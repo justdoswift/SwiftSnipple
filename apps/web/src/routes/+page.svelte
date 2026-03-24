@@ -1,44 +1,60 @@
 <script lang="ts">
-	let { data } = $props();
+	import SnippetCard from '$lib/components/SnippetCard.svelte';
+	import type { PublishedSnippetCard } from '$lib/discovery/types';
+
+	type Props = {
+		data: {
+			feed: PublishedSnippetCard[];
+		};
+	};
+
+	let { data }: Props = $props();
 </script>
 
 <svelte:head>
-	<title>SwiftSnippet Foundation</title>
+	<title>SwiftSnippet Discovery Feed</title>
 	<meta
 		name="description"
-		content="SwiftSnippet Phase 1 stub for protocol, data contract, and CI foundations."
+		content="Browse published SwiftUI snippets with demo-first previews, reusable code, and AI prompt assets."
 	/>
 </svelte:head>
 
-<main class="shell">
+<main class="page">
 	<section class="hero">
-		<p class="eyebrow">Phase 1</p>
-		<h1>{data.appMeta.name}</h1>
-		<p class="lede">
-			Runnable SvelteKit stub ready for later discovery work. This phase locks the content
-			protocol, local infrastructure, and CI foundations.
-		</p>
+		<div class="hero-copy">
+			<p class="eyebrow">Published SwiftUI snippets</p>
+			<h1>Find a believable pattern, inspect the details, and lift it into your next build.</h1>
+			<p class="lede">
+				SwiftSnippet turns each published entry into a demo-first card with cover media,
+				reuse metadata, and a direct path into the full implementation package.
+			</p>
+		</div>
+
+		<div class="hero-panel">
+			<p class="label">Discovery focus</p>
+			<ul>
+				<li>Portfolio-style feed with cover-first cards</li>
+				<li>Difficulty and platform signals before click-through</li>
+				<li>Detail pages with demo, code, prompt, and license context</li>
+			</ul>
+			<a class="explore-link" href="/explore">Open Explore</a>
+		</div>
 	</section>
 
-	<section class="grid">
-		<article>
-			<h2>Locked for this phase</h2>
-			<ul>
-				<li>Single-repo modular structure</li>
-				<li>TypeScript + JSON Schema as protocol source of truth</li>
-				<li>PostgreSQL local baseline</li>
-				<li>Core CI gates only</li>
-			</ul>
-		</article>
+	<section class="feed-section">
+		<div class="section-head">
+			<div>
+				<p class="section-label">Featured and fresh</p>
+				<h2>Published feed</h2>
+			</div>
+			<p class="section-copy">Cards are ordered for editorial feel first, with recent releases still visible.</p>
+		</div>
 
-		<article>
-			<h2>Health endpoints</h2>
-			<ul>
-				<li>Web health page at <code>/health</code></li>
-				<li>API health endpoint at <code>/health</code></li>
-				<li>API metadata endpoint at <code>/meta</code></li>
-			</ul>
-		</article>
+		<div class="feed-grid">
+			{#each data.feed as snippet (snippet.id)}
+				<SnippetCard snippet={snippet} href={`/snippets/${snippet.id}`} />
+			{/each}
+		</div>
 	</section>
 </main>
 
@@ -47,70 +63,110 @@
 		margin: 0;
 		font-family: "Iowan Old Style", "Palatino Linotype", serif;
 		background:
-			radial-gradient(circle at top left, rgba(255, 196, 140, 0.45), transparent 30%),
-			linear-gradient(180deg, #f7f2ea 0%, #efe4d3 100%);
-		color: #1d1a17;
+			radial-gradient(circle at top left, rgba(255, 209, 156, 0.44), transparent 24%),
+			radial-gradient(circle at right, rgba(83, 132, 126, 0.2), transparent 32%),
+			linear-gradient(180deg, #f6efe4 0%, #efe2d2 100%);
+		color: #1f1916;
 	}
 
-	.shell {
-		min-height: 100vh;
-		padding: 4rem 1.5rem;
+	.page {
+		padding: 1.5rem 1.2rem 4rem;
 	}
 
 	.hero,
-	.grid {
-		max-width: 960px;
+	.feed-section {
+		max-width: 1180px;
 		margin: 0 auto;
 	}
 
 	.hero {
-		margin-bottom: 2rem;
+		display: grid;
+		grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.75fr);
+		gap: 1.2rem;
+		padding: 3rem 0;
 	}
 
-	.eyebrow {
-		margin: 0 0 0.5rem;
-		letter-spacing: 0.12em;
-		text-transform: uppercase;
+	.hero-copy,
+	.hero-panel {
+		border-radius: 32px;
+		padding: 1.5rem;
+		border: 1px solid rgba(81, 56, 38, 0.12);
+		background: rgba(255, 250, 243, 0.78);
+		backdrop-filter: blur(14px);
+		box-shadow: 0 24px 60px rgba(68, 46, 28, 0.1);
+	}
+
+	.eyebrow,
+	.section-label,
+	.label {
+		margin: 0 0 0.7rem;
 		font-size: 0.8rem;
-		color: #8b5e34;
+		text-transform: uppercase;
+		letter-spacing: 0.14em;
+		color: #845f42;
 	}
 
 	h1 {
 		margin: 0;
-		font-size: clamp(2.6rem, 7vw, 5rem);
-		line-height: 0.95;
+		font-size: clamp(2.6rem, 6vw, 5.4rem);
+		line-height: 0.92;
+		max-width: 12ch;
 	}
 
-	.lede {
-		max-width: 48rem;
-		font-size: 1.1rem;
-		line-height: 1.7;
-		color: #443a32;
+	.lede,
+	.section-copy,
+	.hero-panel li {
+		font-size: 1.03rem;
+		line-height: 1.75;
+		color: #473c34;
 	}
 
-	.grid {
+	.hero-panel ul {
+		padding-left: 1.2rem;
+		margin: 0 0 1.5rem;
+	}
+
+	.explore-link {
+		display: inline-flex;
+		text-decoration: none;
+		border-radius: 999px;
+		background: #1f5b56;
+		color: #f7f0e6;
+		padding: 0.8rem 1.15rem;
+		font-weight: 700;
+	}
+
+	.feed-section {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-		gap: 1rem;
+		gap: 1.25rem;
 	}
 
-	article {
-		padding: 1.25rem;
-		border: 1px solid rgba(92, 62, 34, 0.14);
-		border-radius: 20px;
-		background: rgba(255, 252, 247, 0.76);
-		backdrop-filter: blur(8px);
-		box-shadow: 0 18px 40px rgba(90, 65, 38, 0.08);
+	.section-head {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		gap: 1rem;
+		align-items: end;
 	}
 
 	h2 {
-		margin-top: 0;
-		font-size: 1.05rem;
+		margin: 0;
+		font-size: clamp(1.8rem, 3vw, 2.8rem);
 	}
 
-	ul {
-		margin: 0;
-		padding-left: 1.2rem;
-		line-height: 1.6;
+	.feed-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+		gap: 1.2rem;
+	}
+
+	@media (max-width: 800px) {
+		.hero {
+			grid-template-columns: 1fr;
+		}
+
+		h1 {
+			max-width: 100%;
+		}
 	}
 </style>

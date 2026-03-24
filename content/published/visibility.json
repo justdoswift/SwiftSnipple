@@ -1,0 +1,17 @@
+{
+  "generatedAt": "2026-03-24T08:15:00.000Z",
+  "items": [
+    {
+      "id": "basic-card-feed",
+      "visibility": "published"
+    },
+    {
+      "id": "stacked-hero-card",
+      "visibility": "published"
+    },
+    {
+      "id": "review-only-meter",
+      "visibility": "not_public"
+    }
+  ]
+}

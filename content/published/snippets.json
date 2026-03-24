@@ -1,0 +1,216 @@
+{
+  "generatedAt": "2026-03-24T08:15:00.000Z",
+  "items": [
+    {
+      "visibility": "published",
+      "card": {
+        "id": "basic-card-feed",
+        "title": "Basic Card Feed",
+        "summary": "A minimal SwiftUI card feed snippet that ships with demo, source, and prompt assets.",
+        "categoryPrimary": "layout",
+        "difficulty": "easy",
+        "platforms": [
+          {
+            "os": "iOS",
+            "minVersion": "17.0"
+          }
+        ],
+        "tags": ["card", "feed", "swiftui"],
+        "media": {
+          "coverUrl": "/published/basic-card-feed/cover.png",
+          "demoUrl": "/published/basic-card-feed/demo.mp4"
+        },
+        "hasDemo": true,
+        "hasPrompt": true,
+        "featuredRank": 2,
+        "publishedAt": "2026-03-20T09:00:00.000Z"
+      },
+      "detail": {
+        "id": "basic-card-feed",
+        "title": "Basic Card Feed",
+        "summary": "A minimal SwiftUI card feed snippet that ships with demo, source, and prompt assets.",
+        "categoryPrimary": "layout",
+        "difficulty": "easy",
+        "platforms": [
+          {
+            "os": "iOS",
+            "minVersion": "17.0"
+          }
+        ],
+        "tags": ["card", "feed", "swiftui"],
+        "media": {
+          "coverUrl": "/published/basic-card-feed/cover.png",
+          "demoUrl": "/published/basic-card-feed/demo.mp4"
+        },
+        "hasDemo": true,
+        "hasPrompt": true,
+        "featuredRank": 2,
+        "publishedAt": "2026-03-20T09:00:00.000Z",
+        "codeBlocks": [
+          {
+            "id": "basic-card-feed-main",
+            "title": "BasicCardFeedSnippet.swift",
+            "language": "swift",
+            "path": "Code/SwiftUI/Sources/BasicCardFeedSnippet.swift",
+            "content": "import SwiftUI\n\nstruct BasicCardFeedSnippet: View {\n    var body: some View {\n        Text(\"Card Feed\")\n    }\n}\n"
+          }
+        ],
+        "promptBlocks": [
+          {
+            "id": "basic-card-feed-prompt",
+            "title": "Prompt Template",
+            "format": "markdown",
+            "path": "Code/Vibe/prompt.md",
+            "content": "# Goal\nCreate a clean SwiftUI card feed with roomy spacing and iOS 17 styling.\n"
+          },
+          {
+            "id": "basic-card-feed-acceptance",
+            "title": "Acceptance Checklist",
+            "format": "markdown",
+            "path": "Code/Vibe/acceptance.md",
+            "content": "- Feed renders at least three cards\n- Each card exposes title and summary\n"
+          }
+        ],
+        "license": {
+          "code": "MIT",
+          "media": "CC-BY-4.0",
+          "thirdPartyNoticePath": "LICENSES/THIRD_PARTY.md",
+          "disclosures": [
+            "Demo media and cover assets can be reused under CC-BY-4.0.",
+            "No additional third-party dependencies are required."
+          ]
+        },
+        "dependencies": [
+          {
+            "name": "SwiftUI",
+            "kind": "framework",
+            "note": "Uses standard SwiftUI layout primitives."
+          }
+        ]
+      },
+      "search": {
+        "id": "basic-card-feed",
+        "title": "Basic Card Feed",
+        "summary": "A minimal SwiftUI card feed snippet that ships with demo, source, and prompt assets.",
+        "categoryPrimary": "layout",
+        "difficulty": "easy",
+        "platforms": [
+          {
+            "os": "iOS",
+            "minVersion": "17.0"
+          }
+        ],
+        "tags": ["card", "feed", "swiftui"],
+        "hasDemo": true,
+        "hasPrompt": true,
+        "featuredRank": 2,
+        "publishedAt": "2026-03-20T09:00:00.000Z"
+      }
+    },
+    {
+      "visibility": "published",
+      "card": {
+        "id": "stacked-hero-card",
+        "title": "Stacked Hero Card",
+        "summary": "A more editorial SwiftUI hero card with layered typography and static cover fallback.",
+        "categoryPrimary": "layout",
+        "difficulty": "medium",
+        "platforms": [
+          {
+            "os": "iOS",
+            "minVersion": "17.0"
+          },
+          {
+            "os": "macOS",
+            "minVersion": "14.0"
+          }
+        ],
+        "tags": ["hero", "card", "editorial"],
+        "media": {
+          "coverUrl": "/published/stacked-hero-card/cover.png"
+        },
+        "hasDemo": false,
+        "hasPrompt": false,
+        "featuredRank": 1,
+        "publishedAt": "2026-03-23T15:30:00.000Z"
+      },
+      "detail": {
+        "id": "stacked-hero-card",
+        "title": "Stacked Hero Card",
+        "summary": "A more editorial SwiftUI hero card with layered typography and static cover fallback.",
+        "categoryPrimary": "layout",
+        "difficulty": "medium",
+        "platforms": [
+          {
+            "os": "iOS",
+            "minVersion": "17.0"
+          },
+          {
+            "os": "macOS",
+            "minVersion": "14.0"
+          }
+        ],
+        "tags": ["hero", "card", "editorial"],
+        "media": {
+          "coverUrl": "/published/stacked-hero-card/cover.png"
+        },
+        "hasDemo": false,
+        "hasPrompt": false,
+        "featuredRank": 1,
+        "publishedAt": "2026-03-23T15:30:00.000Z",
+        "codeBlocks": [
+          {
+            "id": "stacked-hero-card-main",
+            "title": "StackedHeroCardView.swift",
+            "language": "swift",
+            "path": "Code/SwiftUI/Sources/StackedHeroCardView.swift",
+            "content": "import SwiftUI\n\nstruct StackedHeroCardView: View {\n    var body: some View {\n        VStack(alignment: .leading) {\n            Text(\"Stacked Hero\")\n                .font(.largeTitle.bold())\n            Text(\"Editorial card layout\")\n        }\n    }\n}\n"
+          }
+        ],
+        "promptBlocks": [],
+        "license": {
+          "code": "MIT",
+          "media": "CC-BY-4.0",
+          "thirdPartyNoticePath": "LICENSES/THIRD_PARTY.md",
+          "disclosures": [
+            "Cover artwork is published under CC-BY-4.0.",
+            "Reuse the layout with attribution to the original asset pack."
+          ]
+        },
+        "dependencies": [
+          {
+            "name": "SwiftUI",
+            "kind": "framework"
+          },
+          {
+            "name": "SF Symbols",
+            "kind": "tool",
+            "note": "Optional symbols for layered decorative accents."
+          }
+        ]
+      },
+      "search": {
+        "id": "stacked-hero-card",
+        "title": "Stacked Hero Card",
+        "summary": "A more editorial SwiftUI hero card with layered typography and static cover fallback.",
+        "categoryPrimary": "layout",
+        "difficulty": "medium",
+        "platforms": [
+          {
+            "os": "iOS",
+            "minVersion": "17.0"
+          },
+          {
+            "os": "macOS",
+            "minVersion": "14.0"
+          }
+        ],
+        "tags": ["hero", "card", "editorial"],
+        "hasDemo": false,
+        "hasPrompt": false,
+        "featuredRank": 1,
+        "publishedAt": "2026-03-23T15:30:00.000Z"
+      }
+    }
+  ]
+}

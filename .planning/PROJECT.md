@@ -12,12 +12,11 @@ SwiftSnippet 是一个面向 SwiftUI 开发者与 Vibe Coding 用户的片段卡
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Phase 1 validated the `snippet.yaml`-driven content protocol, runnable repository skeleton, PostgreSQL baseline, and core CI gates.
 
 ### Active
 
 - [ ] 提供卡片流浏览、搜索筛选与详情页，承载片段演示、源码与提示词三类内容
-- [ ] 建立 `snippet.yaml` 驱动的内容协议、仓库结构和自动校验门槛，保证每个片段可发布、可回滚、可审计
 - [ ] 提供最小可用的投稿/发布闭环，包括媒体上传、内容审核、索引生成与搜索更新
 - [ ] 交付首批可公开浏览的 SwiftUI 片段内容，覆盖卡片流、交互动效、数据状态与 AI 协作模板
 
@@ -50,11 +49,11 @@ SwiftSnippet 是一个面向 SwiftUI 开发者与 Vibe Coding 用户的片段卡
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| 聚焦 SwiftUI 片段卡片流而不是泛化多技术栈片段平台 | 先服务一个明确且高价值的垂直场景，更容易定义内容协议和质量标准 | — Pending |
-| 采用“演示视频 + 源码 + 提示词”三段式卡片模型 | 这是产品差异化来源，也能同时服务复制用户与 AI 协作用户 | — Pending |
-| v1 先做 Web 平台与内容发布闭环 | 最快验证发现、复制、搜索、投稿、审核、发布这些核心流程 | — Pending |
-| 内容协议以 `snippet.yaml` 和固定目录结构驱动 | 便于 CI、AI 校验、索引构建、许可证追踪与回滚 | — Pending |
-| 路线图先收敛在 MVP 闭环，后置订阅、企业和增长体系 | 保持初始阶段可执行，减少一次性铺太宽的交付风险 | — Pending |
+| 聚焦 SwiftUI 片段卡片流而不是泛化多技术栈片段平台 | 先服务一个明确且高价值的垂直场景，更容易定义内容协议和质量标准 | Phase 1 confirmed this focus in the protocol, fixture, and stub copy |
+| 采用“演示视频 + 源码 + 提示词”三段式卡片模型 | 这是产品差异化来源，也能同时服务复制用户与 AI 协作用户 | Phase 1 schema and fixture lock this content contract |
+| v1 先做 Web 平台与内容发布闭环 | 最快验证发现、复制、搜索、投稿、审核、发布这些核心流程 | Phase 1 established the runnable Web/API/database baseline |
+| 内容协议以 `snippet.yaml` 和固定目录结构驱动 | 便于 CI、AI 校验、索引构建、许可证追踪与回滚 | Phase 1 validated this via JSON Schema, CLI, and fixtures |
+| 路线图先收敛在 MVP 闭环，后置订阅、企业和增长体系 | 保持初始阶段可执行，减少一次性铺太宽的交付风险 | Still active after Phase 1 |
 
 ## Evolution
 
@@ -74,4 +73,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-24 after initialization*
+*Last updated: 2026-03-24 after Phase 1 completion*

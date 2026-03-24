@@ -7,10 +7,10 @@
 
 ### Content Protocol
 
-- [ ] **CPRT-01**: Maintainer can define a snippet with a valid `snippet.yaml` manifest and required directory structure
-- [ ] **CPRT-02**: Maintainer can attach demo media, SwiftUI code, prompt assets, and license metadata to a snippet package
-- [ ] **CPRT-03**: CI can reject snippet submissions that fail schema, structure, or required-field validation
-- [ ] **CPRT-04**: Maintainer can version snippet content so published assets can be traced back to a source revision
+- [x] **CPRT-01**: Maintainer can define a snippet with a valid `snippet.yaml` manifest and required directory structure
+- [x] **CPRT-02**: Maintainer can attach demo media, SwiftUI code, prompt assets, and license metadata to a snippet package
+- [x] **CPRT-03**: CI can reject snippet submissions that fail schema, structure, or required-field validation
+- [x] **CPRT-04**: Maintainer can version snippet content so published assets can be traced back to a source revision
 
 ### Discovery
 
@@ -37,9 +37,9 @@
 ### Operations
 
 - [ ] **OPS-01**: System can enforce rate limits on resource-sensitive API endpoints
-- [ ] **OPS-02**: System can store published snippet metadata, review state, and asset references in a primary database
+- [x] **OPS-02**: System can store published snippet metadata, review state, and asset references in a primary database
 - [ ] **OPS-03**: System can serve cached feed/detail responses for published snippets without exposing draft data
-- [ ] **OPS-04**: Team can run automated checks for Swift formatting/linting, media validation, and license completeness in CI
+- [x] **OPS-04**: Team can run automated checks for Swift formatting/linting, media validation, and license completeness in CI
 
 ### Seed Content
 
@@ -80,10 +80,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CPRT-01 | Phase 1 | Pending |
-| CPRT-02 | Phase 1 | Pending |
-| CPRT-03 | Phase 1 | Pending |
-| CPRT-04 | Phase 1 | Pending |
+| CPRT-01 | Phase 1 | Complete |
+| CPRT-02 | Phase 1 | Complete |
+| CPRT-03 | Phase 1 | Complete |
+| CPRT-04 | Phase 1 | Complete |
 | DISC-01 | Phase 2 | Pending |
 | DISC-02 | Phase 2 | Pending |
 | DISC-03 | Phase 2 | Pending |
@@ -98,9 +98,9 @@
 | PIPE-04 | Phase 3 | Pending |
 | PIPE-05 | Phase 3 | Pending |
 | OPS-01 | Phase 3 | Pending |
-| OPS-02 | Phase 1 | Pending |
+| OPS-02 | Phase 1 | Complete |
 | OPS-03 | Phase 2 | Pending |
-| OPS-04 | Phase 1 | Pending |
+| OPS-04 | Phase 1 | Complete |
 | SEED-01 | Phase 4 | Pending |
 | SEED-02 | Phase 4 | Pending |
 | SEED-03 | Phase 4 | Pending |

@@ -15,8 +15,8 @@
 ### Discovery
 
 - [x] **DISC-01**: User can browse a feed of published SwiftUI snippet cards with title, summary, labels, and preview media
-- [ ] **DISC-02**: User can filter published snippets by controlled facets including category, difficulty, platform, and media flags
-- [ ] **DISC-03**: User can search snippets by keyword and receive ranked results
+- [x] **DISC-02**: User can filter published snippets by controlled facets including category, difficulty, platform, and media flags
+- [x] **DISC-03**: User can search snippets by keyword and receive ranked results
 - [x] **DISC-04**: User can open a published snippet detail page from feed or search results
 
 ### Snippet Detail
@@ -85,8 +85,8 @@
 | CPRT-03 | Phase 1 | Complete |
 | CPRT-04 | Phase 1 | Complete |
 | DISC-01 | Phase 2 | Complete |
-| DISC-02 | Phase 2 | Pending |
-| DISC-03 | Phase 2 | Pending |
+| DISC-02 | Phase 2 | Complete |
+| DISC-03 | Phase 2 | Complete |
 | DISC-04 | Phase 2 | Complete |
 | DTL-01 | Phase 2 | Complete |
 | DTL-02 | Phase 2 | Complete |

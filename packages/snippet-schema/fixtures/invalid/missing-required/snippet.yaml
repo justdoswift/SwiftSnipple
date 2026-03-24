@@ -1,0 +1,24 @@
+id: missing-required
+title: Missing Required
+version: 0.1.0
+status: draft
+category_primary: layout
+tags:
+  - invalid
+facets:
+  - platform:iOS
+difficulty: easy
+platforms:
+  - os: iOS
+    min_version: "17.0"
+assets:
+  cover: Media/cover.png
+code:
+  swiftui_root: Code/SwiftUI
+  prompt_root: Code/Vibe
+  tests_root: Tests
+license:
+  code: MIT
+  media: CC-BY-4.0
+  third_party_notice: LICENSES/THIRD_PARTY.md
+source_revision: fixture-rev-missing

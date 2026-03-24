@@ -1,0 +1,12 @@
+included:
+  - packages/snippet-schema/fixtures/valid/basic-card-feed/Code/SwiftUI
+
+disabled_rules:
+  - trailing_whitespace
+
+opt_in_rules:
+  - explicit_init
+
+line_length:
+  warning: 140
+  ignores_comments: true

@@ -1,0 +1,25 @@
+id: invalid-enum
+title: Invalid Enum
+summary: This fixture should fail because category and status are invalid.
+version: 0.1.0
+status: archived
+category_primary: unknown
+tags:
+  - invalid
+facets:
+  - platform:iOS
+difficulty: easy
+platforms:
+  - os: iOS
+    min_version: "17.0"
+assets:
+  cover: Media/cover.png
+code:
+  swiftui_root: Code/SwiftUI
+  prompt_root: Code/Vibe
+  tests_root: Tests
+license:
+  code: MIT
+  media: CC-BY-4.0
+  third_party_notice: LICENSES/THIRD_PARTY.md
+source_revision: fixture-rev-enum

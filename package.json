@@ -1,0 +1,21 @@
+{
+  "name": "swiftsnippet",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.32.1",
+  "scripts": {
+    "dev:web": "pnpm --filter @swiftsnippet/web dev",
+    "build:web": "pnpm --filter @swiftsnippet/web build",
+    "check:web": "pnpm --filter @swiftsnippet/web check",
+    "lint:protocol": "pnpm --filter @swiftsnippet/snippet-schema lint",
+    "test:protocol": "pnpm --filter @swiftsnippet/snippet-schema test",
+    "verify:snippets": "pnpm --filter @swiftsnippet/snippet-schema verify:fixtures",
+    "check:swift": "bash scripts/check-swift.sh",
+    "build:api": "cd apps/api && go build ./...",
+    "test:api": "cd apps/api && go test ./...",
+    "db:up": "docker compose -f infra/postgres/docker-compose.yml up -d",
+    "db:down": "docker compose -f infra/postgres/docker-compose.yml down -v",
+    "db:migrate": "bash scripts/db-migrate.sh",
+    "check": "pnpm lint:protocol && pnpm test:protocol && pnpm verify:snippets && pnpm check:web && pnpm build:web && pnpm build:api && pnpm test:api && pnpm check:swift"
+  }
+}

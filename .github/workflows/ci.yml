@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  core-gates:
+    runs-on: macos-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: swiftsnippet
+          POSTGRES_USER: swiftsnippet
+          POSTGRES_PASSWORD: swiftsnippet
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U swiftsnippet -d swiftsnippet"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgres://swiftsnippet:swiftsnippet@127.0.0.1:5432/swiftsnippet?sslmode=disable
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.1"
+
+      - name: Install Swift tools
+        run: |
+          brew install swiftlint
+          git clone https://github.com/swiftlang/swift-format.git /tmp/swift-format
+          cd /tmp/swift-format
+          swift build -c release
+          sudo cp .build/release/swift-format /usr/local/bin/swift-format
+
+      - name: Install JS dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run migrations
+        run: pnpm db:migrate
+
+      - name: Run core gates
+        run: pnpm check

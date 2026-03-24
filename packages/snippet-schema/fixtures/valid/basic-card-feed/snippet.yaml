@@ -1,0 +1,28 @@
+id: basic-card-feed
+title: Basic Card Feed
+summary: A minimal valid snippet fixture for feed-card foundations.
+version: 0.1.0
+status: draft
+category_primary: layout
+tags:
+  - card
+  - feed
+facets:
+  - platform:iOS
+  - difficulty:easy
+difficulty: easy
+platforms:
+  - os: iOS
+    min_version: "17.0"
+assets:
+  cover: Media/cover.png
+  demo: Media/demo.mp4
+code:
+  swiftui_root: Code/SwiftUI
+  prompt_root: Code/Vibe
+  tests_root: Tests
+license:
+  code: MIT
+  media: CC-BY-4.0
+  third_party_notice: LICENSES/THIRD_PARTY.md
+source_revision: fixture-rev-001

@@ -1,0 +1,7 @@
+goal: Generate a reusable SwiftUI card feed block.
+constraints:
+  - No third-party dependencies
+  - Keep it previewable
+deliverables:
+  - SwiftUI view
+  - Demo preview

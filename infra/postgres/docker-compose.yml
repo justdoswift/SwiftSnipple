@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: swiftsnippet-postgres
+    environment:
+      POSTGRES_DB: swiftsnippet
+      POSTGRES_USER: swiftsnippet
+      POSTGRES_PASSWORD: swiftsnippet
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U swiftsnippet -d swiftsnippet"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-data:

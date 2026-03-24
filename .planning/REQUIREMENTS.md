@@ -14,17 +14,17 @@
 
 ### Discovery
 
-- [ ] **DISC-01**: User can browse a feed of published SwiftUI snippet cards with title, summary, labels, and preview media
+- [x] **DISC-01**: User can browse a feed of published SwiftUI snippet cards with title, summary, labels, and preview media
 - [ ] **DISC-02**: User can filter published snippets by controlled facets including category, difficulty, platform, and media flags
 - [ ] **DISC-03**: User can search snippets by keyword and receive ranked results
-- [ ] **DISC-04**: User can open a published snippet detail page from feed or search results
+- [x] **DISC-04**: User can open a published snippet detail page from feed or search results
 
 ### Snippet Detail
 
-- [ ] **DTL-01**: User can view a snippet's demo asset, summary, metadata, and supported platforms on the detail page
-- [ ] **DTL-02**: User can read and copy the primary SwiftUI implementation files for a published snippet
-- [ ] **DTL-03**: User can read and copy the prompt template and acceptance checklist associated with a snippet
-- [ ] **DTL-04**: User can view snippet license information and dependency disclosures before reuse
+- [x] **DTL-01**: User can view a snippet's demo asset, summary, metadata, and supported platforms on the detail page
+- [x] **DTL-02**: User can read and copy the primary SwiftUI implementation files for a published snippet
+- [x] **DTL-03**: User can read and copy the prompt template and acceptance checklist associated with a snippet
+- [x] **DTL-04**: User can view snippet license information and dependency disclosures before reuse
 
 ### Publishing Pipeline
 
@@ -38,7 +38,7 @@
 
 - [ ] **OPS-01**: System can enforce rate limits on resource-sensitive API endpoints
 - [x] **OPS-02**: System can store published snippet metadata, review state, and asset references in a primary database
-- [ ] **OPS-03**: System can serve cached feed/detail responses for published snippets without exposing draft data
+- [x] **OPS-03**: System can serve cached feed/detail responses for published snippets without exposing draft data
 - [x] **OPS-04**: Team can run automated checks for Swift formatting/linting, media validation, and license completeness in CI
 
 ### Seed Content
@@ -84,14 +84,14 @@
 | CPRT-02 | Phase 1 | Complete |
 | CPRT-03 | Phase 1 | Complete |
 | CPRT-04 | Phase 1 | Complete |
-| DISC-01 | Phase 2 | Pending |
+| DISC-01 | Phase 2 | Complete |
 | DISC-02 | Phase 2 | Pending |
 | DISC-03 | Phase 2 | Pending |
-| DISC-04 | Phase 2 | Pending |
-| DTL-01 | Phase 2 | Pending |
-| DTL-02 | Phase 2 | Pending |
-| DTL-03 | Phase 2 | Pending |
-| DTL-04 | Phase 2 | Pending |
+| DISC-04 | Phase 2 | Complete |
+| DTL-01 | Phase 2 | Complete |
+| DTL-02 | Phase 2 | Complete |
+| DTL-03 | Phase 2 | Complete |
+| DTL-04 | Phase 2 | Complete |
 | PIPE-01 | Phase 3 | Pending |
 | PIPE-02 | Phase 3 | Pending |
 | PIPE-03 | Phase 3 | Pending |
@@ -99,7 +99,7 @@
 | PIPE-05 | Phase 3 | Pending |
 | OPS-01 | Phase 3 | Pending |
 | OPS-02 | Phase 1 | Complete |
-| OPS-03 | Phase 2 | Pending |
+| OPS-03 | Phase 2 | Complete |
 | OPS-04 | Phase 1 | Complete |
 | SEED-01 | Phase 4 | Pending |
 | SEED-02 | Phase 4 | Pending |

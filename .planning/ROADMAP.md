@@ -42,7 +42,7 @@ SwiftSnippet 的 v1 路线图按“协议 -> 读路径 -> 发布 -> 首发内容
 **Plans:** 3 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — 定义 published-only discovery snapshot、visibility registry 与公开读模型契约
+- [x] 02-01-PLAN.md — 定义 published-only discovery snapshot、visibility registry 与公开读模型契约
 - [ ] 02-02-PLAN.md — 在 Go `net/http` 边界上实现缓存化的 feed/search/detail 公开 API
 - [ ] 02-03-PLAN.md — 用 SvelteKit 构建首页卡片流、Explore 搜索页和 snippet 详情页
 

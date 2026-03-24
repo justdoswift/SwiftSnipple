@@ -2,9 +2,12 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: ready_for_verification
-stopped_at: Completed 02-03-PLAN.md
-last_updated: "2026-03-24T08:33:24.347Z"
+current_phase: "03"
+current_phase_name: publish-pipeline
+current_plan: "0"
+status: planning
+stopped_at: Phase 03 context gathered
+last_updated: "2026-03-24T15:41:12Z"
 progress:
   total_phases: 4
   completed_phases: 2
@@ -23,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 
 ## Current Position
 
-Phase: 02 (discovery-experience) — COMPLETE
-Plan: 3 of 3
+Phase: 03 (publish-pipeline) — READY TO PLAN
+Plan: 0 of 0
 
 ## Performance Metrics
 
@@ -65,6 +68,8 @@ Recent decisions affecting current work:
 - [Phase 02]: Detail lookups distinguish `not_public` from missing ids before caching, while search returns ranked matches with up to three published fallbacks.
 - [Phase 02]: Frontend discovery now consumes the published Go feed/search/detail contracts directly, using URL params as the sole Explore state source.
 - [Phase 02]: Unpublished snippet ids render an explicit 内容未公开 page while missing prompt/demo assets are handled by hidden tabs and cover fallback, not placeholders.
+- [Phase 03]: Publish Pipeline will stay API-first in v1, centering on signed upload URL issuance, explicit review/publish actions, and generated public artifacts rather than a full admin UI.
+- [Phase 03]: 发布闭环继续沿用 `draft -> review -> published` 三态，并以生成 published snapshot / visibility registry / search documents 作为公开读路径的唯一产物边界。
 
 ### Pending Todos
 
@@ -77,6 +82,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-24T08:33:24.344Z
-Stopped at: Completed 02-03-PLAN.md
-Resume file: None
+Last session: 2026-03-24T23:41:12+0800
+Stopped at: Phase 03 context gathered
+Resume file: .planning/phases/03-publish-pipeline/03-CONTEXT.md

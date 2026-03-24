@@ -10,6 +10,7 @@
     "lint:protocol": "pnpm --filter @swiftsnippet/snippet-schema lint",
     "test:protocol": "pnpm --filter @swiftsnippet/snippet-schema test",
     "verify:snippets": "pnpm --filter @swiftsnippet/snippet-schema verify:fixtures",
+    "check:published-index": "pnpm --filter @swiftsnippet/snippet-schema verify:published-index",
     "check:swift": "bash scripts/check-swift.sh",
     "build:api": "cd apps/api && go build ./...",
     "test:api": "cd apps/api && go test ./...",

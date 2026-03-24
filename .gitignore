@@ -2,6 +2,7 @@ node_modules/
 .pnpm-store/
 dist/
 build/
+.build/
 .svelte-kit/
 coverage/
 
@@ -12,4 +13,3 @@ apps/api/.tmp/
 .env
 .env.*
 !.env.example
-

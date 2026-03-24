@@ -9,23 +9,10 @@ on:
 jobs:
   core-gates:
     runs-on: macos-latest
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_DB: swiftsnippet
-          POSTGRES_USER: swiftsnippet
-          POSTGRES_PASSWORD: swiftsnippet
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U swiftsnippet -d swiftsnippet"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     env:
       DATABASE_URL: postgres://swiftsnippet:swiftsnippet@127.0.0.1:5432/swiftsnippet?sslmode=disable
+      HOMEBREW_NO_AUTO_UPDATE: 1
 
     steps:
       - uses: actions/checkout@v4
@@ -43,13 +30,21 @@ jobs:
         with:
           go-version: "1.25.1"
 
-      - name: Install Swift tools
+      - name: Install Swift and PostgreSQL tools
         run: |
           brew install swiftlint
-          git clone https://github.com/swiftlang/swift-format.git /tmp/swift-format
-          cd /tmp/swift-format
-          swift build -c release
-          sudo cp .build/release/swift-format /usr/local/bin/swift-format
+          brew install postgresql@16
+          echo "$(brew --prefix postgresql@16)/bin" >> "$GITHUB_PATH"
+
+      - name: Start PostgreSQL
+        env:
+          PGDATA: ${{ runner.temp }}/pgdata
+        run: |
+          export PATH="$(brew --prefix postgresql@16)/bin:$PATH"
+          initdb -D "$PGDATA" --username=swiftsnippet --auth=trust
+          pg_ctl -D "$PGDATA" -l "$RUNNER_TEMP/postgres.log" -o "-F -p 5432" start
+          createdb -h 127.0.0.1 -p 5432 -U swiftsnippet swiftsnippet
+          pg_isready -h 127.0.0.1 -p 5432 -U swiftsnippet -d swiftsnippet
 
       - name: Install JS dependencies
         run: pnpm install --frozen-lockfile

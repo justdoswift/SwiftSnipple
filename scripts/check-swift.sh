@@ -21,6 +21,6 @@ if ! command -v swiftlint >/dev/null 2>&1; then
   exit 1
 fi
 
-"${SWIFT_FORMAT_CMD[@]}" lint --recursive "$FIXTURE_SWIFT_DIR"
+"${SWIFT_FORMAT_CMD[@]}" lint --strict --recursive "$FIXTURE_SWIFT_DIR"
 swiftlint lint --config "$ROOT_DIR/.swiftlint.yml" --path "$FIXTURE_SWIFT_DIR"
 swift build --package-path "$FIXTURE_SWIFT_DIR"

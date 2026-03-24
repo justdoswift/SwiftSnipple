@@ -4,7 +4,7 @@
 
 - Product: SwiftSnippet
 - Core value: 用户必须能在几秒内找到一个可信、可复制、可复用的 SwiftUI 片段，并立即把它带回自己的项目或 AI 工作流中。
-- Current phase: Phase 1 - Foundation Protocol
+- Current phase: Phase 2 - Discovery Experience
 - Planning source of truth: `.planning/PROJECT.md`, `.planning/REQUIREMENTS.md`, `.planning/ROADMAP.md`, `.planning/STATE.md`
 
 ## Working Rules
@@ -30,4 +30,4 @@
 
 ## Next Command
 
-Run `$gsd-plan-phase 1` to create the executable plan for Foundation Protocol.
+Run `$gsd-discuss-phase 2` to capture Discovery Experience context, or `$gsd-plan-phase 2` if Phase 2 context is already locked.

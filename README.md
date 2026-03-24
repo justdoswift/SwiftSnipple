@@ -113,8 +113,10 @@ pnpm check
 
 - `swift-format`
 - `swiftlint`
+- `psql`（用于执行 `pnpm db:migrate`）
 
 如果缺少任一工具，`pnpm check:swift` 会失败并提示安装。
+如果缺少 `psql`，`pnpm db:migrate` 会失败并提示安装。
 
 ## Phase 2/3 Contract Handoff
 

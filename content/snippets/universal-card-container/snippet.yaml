@@ -1,0 +1,28 @@
+id: universal-card-container
+title: 通用卡片容器
+summary: 一个可复用的 SwiftUI 卡片容器，支持眉题、标题、摘要和内容插槽。
+version: 1.0.0
+status: draft
+category_primary: layout
+tags:
+  - 容器
+  - 卡片
+  - 复用
+facets:
+  - platform:iOS
+  - difficulty:easy
+difficulty: easy
+platforms:
+  - os: iOS
+    min_version: "17.0"
+assets:
+  cover: Media/cover.png
+code:
+  swiftui_root: Code/SwiftUI
+  prompt_root: Code/Vibe
+  tests_root: Tests
+license:
+  code: MIT
+  media: CC-BY-4.0
+  third_party_notice: LICENSES/THIRD_PARTY.md
+source_revision: universal-card-container-rev-001

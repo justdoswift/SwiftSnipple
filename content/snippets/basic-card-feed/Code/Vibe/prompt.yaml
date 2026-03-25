@@ -1,0 +1,7 @@
+goal: 生成一个可复用的 SwiftUI 卡片信息流组件。
+constraints:
+  - 不依赖第三方库
+  - 布局需要可预览
+deliverables:
+  - SwiftUI 视图
+  - Demo 预览

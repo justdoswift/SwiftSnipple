@@ -8,18 +8,25 @@
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:e2e": "PID_FILE=../../.swiftsnippet.e2e.pids bash ../../scripts/stop.sh >/dev/null 2>&1 || true && (lsof -tiTCP:13001 -sTCP:LISTEN | xargs kill >/dev/null 2>&1 || true) && (lsof -tiTCP:18081 -sTCP:LISTEN | xargs kill >/dev/null 2>&1 || true) && playwright test"
   },
   "devDependencies": {
-    "@testing-library/svelte": "^5.3.1",
+    "@playwright/test": "^1.58.2",
     "@sveltejs/adapter-auto": "^4.0.0",
     "@sveltejs/kit": "^2.17.1",
     "@sveltejs/vite-plugin-svelte": "^5.0.3",
+    "@testing-library/svelte": "^5.3.1",
     "jsdom": "^26.1.0",
     "svelte": "^5.28.2",
     "svelte-check": "^4.1.6",
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
     "vitest": "^4.1.1"
+  },
+  "dependencies": {
+    "@fontsource/fustat": "^5.2.7",
+    "@fontsource/geist-sans": "^5.2.5",
+    "@fontsource/inter": "^5.2.8"
   }
 }

@@ -1,0 +1,7 @@
+goal: 生成一个统一管理加载态的 SwiftUI 状态包装器。
+constraints:
+  - 覆盖 loading、empty、error、content
+  - 保持调用方式清晰
+deliverables:
+  - SwiftUI 状态容器
+  - 状态切换预览

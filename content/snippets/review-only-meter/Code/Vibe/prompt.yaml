@@ -1,0 +1,7 @@
+goal: 生成一个用于评审面板的 SwiftUI 进度仪表。
+constraints:
+  - 尺寸紧凑
+  - 状态表达清晰
+deliverables:
+  - SwiftUI 视图
+  - 预览示例

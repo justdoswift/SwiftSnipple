@@ -1,0 +1,28 @@
+id: component-generation-prompt-pack
+title: 组件生成提示词包
+summary: 一组可直接投喂给 AI 的提示词模板，用来生成带验收标准的 SwiftUI 组件输出。
+version: 1.0.0
+status: draft
+category_primary: tooling
+tags:
+  - AI
+  - 提示词
+  - 工作流
+facets:
+  - platform:iOS
+  - difficulty:medium
+difficulty: medium
+platforms:
+  - os: iOS
+    min_version: "17.0"
+assets:
+  cover: Media/cover.png
+code:
+  swiftui_root: Code/SwiftUI
+  prompt_root: Code/Vibe
+  tests_root: Tests
+license:
+  code: MIT
+  media: CC-BY-4.0
+  third_party_notice: LICENSES/THIRD_PARTY.md
+source_revision: component-generation-prompt-pack-rev-001

@@ -1,0 +1,7 @@
+goal: 生成一个带长按反馈的 SwiftUI 收藏按钮。
+constraints:
+  - 要有提示反馈
+  - 状态表现需要清晰
+deliverables:
+  - SwiftUI 按钮组件
+  - 状态预览

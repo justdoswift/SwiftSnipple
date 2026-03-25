@@ -1,0 +1,7 @@
+goal: 生成带 shimmer 动效的 SwiftUI 骨架占位组件。
+constraints:
+  - 需要适合列表和卡片
+  - 不要引入第三方动画库
+deliverables:
+  - SwiftUI 骨架组件
+  - Demo 动画预览

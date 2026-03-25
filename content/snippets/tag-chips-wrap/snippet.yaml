@@ -1,0 +1,28 @@
+id: tag-chips-wrap
+title: 标签换行 Chips
+summary: 一组会自动换行的 SwiftUI 标签 Chips，适合窄宽和宽屏信息面板。
+version: 1.0.0
+status: draft
+category_primary: layout
+tags:
+  - 标签
+  - Chips
+  - 换行
+facets:
+  - platform:iOS
+  - difficulty:medium
+difficulty: medium
+platforms:
+  - os: iOS
+    min_version: "17.0"
+assets:
+  cover: Media/cover.png
+code:
+  swiftui_root: Code/SwiftUI
+  prompt_root: Code/Vibe
+  tests_root: Tests
+license:
+  code: MIT
+  media: CC-BY-4.0
+  third_party_notice: LICENSES/THIRD_PARTY.md
+source_revision: tag-chips-wrap-rev-001

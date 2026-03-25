@@ -5,6 +5,10 @@ build/
 .build/
 .svelte-kit/
 coverage/
+playwright-report/
+test-results/
+apps/web/playwright-report/
+apps/web/test-results/
 
 apps/api/bin/
 apps/api/.tmp/
@@ -13,3 +17,4 @@ apps/api/.tmp/
 .env
 .env.*
 !.env.example
+.swiftsnippet.pids

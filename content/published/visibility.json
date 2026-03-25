@@ -1,8 +1,44 @@
 {
-  "generatedAt": "2026-03-24T08:15:00.000Z",
+  "generatedAt": "2026-03-25T03:46:14.460194Z",
   "items": [
     {
       "id": "basic-card-feed",
+      "visibility": "published"
+    },
+    {
+      "id": "bookmark-long-press",
+      "visibility": "published"
+    },
+    {
+      "id": "component-generation-prompt-pack",
+      "visibility": "published"
+    },
+    {
+      "id": "internal-draft-sample",
+      "visibility": "not_public"
+    },
+    {
+      "id": "like-button-bounce",
+      "visibility": "published"
+    },
+    {
+      "id": "loadable-view-states",
+      "visibility": "published"
+    },
+    {
+      "id": "masonry-grid",
+      "visibility": "published"
+    },
+    {
+      "id": "review-only-meter",
+      "visibility": "published"
+    },
+    {
+      "id": "search-page-skeleton",
+      "visibility": "published"
+    },
+    {
+      "id": "skeleton-shimmer",
       "visibility": "published"
     },
     {
@@ -10,8 +46,12 @@
       "visibility": "published"
     },
     {
-      "id": "review-only-meter",
-      "visibility": "not_public"
+      "id": "tag-chips-wrap",
+      "visibility": "published"
+    },
+    {
+      "id": "universal-card-container",
+      "visibility": "published"
     }
   ]
 }

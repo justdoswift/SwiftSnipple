@@ -1,0 +1,30 @@
+id: stacked-hero-card
+title: 叠层主视觉卡片
+summary: 一个更偏编辑感的 SwiftUI 主视觉卡片，强调层级排版与静态封面展示。
+version: 1.0.0
+status: draft
+category_primary: layout
+tags:
+  - 主视觉
+  - 卡片
+  - 编辑感
+facets:
+  - platform:iOS
+  - difficulty:medium
+difficulty: medium
+platforms:
+  - os: iOS
+    min_version: "17.0"
+  - os: macOS
+    min_version: "14.0"
+assets:
+  cover: Media/cover.png
+code:
+  swiftui_root: Code/SwiftUI
+  prompt_root: Code/Vibe
+  tests_root: Tests
+license:
+  code: MIT
+  media: CC-BY-4.0
+  third_party_notice: LICENSES/THIRD_PARTY.md
+source_revision: stacked-hero-card-rev-001

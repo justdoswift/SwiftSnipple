@@ -17,8 +17,8 @@ func TestFeedOmitsNotPublicAndSortsByFeaturedRank(t *testing.T) {
 		t.Fatalf("feed failed: %v", err)
 	}
 
-	if len(response.Items) != 2 {
-		t.Fatalf("expected 2 published feed items, got %d", len(response.Items))
+	if len(response.Items) != 12 {
+		t.Fatalf("expected 12 published feed items, got %d", len(response.Items))
 	}
 
 	if response.Items[0].ID != "stacked-hero-card" {
@@ -26,7 +26,7 @@ func TestFeedOmitsNotPublicAndSortsByFeaturedRank(t *testing.T) {
 	}
 
 	for _, item := range response.Items {
-		if item.ID == "review-only-meter" {
+		if item.ID == "internal-draft-sample" {
 			t.Fatalf("unexpected not-public item in feed")
 		}
 	}
@@ -35,7 +35,7 @@ func TestFeedOmitsNotPublicAndSortsByFeaturedRank(t *testing.T) {
 func TestSearchRanksCardResults(t *testing.T) {
 	service := newTestService(t)
 
-	response, err := service.Search(context.Background(), SearchQuery{Q: "card"})
+	response, err := service.Search(context.Background(), SearchQuery{Q: "按钮"})
 	if err != nil {
 		t.Fatalf("search failed: %v", err)
 	}
@@ -44,8 +44,8 @@ func TestSearchRanksCardResults(t *testing.T) {
 		t.Fatalf("expected 2 search results, got %d", len(response.Items))
 	}
 
-	if response.Items[0].ID != "stacked-hero-card" {
-		t.Fatalf("expected stacked-hero-card first on tie-break, got %s", response.Items[0].ID)
+	if response.Items[0].ID != "like-button-bounce" {
+		t.Fatalf("expected like-button-bounce first on score/rank, got %s", response.Items[0].ID)
 	}
 
 	if response.Items[0].Score < response.Items[1].Score {
@@ -62,12 +62,12 @@ func TestSearchFiltersHasDemoFalse(t *testing.T) {
 		t.Fatalf("search failed: %v", err)
 	}
 
-	if len(response.Items) != 1 {
-		t.Fatalf("expected 1 no-demo record, got %d", len(response.Items))
+	if len(response.Items) != 8 {
+		t.Fatalf("expected 8 no-demo records, got %d", len(response.Items))
 	}
 
 	if response.Items[0].ID != "stacked-hero-card" {
-		t.Fatalf("expected stacked-hero-card, got %s", response.Items[0].ID)
+		t.Fatalf("expected stacked-hero-card first by featured rank, got %s", response.Items[0].ID)
 	}
 }
 
@@ -95,7 +95,7 @@ func TestSearchZeroResultReturnsFallbackUpToThree(t *testing.T) {
 func TestDetailReturnsNotPublicError(t *testing.T) {
 	service := newTestService(t)
 
-	_, err := service.Detail(context.Background(), "review-only-meter")
+	_, err := service.Detail(context.Background(), "internal-draft-sample")
 	if err == nil {
 		t.Fatalf("expected not public error")
 	}

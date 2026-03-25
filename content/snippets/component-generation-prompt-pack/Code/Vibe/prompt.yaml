@@ -1,0 +1,7 @@
+goal: 生成一组可复用的 SwiftUI 组件生成提示词模板。
+constraints:
+  - 输出要包含清晰验收标准
+  - 适合直接投喂给 AI
+deliverables:
+  - 提示词模板
+  - 验收说明

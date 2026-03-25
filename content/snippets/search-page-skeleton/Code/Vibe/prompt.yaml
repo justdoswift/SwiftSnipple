@@ -1,0 +1,7 @@
+goal: 生成一个 SwiftUI 搜索页骨架。
+constraints:
+  - 包含输入、历史和热门标签
+  - 适合后续接入真实搜索逻辑
+deliverables:
+  - SwiftUI 页面骨架
+  - 预览示例

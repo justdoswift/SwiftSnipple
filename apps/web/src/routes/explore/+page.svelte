@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import FacetChips from '$lib/components/FacetChips.svelte';
-	import SnippetCard from '$lib/components/SnippetCard.svelte';
 	import {
-		filtersToSearchParams,
-		withUpdatedFilter
-	} from '$lib/discovery/query';
+		booleanLabel,
+		categoryLabel,
+		difficultyLabel
+	} from '$lib/discovery/presentation';
+	import SnippetCard from '$lib/components/SnippetCard.svelte';
+	import { filtersToSearchParams, withUpdatedFilter } from '$lib/discovery/query';
 	import type {
 		DiscoveryFilterKey,
 		DiscoveryFilters,
@@ -21,18 +23,22 @@
 	};
 
 	let { data }: Props = $props();
+	const hasSecondarySelection = $derived(Boolean(data.filters.hasDemo || data.filters.hasPrompt));
+	let showSecondaryFilters = $state(false);
 
-	const booleanFacetLabels: Record<string, string> = {
-		true: 'Yes',
-		false: 'No'
-	};
-
-	function facetOptions(counts: Record<string, number>): FacetOption[] {
+	function facetOptions(key: DiscoveryFilterKey, counts: Record<string, number>): FacetOption[] {
 		return Object.entries(counts)
 			.sort(([left], [right]) => left.localeCompare(right))
 			.map(([value, count]) => ({
 				value,
-				label: booleanFacetLabels[value] ?? value,
+				label:
+					key === 'category'
+						? categoryLabel(value)
+						: key === 'difficulty'
+							? difficultyLabel(value)
+							: key === 'hasDemo' || key === 'hasPrompt'
+								? booleanLabel(value)
+								: value,
 				count
 			}));
 	}
@@ -54,103 +60,128 @@
 		const target = event.currentTarget as HTMLInputElement;
 		updateFilter('q', target.value);
 	}
+
+	function toggleSecondaryFilters() {
+		showSecondaryFilters = !showSecondaryFilters;
+	}
+
+	$effect(() => {
+		if (hasSecondarySelection) {
+			showSecondaryFilters = true;
+		}
+	});
 </script>
 
 <svelte:head>
-	<title>Explore SwiftSnippet</title>
+	<title>SwiftSnippet | 发现公开片段</title>
 	<meta
 		name="description"
-		content="Search published SwiftUI snippets with live query params, lightweight facets, and fallback recommendations."
+		content="Explore 是 SwiftSnippet 的主浏览页，用轻工具条筛选并直接复制 SwiftUI 片段资产。"
 	/>
 </svelte:head>
 
-<main class="page">
-	<section class="intro">
+<main class="editorial-page gallery-page">
+	<section class="gallery-hero">
 		<div>
-			<p class="eyebrow">Explore published snippets</p>
-			<h1>Search by intent, then narrow by the reuse signals that matter.</h1>
+			<p class="section-kicker">Explore / 主浏览页</p>
+			<h1 class="gallery-title">全部片段，一次看完。</h1>
+			<p class="hero-copy section-copy">直接筛、直接复制；详情页只负责承接完整上下文。</p>
 		</div>
-		<p class="lede">
-			URL-driven filtering keeps this page shareable and reactive. Every keystroke and chip tap
-			refreshes results immediately without an Apply step.
-		</p>
+		<a class="hero-link" href="/">首页看精选</a>
 	</section>
 
-	<section class="search-shell">
-		<label class="search-field" for="search-query">
-			<span>Keyword</span>
-			<input
-				id="search-query"
-				name="q"
-				type="search"
-				placeholder="Search snippets, tags, and summaries"
-				value={data.filters.q}
-				oninput={queryInput}
-			/>
-		</label>
+	<section class="toolbar glass-panel">
+		<div class="toolbar-top">
+			<label class="search-field" for="search-query">
+				<span>搜索片段</span>
+				<input
+					id="search-query"
+					name="q"
+					type="search"
+					placeholder="搜索标题、标签或摘要"
+					value={data.filters.q}
+					oninput={queryInput}
+				/>
+			</label>
 
-		<div class="facet-stack">
+			<button
+				type="button"
+				class="secondary-toggle"
+				aria-expanded={showSecondaryFilters}
+				onclick={toggleSecondaryFilters}
+			>
+				{showSecondaryFilters ? '收起次级筛选' : '更多筛选'}
+			</button>
+		</div>
+
+		<div class="facet-rows primary">
 			<FacetChips
-				label="Category"
-				options={facetOptions(data.results.facets.category)}
+				label="分类"
+				options={facetOptions('category', data.results.facets.category)}
 				activeValue={data.filters.category}
 				onselect={(value) => updateFilter('category', value)}
 			/>
 			<FacetChips
-				label="Difficulty"
-				options={facetOptions(data.results.facets.difficulty)}
+				label="难度"
+				options={facetOptions('difficulty', data.results.facets.difficulty)}
 				activeValue={data.filters.difficulty}
 				onselect={(value) => updateFilter('difficulty', value)}
 			/>
 			<FacetChips
-				label="Platform"
-				options={facetOptions(data.results.facets.platform)}
+				label="平台"
+				options={facetOptions('platform', data.results.facets.platform)}
 				activeValue={data.filters.platform}
 				onselect={(value) => updateFilter('platform', value)}
 			/>
-			<FacetChips
-				label="Has Demo"
-				options={facetOptions(data.results.facets.hasDemo)}
-				activeValue={data.filters.hasDemo}
-				onselect={(value) => updateFilter('hasDemo', value)}
-			/>
-			<FacetChips
-				label="Has Prompt"
-				options={facetOptions(data.results.facets.hasPrompt)}
-				activeValue={data.filters.hasPrompt}
-				onselect={(value) => updateFilter('hasPrompt', value)}
-			/>
 		</div>
+
+		{#if showSecondaryFilters}
+			<div class="facet-rows secondary">
+				<FacetChips
+					label="含 Demo"
+					options={facetOptions('hasDemo', data.results.facets.hasDemo)}
+					activeValue={data.filters.hasDemo}
+					tone="secondary"
+					onselect={(value) => updateFilter('hasDemo', value)}
+				/>
+				<FacetChips
+					label="含提示词"
+					options={facetOptions('hasPrompt', data.results.facets.hasPrompt)}
+					activeValue={data.filters.hasPrompt}
+					tone="secondary"
+					onselect={(value) => updateFilter('hasPrompt', value)}
+				/>
+			</div>
+		{/if}
 	</section>
 
-	<section class="results">
+	<section class="results-section">
 		<div class="results-head">
 			<div>
-				<p class="eyebrow">Results</p>
-				<h2>{data.results.total} published matches</h2>
+				<p class="section-kicker">结果</p>
+				<h2 class="section-title">共 {data.results.total} 条作品</h2>
 			</div>
-			<a href="/">Back to feed</a>
+			<p class="section-copy">先看封面与节奏，需要时再进详情。</p>
 		</div>
 
 		{#if data.results.items.length > 0}
 			<div class="results-grid">
 				{#each data.results.items as snippet (snippet.id)}
-					<SnippetCard snippet={snippet} href={`/snippets/${snippet.id}`} />
+					<SnippetCard snippet={snippet} href={`/snippets/${snippet.id}`} variant="explore" />
 				{/each}
 			</div>
 		{:else}
-			<div class="zero-state">
-				<h2>No published snippets matched your current filters</h2>
-				<p>
-					Try broadening the keyword or clearing one facet. Meanwhile, these published picks can
-					help you get back on track.
+			<div class="zero-state content-surface">
+				<h2 class="section-title">没有命中，先从这些精选重新开始。</h2>
+				<p class="section-copy">
+					放宽关键词，或者打开次级筛选重来一遍。下面这些已发布片段适合作为新的起点。
 				</p>
 			</div>
 
-			{#if data.results.fallback.length > 0}
+			{#if (data.results.fallback ?? []).length > 0}
 				<div class="results-grid">
-					{#each data.results.fallback.slice(0, 3) as snippet (snippet.id)}
-						<SnippetCard snippet={snippet} href={`/snippets/${snippet.id}`} />
+					{#each data.results.fallback ?? [] as snippet (snippet.id)}
+						<SnippetCard snippet={snippet} href={`/snippets/${snippet.id}`} variant="explore" />
 					{/each}
 				</div>
 			{/if}
@@ -159,130 +190,162 @@
 </main>
 
 <style>
-	:global(body) {
-		margin: 0;
-		font-family: "Iowan Old Style", "Palatino Linotype", serif;
-		background:
-			radial-gradient(circle at top, rgba(244, 194, 149, 0.34), transparent 28%),
-			linear-gradient(180deg, #f8f0e6 0%, #efe4d4 100%);
-		color: #201916;
-	}
-
-	.page {
-		max-width: 1180px;
-		margin: 0 auto;
-		padding: 2rem 1.2rem 4rem;
+	.gallery-page {
 		display: grid;
-		gap: 1.5rem;
+		gap: 0.8rem;
+		padding-top: 6.55rem;
 	}
 
-	.intro,
-	.search-shell,
+	.gallery-hero,
+	.toolbar,
 	.zero-state {
-		border-radius: 30px;
-		border: 1px solid rgba(85, 59, 39, 0.12);
-		background: rgba(255, 250, 243, 0.82);
-		backdrop-filter: blur(12px);
-		box-shadow: 0 24px 60px rgba(75, 49, 30, 0.08);
-		padding: 1.4rem;
+		border-radius: 24px;
 	}
 
-	.intro {
+	.gallery-hero {
 		display: grid;
-		gap: 0.75rem;
-		grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
-		align-items: end;
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: 0.55rem;
+		padding: 0.05rem 0 0;
+		align-items: center;
 	}
 
-	.eyebrow {
-		margin: 0 0 0.65rem;
-		font-size: 0.8rem;
-		text-transform: uppercase;
-		letter-spacing: 0.14em;
-		color: #845f42;
-	}
-
-	h1,
-	h2 {
+	.gallery-title,
+	.hero-copy {
 		margin: 0;
 	}
 
-	h1 {
-		font-size: clamp(2.2rem, 5vw, 4.3rem);
-		line-height: 0.95;
-		max-width: 14ch;
+	.gallery-title {
+		font-family: var(--font-display);
+		font-size: clamp(1.72rem, 3.4vw, 2.65rem);
+		line-height: 1.04;
+		letter-spacing: -0.04em;
+		max-width: 7ch;
 	}
 
-	.lede,
-	.zero-state p {
-		line-height: 1.75;
-		color: #4e4035;
+	.hero-copy {
+		max-width: 22rem;
+		font-size: 0.82rem;
+		color: rgba(17, 17, 17, 0.5);
 	}
 
-	.search-shell {
+	.toolbar {
 		display: grid;
-		gap: 1.2rem;
+		gap: 0.64rem;
+		padding: 0.74rem 0.78rem 0.82rem;
+	}
+
+	.zero-state {
+		display: grid;
+		gap: 0.52rem;
+		padding: 1.08rem 1rem;
+	}
+
+	.toolbar-top {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: end;
+		gap: 0.8rem;
 	}
 
 	.search-field {
 		display: grid;
-		gap: 0.6rem;
+		gap: 0.48rem;
 	}
 
 	.search-field span {
-		text-transform: uppercase;
-		letter-spacing: 0.14em;
-		font-size: 0.75rem;
-		color: #6c5a4d;
+		font-size: 0.68rem;
+		font-weight: 600;
+		color: rgba(17, 17, 17, 0.58);
 	}
 
 	input {
 		width: 100%;
-		padding: 1rem 1.1rem;
-		border-radius: 20px;
-		border: 1px solid rgba(77, 56, 42, 0.14);
+		padding: 0.8rem 0.9rem;
+		border-radius: 16px;
+		border: 1px solid rgba(0, 0, 0, 0.08);
+		background: rgba(255, 255, 255, 0.72);
+		color: var(--site-text);
 		font: inherit;
-		font-size: 1.05rem;
-		background: rgba(255, 255, 255, 0.8);
-		color: inherit;
+		font-size: 0.9rem;
+		box-shadow: inset 0 4px 4px rgba(255, 255, 255, 0.24);
 	}
 
-	.facet-stack {
-		display: grid;
-		gap: 1rem;
+	.secondary-toggle,
+	.hero-link {
+		border: 1px solid rgba(0, 0, 0, 0.07);
+		background: rgba(255, 255, 255, 0.62);
+		border-radius: 999px;
+		padding: 0.62rem 0.82rem;
+		color: rgba(17, 17, 17, 0.64);
+		font: inherit;
+		font-size: 0.8rem;
+		font-weight: 600;
+		text-decoration: none;
+		cursor: pointer;
 	}
 
-	.results {
+	input:focus {
+		outline: none;
+		border-color: rgba(0, 132, 255, 0.28);
+		box-shadow:
+			inset 0 4px 4px rgba(255, 255, 255, 0.24),
+			0 0 0 4px rgba(0, 132, 255, 0.08);
+	}
+
+	.facet-rows,
+	.results-section {
 		display: grid;
-		gap: 1rem;
+		gap: 0.72rem;
+	}
+
+	.facet-rows.primary {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+
+	.facet-rows.secondary {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		padding-top: 0.18rem;
+		border-top: 1px solid rgba(0, 0, 0, 0.06);
 	}
 
 	.results-head {
 		display: flex;
 		flex-wrap: wrap;
-		justify-content: space-between;
-		gap: 1rem;
 		align-items: end;
-	}
-
-	.results-head a {
-		color: #1f5b56;
-		font-weight: 700;
+		justify-content: space-between;
+		gap: 0.72rem;
+		padding-top: 0.12rem;
 	}
 
 	.results-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-		gap: 1.2rem;
+		grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+		gap: 1rem;
 	}
 
-	@media (max-width: 800px) {
-		.intro {
+	.zero-state {
+		display: grid;
+		gap: 0.72rem;
+		padding: 0.94rem;
+	}
+
+	@media (max-width: 1040px) {
+		.gallery-hero {
 			grid-template-columns: 1fr;
 		}
 
-		h1 {
-			max-width: 100%;
+		.toolbar-top,
+		.facet-rows.primary,
+		.facet-rows.secondary {
+			grid-template-columns: 1fr;
+		}
+
+	}
+
+	@media (max-width: 720px) {
+		.gallery-page {
+			padding-top: 6.2rem;
 		}
 	}
 </style>

@@ -5,13 +5,14 @@
 		label: string;
 		options: FacetOption[];
 		activeValue?: string;
+		tone?: 'primary' | 'secondary';
 		onselect?: (value: string) => void;
 	};
 
-	let { label, options, activeValue = '', onselect }: Props = $props();
+	let { label, options, activeValue = '', tone = 'primary', onselect }: Props = $props();
 </script>
 
-<section class="group" aria-label={label}>
+<section class={`group ${tone}`} aria-label={label}>
 	<p>{label}</p>
 	<div class="chips">
 		<button
@@ -19,7 +20,7 @@
 			class:active={activeValue === ''}
 			onclick={() => onselect?.('')}
 		>
-			All
+			全部
 		</button>
 
 		{#each options as option (option.value)}
@@ -40,44 +41,71 @@
 <style>
 	.group {
 		display: grid;
-		gap: 0.65rem;
+		gap: 0.55rem;
+	}
+
+	.group.secondary {
+		gap: 0.42rem;
 	}
 
 	p {
 		margin: 0;
-		font-size: 0.76rem;
+		font-size: 0.7rem;
 		text-transform: uppercase;
-		letter-spacing: 0.14em;
-		color: #6d5b4e;
+		letter-spacing: 0.12em;
+		color: rgba(17, 17, 17, 0.42);
+	}
+
+	.group.secondary p {
+		font-size: 0.66rem;
+		color: rgba(17, 17, 17, 0.34);
 	}
 
 	.chips {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.6rem;
+		gap: 0.5rem;
 	}
 
 	button {
-		border: 1px solid rgba(86, 57, 40, 0.12);
-		background: rgba(255, 251, 244, 0.78);
-		color: #2d2621;
+		border: 1px solid rgba(0, 0, 0, 0.07);
+		background: rgba(255, 255, 255, 0.7);
+		color: var(--site-text);
 		border-radius: 999px;
-		padding: 0.55rem 0.85rem;
+		padding: 0.48rem 0.72rem;
 		display: inline-flex;
 		align-items: center;
 		gap: 0.45rem;
 		font: inherit;
+		font-size: 0.84rem;
 		cursor: pointer;
+		transition:
+			background 180ms ease,
+			border-color 180ms ease,
+			color 180ms ease;
+	}
+
+	.group.secondary button {
+		padding: 0.42rem 0.62rem;
+		font-size: 0.78rem;
+		background: rgba(255, 255, 255, 0.52);
+		color: rgba(17, 17, 17, 0.62);
+	}
+
+	button:hover,
+	button:focus-visible {
+		border-color: rgba(0, 132, 255, 0.18);
+		background: rgba(0, 132, 255, 0.06);
 	}
 
 	button.active {
-		background: #1e4f4b;
-		border-color: #1e4f4b;
-		color: #f8f2e9;
+		background: rgba(0, 132, 255, 0.1);
+		border-color: rgba(0, 132, 255, 0.18);
+		color: rgba(0, 132, 255, 0.9);
 	}
 
 	strong {
-		font-size: 0.78rem;
-		opacity: 0.8;
+		font-size: 0.72rem;
+		opacity: 0.72;
 	}
 </style>

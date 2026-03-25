@@ -1,0 +1,28 @@
+id: review-only-meter
+title: 评审进度仪表
+summary: 一个紧凑的 SwiftUI 进度仪表，适合评审面板、上线清单和 QA 状态展示。
+version: 1.0.0
+status: review
+category_primary: tooling
+tags:
+  - 进度
+  - 评审
+  - 仪表
+facets:
+  - platform:iOS
+  - difficulty:easy
+difficulty: easy
+platforms:
+  - os: iOS
+    min_version: "17.0"
+assets:
+  cover: Media/cover.png
+code:
+  swiftui_root: Code/SwiftUI
+  prompt_root: Code/Vibe
+  tests_root: Tests
+license:
+  code: MIT
+  media: CC-BY-4.0
+  third_party_notice: LICENSES/THIRD_PARTY.md
+source_revision: review-only-meter-rev-001

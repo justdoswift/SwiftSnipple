@@ -4,9 +4,13 @@
   "private": true,
   "packageManager": "pnpm@10.32.1",
   "scripts": {
+    "dev": "bash scripts/dev.sh",
+    "stop": "bash scripts/stop.sh",
+    "dev:api": "cd apps/api && go run ./cmd/api",
     "dev:web": "pnpm --filter @swiftsnippet/web dev",
     "build:web": "pnpm --filter @swiftsnippet/web build",
     "check:web": "pnpm --filter @swiftsnippet/web check",
+    "test:web:e2e": "pnpm --filter @swiftsnippet/web test:e2e",
     "lint:protocol": "pnpm --filter @swiftsnippet/snippet-schema lint",
     "test:protocol": "pnpm --filter @swiftsnippet/snippet-schema test",
     "verify:snippets": "pnpm --filter @swiftsnippet/snippet-schema verify:fixtures",

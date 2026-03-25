@@ -1,0 +1,7 @@
+goal: 生成一组可自动换行的 SwiftUI 标签 Chips。
+constraints:
+  - 需要兼容不同文本长度
+  - 适合详情页和筛选区
+deliverables:
+  - SwiftUI 标签组件
+  - 预览示例

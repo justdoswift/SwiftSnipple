@@ -1,6 +1,14 @@
 <script lang="ts">
 	import CodeBlock from '$lib/components/CodeBlock.svelte';
+	import {
+		categoryLabel,
+		demoAvailabilityLabel,
+		difficultyLabel,
+		platformLabel,
+		promptAvailabilityLabel
+	} from '$lib/discovery/presentation';
 	import PromptBlock from '$lib/components/PromptBlock.svelte';
+	import SnippetPreviewMedia from '$lib/components/SnippetPreviewMedia.svelte';
 	import type { PublishedSnippetRecord } from '$lib/discovery/types';
 
 	type DetailData =
@@ -18,11 +26,7 @@
 	};
 
 	let { data }: Props = $props();
-	let activeTab = $state<'Demo' | 'Code' | 'Prompt' | 'License'>('Demo');
-
-	function platformLabel(platform: { os: string; minVersion: string }) {
-		return `${platform.os} ${platform.minVersion}`;
-	}
+	let activeTab = $state<'demo' | 'code' | 'prompt' | 'license'>('demo');
 </script>
 
 <svelte:head>
@@ -33,16 +37,15 @@
 
 {#if data.notPublic}
 	<main class="blocked-page">
-		<section class="blocked-card">
-			<p class="eyebrow">Discovery visibility</p>
+		<section class="blocked-card content-surface">
+			<p class="section-kicker">公开可见性</p>
 			<h1>内容未公开</h1>
-			<p>
-				这个 slug 目前不在公开列表中。你可以回到公开 feed 或 Explore，继续浏览当前已发布的
-				SwiftUI 片段。
+			<p class="section-copy">
+				这个 slug 当前不在公开列表中。可以回到首页或 Explore，继续浏览已发布片段。
 			</p>
 			<div class="actions">
-				<a href="/">返回首页</a>
-				<a href="/explore">去 Explore</a>
+				<a class="back-link" href="/">返回首页</a>
+				<a class="back-link" href="/explore">去发现页</a>
 			</div>
 		</section>
 	</main>
@@ -52,152 +55,142 @@
 	{@const acceptanceBlocks = snippet.promptBlocks.filter((block) => block.kind !== 'prompt')}
 
 	<main class="page">
-		<section class="hero">
-			<div class="media-panel">
-				{#if snippet.media.demoUrl}
-					<video
-						class="hero-media"
-						src={snippet.media.demoUrl}
-						controls
-						preload="metadata"
-						poster={snippet.media.coverUrl}
-					>
-						<track kind="captions" srclang="en" label="English captions" />
-						<p>Your browser does not support embedded video playback.</p>
-					</video>
-				{:else}
-					<img
-						class="hero-media"
-						src={snippet.media.coverUrl}
-						alt={`${snippet.title} preview`}
-					/>
-				{/if}
-			</div>
+		<div class="back-row">
+			<a class="back-link" href="/">返回首页</a>
+			<a class="back-link" href="/explore">继续发现</a>
+		</div>
 
+		<section class="hero">
 			<div class="hero-copy">
-				<p class="eyebrow">{snippet.categoryPrimary}</p>
-				<h1>{snippet.title}</h1>
-				<p class="summary">{snippet.summary}</p>
+				<p class="section-kicker">{categoryLabel(snippet.categoryPrimary)}</p>
+				<h1 class="section-title page-title">{snippet.title}</h1>
+				<p class="summary section-copy">{snippet.summary}</p>
 
 				<div class="signal-row">
-					<span class="badge">{snippet.difficulty}</span>
-					<span class="badge">{snippet.hasDemo ? 'Demo ready' : 'Cover fallback only'}</span>
-					<span class="badge">{snippet.hasPrompt ? 'Prompt included' : 'Code-only asset pack'}</span>
+					<span class="badge">{difficultyLabel(snippet.difficulty)}</span>
+					<span class="badge">{demoAvailabilityLabel(snippet.hasDemo)}</span>
+					<span class="badge">{promptAvailabilityLabel(snippet.hasPrompt)}</span>
 				</div>
 
-				<div class="platforms">
-					{#each snippet.platforms as platform (`${platform.os}-${platform.minVersion}`)}
-						<span>{platformLabel(platform)}</span>
-					{/each}
-				</div>
+				<div class="meta-panel">
+					<div class="platforms">
+						{#each snippet.platforms as platform (`${platform.os}-${platform.minVersion}`)}
+							<span>{platformLabel(platform)}</span>
+						{/each}
+					</div>
 
-				<ul class="tags">
-					{#each snippet.tags as tag (tag)}
-						<li>{tag}</li>
-					{/each}
-				</ul>
+					<ul class="tags">
+						{#each snippet.tags as tag (tag)}
+							<li>{tag}</li>
+						{/each}
+					</ul>
+				</div>
+			</div>
+
+			<div class="media-panel content-surface">
+				<SnippetPreviewMedia
+					id={snippet.id}
+					coverUrl={snippet.media.coverUrl}
+					demoUrl={snippet.media.demoUrl}
+					eyebrow={categoryLabel(snippet.categoryPrimary)}
+					metaText={`${difficultyLabel(snippet.difficulty)} · ${promptAvailabilityLabel(snippet.hasPrompt)}`}
+					className="hero-media"
+					alt={`${snippet.title} 预览图`}
+					loading="eager"
+				/>
 			</div>
 		</section>
 
-		<section class="tabs">
-			<div class="tab-list" role="tablist" aria-label="Snippet detail tabs">
-				<button
-					type="button"
-					role="tab"
-					aria-selected={activeTab === 'Demo'}
-					class:active={activeTab === 'Demo'}
-					onclick={() => (activeTab = 'Demo')}
-				>
-					Demo
-				</button>
-				<button
-					type="button"
-					role="tab"
-					aria-selected={activeTab === 'Code'}
-					class:active={activeTab === 'Code'}
-					onclick={() => (activeTab = 'Code')}
-				>
-					Code
-				</button>
-				{#if snippet.hasPrompt}
+		<section class="tabs glass-panel">
+			<div class="tabs-layout">
+				<div class="tab-list" role="tablist" aria-label="片段详情标签页">
 					<button
 						type="button"
 						role="tab"
-						aria-selected={activeTab === 'Prompt'}
-						class:active={activeTab === 'Prompt'}
-						onclick={() => (activeTab = 'Prompt')}
+						aria-selected={activeTab === 'demo'}
+						class:active={activeTab === 'demo'}
+						onclick={() => (activeTab = 'demo')}
 					>
-						Prompt
+						演示
 					</button>
-				{/if}
-				<button
-					type="button"
-					role="tab"
-					aria-selected={activeTab === 'License'}
-					class:active={activeTab === 'License'}
-					onclick={() => (activeTab = 'License')}
-				>
-					License
-				</button>
-			</div>
+					<button
+						type="button"
+						role="tab"
+						aria-selected={activeTab === 'code'}
+						class:active={activeTab === 'code'}
+						onclick={() => (activeTab = 'code')}
+					>
+						代码
+					</button>
+					{#if snippet.hasPrompt}
+						<button
+							type="button"
+							role="tab"
+							aria-selected={activeTab === 'prompt'}
+							class:active={activeTab === 'prompt'}
+							onclick={() => (activeTab = 'prompt')}
+						>
+							提示词
+						</button>
+					{/if}
+					<button
+						type="button"
+						role="tab"
+						aria-selected={activeTab === 'license'}
+						class:active={activeTab === 'license'}
+						onclick={() => (activeTab = 'license')}
+					>
+						许可
+					</button>
+				</div>
 
-			<div class="tab-panel">
-				{#if activeTab === 'Demo'}
-					<div class="demo-panel">
-						{#if snippet.media.demoUrl}
-							<video
-								class="tab-media"
-								src={snippet.media.demoUrl}
-								controls
-								preload="metadata"
-								poster={snippet.media.coverUrl}
-							>
-								<track kind="captions" srclang="en" label="English captions" />
-								<p>Your browser does not support embedded video playback.</p>
-							</video>
-						{:else}
-							<img
-								class="tab-media"
-								src={snippet.media.coverUrl}
-								alt={`${snippet.title} detail cover`}
+				<div class="tab-panel">
+					{#if activeTab === 'demo'}
+						<div class="demo-panel">
+							<SnippetPreviewMedia
+								id={snippet.id}
+								coverUrl={snippet.media.coverUrl}
+								demoUrl={snippet.media.demoUrl}
+								eyebrow={categoryLabel(snippet.categoryPrimary)}
+								metaText={`${difficultyLabel(snippet.difficulty)} · ${demoAvailabilityLabel(snippet.hasDemo)}`}
+								className="tab-media"
+								alt={`${snippet.title} 详情封面`}
+								loading="eager"
 							/>
-						{/if}
-						<p class="panel-copy">
-							Start with the visual output first, then move into the implementation and reuse
-							assets once the behavior feels trustworthy.
-						</p>
-					</div>
-				{:else if activeTab === 'Code'}
-					<div class="stack">
-						{#each snippet.codeBlocks as block (block.id)}
-							<CodeBlock title={block.filename} language={block.language} content={block.content} />
-						{/each}
-					</div>
-				{:else if activeTab === 'Prompt' && snippet.hasPrompt}
-					<div class="stack">
-						{#each promptBlocks as block (block.id)}
-							<PromptBlock title="Prompt Template" kind={block.kind} content={block.content} />
-						{/each}
-						{#each acceptanceBlocks as block (block.id)}
-							<PromptBlock title="Acceptance Checklist" kind={block.kind} content={block.content} />
-						{/each}
-					</div>
-				{:else}
-					<div class="license-panel">
+							<p class="panel-copy section-copy">
+								详情页保留完整的源码、Prompt、License 与演示上下文，用来承接卡片层的快速复制动作。
+							</p>
+						</div>
+					{:else if activeTab === 'code'}
+						<div class="stack">
+							{#each snippet.codeBlocks as block (block.id)}
+								<CodeBlock title={block.filename} language={block.language} content={block.content} />
+							{/each}
+						</div>
+					{:else if activeTab === 'prompt' && snippet.hasPrompt}
+						<div class="stack">
+							{#each promptBlocks as block (block.id)}
+								<PromptBlock title="提示词模板" kind={block.kind} content={block.content} />
+							{/each}
+							{#each acceptanceBlocks as block (block.id)}
+								<PromptBlock title="验收清单" kind={block.kind} content={block.content} />
+							{/each}
+						</div>
+					{:else}
 						<div class="license-grid">
-							<article>
-								<p class="eyebrow">License</p>
-								<h2>Reuse terms</h2>
+							<article class="license-card content-surface">
+								<p class="section-kicker">许可</p>
+								<h2 class="section-title">复用边界</h2>
 								<ul>
-									<li>Code: {snippet.license.code}</li>
-									<li>Media: {snippet.license.media}</li>
-									<li>Third-party notice: {snippet.license.thirdPartyNotice}</li>
+									<li>代码：{snippet.license.code}</li>
+									<li>媒体：{snippet.license.media}</li>
+									<li>第三方声明：{snippet.license.thirdPartyNotice}</li>
 								</ul>
 							</article>
 
-							<article>
-								<p class="eyebrow">Dependencies</p>
-								<h2>Runtime context</h2>
+							<article class="license-card content-surface">
+								<p class="section-kicker">依赖</p>
+								<h2 class="section-title">运行环境</h2>
 								{#if snippet.dependencies.length > 0}
 									<ul>
 										{#each snippet.dependencies as dependency (dependency)}
@@ -205,77 +198,77 @@
 										{/each}
 									</ul>
 								{:else}
-									<p>No additional dependencies disclosed.</p>
+									<p class="section-copy">没有额外披露的运行依赖。</p>
 								{/if}
 							</article>
 						</div>
-					</div>
-				{/if}
+					{/if}
+				</div>
 			</div>
 		</section>
 	</main>
 {/if}
 
 <style>
-	:global(body) {
-		margin: 0;
-		font-family: "Iowan Old Style", "Palatino Linotype", serif;
-		background:
-			radial-gradient(circle at top, rgba(242, 191, 145, 0.35), transparent 28%),
-			linear-gradient(180deg, #f7efe4 0%, #efe3d3 100%);
-		color: #1e1714;
-	}
-
 	.page,
 	.blocked-page {
-		max-width: 1180px;
+		width: min(var(--page-width), calc(100vw - 3rem));
 		margin: 0 auto;
-		padding: 2rem 1.2rem 4rem;
+		padding: 6.8rem clamp(1rem, 2.2vw, 1.8rem) 4rem;
+	}
+
+	.back-row,
+	.actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+		margin-bottom: 0.9rem;
+	}
+
+	.back-link {
+		text-decoration: none;
+		color: rgba(17, 17, 17, 0.58);
+		font-size: 0.84rem;
+		font-weight: 600;
 	}
 
 	.hero,
 	.tabs,
 	.blocked-card {
-		border-radius: 32px;
-		border: 1px solid rgba(81, 56, 38, 0.12);
-		background: rgba(255, 250, 243, 0.84);
-		backdrop-filter: blur(12px);
-		box-shadow: 0 24px 60px rgba(68, 46, 28, 0.1);
+		border-radius: 24px;
 	}
 
 	.hero {
 		display: grid;
-		grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
-		gap: 1.2rem;
-		padding: 1.4rem;
+		grid-template-columns: minmax(260px, 0.7fr) minmax(620px, 1.3fr);
+		gap: 1rem;
+		align-items: start;
 	}
 
+	.hero-copy,
 	.media-panel,
-	.tab-panel {
-		min-width: 0;
-	}
-
-	.hero-media,
-	.tab-media {
-		width: 100%;
-		display: block;
+	.tabs,
+	.blocked-card {
 		border-radius: 24px;
-		object-fit: cover;
-		background: #d8c6b3;
 	}
 
 	.hero-copy {
-		display: grid;
-		align-content: start;
-		gap: 1rem;
+		padding: 0.35rem 0.1rem 0.15rem;
 	}
 
-	.eyebrow {
-		margin: 0;
-		font-size: 0.8rem;
-		text-transform: uppercase;
-		letter-spacing: 0.14em;
-		color: #845f42;
+	.media-panel {
+		min-height: 34rem;
+		padding: 0.72rem;
+		align-items: stretch;
+	}
+
+	.media-panel :global(.hero-media),
+	.demo-panel :global(.tab-media) {
+		width: 100%;
+		display: block;
+		border-radius: 20px;
+		object-fit: cover;
+		background: rgba(255, 255, 255, 0.9);
 	}
 
 	h1,
@@ -285,83 +278,128 @@
 		margin: 0;
 	}
 
-	h1 {
-		font-size: clamp(2.1rem, 5vw, 4rem);
-		line-height: 0.95;
+	.page-title {
+		font-size: clamp(1.7rem, 2.4vw, 2.34rem);
+		line-height: 1.06;
+		max-width: 10ch;
 	}
 
 	.summary,
 	.panel-copy,
-	.blocked-card p,
-	.license-panel p,
-	.license-panel li {
-		line-height: 1.75;
-		color: #4a3e34;
+	.license-card li {
+		line-height: 1.68;
+	}
+
+	.summary {
+		max-width: 24rem;
+		font-size: 0.88rem;
 	}
 
 	.signal-row,
 	.platforms,
-	.tags,
-	.actions {
+	.tags {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.65rem;
+		gap: 0.6rem;
 		padding: 0;
 		margin: 0;
+	}
+
+	.meta-panel {
+		display: grid;
+		gap: 0.54rem;
+		padding-top: 0.54rem;
+		border-top: 1px solid rgba(0, 0, 0, 0.08);
 	}
 
 	.badge,
 	.platforms span,
 	.tags li {
 		list-style: none;
-		padding: 0.45rem 0.7rem;
+		padding: 0.32rem 0.54rem;
 		border-radius: 999px;
-		background: rgba(95, 129, 123, 0.14);
-		color: #234744;
+		background: rgba(255, 255, 255, 0.84);
+		color: rgba(17, 17, 17, 0.6);
+		border: 1px solid rgba(0, 0, 0, 0.06);
+		font-size: 0.69rem;
+		line-height: 1.2;
+	}
+
+	.media-panel {
+		min-height: 34rem;
 	}
 
 	.tabs {
-		margin-top: 1.2rem;
-		padding: 1.3rem;
+		margin-top: 0.8rem;
+		padding: 0.82rem;
+	}
+
+	.tabs-layout {
+		display: grid;
+		gap: 0.74rem;
 	}
 
 	.tab-list {
 		display: flex;
-		flex-wrap: wrap;
-		gap: 0.7rem;
-		margin-bottom: 1rem;
+		flex-wrap: nowrap;
+		overflow-x: auto;
+		gap: 0.46rem;
+		padding-bottom: 0.2rem;
+		margin: 0;
+		scrollbar-width: none;
 	}
 
-	.tab-list button,
-	.actions a {
-		border: 0;
+	.tab-list::-webkit-scrollbar {
+		display: none;
+	}
+
+	.tab-list button {
 		border-radius: 999px;
-		background: rgba(34, 42, 41, 0.08);
-		color: inherit;
-		padding: 0.7rem 1rem;
+		border: 1px solid rgba(0, 0, 0, 0.07);
+		background: rgba(255, 255, 255, 0.7);
+		color: rgba(17, 17, 17, 0.68);
+		padding: 0.62rem 0.82rem;
 		font: inherit;
+		font-weight: 600;
+		font-size: 0.82rem;
 		cursor: pointer;
-		text-decoration: none;
+		text-align: left;
+		white-space: nowrap;
 	}
 
 	.tab-list button.active {
-		background: #1f5b56;
-		color: #f5efe6;
+		background: rgba(0, 132, 255, 0.08);
+		border-color: rgba(0, 132, 255, 0.18);
+		color: rgba(0, 132, 255, 0.88);
 	}
 
 	.stack,
 	.license-grid {
 		display: grid;
-		gap: 1rem;
+		gap: 0.82rem;
 	}
 
 	.license-grid {
 		grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 	}
 
-	.license-grid article,
+	.license-card,
 	.blocked-card {
-		padding: 1.35rem;
+		padding: 0.96rem;
+	}
+
+	.demo-panel {
+		display: grid;
+		grid-template-columns: minmax(0, 1.2fr) minmax(16rem, 0.8fr);
+		gap: 0.82rem;
+		align-items: end;
+	}
+
+	.panel-copy {
+		padding: 0.9rem 0.95rem;
+		border-radius: 20px;
+		background: rgba(255, 255, 255, 0.92);
+		border: 1px solid rgba(0, 0, 0, 0.06);
 	}
 
 	.blocked-page {
@@ -370,9 +408,26 @@
 		min-height: 100vh;
 	}
 
-	@media (max-width: 860px) {
-		.hero {
+	.blocked-card h1 {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: clamp(2.6rem, 7vw, 4.6rem);
+		line-height: 0.96;
+	}
+
+	@media (max-width: 900px) {
+		.page,
+		.blocked-page {
+			padding-top: 6.3rem;
+		}
+
+		.hero,
+		.demo-panel {
 			grid-template-columns: 1fr;
+		}
+
+		.media-panel {
+			min-height: 0;
 		}
 	}
 </style>

@@ -1,0 +1,277 @@
+{
+  "generatedAt": "2026-03-25T03:46:14.460194Z",
+  "items": [
+    {
+      "id": "stacked-hero-card",
+      "title": "叠层主视觉卡片",
+      "summary": "一个更偏编辑感的 SwiftUI 主视觉卡片，强调层级排版与静态封面展示。",
+      "categoryPrimary": "layout",
+      "difficulty": "medium",
+      "platforms": [
+        {
+          "os": "iOS",
+          "minVersion": "17.0"
+        },
+        {
+          "os": "macOS",
+          "minVersion": "14.0"
+        }
+      ],
+      "tags": [
+        "主视觉",
+        "卡片",
+        "编辑感"
+      ],
+      "hasDemo": false,
+      "hasPrompt": true,
+      "featuredRank": 1,
+      "publishedAt": "2026-03-25T02:46:38.81052Z"
+    },
+    {
+      "id": "masonry-grid",
+      "title": "瀑布流网格",
+      "summary": "一个双列 SwiftUI 瀑布流网格，适合高低不齐的卡片内容与展示型列表。",
+      "categoryPrimary": "layout",
+      "difficulty": "hard",
+      "platforms": [
+        {
+          "os": "iOS",
+          "minVersion": "17.0"
+        },
+        {
+          "os": "macOS",
+          "minVersion": "14.0"
+        }
+      ],
+      "tags": [
+        "瀑布流",
+        "网格",
+        "展示"
+      ],
+      "hasDemo": true,
+      "hasPrompt": true,
+      "featuredRank": 2,
+      "publishedAt": "2026-03-25T02:46:34.402894Z"
+    },
+    {
+      "id": "basic-card-feed",
+      "title": "基础卡片流",
+      "summary": "一个轻量的 SwiftUI 卡片流片段，用来示范首批可公开发布的内容结构。",
+      "categoryPrimary": "layout",
+      "difficulty": "easy",
+      "platforms": [
+        {
+          "os": "iOS",
+          "minVersion": "17.0"
+        }
+      ],
+      "tags": [
+        "卡片",
+        "信息流",
+        "SwiftUI"
+      ],
+      "hasDemo": true,
+      "hasPrompt": true,
+      "featuredRank": 3,
+      "publishedAt": "2026-03-25T02:46:28.865137Z"
+    },
+    {
+      "id": "skeleton-shimmer",
+      "title": "骨架闪烁占位",
+      "summary": "用于列表和面板加载态的 SwiftUI 骨架屏，并附带持续闪烁的演示。",
+      "categoryPrimary": "animation",
+      "difficulty": "medium",
+      "platforms": [
+        {
+          "os": "iOS",
+          "minVersion": "17.0"
+        }
+      ],
+      "tags": [
+        "骨架屏",
+        "闪烁",
+        "加载"
+      ],
+      "hasDemo": true,
+      "hasPrompt": true,
+      "featuredRank": 4,
+      "publishedAt": "2026-03-25T02:46:37.977885Z"
+    },
+    {
+      "id": "like-button-bounce",
+      "title": "点赞弹跳按钮",
+      "summary": "一个带弹簧反馈和计数变化的 SwiftUI 点赞按钮，强调手感与状态切换。",
+      "categoryPrimary": "animation",
+      "difficulty": "medium",
+      "platforms": [
+        {
+          "os": "iOS",
+          "minVersion": "17.0"
+        }
+      ],
+      "tags": [
+        "点赞",
+        "按钮",
+        "交互"
+      ],
+      "hasDemo": true,
+      "hasPrompt": true,
+      "featuredRank": 5,
+      "publishedAt": "2026-03-25T02:46:31.296751Z"
+    },
+    {
+      "id": "universal-card-container",
+      "title": "通用卡片容器",
+      "summary": "一个可复用的 SwiftUI 卡片容器，支持眉题、标题、摘要和内容插槽。",
+      "categoryPrimary": "layout",
+      "difficulty": "easy",
+      "platforms": [
+        {
+          "os": "iOS",
+          "minVersion": "17.0"
+        }
+      ],
+      "tags": [
+        "容器",
+        "卡片",
+        "复用"
+      ],
+      "hasDemo": false,
+      "hasPrompt": true,
+      "featuredRank": 6,
+      "publishedAt": "2026-03-25T02:46:40.479419Z"
+    },
+    {
+      "id": "tag-chips-wrap",
+      "title": "标签换行 Chips",
+      "summary": "一组会自动换行的 SwiftUI 标签 Chips，适合窄宽和宽屏信息面板。",
+      "categoryPrimary": "layout",
+      "difficulty": "medium",
+      "platforms": [
+        {
+          "os": "iOS",
+          "minVersion": "17.0"
+        }
+      ],
+      "tags": [
+        "标签",
+        "Chips",
+        "换行"
+      ],
+      "hasDemo": false,
+      "hasPrompt": true,
+      "featuredRank": 7,
+      "publishedAt": "2026-03-25T02:46:39.600332Z"
+    },
+    {
+      "id": "bookmark-long-press",
+      "title": "长按收藏按钮",
+      "summary": "一个带长按提示和已收藏态表现的 SwiftUI 收藏控件，适合内容列表操作。",
+      "categoryPrimary": "input",
+      "difficulty": "easy",
+      "platforms": [
+        {
+          "os": "iOS",
+          "minVersion": "17.0"
+        }
+      ],
+      "tags": [
+        "收藏",
+        "长按",
+        "手势"
+      ],
+      "hasDemo": false,
+      "hasPrompt": true,
+      "featuredRank": 8,
+      "publishedAt": "2026-03-25T02:46:29.66499Z"
+    },
+    {
+      "id": "search-page-skeleton",
+      "title": "搜索页骨架",
+      "summary": "一个轻量的 SwiftUI 搜索页骨架，包含占位输入、历史区和热门标签区域。",
+      "categoryPrimary": "navigation",
+      "difficulty": "medium",
+      "platforms": [
+        {
+          "os": "iOS",
+          "minVersion": "17.0"
+        }
+      ],
+      "tags": [
+        "搜索",
+        "骨架",
+        "导航"
+      ],
+      "hasDemo": false,
+      "hasPrompt": true,
+      "featuredRank": 9,
+      "publishedAt": "2026-03-25T02:46:37.14336Z"
+    },
+    {
+      "id": "loadable-view-states",
+      "title": "可加载视图状态",
+      "summary": "一个 SwiftUI 状态包装器，用统一方式呈现 loading、empty、error 和 content 四种界面。",
+      "categoryPrimary": "state",
+      "difficulty": "medium",
+      "platforms": [
+        {
+          "os": "iOS",
+          "minVersion": "17.0"
+        }
+      ],
+      "tags": [
+        "加载态",
+        "状态",
+        "包装器"
+      ],
+      "hasDemo": false,
+      "hasPrompt": true,
+      "featuredRank": 10,
+      "publishedAt": "2026-03-25T02:46:32.41491Z"
+    },
+    {
+      "id": "review-only-meter",
+      "title": "评审进度仪表",
+      "summary": "一个紧凑的 SwiftUI 进度仪表，适合评审面板、上线清单和 QA 状态展示。",
+      "categoryPrimary": "tooling",
+      "difficulty": "easy",
+      "platforms": [
+        {
+          "os": "iOS",
+          "minVersion": "17.0"
+        }
+      ],
+      "tags": [
+        "进度",
+        "评审",
+        "仪表"
+      ],
+      "hasDemo": false,
+      "hasPrompt": true,
+      "featuredRank": 11,
+      "publishedAt": "2026-03-25T02:46:35.598184Z"
+    },
+    {
+      "id": "component-generation-prompt-pack",
+      "title": "组件生成提示词包",
+      "summary": "一组可直接投喂给 AI 的提示词模板，用来生成带验收标准的 SwiftUI 组件输出。",
+      "categoryPrimary": "tooling",
+      "difficulty": "medium",
+      "platforms": [
+        {
+          "os": "iOS",
+          "minVersion": "17.0"
+        }
+      ],
+      "tags": [
+        "AI",
+        "提示词",
+        "工作流"
+      ],
+      "hasDemo": false,
+      "hasPrompt": true,
+      "featuredRank": 12,
+      "publishedAt": "2026-03-25T02:46:30.500954Z"
+    }
+  ]
+}

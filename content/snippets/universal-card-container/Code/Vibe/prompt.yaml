@@ -1,0 +1,7 @@
+goal: 生成一个可复用的 SwiftUI 通用卡片容器。
+constraints:
+  - 需要保留插槽能力
+  - 适合做信息摘要场景
+deliverables:
+  - SwiftUI 容器视图
+  - 基本预览

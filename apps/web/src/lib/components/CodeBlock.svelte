@@ -1,4 +1,6 @@
 <script lang="ts">
+	import CopyActionButton from '$lib/components/CopyActionButton.svelte';
+
 	type Props = {
 		title: string;
 		language?: string;
@@ -22,13 +24,13 @@
 	}
 </script>
 
-<section class="block">
+<section class="block content-surface">
 	<header>
 		<div>
 			<h3>{title}</h3>
 			<p>{language}</p>
 		</div>
-		<button type="button" onclick={copyCode}>{copied ? 'Copied' : 'Copy code'}</button>
+		<CopyActionButton icon="code" label="复制代码" {copied} onclick={copyCode} />
 	</header>
 
 	<pre><code>{content}</code></pre>
@@ -37,12 +39,12 @@
 <style>
 	.block {
 		display: grid;
-		gap: 1rem;
-		padding: 1rem;
-		border-radius: 22px;
-		border: 1px solid rgba(67, 53, 41, 0.1);
-		background: #201b19;
-		color: #f7efe4;
+		gap: 0.88rem;
+		padding: 0.96rem;
+		border-radius: 24px;
+		color: var(--site-text);
+		content-visibility: auto;
+		contain-intrinsic-size: 280px 220px;
 	}
 
 	header {
@@ -57,28 +59,30 @@
 		margin: 0;
 	}
 
+	h3 {
+		font-family: var(--font-display);
+		font-size: 0.92rem;
+		line-height: 1.15;
+	}
+
 	p {
 		text-transform: uppercase;
 		letter-spacing: 0.12em;
 		font-size: 0.72rem;
-		color: rgba(247, 239, 228, 0.72);
-	}
-
-	button {
-		border: 0;
-		border-radius: 999px;
-		background: #f3b87b;
-		color: #231a16;
-		padding: 0.65rem 0.95rem;
-		font: inherit;
-		font-weight: 700;
-		cursor: pointer;
+		color: rgba(17, 17, 17, 0.46);
 	}
 
 	pre {
 		margin: 0;
 		overflow-x: auto;
-		font-size: 0.92rem;
-		line-height: 1.6;
+		padding-top: 0.2rem;
+		font-size: 0.88rem;
+		line-height: 1.58;
+		color: rgba(17, 17, 17, 0.86);
+	}
+
+	pre code {
+		font-family:
+			"SF Mono", "SFMono-Regular", "JetBrains Mono", "IBM Plex Mono", "Menlo", monospace;
 	}
 </style>

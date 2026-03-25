@@ -1,0 +1,31 @@
+id: masonry-grid
+title: 瀑布流网格
+summary: 一个双列 SwiftUI 瀑布流网格，适合高低不齐的卡片内容与展示型列表。
+version: 1.0.0
+status: draft
+category_primary: layout
+tags:
+  - 瀑布流
+  - 网格
+  - 展示
+facets:
+  - platform:iOS
+  - difficulty:hard
+difficulty: hard
+platforms:
+  - os: iOS
+    min_version: "17.0"
+  - os: macOS
+    min_version: "14.0"
+assets:
+  cover: Media/cover.png
+  demo: Media/demo.mp4
+code:
+  swiftui_root: Code/SwiftUI
+  prompt_root: Code/Vibe
+  tests_root: Tests
+license:
+  code: MIT
+  media: CC-BY-4.0
+  third_party_notice: LICENSES/THIRD_PARTY.md
+source_revision: masonry-grid-rev-001

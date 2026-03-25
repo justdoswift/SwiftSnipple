@@ -1,174 +1,245 @@
 <script lang="ts">
+	import CopyActionButton from '$lib/components/CopyActionButton.svelte';
+	import SnippetPreviewMedia from '$lib/components/SnippetPreviewMedia.svelte';
+	import { categoryLabel, difficultyLabel } from '$lib/discovery/presentation';
 	import type { PublishedSnippetCard } from '$lib/discovery/types';
 
 	type Props = {
 		snippet: PublishedSnippetCard;
 		href?: string;
+		variant?: 'home' | 'explore';
+		featured?: boolean;
 	};
 
-	let { snippet, href = `/snippets/${snippet.id}` }: Props = $props();
+	let {
+		snippet,
+		href = `/snippets/${snippet.id}`,
+		variant = 'explore',
+		featured = false
+	}: Props = $props();
+	const hasCodeCopy = $derived(Boolean(snippet.quickCopy?.code));
+	const hasPromptCopy = $derived(Boolean(snippet.quickCopy?.prompt));
+	const reuseLabel = $derived(
+		snippet.hasPrompt ? '含 Prompt' : snippet.hasDemo ? '含 Demo' : '仅代码'
+	);
+	const metaLine = $derived(
+		`${categoryLabel(snippet.categoryPrimary)} · ${difficultyLabel(snippet.difficulty)} · ${reuseLabel}`
+	);
+	let copiedState = $state<'code' | 'prompt' | null>(null);
+
+	async function copyAsset(kind: 'code' | 'prompt') {
+		const content = snippet.quickCopy?.[kind];
+		if (!content || !navigator?.clipboard) {
+			return;
+		}
+
+		await navigator.clipboard.writeText(content);
+		copiedState = kind;
+
+		setTimeout(() => {
+			if (copiedState === kind) {
+				copiedState = null;
+			}
+		}, 1500);
+	}
 </script>
 
-<a class="card" href={href} aria-label={`Open ${snippet.title}`}>
+<article class={`card content-surface ${variant} ${featured ? 'featured' : ''}`}>
 	<div class="media-shell">
-		<img class="cover" src={snippet.media.coverUrl} alt={snippet.title} loading="lazy" />
-		<div class="media-meta">
-			<span>{snippet.categoryPrimary}</span>
-			<span>{snippet.hasDemo ? 'Demo ready' : 'Cover preview'}</span>
-		</div>
-	</div>
+		<a class="media-link" href={href} aria-label={`打开 ${snippet.title}`}>
+			<SnippetPreviewMedia
+				id={snippet.id}
+				coverUrl={snippet.media.coverUrl}
+				demoUrl={featured ? snippet.media.demoUrl : undefined}
+				videoMode={featured ? 'ambient' : 'controls'}
+				variant="gallery"
+				eyebrow={categoryLabel(snippet.categoryPrimary)}
+				metaText={`${difficultyLabel(snippet.difficulty)} · ${reuseLabel}`}
+				className="cover"
+				alt={snippet.title}
+			/>
+			<div class="media-overlay"></div>
+		</a>
 
-	<div class="content">
-		<div class="header">
-			<p class="difficulty difficulty-{snippet.difficulty}">{snippet.difficulty}</p>
-			<div class="platforms" aria-label="Supported platforms">
-				{#each snippet.platforms as platform (`${platform.os}-${platform.minVersion}`)}
-					<span>{platform.os} {platform.minVersion}</span>
-				{/each}
+		<div class="quick-actions">
+			{#if hasCodeCopy}
+				<CopyActionButton
+					icon="code"
+					label="复制代码"
+					copied={copiedState === 'code'}
+					compact={true}
+					onclick={() => copyAsset('code')}
+				/>
+			{/if}
+			{#if hasPromptCopy}
+				<CopyActionButton
+					icon="prompt"
+					label="复制 Prompt"
+					copied={copiedState === 'prompt'}
+					compact={true}
+					onclick={() => copyAsset('prompt')}
+				/>
+			{/if}
+		</div>
+
+		{#if featured}
+			<div class="featured-copy">
+				<a class="title-link" href={href}>
+					<h2 class="title">{snippet.title}</h2>
+				</a>
+				<p class="meta">{metaLine}</p>
 			</div>
-		</div>
-
-		<div class="body">
-			<h2>{snippet.title}</h2>
-			<p>{snippet.summary}</p>
-		</div>
-
-		<ul class="tags" aria-label="Snippet tags">
-			{#each snippet.tags as tag (tag)}
-				<li>{tag}</li>
-			{/each}
-		</ul>
+		{/if}
 	</div>
-</a>
+
+	{#if !featured}
+		<div class="content">
+			<a class="title-link" href={href}>
+				<h2 class="title">{snippet.title}</h2>
+			</a>
+			<p class="meta">{metaLine}</p>
+		</div>
+	{/if}
+</article>
 
 <style>
 	.card {
 		display: grid;
-		gap: 1rem;
-		text-decoration: none;
-		color: inherit;
-		background: rgba(255, 251, 244, 0.92);
-		border: 1px solid rgba(82, 54, 35, 0.14);
-		border-radius: 28px;
-		overflow: clip;
-		box-shadow: 0 24px 60px rgba(65, 41, 20, 0.12);
-		transition:
-			transform 180ms ease,
-			box-shadow 180ms ease,
-			border-color 180ms ease;
+		gap: 0;
+		border-radius: 24px;
+		content-visibility: auto;
+		contain-intrinsic-size: 320px 280px;
 	}
 
-	.card:hover,
-	.card:focus-visible {
-		transform: translateY(-3px);
-		box-shadow: 0 32px 72px rgba(65, 41, 20, 0.18);
-		border-color: rgba(82, 54, 35, 0.22);
+	.card.featured {
+		display: block;
+		border-radius: 30px;
 	}
 
 	.media-shell {
 		position: relative;
 		aspect-ratio: 16 / 10;
-		background:
-			linear-gradient(135deg, rgba(235, 188, 139, 0.42), rgba(83, 132, 126, 0.18)),
-			#f3e6d7;
+		background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 250, 255, 0.96));
+		overflow: hidden;
+		border-radius: 22px;
 	}
 
-	.cover {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		display: block;
+	.card.featured .media-shell {
+		aspect-ratio: auto;
+		min-height: 32rem;
+		border-radius: 30px;
+		background: linear-gradient(180deg, rgba(255, 255, 255, 0.985), rgba(247, 250, 255, 0.95));
 	}
 
-	.media-meta {
+	.media-link,
+	.title-link {
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.media-overlay {
 		position: absolute;
-		left: 1rem;
-		right: 1rem;
-		bottom: 1rem;
-		display: flex;
-		justify-content: space-between;
-		gap: 0.75rem;
-		font-size: 0.75rem;
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		color: #fff8f0;
+		inset: 0;
+		background:
+			linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.18) 58%, rgba(255, 255, 255, 0.5)),
+			linear-gradient(180deg, transparent 52%, rgba(255, 255, 255, 0.72) 100%);
+		pointer-events: none;
 	}
 
-	.media-meta span {
-		background: rgba(19, 24, 23, 0.58);
-		border: 1px solid rgba(255, 255, 255, 0.12);
-		border-radius: 999px;
-		padding: 0.45rem 0.7rem;
-		backdrop-filter: blur(12px);
+	.quick-actions {
+		position: absolute;
+		z-index: 1;
+	}
+
+	.quick-actions {
+		top: 0.72rem;
+		right: 0.72rem;
+		display: inline-flex;
+		gap: 0.28rem;
+	}
+
+	.card.home .quick-actions {
+		opacity: 0.34;
+		transition: opacity 180ms ease;
+	}
+
+	.card.home:hover .quick-actions,
+	.card.home:focus-within .quick-actions,
+	.card.featured .quick-actions {
+		opacity: 1;
 	}
 
 	.content {
 		display: grid;
-		gap: 0.9rem;
-		padding: 0 1.2rem 1.2rem;
+		align-content: end;
+		gap: 0.26rem;
+		padding: 0.74rem 0.78rem 0.8rem;
 	}
 
-	.header {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: space-between;
-		gap: 0.75rem;
-		align-items: center;
+	.card.home .content {
+		padding: 0.7rem 0.74rem 0.78rem;
 	}
 
-	.difficulty {
+	.card.explore .content {
+		padding: 0.76rem 0.8rem 0.84rem;
+	}
+
+	.card.featured .content {
+		display: none;
+	}
+
+	.featured-copy {
+		position: absolute;
+		left: 1rem;
+		bottom: 1rem;
+		z-index: 1;
+		display: grid;
+		gap: 0.3rem;
+		max-width: 18rem;
+		padding: 0.86rem 0.9rem 0.88rem;
+		border-radius: 20px;
+		background: rgba(255, 255, 255, 0.84);
+		border: 1px solid rgba(17, 17, 17, 0.06);
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.9),
+			0 10px 22px rgba(17, 17, 17, 0.05);
+	}
+
+	.title {
 		margin: 0;
-		text-transform: uppercase;
-		letter-spacing: 0.12em;
-		font-size: 0.75rem;
-		font-weight: 700;
+		font-family: var(--font-display);
+		font-size: 0.88rem;
+		line-height: 1.12;
+		letter-spacing: -0.02em;
 	}
 
-	.difficulty-easy {
-		color: #1f6d53;
+	.card.featured .title {
+		font-size: clamp(1.26rem, 2vw, 1.72rem);
+		line-height: 1.04;
+		max-width: 12ch;
 	}
 
-	.difficulty-medium {
-		color: #9a5b15;
-	}
-
-	.difficulty-hard {
-		color: #8b2f2b;
-	}
-
-	.platforms {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.45rem;
-	}
-
-	.platforms span,
-	.tags li {
-		list-style: none;
-		padding: 0.35rem 0.65rem;
-		border-radius: 999px;
-		background: rgba(102, 130, 126, 0.12);
-		color: #264743;
-		font-size: 0.82rem;
-	}
-
-	.body h2 {
-		margin: 0 0 0.5rem;
-		font-size: clamp(1.45rem, 2vw, 1.85rem);
-		line-height: 1.05;
-	}
-
-	.body p {
+	.meta {
 		margin: 0;
-		line-height: 1.65;
-		color: #4b4036;
+		font-size: 0.64rem;
+		line-height: 1.3;
+		color: rgba(17, 17, 17, 0.46);
+		letter-spacing: 0.02em;
 	}
 
-	.tags {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.45rem;
-		padding: 0;
-		margin: 0;
+	.card.featured .meta {
+		font-size: 0.74rem;
+		color: rgba(17, 17, 17, 0.52);
+	}
+
+	@media (max-width: 920px) {
+		.card.featured {
+			grid-template-columns: 1fr;
+		}
+
+		.card.featured .media-shell {
+			min-height: 0;
+			aspect-ratio: 16 / 11;
+		}
 	}
 </style>

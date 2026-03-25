@@ -1,5 +1,6 @@
 import type {
 	FeedResponse,
+	PublishedSnippetCard,
 	PublishedSnippetRecord,
 	SearchResponse
 } from '$lib/discovery/types';
@@ -60,4 +61,37 @@ export function loadSnippetDetail(fetcher: DiscoveryFetch, id: string) {
 		fetcher,
 		`/api/v1/discovery/snippets/${encodeURIComponent(id)}`
 	);
+}
+
+export async function enrichCardsWithQuickCopy<T extends PublishedSnippetCard>(
+	fetcher: DiscoveryFetch,
+	cards: T[] | undefined
+) {
+	const safeCards = cards ?? [];
+	const uniqueIds = [...new Set(safeCards.map((card) => card.id))];
+	const detailEntries = await Promise.all(
+		uniqueIds.map(async (id) => {
+			try {
+				const detail = await loadSnippetDetail(fetcher, id);
+				const firstPrompt = detail.promptBlocks.find((block) => block.kind === 'prompt');
+
+				return [
+					id,
+					{
+						code: detail.codeBlocks[0]?.content,
+						prompt: firstPrompt?.content
+					}
+				] as const;
+			} catch {
+				return [id, {}] as const;
+			}
+		})
+	);
+
+	const quickCopyById = new Map(detailEntries);
+
+	return safeCards.map((card) => ({
+		...card,
+		quickCopy: quickCopyById.get(card.id)
+	}));
 }

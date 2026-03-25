@@ -1,0 +1,7 @@
+goal: 生成一个带弹跳反馈的 SwiftUI 点赞按钮。
+constraints:
+  - 需要体现交互手感
+  - 计数变化要自然
+deliverables:
+  - SwiftUI 按钮组件
+  - Demo 交互预览

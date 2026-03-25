@@ -1,0 +1,28 @@
+id: bookmark-long-press
+title: 长按收藏按钮
+summary: 一个带长按提示和已收藏态表现的 SwiftUI 收藏控件，适合内容列表操作。
+version: 1.0.0
+status: draft
+category_primary: input
+tags:
+  - 收藏
+  - 长按
+  - 手势
+facets:
+  - platform:iOS
+  - difficulty:easy
+difficulty: easy
+platforms:
+  - os: iOS
+    min_version: "17.0"
+assets:
+  cover: Media/cover.png
+code:
+  swiftui_root: Code/SwiftUI
+  prompt_root: Code/Vibe
+  tests_root: Tests
+license:
+  code: MIT
+  media: CC-BY-4.0
+  third_party_notice: LICENSES/THIRD_PARTY.md
+source_revision: bookmark-long-press-rev-001

@@ -1,0 +1,7 @@
+goal: 生成一个双列 SwiftUI 瀑布流布局。
+constraints:
+  - 需要处理不等高卡片
+  - 保持滚动体验稳定
+deliverables:
+  - SwiftUI 布局视图
+  - Demo 预览

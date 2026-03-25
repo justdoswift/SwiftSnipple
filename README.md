@@ -13,18 +13,27 @@ SwiftSnippet 是一个面向 SwiftUI 开发者与 Vibe Coding 用户的片段卡
 
 ## Quick Start
 
-### 1. Install dependencies
+### 1. Prepare env and dependencies
 
 ```bash
+cp .env.example .env
 pnpm install
 ```
 
-### 2. Start PostgreSQL
+如果你本地已经有 PostgreSQL 在运行，只要把 `.env` 里的 `DATABASE_URL` 改成可用连接，启动脚本会优先复用它，不会强制再起一个库。
+
+### 2. One-command local startup
 
 ```bash
-pnpm db:up
-pnpm db:migrate
+pnpm dev
 ```
+
+这条命令会按顺序完成：
+
+- 复用现有 `DATABASE_URL`，如果连不上再回退到 `infra/postgres/docker-compose.yml`
+- 执行数据库 migration
+- 启动 Go API
+- 启动 SvelteKit Web
 
 默认数据库连接：
 
@@ -34,22 +43,20 @@ pnpm db:migrate
 - User: `swiftsnippet`
 - Password: `swiftsnippet`
 
-### 3. Run the stubs
+默认服务地址：
 
-Web:
+- API: `http://127.0.0.1:18080`
+- Web: `http://127.0.0.1:13000`
 
-```bash
-pnpm dev:web
-```
-
-API:
+### 3. Split startup if needed
 
 ```bash
-cd apps/api
-go run ./cmd/api
+make db-up      # 仅启动项目自带 postgres
+make api        # 仅启动后端
+make web        # 仅启动前端
+make dev-all    # 一键启动前后端 + 数据库
+pnpm stop       # 停止 dev 脚本启动的进程
 ```
-
-默认 API 监听 `http://127.0.0.1:8080`。
 
 ## Snippet Protocol
 
@@ -94,7 +101,7 @@ pnpm verify:snippets
 
 ## Quality Gates
 
-本阶段只启用核心门禁：
+当前核心门禁包括：
 
 - Snippet schema / 目录结构校验
 - Web stub type / build check
@@ -107,16 +114,35 @@ pnpm verify:snippets
 pnpm check
 ```
 
+## Phase 3 Publish Flow
+
+Phase 3 现在提供了最小可验证的供给侧闭环：
+
+- `POST /api/v1/media/upload-url` 为 `cover` / `demo` 资产签发受约束上传地址
+- `POST /api/v1/publish/snippets/{id}/review` 执行 `draft -> review`
+- `POST /api/v1/publish/snippets/{id}/publish` 先做协议 + 发布准备度校验，再执行 `review -> published`，并刷新 `content/published/snippets.json`、`content/published/visibility.json`、`content/published/search-documents.json`
+
+本地验证命令：
+
+```bash
+pnpm db:up
+pnpm db:migrate
+cd apps/api && go test ./internal/storage ./internal/publish ./internal/ratelimit ./internal/httpapi
+pnpm check:published-index
+```
+
+如果要手动走一遍发布链路，参见 [`apps/api/README.md`](/Users/gepeng/Documents/coolweb/SwiftSnippet/apps/api/README.md) 中的 `upload-url / review / publish` `curl` 示例。
+
 ### Swift tooling note
 
 本机需要安装：
 
 - `swift-format`
 - `swiftlint`
-- `psql`（用于执行 `pnpm db:migrate`）
+- `docker`（用于本地 Postgres 或作为 `psql` 缺失时的 fallback 客户端）
 
 如果缺少任一工具，`pnpm check:swift` 会失败并提示安装。
-如果缺少 `psql`，`pnpm db:migrate` 会失败并提示安装。
+如果本机没有 `psql`，仓库脚本会自动回退到 `postgres:16` 容器内的 `psql` 客户端。
 
 ## Phase 2/3 Contract Handoff
 

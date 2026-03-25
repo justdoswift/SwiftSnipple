@@ -1,4 +1,6 @@
 <script lang="ts">
+	import CopyActionButton from '$lib/components/CopyActionButton.svelte';
+
 	type Props = {
 		title: string;
 		kind: string;
@@ -22,13 +24,13 @@
 	}
 </script>
 
-<section class="block">
+<section class="block content-surface">
 	<header>
 		<div>
 			<h3>{title}</h3>
-			<p>{kind}</p>
+			<p>{kind === 'prompt' ? '提示词' : kind === 'acceptance' ? '验收' : kind}</p>
 		</div>
-		<button type="button" onclick={copyPrompt}>{copied ? 'Copied' : 'Copy prompt'}</button>
+		<CopyActionButton icon="prompt" label="复制提示词" {copied} onclick={copyPrompt} />
 	</header>
 
 	<article>{content}</article>
@@ -37,12 +39,12 @@
 <style>
 	.block {
 		display: grid;
-		gap: 1rem;
-		padding: 1rem;
-		border-radius: 22px;
-		border: 1px solid rgba(56, 94, 90, 0.14);
-		background: rgba(241, 248, 247, 0.94);
-		color: #17312f;
+		gap: 0.88rem;
+		padding: 0.96rem;
+		border-radius: 24px;
+		color: var(--site-text);
+		content-visibility: auto;
+		contain-intrinsic-size: 260px 220px;
 	}
 
 	header {
@@ -57,26 +59,22 @@
 		margin: 0;
 	}
 
-	p {
-		text-transform: uppercase;
-		letter-spacing: 0.12em;
-		font-size: 0.72rem;
-		color: #51716d;
+	h3 {
+		font-family: var(--font-display);
+		font-size: 0.92rem;
+		line-height: 1.15;
 	}
 
-	button {
-		border: 0;
-		border-radius: 999px;
-		background: #1f5a56;
-		color: #f4f8f6;
-		padding: 0.65rem 0.95rem;
-		font: inherit;
-		font-weight: 700;
-		cursor: pointer;
+	p {
+		letter-spacing: 0.12em;
+		font-size: 0.72rem;
+		color: rgba(17, 17, 17, 0.46);
 	}
 
 	article {
 		white-space: pre-wrap;
-		line-height: 1.7;
+		font-size: 0.9rem;
+		line-height: 1.68;
+		color: rgba(17, 17, 17, 0.68);
 	}
 </style>

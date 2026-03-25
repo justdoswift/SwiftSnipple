@@ -1,0 +1,7 @@
+goal: 生成一个带层叠排版的 SwiftUI 主视觉卡片。
+constraints:
+  - 保持编辑感与留白
+  - 不要引入额外依赖
+deliverables:
+  - SwiftUI 视图
+  - 轻量预览

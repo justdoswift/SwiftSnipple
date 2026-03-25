@@ -1,0 +1,28 @@
+id: loadable-view-states
+title: 可加载视图状态
+summary: 一个 SwiftUI 状态包装器，用统一方式呈现 loading、empty、error 和 content 四种界面。
+version: 1.0.0
+status: draft
+category_primary: state
+tags:
+  - 加载态
+  - 状态
+  - 包装器
+facets:
+  - platform:iOS
+  - difficulty:medium
+difficulty: medium
+platforms:
+  - os: iOS
+    min_version: "17.0"
+assets:
+  cover: Media/cover.png
+code:
+  swiftui_root: Code/SwiftUI
+  prompt_root: Code/Vibe
+  tests_root: Tests
+license:
+  code: MIT
+  media: CC-BY-4.0
+  third_party_notice: LICENSES/THIRD_PARTY.md
+source_revision: loadable-view-states-rev-001

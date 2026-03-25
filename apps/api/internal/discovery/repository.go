@@ -201,6 +201,15 @@ func (r *Repository) ensureLoaded(ctx context.Context) error {
 	return r.loadErr
 }
 
+func (r *Repository) Invalidate() {
+	r.once = sync.Once{}
+	r.loadErr = nil
+	r.feed = nil
+	r.details = nil
+	r.searchDocs = nil
+	r.visibility = nil
+}
+
 func (r *Repository) load(ctx context.Context) error {
 	select {
 	case <-ctx.Done():

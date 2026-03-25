@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1600" height="1000" viewBox="0 0 1600 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="1000" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#121712"/>
+      <stop offset="1" stop-color="#0D110D"/>
+    </linearGradient>
+    <radialGradient id="glowA" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1280 220) rotate(145) scale(420 420)">
+      <stop stop-color="#D3AB70" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#D3AB70" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowB" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(340 820) rotate(27) scale(520 520)">
+      <stop stop-color="#4D6457" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#4D6457" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#bg)"/>
+  <rect width="1600" height="1000" fill="url(#glowA)"/>
+  <rect width="1600" height="1000" fill="url(#glowB)"/>
+  <g opacity="0.18">
+    <path d="M0 160H1600" stroke="white" stroke-opacity="0.12"/>
+    <path d="M0 500H1600" stroke="white" stroke-opacity="0.08"/>
+    <path d="M0 840H1600" stroke="white" stroke-opacity="0.12"/>
+    <path d="M180 0V1000" stroke="white" stroke-opacity="0.08"/>
+    <path d="M760 0V1000" stroke="white" stroke-opacity="0.06"/>
+    <path d="M1420 0V1000" stroke="white" stroke-opacity="0.08"/>
+  </g>
+  <text x="72" y="430" fill="white" fill-opacity="0.04" font-size="270" font-weight="700" font-family="Georgia, 'Times New Roman', serif">SEARCH PAGE SKELETON</text>
+  <text x="108" y="122" fill="#D3AB70" font-size="24" letter-spacing="10" font-weight="700" font-family="'PingFang SC', 'Noto Sans SC', sans-serif">SWIFTSNIPPET</text>
+  <text x="108" y="192" fill="#EFE9DD" font-size="88" font-weight="700" font-family="'PingFang SC', 'Noto Sans SC', sans-serif">搜索页骨架</text>
+  <text x="112" y="250" fill="#C9A96A" font-size="34" font-weight="600" font-family="'PingFang SC', 'Noto Sans SC', sans-serif">导航 / 页面</text>
+  <foreignObject x="108" y="316" width="620" height="180">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="color:rgba(242,237,227,0.72);font:500 30px/1.6 'PingFang SC','Noto Sans SC',sans-serif;letter-spacing:0.02em;">
+      先搭出搜索页的输入、历史与热点区。
+    </div>
+  </foreignObject>
+  <rect x="980" y="170" width="410" height="250" rx="32" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)"/>
+  <rect x="1020" y="210" width="220" height="18" rx="9" fill="#D3AB70" fill-opacity="0.92"/>
+  <rect x="1020" y="252" width="310" height="14" rx="7" fill="white" fill-opacity="0.12"/>
+  <rect x="1020" y="286" width="262" height="14" rx="7" fill="white" fill-opacity="0.08"/>
+  <rect x="1020" y="330" width="126" height="42" rx="21" fill="#D3AB70" fill-opacity="0.16" stroke="#D3AB70" stroke-opacity="0.3"/>
+  <rect x="804" y="582" width="518" height="244" rx="36" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.07)"/>
+  <rect x="848" y="626" width="430" height="24" rx="12" fill="white" fill-opacity="0.08"/>
+  <rect x="848" y="674" width="356" height="24" rx="12" fill="white" fill-opacity="0.06"/>
+  <rect x="848" y="722" width="248" height="24" rx="12" fill="#4D6457" fill-opacity="0.28"/>
+  <rect x="108" y="712" width="250" height="70" rx="35" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)"/>
+  <text x="150" y="756" fill="#F3ECDD" font-size="28" font-weight="600" font-family="'PingFang SC', 'Noto Sans SC', sans-serif">已生成占位封面</text>
+</svg>

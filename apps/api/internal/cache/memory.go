@@ -54,3 +54,9 @@ func (m *Memory) Set(key string, value any, ttl time.Duration) {
 	}
 	m.mu.Unlock()
 }
+
+func (m *Memory) Clear() {
+	m.mu.Lock()
+	m.entries = map[string]entry{}
+	m.mu.Unlock()
+}

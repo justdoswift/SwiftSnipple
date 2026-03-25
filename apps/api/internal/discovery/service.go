@@ -24,6 +24,14 @@ type responseCache interface {
 	Set(key string, value any, ttl time.Duration)
 }
 
+type invalidatableRepository interface {
+	Invalidate()
+}
+
+type invalidatableCache interface {
+	Clear()
+}
+
 type Service struct {
 	repo  repository
 	cache responseCache
@@ -225,4 +233,13 @@ func cloneFacetMap(input map[string]int) map[string]int {
 		output[key] = value
 	}
 	return output
+}
+
+func (s *Service) Invalidate() {
+	if repo, ok := s.repo.(invalidatableRepository); ok {
+		repo.Invalidate()
+	}
+	if cache, ok := s.cache.(invalidatableCache); ok {
+		cache.Clear()
+	}
 }

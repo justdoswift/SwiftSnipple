@@ -1,15 +1,18 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: MVP
-status: completed
-stopped_at: v1.0 archived; ready for next milestone definition
-last_updated: "2026-03-25T18:45:00Z"
+milestone: v1.1
+milestone_name: 视觉重构
+current_phase: "05"
+current_phase_name: visual-system-reset
+current_plan: "0"
+status: planning
+stopped_at: Milestone v1.1 started; ready to plan Phase 05
+last_updated: "2026-03-25T19:10:00Z"
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 13
-  completed_plans: 13
+  total_phases: 3
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
@@ -19,12 +22,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-25)
 
 **Core value:** 用户必须能在几秒内找到一个可信、可复制、可复用的 SwiftUI 片段，并立即把它带回自己的项目或 AI 工作流中。
-**Current focus:** Planning next milestone after v1.0 MVP archival
+**Current focus:** Phase 05 — visual-system-reset
 
 ## Current Position
 
-Phase: v1.0 archived
-Plan: none active
+Phase: 05 (visual-system-reset) — READY TO PLAN
+Plan: 0 of 0
 
 ## Performance Metrics
 
@@ -71,10 +74,10 @@ None yet.
 
 ### Blockers/Concerns
 
-None active. Next milestone has not been defined yet.
+None active. Next step is requirements / roadmap-approved planning for Phase 05.
 
 ## Session Continuity
 
-Last session: 2026-03-25T18:45:00+0800
-Stopped at: v1.0 milestone archived
-Resume file: .planning/MILESTONES.md
+Last session: 2026-03-25T19:10:00+0800
+Stopped at: Milestone v1.1 initialized
+Resume file: .planning/ROADMAP.md

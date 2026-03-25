@@ -19,13 +19,24 @@ SwiftSnippet 是一个面向 SwiftUI 开发者与 Vibe Coding 用户的片段卡
 
 ### Active
 
-- [ ] None — v1 roadmap scope has been completed and validated.
+- [ ] 公开站需要从现有的功能可用 UI 升级到更有辨识度的视觉系统，并保留 Discovery 的核心效率
+- [ ] 首页、Explore、详情页的主浏览文案需要切成中文，降低首次理解成本
+- [ ] 新一轮 UI 重构必须保持 SwiftSnippet 的 SwiftUI-first 内容定位，不把精力扩散到后台或新平台能力
+
+## Current Milestone: v1.1 视觉重构
+
+**Goal:** 用更统一、更高级、中文优先的公开站视觉系统，提升首屏吸引力、浏览效率和品牌辨识度。
+
+**Target features:**
+- 首页采用更强的海报式首屏和深色视觉语言
+- Explore 与详情页共享统一的深色组件、筛选与信息层级
+- 主浏览流程的导航、状态、操作文案改成中文
 
 ## Next Milestone Goals
 
-- 明确 v1.1 是继续做内容供给效率、公开站增长能力，还是转向私有索引 / 账号体系等新方向
-- 基于真实首发批次反馈，决定是否优先补收藏、导出包、更多 snippet 题材，还是加强运营 / 投稿工具
-- 在开始新 milestone 前重新定义 requirements，而不是直接沿用 v1 的 pending / out-of-scope 列表
+- 把公开站从“功能已通”升级到“风格明确、记忆点强、截图也成立”的视觉层级
+- 在不改写 Discovery / Publish 后端边界的前提下，提升首页、Explore、详情页的一致性与可读性
+- 为后续 UI phase / verification 留出清晰的中文文案与视觉标准，而不是继续沿用 v1 的英文占位语气
 
 ### Out of Scope
 
@@ -65,7 +76,7 @@ SwiftSnippet 是一个面向 SwiftUI 开发者与 Vibe Coding 用户的片段卡
 
 ## Current State
 
-Phase 4 complete. SwiftSnippet 的 v1 现在已经具备统一内容协议、published-only discovery 体验、可验证的 publish pipeline，以及一批可公开浏览和复用的 12 条首发内容。
+v1.0 已完成并归档。SwiftSnippet 现在已经具备统一内容协议、published-only discovery 体验、可验证的 publish pipeline，以及一批可公开浏览和复用的 12 条首发内容。当前进入 v1.1，重点不是补新平台边界，而是把公开站 UI 做成更有辨识度、中文优先、适合公开展示的版本。
 
 ## Evolution
 
@@ -85,4 +96,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-25 after v1.0 milestone archival*
+*Last updated: 2026-03-25 after v1.1 milestone kickoff*

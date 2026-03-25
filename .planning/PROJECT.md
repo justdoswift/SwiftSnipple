@@ -21,6 +21,12 @@ SwiftSnippet 是一个面向 SwiftUI 开发者与 Vibe Coding 用户的片段卡
 
 - [ ] None — v1 roadmap scope has been completed and validated.
 
+## Next Milestone Goals
+
+- 明确 v1.1 是继续做内容供给效率、公开站增长能力，还是转向私有索引 / 账号体系等新方向
+- 基于真实首发批次反馈，决定是否优先补收藏、导出包、更多 snippet 题材，还是加强运营 / 投稿工具
+- 在开始新 milestone 前重新定义 requirements，而不是直接沿用 v1 的 pending / out-of-scope 列表
+
 ### Out of Scope
 
 - 原生 iOS/macOS 客户端应用 — v1 先验证 Web 端内容分发与工作流闭环
@@ -79,4 +85,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-25 after Phase 4 completion*
+*Last updated: 2026-03-25 after v1.0 milestone archival*

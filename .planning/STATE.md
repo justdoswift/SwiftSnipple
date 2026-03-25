@@ -1,13 +1,10 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0
-milestone_name: milestone
-current_phase: "04"
-current_phase_name: launch-content-batch
-current_plan: "4"
+milestone_name: MVP
 status: completed
-stopped_at: Phase 04 verified; v1 milestone complete
-last_updated: "2026-03-25T18:25:00Z"
+stopped_at: v1.0 archived; ready for next milestone definition
+last_updated: "2026-03-25T18:45:00Z"
 progress:
   total_phases: 4
   completed_phases: 4
@@ -22,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-25)
 
 **Core value:** 用户必须能在几秒内找到一个可信、可复制、可复用的 SwiftUI 片段，并立即把它带回自己的项目或 AI 工作流中。
-**Current focus:** Milestone v1 complete — protocol, discovery, publish, and launch content are all validated
+**Current focus:** Planning next milestone after v1.0 MVP archival
 
 ## Current Position
 
-Phase: 04 (launch-content-batch) — COMPLETE
-Plan: 4 of 4
+Phase: v1.0 archived
+Plan: none active
 
 ## Performance Metrics
 
@@ -74,10 +71,10 @@ None yet.
 
 ### Blockers/Concerns
 
-None active. v1 milestone is complete and ready for milestone wrap-up / archiving.
+None active. Next milestone has not been defined yet.
 
 ## Session Continuity
 
-Last session: 2026-03-25T18:25:00+0800
-Stopped at: Phase 04 execution and verification complete
-Resume file: .planning/phases/04-launch-content-batch/04-VERIFICATION.md
+Last session: 2026-03-25T18:45:00+0800
+Stopped at: v1.0 milestone archived
+Resume file: .planning/MILESTONES.md

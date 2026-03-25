@@ -28,24 +28,24 @@
 
 ### Publishing Pipeline
 
-- [ ] **PIPE-01**: Contributor or maintainer can upload snippet media through a signed upload flow without direct cloud credentials
-- [ ] **PIPE-02**: Maintainer can move a snippet through draft, review, and published states
-- [ ] **PIPE-03**: Publish workflow can validate media constraints, content protocol compliance, and release readiness before publication
-- [ ] **PIPE-04**: Publish workflow can generate or refresh a published index consumed by the public site
-- [ ] **PIPE-05**: Publish workflow can update search documents so new or changed snippets appear in discovery flows
+- [x] **PIPE-01**: Contributor or maintainer can upload snippet media through a signed upload flow without direct cloud credentials
+- [x] **PIPE-02**: Maintainer can move a snippet through draft, review, and published states
+- [x] **PIPE-03**: Publish workflow can validate media constraints, content protocol compliance, and release readiness before publication
+- [x] **PIPE-04**: Publish workflow can generate or refresh a published index consumed by the public site
+- [x] **PIPE-05**: Publish workflow can update search documents so new or changed snippets appear in discovery flows
 
 ### Operations
 
-- [ ] **OPS-01**: System can enforce rate limits on resource-sensitive API endpoints
+- [x] **OPS-01**: System can enforce rate limits on resource-sensitive API endpoints
 - [x] **OPS-02**: System can store published snippet metadata, review state, and asset references in a primary database
 - [x] **OPS-03**: System can serve cached feed/detail responses for published snippets without exposing draft data
 - [x] **OPS-04**: Team can run automated checks for Swift formatting/linting, media validation, and license completeness in CI
 
 ### Seed Content
 
-- [ ] **SEED-01**: Team can publish an initial batch of at least 12 production-quality SwiftUI snippets to the public feed
-- [ ] **SEED-02**: Initial batch includes coverage across card feed UI, interactions, data state, and AI collaboration templates
-- [ ] **SEED-03**: Every launch snippet includes at least one meaningful reuse path through either copyable code or copyable prompt assets
+- [x] **SEED-01**: Team can publish an initial batch of at least 12 production-quality SwiftUI snippets to the public feed
+- [x] **SEED-02**: Initial batch includes coverage across card feed UI, interactions, data state, and AI collaboration templates
+- [x] **SEED-03**: Every launch snippet includes at least one meaningful reuse path through either copyable code or copyable prompt assets
 
 ## v2 Requirements
 
@@ -92,18 +92,18 @@
 | DTL-02 | Phase 2 | Complete |
 | DTL-03 | Phase 2 | Complete |
 | DTL-04 | Phase 2 | Complete |
-| PIPE-01 | Phase 3 | Pending |
-| PIPE-02 | Phase 3 | Pending |
-| PIPE-03 | Phase 3 | Pending |
-| PIPE-04 | Phase 3 | Pending |
-| PIPE-05 | Phase 3 | Pending |
-| OPS-01 | Phase 3 | Pending |
+| PIPE-01 | Phase 3 | Complete |
+| PIPE-02 | Phase 3 | Complete |
+| PIPE-03 | Phase 3 | Complete |
+| PIPE-04 | Phase 3 | Complete |
+| PIPE-05 | Phase 3 | Complete |
+| OPS-01 | Phase 3 | Complete |
 | OPS-02 | Phase 1 | Complete |
 | OPS-03 | Phase 2 | Complete |
 | OPS-04 | Phase 1 | Complete |
-| SEED-01 | Phase 4 | Pending |
-| SEED-02 | Phase 4 | Pending |
-| SEED-03 | Phase 4 | Pending |
+| SEED-01 | Phase 4 | Complete |
+| SEED-02 | Phase 4 | Complete |
+| SEED-03 | Phase 4 | Complete |
 
 **Coverage:**
 - v1 requirements: 24 total
@@ -112,4 +112,4 @@
 
 ---
 *Requirements defined: 2026-03-24*
-*Last updated: 2026-03-24 after initial definition*
+*Last updated: 2026-03-25 after Phase 4 completion*

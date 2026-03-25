@@ -13,12 +13,13 @@ SwiftSnippet 是一个面向 SwiftUI 开发者与 Vibe Coding 用户的片段卡
 ### Validated
 
 - [x] Phase 1 validated the `snippet.yaml`-driven content protocol, runnable repository skeleton, PostgreSQL baseline, and core CI gates.
+- [x] Phase 2 validated the published-only feed, search, detail, and explicit `not_public` discovery experience.
+- [x] Phase 3 validated the signed upload, review/publish transitions, artifact refresh, cache invalidation, and write-path rate limiting.
+- [x] Phase 4 validated a 12-snippet public launch batch covering UI, interaction, state, and AI collaboration reuse paths.
 
 ### Active
 
-- [ ] 提供卡片流浏览、搜索筛选与详情页，承载片段演示、源码与提示词三类内容
-- [ ] 提供最小可用的投稿/发布闭环，包括媒体上传、内容审核、索引生成与搜索更新
-- [ ] 交付首批可公开浏览的 SwiftUI 片段内容，覆盖卡片流、交互动效、数据状态与 AI 协作模板
+- [ ] None — v1 roadmap scope has been completed and validated.
 
 ### Out of Scope
 
@@ -54,6 +55,11 @@ SwiftSnippet 是一个面向 SwiftUI 开发者与 Vibe Coding 用户的片段卡
 | v1 先做 Web 平台与内容发布闭环 | 最快验证发现、复制、搜索、投稿、审核、发布这些核心流程 | Phase 1 established the runnable Web/API/database baseline |
 | 内容协议以 `snippet.yaml` 和固定目录结构驱动 | 便于 CI、AI 校验、索引构建、许可证追踪与回滚 | Phase 1 validated this via JSON Schema, CLI, and fixtures |
 | 路线图先收敛在 MVP 闭环，后置订阅、企业和增长体系 | 保持初始阶段可执行，减少一次性铺太宽的交付风险 | Still active after Phase 1 |
+| 首发内容批次锁定为 12 条 SwiftUI 内容并优先展示多样性 | 首发必须同时证明“平台可用”与“内容值得消费” | Phase 4 shipped a 12-item published batch with 4 demo-backed highlights |
+
+## Current State
+
+Phase 4 complete. SwiftSnippet 的 v1 现在已经具备统一内容协议、published-only discovery 体验、可验证的 publish pipeline，以及一批可公开浏览和复用的 12 条首发内容。
 
 ## Evolution
 
@@ -73,4 +79,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-24 after Phase 1 completion*
+*Last updated: 2026-03-25 after Phase 4 completion*

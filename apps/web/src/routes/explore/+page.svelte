@@ -192,7 +192,7 @@
 <style>
 	.gallery-page {
 		display: grid;
-		gap: 0.8rem;
+		gap: 0.72rem;
 		padding-top: 6.55rem;
 	}
 
@@ -205,7 +205,7 @@
 	.gallery-hero {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) auto;
-		gap: 0.55rem;
+		gap: 0.45rem;
 		padding: 0.05rem 0 0;
 		align-items: center;
 	}
@@ -217,7 +217,7 @@
 
 	.gallery-title {
 		font-family: var(--font-display);
-		font-size: clamp(1.72rem, 3.4vw, 2.65rem);
+		font-size: clamp(1.58rem, 3vw, 2.4rem);
 		line-height: 1.04;
 		letter-spacing: -0.04em;
 		max-width: 7ch;
@@ -225,14 +225,14 @@
 
 	.hero-copy {
 		max-width: 22rem;
-		font-size: 0.82rem;
-		color: rgba(17, 17, 17, 0.5);
+		font-size: 0.8rem;
+		color: rgba(17, 17, 17, 0.54);
 	}
 
 	.toolbar {
 		display: grid;
-		gap: 0.64rem;
-		padding: 0.74rem 0.78rem 0.82rem;
+		gap: 0.6rem;
+		padding: 0.72rem 0.74rem 0.78rem;
 	}
 
 	.zero-state {
@@ -256,30 +256,32 @@
 	.search-field span {
 		font-size: 0.68rem;
 		font-weight: 600;
-		color: rgba(17, 17, 17, 0.58);
+		color: rgba(17, 17, 17, 0.54);
 	}
 
 	input {
 		width: 100%;
-		padding: 0.8rem 0.9rem;
+		padding: 0.76rem 0.88rem;
 		border-radius: 16px;
-		border: 1px solid rgba(0, 0, 0, 0.08);
-		background: rgba(255, 255, 255, 0.72);
+		border: 1px solid rgba(0, 0, 0, 0.1);
+		background: rgba(255, 255, 255, 0.9);
 		color: var(--site-text);
 		font: inherit;
-		font-size: 0.9rem;
-		box-shadow: inset 0 4px 4px rgba(255, 255, 255, 0.24);
+		font-size: 0.88rem;
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.96),
+			0 1px 2px rgba(17, 17, 17, 0.02);
 	}
 
 	.secondary-toggle,
 	.hero-link {
-		border: 1px solid rgba(0, 0, 0, 0.07);
-		background: rgba(255, 255, 255, 0.62);
+		border: 1px solid rgba(0, 0, 0, 0.08);
+		background: rgba(255, 255, 255, 0.82);
 		border-radius: 999px;
-		padding: 0.62rem 0.82rem;
-		color: rgba(17, 17, 17, 0.64);
+		padding: 0.58rem 0.8rem;
+		color: rgba(17, 17, 17, 0.68);
 		font: inherit;
-		font-size: 0.8rem;
+		font-size: 0.78rem;
 		font-weight: 600;
 		text-decoration: none;
 		cursor: pointer;
@@ -296,7 +298,7 @@
 	.facet-rows,
 	.results-section {
 		display: grid;
-		gap: 0.72rem;
+		gap: 0.66rem;
 	}
 
 	.facet-rows.primary {
@@ -321,7 +323,7 @@
 	.results-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
-		gap: 1rem;
+		gap: 0.92rem;
 	}
 
 	.zero-state {

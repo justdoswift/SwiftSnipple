@@ -50,8 +50,8 @@
 			<SnippetPreviewMedia
 				id={snippet.id}
 				coverUrl={snippet.media.coverUrl}
-				demoUrl={featured ? snippet.media.demoUrl : undefined}
-				videoMode={featured ? 'ambient' : 'controls'}
+				demoUrl={undefined}
+				videoMode="controls"
 				variant="gallery"
 				eyebrow={categoryLabel(snippet.categoryPrimary)}
 				metaText={`${difficultyLabel(snippet.difficulty)} · ${reuseLabel}`}
@@ -106,7 +106,7 @@
 	.card {
 		display: grid;
 		gap: 0;
-		border-radius: 24px;
+		border-radius: 22px;
 		content-visibility: auto;
 		contain-intrinsic-size: 320px 280px;
 	}
@@ -118,7 +118,7 @@
 
 	.media-shell {
 		position: relative;
-		aspect-ratio: 16 / 10;
+		aspect-ratio: 16 / 10.5;
 		background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 250, 255, 0.96));
 		overflow: hidden;
 		border-radius: 22px;
@@ -126,8 +126,8 @@
 
 	.card.featured .media-shell {
 		aspect-ratio: auto;
-		min-height: 32rem;
-		border-radius: 30px;
+		min-height: 27rem;
+		border-radius: 28px;
 		background: linear-gradient(180deg, rgba(255, 255, 255, 0.985), rgba(247, 250, 255, 0.95));
 	}
 
@@ -137,12 +137,23 @@
 		text-decoration: none;
 	}
 
+	.media-link {
+		display: block;
+		width: 100%;
+		height: 100%;
+	}
+
+	.card.featured .media-link,
+	.card.featured :global(.cover) {
+		min-height: 27rem;
+	}
+
 	.media-overlay {
 		position: absolute;
 		inset: 0;
 		background:
-			linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.18) 58%, rgba(255, 255, 255, 0.5)),
-			linear-gradient(180deg, transparent 52%, rgba(255, 255, 255, 0.72) 100%);
+			linear-gradient(180deg, rgba(255, 255, 255, 0.01), rgba(255, 255, 255, 0.12) 54%, rgba(255, 255, 255, 0.38)),
+			linear-gradient(180deg, transparent 48%, rgba(255, 255, 255, 0.62) 100%);
 		pointer-events: none;
 	}
 
@@ -173,7 +184,7 @@
 		display: grid;
 		align-content: end;
 		gap: 0.26rem;
-		padding: 0.74rem 0.78rem 0.8rem;
+		padding: 0.72rem 0.76rem 0.78rem;
 	}
 
 	.card.home .content {
@@ -195,35 +206,35 @@
 		z-index: 1;
 		display: grid;
 		gap: 0.3rem;
-		max-width: 18rem;
-		padding: 0.86rem 0.9rem 0.88rem;
+		max-width: 16rem;
+		padding: 0.82rem 0.86rem 0.84rem;
 		border-radius: 20px;
-		background: rgba(255, 255, 255, 0.84);
-		border: 1px solid rgba(17, 17, 17, 0.06);
+		background: rgba(255, 255, 255, 0.9);
+		border: 1px solid rgba(17, 17, 17, 0.08);
 		box-shadow:
-			inset 0 1px 0 rgba(255, 255, 255, 0.9),
-			0 10px 22px rgba(17, 17, 17, 0.05);
+			inset 0 1px 0 rgba(255, 255, 255, 0.92),
+			0 10px 22px rgba(17, 17, 17, 0.06);
 	}
 
 	.title {
 		margin: 0;
 		font-family: var(--font-display);
-		font-size: 0.88rem;
+		font-size: 0.92rem;
 		line-height: 1.12;
 		letter-spacing: -0.02em;
 	}
 
 	.card.featured .title {
-		font-size: clamp(1.26rem, 2vw, 1.72rem);
+		font-size: clamp(1.2rem, 1.8vw, 1.56rem);
 		line-height: 1.04;
 		max-width: 12ch;
 	}
 
 	.meta {
 		margin: 0;
-		font-size: 0.64rem;
-		line-height: 1.3;
-		color: rgba(17, 17, 17, 0.46);
+		font-size: 0.66rem;
+		line-height: 1.32;
+		color: rgba(17, 17, 17, 0.52);
 		letter-spacing: 0.02em;
 	}
 

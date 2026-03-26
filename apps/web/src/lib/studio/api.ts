@@ -1,8 +1,10 @@
 import type {
 	AdminCreateSnippetRequest,
+	AdminEditableFile,
 	AdminSessionResponse,
 	AdminSnippetCollection,
 	AdminSnippetEditorPayload,
+	AdminPlatform,
 	AdminValidationResponse
 } from '$lib/studio/types';
 
@@ -23,6 +25,81 @@ async function requestJSON<T>(fetcher: typeof fetch, input: string, init?: Reque
 	}
 
 	return (await response.json()) as T;
+}
+
+function normalizeEditableFiles(value: unknown): AdminEditableFile[] {
+	if (!Array.isArray(value)) {
+		return [];
+	}
+
+	return value.map((file) => {
+		const record = (file ?? {}) as Partial<AdminEditableFile>;
+		return {
+			path: typeof record.path === 'string' ? record.path : '',
+			label: typeof record.label === 'string' ? record.label : '',
+			kind: typeof record.kind === 'string' ? record.kind : undefined,
+			content: typeof record.content === 'string' ? record.content : ''
+		};
+	});
+}
+
+function normalizePlatforms(value: unknown): AdminPlatform[] {
+	if (!Array.isArray(value)) {
+		return [];
+	}
+
+	return value.map((platform) => {
+		const record = (platform ?? {}) as Partial<AdminPlatform>;
+		return {
+			os: typeof record.os === 'string' ? record.os : '',
+			minVersion: typeof record.minVersion === 'string' ? record.minVersion : ''
+		};
+	});
+}
+
+function fallbackString(value: unknown, fallback: string): string {
+	return typeof value === 'string' && value.trim() !== '' ? value : fallback;
+}
+
+export function normalizeAdminSnippetEditorPayload(
+	payload: AdminSnippetEditorPayload
+): AdminSnippetEditorPayload {
+	const record = (payload ?? {}) as Partial<AdminSnippetEditorPayload>;
+	const assets = (record.assets ?? {}) as Partial<AdminSnippetEditorPayload['assets']>;
+	const license = (record.license ?? {}) as Partial<AdminSnippetEditorPayload['license']>;
+
+	return {
+		id: typeof record.id === 'string' ? record.id : '',
+		title: typeof record.title === 'string' ? record.title : '',
+		summary: typeof record.summary === 'string' ? record.summary : '',
+		categoryPrimary:
+			typeof record.categoryPrimary === 'string' ? record.categoryPrimary : 'layout',
+		difficulty: typeof record.difficulty === 'string' ? record.difficulty : 'easy',
+		version: typeof record.version === 'string' ? record.version : '1.0.0',
+		state: typeof record.state === 'string' ? record.state : 'draft',
+		sourceRevision: typeof record.sourceRevision === 'string' ? record.sourceRevision : '',
+		tags: Array.isArray(record.tags)
+			? record.tags.filter((value): value is string => typeof value === 'string')
+			: [],
+		platforms: normalizePlatforms(record.platforms),
+		assets: {
+			cover: fallbackString(assets.cover, 'Media/cover.png'),
+			demo: typeof assets.demo === 'string' && assets.demo.trim() !== '' ? assets.demo : undefined,
+			coverPreviewUrl:
+				typeof assets.coverPreviewUrl === 'string' ? assets.coverPreviewUrl : undefined,
+			demoPreviewUrl:
+				typeof assets.demoPreviewUrl === 'string' ? assets.demoPreviewUrl : undefined
+		},
+		license: {
+			code: fallbackString(license.code, 'MIT'),
+			media: fallbackString(license.media, 'CC-BY-4.0'),
+			thirdPartyNotice: fallbackString(license.thirdPartyNotice, 'LICENSES/THIRD_PARTY.md'),
+			thirdPartyText:
+				typeof license.thirdPartyText === 'string' ? license.thirdPartyText : ''
+		},
+		codeFiles: normalizeEditableFiles(record.codeFiles),
+		promptFiles: normalizeEditableFiles(record.promptFiles)
+	};
 }
 
 export async function loadAdminSession(fetcher: typeof fetch): Promise<AdminSessionResponse> {
@@ -66,7 +143,7 @@ export function loadAdminSnippet(fetcher: typeof fetch, id: string) {
 	return requestJSON<AdminSnippetEditorPayload>(
 		fetcher,
 		`/api/v1/admin/snippets/${encodeURIComponent(id)}`
-	);
+	).then(normalizeAdminSnippetEditorPayload);
 }
 
 export function createAdminSnippet(fetcher: typeof fetch, payload: AdminCreateSnippetRequest) {
@@ -76,7 +153,7 @@ export function createAdminSnippet(fetcher: typeof fetch, payload: AdminCreateSn
 			'content-type': 'application/json'
 		},
 		body: JSON.stringify(payload)
-	});
+	}).then(normalizeAdminSnippetEditorPayload);
 }
 
 export function saveAdminSnippet(fetcher: typeof fetch, id: string, payload: AdminSnippetEditorPayload) {
@@ -90,7 +167,7 @@ export function saveAdminSnippet(fetcher: typeof fetch, id: string, payload: Adm
 			},
 			body: JSON.stringify(payload)
 		}
-	);
+	).then(normalizeAdminSnippetEditorPayload);
 }
 
 export function validateAdminSnippet(fetcher: typeof fetch, id: string) {

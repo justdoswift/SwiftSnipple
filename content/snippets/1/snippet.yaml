@@ -1,0 +1,26 @@
+id: "1"
+title: "2"
+summary: "3333"
+status: draft
+category_primary: layout
+version: 1.0.0
+tags: []
+facets:
+    - platform:iOS
+    - difficulty:easy
+difficulty: easy
+platforms:
+    - os: iOS
+      min_version: "17.0"
+assets:
+    cover: Media/cover.png
+    demo: ""
+code:
+    swiftui_root: Code/SwiftUI
+    prompt_root: Code/Vibe
+    tests_root: Tests
+license:
+    code: MIT
+    media: CC-BY-4.0
+    third_party_notice: LICENSES/THIRD_PARTY.md
+source_revision: 1-rev-001

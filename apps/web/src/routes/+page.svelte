@@ -107,7 +107,7 @@
 <style>
 	.landing-page {
 		display: grid;
-		gap: 1.25rem;
+		gap: 1.1rem;
 		padding-bottom: 4rem;
 	}
 
@@ -115,7 +115,7 @@
 		position: relative;
 		width: min(var(--page-width), calc(100vw - 3rem));
 		margin: 0 auto;
-		padding: 3.8rem clamp(1rem, 2.2vw, 1.8rem) 0.2rem;
+		padding: 3.55rem clamp(1rem, 2.2vw, 1.8rem) 0.1rem;
 		overflow: hidden;
 	}
 
@@ -146,7 +146,7 @@
 		position: relative;
 		z-index: 1;
 		display: grid;
-		gap: 0.72rem;
+		gap: 0.64rem;
 		max-width: 37rem;
 		padding: 0.2rem 0 0.4rem;
 	}
@@ -154,7 +154,7 @@
 	h1 {
 		margin: 0;
 		font-family: var(--font-display);
-		font-size: clamp(2.15rem, 3.8vw, 3.35rem);
+		font-size: clamp(2rem, 3.5vw, 3.05rem);
 		line-height: 1.02;
 		letter-spacing: -0.04em;
 		max-width: 8.6ch;
@@ -163,8 +163,8 @@
 	.hero-subcopy {
 		margin: 0;
 		max-width: 22rem;
-		font-size: 0.86rem;
-		line-height: 1.54;
+		font-size: 0.84rem;
+		line-height: 1.58;
 		letter-spacing: -0.02em;
 		color: rgba(17, 17, 17, 0.62);
 	}
@@ -189,7 +189,7 @@
 		-webkit-backdrop-filter: blur(2px);
 		box-shadow:
 			inset 0 4px 4px rgba(255, 255, 255, 0.35),
-			0 20px 30px rgba(0, 132, 255, 0.2);
+			0 16px 24px rgba(0, 132, 255, 0.18);
 		color: white;
 		text-decoration: none;
 		font-size: 0.82rem;
@@ -204,7 +204,7 @@
 		transform: scale(1.02);
 		box-shadow:
 			inset 0 4px 4px rgba(255, 255, 255, 0.35),
-			0 24px 36px rgba(0, 132, 255, 0.24);
+			0 18px 28px rgba(0, 132, 255, 0.22);
 	}
 
 	.cta-icon {
@@ -225,15 +225,15 @@
 	.hero-note {
 		margin: 0;
 		max-width: 15rem;
-		font-size: 0.72rem;
+		font-size: 0.7rem;
 		line-height: 1.48;
-		color: rgba(17, 17, 17, 0.48);
+		color: rgba(17, 17, 17, 0.5);
 	}
 
 	.featured-section,
 	.gallery-section {
 		display: grid;
-		gap: 0.86rem;
+		gap: 0.74rem;
 	}
 
 	.section-row {
@@ -245,7 +245,7 @@
 	}
 
 	.section-row .section-copy {
-		max-width: 20rem;
+		max-width: 18rem;
 	}
 
 	.compact {

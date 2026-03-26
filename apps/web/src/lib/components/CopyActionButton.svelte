@@ -57,10 +57,12 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.45rem;
-		min-height: 2.15rem;
-		padding: 0.36rem 0.62rem;
+		min-height: 2.05rem;
+		padding: 0.34rem 0.58rem;
 		border-radius: 999px;
-		color: rgba(17, 17, 17, 0.76);
+		border: 1px solid rgba(17, 17, 17, 0.08);
+		background: rgba(255, 255, 255, 0.84);
+		color: rgba(17, 17, 17, 0.78);
 		cursor: pointer;
 		transition:
 			transform 180ms ease,
@@ -72,8 +74,8 @@
 	.copy-action:focus-visible {
 		transform: translateY(-1px) scale(1.01);
 		box-shadow:
-			inset 0 1px 0 rgba(255, 255, 255, 0.8),
-			0 12px 24px rgba(17, 17, 17, 0.08);
+			inset 0 1px 0 rgba(255, 255, 255, 0.92),
+			0 10px 18px rgba(17, 17, 17, 0.08);
 	}
 
 	.copy-action.compact {

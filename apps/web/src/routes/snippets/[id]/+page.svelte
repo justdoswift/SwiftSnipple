@@ -91,7 +91,7 @@
 				<SnippetPreviewMedia
 					id={snippet.id}
 					coverUrl={snippet.media.coverUrl}
-					demoUrl={snippet.media.demoUrl}
+					demoUrl={undefined}
 					eyebrow={categoryLabel(snippet.categoryPrimary)}
 					metaText={`${difficultyLabel(snippet.difficulty)} · ${promptAvailabilityLabel(snippet.hasPrompt)}`}
 					className="hero-media"
@@ -150,7 +150,7 @@
 							<SnippetPreviewMedia
 								id={snippet.id}
 								coverUrl={snippet.media.coverUrl}
-								demoUrl={snippet.media.demoUrl}
+								demoUrl={undefined}
 								eyebrow={categoryLabel(snippet.categoryPrimary)}
 								metaText={`${difficultyLabel(snippet.difficulty)} · ${demoAvailabilityLabel(snippet.hasDemo)}`}
 								className="tab-media"
@@ -240,8 +240,8 @@
 
 	.hero {
 		display: grid;
-		grid-template-columns: minmax(260px, 0.7fr) minmax(620px, 1.3fr);
-		gap: 1rem;
+		grid-template-columns: minmax(280px, 0.78fr) minmax(560px, 1.22fr);
+		gap: 0.86rem;
 		align-items: start;
 	}
 
@@ -253,12 +253,12 @@
 	}
 
 	.hero-copy {
-		padding: 0.35rem 0.1rem 0.15rem;
+		padding: 0.34rem 0.08rem 0.1rem;
 	}
 
 	.media-panel {
-		min-height: 34rem;
-		padding: 0.72rem;
+		min-height: 27rem;
+		padding: 0.68rem;
 		align-items: stretch;
 	}
 
@@ -271,6 +271,14 @@
 		background: rgba(255, 255, 255, 0.9);
 	}
 
+	.media-panel :global(.hero-media) {
+		min-height: 25.5rem;
+	}
+
+	.demo-panel :global(.tab-media) {
+		min-height: 18rem;
+	}
+
 	h1,
 	h2,
 	.summary,
@@ -279,9 +287,9 @@
 	}
 
 	.page-title {
-		font-size: clamp(1.7rem, 2.4vw, 2.34rem);
+		font-size: clamp(1.58rem, 2.2vw, 2.18rem);
 		line-height: 1.06;
-		max-width: 10ch;
+		max-width: 9ch;
 	}
 
 	.summary,
@@ -291,8 +299,8 @@
 	}
 
 	.summary {
-		max-width: 24rem;
-		font-size: 0.88rem;
+		max-width: 22rem;
+		font-size: 0.86rem;
 	}
 
 	.signal-row,
@@ -308,7 +316,7 @@
 	.meta-panel {
 		display: grid;
 		gap: 0.54rem;
-		padding-top: 0.54rem;
+		padding-top: 0.62rem;
 		border-top: 1px solid rgba(0, 0, 0, 0.08);
 	}
 
@@ -318,10 +326,10 @@
 		list-style: none;
 		padding: 0.32rem 0.54rem;
 		border-radius: 999px;
-		background: rgba(255, 255, 255, 0.84);
-		color: rgba(17, 17, 17, 0.6);
-		border: 1px solid rgba(0, 0, 0, 0.06);
-		font-size: 0.69rem;
+		background: rgba(255, 255, 255, 0.9);
+		color: rgba(17, 17, 17, 0.64);
+		border: 1px solid rgba(0, 0, 0, 0.08);
+		font-size: 0.68rem;
 		line-height: 1.2;
 	}
 
@@ -331,7 +339,7 @@
 
 	.tabs {
 		margin-top: 0.8rem;
-		padding: 0.82rem;
+		padding: 0.76rem;
 	}
 
 	.tabs-layout {
@@ -355,13 +363,13 @@
 
 	.tab-list button {
 		border-radius: 999px;
-		border: 1px solid rgba(0, 0, 0, 0.07);
-		background: rgba(255, 255, 255, 0.7);
+		border: 1px solid rgba(0, 0, 0, 0.08);
+		background: rgba(255, 255, 255, 0.84);
 		color: rgba(17, 17, 17, 0.68);
-		padding: 0.62rem 0.82rem;
+		padding: 0.58rem 0.78rem;
 		font: inherit;
 		font-weight: 600;
-		font-size: 0.82rem;
+		font-size: 0.8rem;
 		cursor: pointer;
 		text-align: left;
 		white-space: nowrap;
@@ -390,7 +398,7 @@
 
 	.demo-panel {
 		display: grid;
-		grid-template-columns: minmax(0, 1.2fr) minmax(16rem, 0.8fr);
+		grid-template-columns: minmax(0, 1.24fr) minmax(15rem, 0.76fr);
 		gap: 0.82rem;
 		align-items: end;
 	}
@@ -398,8 +406,8 @@
 	.panel-copy {
 		padding: 0.9rem 0.95rem;
 		border-radius: 20px;
-		background: rgba(255, 255, 255, 0.92);
-		border: 1px solid rgba(0, 0, 0, 0.06);
+		background: rgba(255, 255, 255, 0.96);
+		border: 1px solid rgba(0, 0, 0, 0.08);
 	}
 
 	.blocked-page {

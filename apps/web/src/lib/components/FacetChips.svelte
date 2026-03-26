@@ -50,10 +50,10 @@
 
 	p {
 		margin: 0;
-		font-size: 0.7rem;
+		font-size: 0.68rem;
 		text-transform: uppercase;
 		letter-spacing: 0.12em;
-		color: rgba(17, 17, 17, 0.42);
+		color: rgba(17, 17, 17, 0.46);
 	}
 
 	.group.secondary p {
@@ -68,16 +68,16 @@
 	}
 
 	button {
-		border: 1px solid rgba(0, 0, 0, 0.07);
-		background: rgba(255, 255, 255, 0.7);
+		border: 1px solid rgba(0, 0, 0, 0.08);
+		background: rgba(255, 255, 255, 0.84);
 		color: var(--site-text);
 		border-radius: 999px;
-		padding: 0.48rem 0.72rem;
+		padding: 0.46rem 0.7rem;
 		display: inline-flex;
 		align-items: center;
 		gap: 0.45rem;
 		font: inherit;
-		font-size: 0.84rem;
+		font-size: 0.8rem;
 		cursor: pointer;
 		transition:
 			background 180ms ease,
@@ -86,16 +86,16 @@
 	}
 
 	.group.secondary button {
-		padding: 0.42rem 0.62rem;
-		font-size: 0.78rem;
-		background: rgba(255, 255, 255, 0.52);
+		padding: 0.4rem 0.6rem;
+		font-size: 0.76rem;
+		background: rgba(255, 255, 255, 0.74);
 		color: rgba(17, 17, 17, 0.62);
 	}
 
 	button:hover,
 	button:focus-visible {
-		border-color: rgba(0, 132, 255, 0.18);
-		background: rgba(0, 132, 255, 0.06);
+		border-color: rgba(0, 132, 255, 0.2);
+		background: rgba(0, 132, 255, 0.08);
 	}
 
 	button.active {

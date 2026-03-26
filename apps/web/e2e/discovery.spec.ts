@@ -32,6 +32,7 @@ test.describe('discovery surface', () => {
 		await expect(page.locator('.media-panel').first()).toBeVisible();
 		await expect(page.locator('.media-panel').first()).toContainText('叠层主视觉卡片 预览图');
 		await expect(page.getByRole('tablist', { name: '片段详情标签页' })).toBeVisible();
+		await page.screenshot({ path: testInfo.outputPath('detail.png'), fullPage: true });
 
 		await page.goto('/snippets/internal-draft-sample');
 		await expect(page.getByRole('heading', { name: '内容未公开' })).toBeVisible();

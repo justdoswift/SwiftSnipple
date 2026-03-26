@@ -40,7 +40,7 @@
 	.block {
 		display: grid;
 		gap: 0.88rem;
-		padding: 0.96rem;
+		padding: 0.92rem;
 		border-radius: 24px;
 		color: var(--site-text);
 		content-visibility: auto;
@@ -61,7 +61,7 @@
 
 	h3 {
 		font-family: var(--font-display);
-		font-size: 0.92rem;
+		font-size: 0.9rem;
 		line-height: 1.15;
 	}
 
@@ -73,8 +73,8 @@
 
 	article {
 		white-space: pre-wrap;
-		font-size: 0.9rem;
+		font-size: 0.86rem;
 		line-height: 1.68;
-		color: rgba(17, 17, 17, 0.68);
+		color: rgba(17, 17, 17, 0.72);
 	}
 </style>

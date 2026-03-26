@@ -86,21 +86,28 @@
 			{/if}
 
 			<div class="gallery-glow gallery-glow-a"></div>
+			<div class="gallery-glow gallery-glow-b"></div>
 			<div class="gallery-grid" aria-hidden="true"></div>
+			<div class="gallery-accent" aria-hidden="true"></div>
+			<div class="gallery-watermark" aria-hidden="true">
+				{(eyebrow || id.replaceAll('-', ' ')).slice(0, 14)}
+			</div>
 
 			<div class="gallery-top">
 				<span>{eyebrow || id.replaceAll('-', ' ')}</span>
 			</div>
 
-			<div class="gallery-chrome gallery-chrome-a" aria-hidden="true">
-				<div></div>
-				<div></div>
-				<div></div>
-			</div>
-
-			<div class="gallery-chrome gallery-chrome-b" aria-hidden="true">
-				<div></div>
-				<div></div>
+			<div class="gallery-stage" aria-hidden="true">
+				<div class="gallery-card gallery-card-primary">
+					<div></div>
+					<div></div>
+					<div></div>
+				</div>
+				<div class="gallery-card gallery-card-secondary">
+					<div></div>
+					<div></div>
+					<div></div>
+				</div>
 			</div>
 
 			<div class="gallery-footer">
@@ -129,12 +136,17 @@
 	}
 
 	.gallery-cover {
+		display: block;
 		position: relative;
 		isolation: isolate;
 		overflow: hidden;
+		width: 100%;
+		height: 100%;
+		min-height: 100%;
 		background:
-			linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(244, 248, 255, 0.97)),
-			radial-gradient(circle at 16% 16%, rgba(96, 177, 255, 0.18), transparent 28%);
+			linear-gradient(180deg, rgba(255, 255, 255, 0.985), rgba(244, 248, 255, 0.96)),
+			radial-gradient(circle at 16% 16%, rgba(96, 177, 255, 0.24), transparent 30%),
+			linear-gradient(135deg, rgba(0, 132, 255, 0.03), transparent 34%);
 	}
 
 	.gallery-source {
@@ -143,41 +155,76 @@
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
-		opacity: 0.06;
-		filter: saturate(0.64) brightness(1.03);
+		opacity: 0.18;
+		filter: saturate(0.76) brightness(1.01);
 		transform: scale(1.03);
 	}
 
 	.gallery-glow {
 		position: absolute;
 		border-radius: 999px;
-		filter: blur(16px);
+		filter: blur(20px);
 		pointer-events: none;
 	}
 
 	.gallery-glow-a {
 		top: -8%;
 		left: 10%;
+		width: 30%;
+		height: 22%;
+		background: rgba(96, 177, 255, 0.22);
+	}
+
+	.gallery-glow-b {
+		right: 8%;
+		bottom: 16%;
 		width: 26%;
-		height: 20%;
-		background: rgba(96, 177, 255, 0.18);
+		height: 18%;
+		background: rgba(49, 154, 255, 0.16);
 	}
 
 	.gallery-grid {
 		position: absolute;
 		inset: 0;
 		background-image:
-			linear-gradient(rgba(17, 17, 17, 0.035) 1px, transparent 1px),
-			linear-gradient(90deg, rgba(17, 17, 17, 0.03) 1px, transparent 1px);
+			linear-gradient(rgba(17, 17, 17, 0.045) 1px, transparent 1px),
+			linear-gradient(90deg, rgba(17, 17, 17, 0.04) 1px, transparent 1px);
 		background-size: 100% 100%, 13rem 100%;
-		mask-image: linear-gradient(180deg, rgba(255, 255, 255, 0.5), transparent 88%);
+		mask-image: linear-gradient(180deg, rgba(255, 255, 255, 0.6), transparent 88%);
 	}
 
 	.gallery-top,
 	.gallery-footer,
-	.gallery-chrome {
+	.gallery-stage,
+	.gallery-watermark {
 		position: absolute;
 		z-index: 1;
+	}
+
+	.gallery-watermark {
+		left: 6%;
+		right: 6%;
+		top: 42%;
+		transform: translateY(-50%);
+		font-family: var(--font-display);
+		font-size: clamp(4.4rem, 16vw, 11rem);
+		letter-spacing: -0.07em;
+		line-height: 0.9;
+		color: rgba(17, 17, 17, 0.12);
+		text-transform: uppercase;
+		white-space: nowrap;
+		pointer-events: none;
+	}
+
+	.gallery-accent {
+		position: absolute;
+		top: 18%;
+		left: 12%;
+		width: 22%;
+		height: 0.86rem;
+		border-radius: 999px;
+		background: rgba(0, 132, 255, 0.72);
+		box-shadow: 0 10px 24px rgba(0, 132, 255, 0.18);
 	}
 
 	.gallery-top {
@@ -189,64 +236,76 @@
 		display: inline-flex;
 		padding: 0.36rem 0.62rem;
 		border-radius: 999px;
-		background: rgba(255, 255, 255, 0.82);
-		border: 1px solid rgba(17, 17, 17, 0.05);
+		background: rgba(255, 255, 255, 0.9);
+		border: 1px solid rgba(17, 17, 17, 0.08);
 		font-size: 0.62rem;
 		letter-spacing: 0.06em;
-		color: rgba(17, 17, 17, 0.56);
+		color: rgba(17, 17, 17, 0.62);
 	}
 
-	.gallery-chrome {
-		border-radius: 1.35rem;
-		border: 1px solid rgba(17, 17, 17, 0.05);
-		background: rgba(255, 255, 255, 0.78);
-		box-shadow: 0 10px 22px rgba(17, 17, 17, 0.04);
+	.gallery-stage {
+		inset: 0;
+		pointer-events: none;
 	}
 
-	.gallery-chrome-a {
-		top: 18%;
-		right: 10%;
+	.gallery-card {
+		position: absolute;
 		display: grid;
-		gap: 0.48rem;
-		width: 34%;
-		padding: 0.88rem;
+		gap: 0.5rem;
+		padding: 0.92rem;
+		border-radius: 1.45rem;
+		border: 1px solid rgba(17, 17, 17, 0.08);
+		background: rgba(255, 255, 255, 0.88);
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.94),
+			0 14px 26px rgba(17, 17, 17, 0.05);
 	}
 
-	.gallery-chrome-a div:nth-child(1) {
-		width: 62%;
+	.gallery-card-primary {
+		top: 14%;
+		right: 10%;
+		width: 38%;
+	}
+
+	.gallery-card-primary div:nth-child(1) {
+		width: 66%;
 		height: 0.72rem;
 		border-radius: 999px;
-		background: rgba(0, 132, 255, 0.52);
+		background: rgba(0, 132, 255, 0.72);
 	}
 
-	.gallery-chrome-a div:nth-child(2),
-	.gallery-chrome-a div:nth-child(3) {
-		height: 0.62rem;
+	.gallery-card-primary div:nth-child(2),
+	.gallery-card-primary div:nth-child(3) {
+		height: 0.6rem;
 		border-radius: 999px;
-		background: rgba(17, 17, 17, 0.08);
+		background: rgba(17, 17, 17, 0.14);
 	}
 
-	.gallery-chrome-b {
+	.gallery-card-secondary {
 		left: 12%;
-		bottom: 18%;
-		display: grid;
-		gap: 0.48rem;
-		width: 40%;
-		padding: 0.92rem;
+		bottom: 16%;
+		width: 48%;
 	}
 
-	.gallery-chrome-b div:nth-child(1) {
-		width: 72%;
-		height: 0.78rem;
+	.gallery-card-secondary div:nth-child(1) {
+		width: 78%;
+		height: 0.8rem;
 		border-radius: 999px;
-		background: rgba(17, 17, 17, 0.12);
+		background: rgba(17, 17, 17, 0.18);
 	}
 
-	.gallery-chrome-b div:nth-child(2) {
-		width: 50%;
+	.gallery-card-secondary div:nth-child(2) {
+		width: 62%;
 		height: 0.74rem;
 		border-radius: 999px;
-		background: rgba(17, 17, 17, 0.08);
+		background: rgba(17, 17, 17, 0.14);
+	}
+
+	.gallery-card-secondary div:nth-child(3) {
+		width: 46%;
+		height: 0.74rem;
+		border-radius: 999px;
+		background: rgba(0, 132, 255, 0.34);
 	}
 
 	.gallery-footer {
@@ -255,11 +314,11 @@
 		bottom: 0.78rem;
 		display: grid;
 		gap: 0.18rem;
-		padding: 0.72rem 0.78rem;
+		padding: 0.7rem 0.76rem;
 		border-radius: 1rem;
-		background: rgba(255, 255, 255, 0.88);
-		border: 1px solid rgba(17, 17, 17, 0.05);
-		box-shadow: 0 10px 22px rgba(17, 17, 17, 0.045);
+		background: rgba(255, 255, 255, 0.92);
+		border: 1px solid rgba(17, 17, 17, 0.08);
+		box-shadow: 0 10px 22px rgba(17, 17, 17, 0.05);
 	}
 
 	.gallery-footer p,
@@ -268,16 +327,16 @@
 	}
 
 	.gallery-footer p {
-		font-size: 0.8rem;
+		font-size: 0.82rem;
 		font-weight: 600;
 		line-height: 1.16;
 		letter-spacing: -0.02em;
-		color: rgba(17, 17, 17, 0.82);
+		color: rgba(17, 17, 17, 0.88);
 	}
 
 	.gallery-footer span {
 		font-size: 0.66rem;
-		color: rgba(17, 17, 17, 0.5);
+		color: rgba(17, 17, 17, 0.56);
 	}
 
 	.fallback-cover {

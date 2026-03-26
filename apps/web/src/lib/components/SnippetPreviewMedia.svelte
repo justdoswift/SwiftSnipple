@@ -83,7 +83,7 @@
 	>
 		{#if showSourceImage}
 			<img
-				class="absolute inset-0 size-full scale-[1.02] object-cover opacity-[0.1] saturate-[0.82] brightness-[1.02]"
+				class="absolute inset-0 size-full scale-[1.02] object-cover opacity-[0.08] saturate-[0.78] brightness-[1.03]"
 				src={activeCoverUrl}
 				alt={alt}
 				{loading}
@@ -93,19 +93,20 @@
 
 		<div class="page-orb page-orb-primary absolute left-[12%] top-[10%] h-[16%] w-[24%] blur-[20px]"></div>
 		<div class="page-orb page-orb-soft absolute bottom-[18%] right-[10%] h-[14%] w-[22%] blur-[20px]"></div>
+		<div class="page-orb page-orb-warm absolute bottom-[10%] left-[28%] h-[14%] w-[20%] blur-[24px]"></div>
 		<div
 			class="preview-grid-mask pointer-events-none absolute inset-0"
 			aria-hidden="true"
 		></div>
 
 		<div class="absolute left-3 top-3 z-1">
-			<Badge variant="outline" class="bg-card/88 text-[0.62rem] tracking-[0.06em] text-muted-foreground">
+			<Badge variant="secondary" class="text-[0.62rem] tracking-[0.06em] text-muted-foreground/88">
 				{eyebrow || id.replaceAll('-', ' ')}
 			</Badge>
 		</div>
 
 		<div class="pointer-events-none absolute inset-0" aria-hidden="true">
-			<Card.Root class="absolute left-[10%] top-[14%] h-[58%] w-[72%] overflow-hidden rounded-[calc(var(--radius)+0.75rem)] border-border/75 bg-card/96">
+			<Card.Root class="absolute left-[10%] top-[14%] h-[58%] w-[72%] overflow-hidden rounded-[calc(var(--radius)+0.75rem)]">
 				<div class="flex items-center justify-between border-b px-4 py-3">
 					<div class="flex gap-1.5">
 						<div class="size-2 rounded-full bg-primary/55"></div>
@@ -127,7 +128,7 @@
 						<div class="grid gap-2">
 							<div class="h-2.5 w-2/5 rounded-full bg-foreground/16"></div>
 							<div class="grid grid-cols-[1.4fr_0.9fr] gap-3">
-								<div class="rounded-[calc(var(--radius)+0.2rem)] border border-border/70 bg-background/82 p-3">
+								<div class="rounded-[calc(var(--radius)+0.2rem)] border border-white/26 bg-white/54 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.26)]">
 									<div class="mb-2 h-24 rounded-[calc(var(--radius)-1px)] bg-primary/12"></div>
 									<div class="space-y-2">
 										<div class="h-2 rounded-full bg-foreground/12"></div>
@@ -135,14 +136,14 @@
 									</div>
 								</div>
 								<div class="grid gap-3">
-									<div class="rounded-[calc(var(--radius)+0.2rem)] border border-border/70 bg-background/88 p-3">
+									<div class="rounded-[calc(var(--radius)+0.2rem)] border border-white/26 bg-white/56 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.24)]">
 										<div class="mb-2 h-2.5 w-12 rounded-full bg-primary/52"></div>
 										<div class="space-y-2">
 											<div class="h-2 rounded-full bg-foreground/12"></div>
 											<div class="h-2 rounded-full bg-foreground/10"></div>
 										</div>
 									</div>
-									<div class="rounded-[calc(var(--radius)+0.2rem)] border border-border/70 bg-background/88 p-3">
+									<div class="rounded-[calc(var(--radius)+0.2rem)] border border-white/26 bg-white/56 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.24)]">
 										<div class="mb-2 h-2.5 w-10 rounded-full bg-foreground/12"></div>
 										<div class="h-10 rounded-[calc(var(--radius)-1px)] bg-muted/80"></div>
 									</div>
@@ -152,7 +153,7 @@
 					</div>
 				</div>
 			</Card.Root>
-			<Card.Root class="absolute bottom-[14%] right-[10%] w-[30%] rounded-[calc(var(--radius)+0.5rem)] border-border/75 bg-card/96 px-4 py-4">
+			<Card.Root class="absolute bottom-[14%] right-[10%] w-[30%] rounded-[calc(var(--radius)+0.5rem)] px-4 py-4">
 				<div class="mb-2 h-2.5 w-16 rounded-full bg-primary/52"></div>
 				<div class="space-y-2">
 					<div class="h-2 rounded-full bg-foreground/12"></div>
@@ -162,7 +163,7 @@
 			</Card.Root>
 		</div>
 
-		<Card.Root class="absolute bottom-3 left-3 right-3 z-1 gap-1 rounded-[calc(var(--radius)+0.25rem)] border-border/75 bg-card/94 px-4 py-3">
+		<Card.Root class="absolute bottom-3 left-3 right-3 z-1 gap-1 rounded-[calc(var(--radius)+0.4rem)] px-4 py-3">
 			<p class="m-0 text-sm font-semibold leading-tight tracking-tight text-foreground">{displayTitle}</p>
 			{#if metaText}
 				<span class="m-0 text-xs text-muted-foreground">{metaText}</span>

@@ -10,6 +10,14 @@
 	}: WithElementRef<HTMLAttributes<HTMLTableRowElement>> = $props();
 </script>
 
-<tr bind:this={ref} data-slot="table-row" class={cn("hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors", className)} {...restProps}>
+<tr
+	bind:this={ref}
+	data-slot="table-row"
+	class={cn(
+		"border-b border-white/16 transition-[background-color,border-color] hover:border-white/24 hover:bg-white/42 data-[state=selected]:border-white/28 data-[state=selected]:bg-white/54",
+		className
+	)}
+	{...restProps}
+>
 	{@render children?.()}
 </tr>

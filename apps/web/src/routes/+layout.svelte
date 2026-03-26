@@ -35,6 +35,7 @@
 	<div class="relative min-h-screen">
 		<div class="page-orb page-orb-primary absolute -left-20 -top-36 z-0 h-48 w-88"></div>
 		<div class="page-orb page-orb-soft absolute left-32 top-[-4rem] z-0 h-36 w-56"></div>
+		<div class="page-orb page-orb-warm absolute left-[18%] top-[26rem] z-0 h-52 w-64"></div>
 
 		<header class="pointer-events-none sticky top-5 z-20 flex justify-center px-5 max-[900px]:top-4">
 			<div class="surface-popover pointer-events-auto inline-flex w-fit items-center gap-3 rounded-[calc(var(--radius)+0.25rem)] px-3 py-2 max-[900px]:w-full max-[900px]:max-w-[calc(100vw-1.5rem)] max-[900px]:justify-between max-[900px]:px-3.5">
@@ -49,8 +50,8 @@
 						<a
 							class={`rounded-[calc(var(--radius)-2px)] px-3 py-2 text-sm font-medium no-underline transition-[background-color,color] duration-[var(--motion-fast)] ${
 								isActive(item.href, page.url.pathname)
-									? 'bg-background text-foreground [box-shadow:var(--shadow-sm)]'
-									: 'text-muted-foreground hover:bg-muted/72 hover:text-foreground focus-visible:bg-muted/72 focus-visible:text-foreground'
+									? 'glass-pill text-foreground'
+									: 'text-muted-foreground hover:bg-white/50 hover:text-foreground focus-visible:bg-white/50 focus-visible:text-foreground'
 							}`}
 							href={item.href}
 						>

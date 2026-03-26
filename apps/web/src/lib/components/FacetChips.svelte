@@ -24,9 +24,9 @@
 	<div class="flex flex-wrap gap-2">
 		<Button
 			type="button"
-			variant={activeValue === '' ? 'secondary' : 'outline'}
+			variant={activeValue === '' ? 'secondary' : 'ghost'}
 			size={tone === 'secondary' ? 'xs' : 'sm'}
-			class="rounded-full px-3"
+			class={`rounded-full px-3 ${activeValue === '' ? '' : 'text-muted-foreground/84'}`}
 			onclick={() => onselect?.('')}
 		>
 			全部
@@ -35,14 +35,19 @@
 		{#each options as option (option.value)}
 			<Button
 				type="button"
-				variant={activeValue === option.value ? 'secondary' : 'outline'}
+				variant={activeValue === option.value ? 'secondary' : 'ghost'}
 				size={tone === 'secondary' ? 'xs' : 'sm'}
-				class="rounded-full px-3"
+				class={`rounded-full px-3 ${activeValue === option.value ? '' : 'text-muted-foreground/84'}`}
 				onclick={() => onselect?.(option.value)}
 			>
 				<span>{option.label}</span>
 				{#if option.count !== undefined}
-					<Badge variant="secondary" class="h-5 px-1.5 text-[0.68rem]">{option.count}</Badge>
+					<Badge
+						variant={activeValue === option.value ? 'secondary' : 'outline'}
+						class={`h-5 px-1.5 text-[0.68rem] ${activeValue === option.value ? '' : 'opacity-72'}`}
+					>
+						{option.count}
+					</Badge>
 				{/if}
 			</Button>
 		{/each}

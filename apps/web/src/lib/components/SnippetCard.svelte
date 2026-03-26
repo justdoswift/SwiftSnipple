@@ -47,7 +47,7 @@
 
 <Card.Root
 	data-testid={`snippet-card-${snippet.id}`}
-	class="content-visibility-auto relative gap-0 overflow-hidden py-0 [contain-intrinsic-size:320px_280px]"
+	class="content-visibility-auto relative gap-0 overflow-hidden py-0 transition-transform duration-[var(--motion-normal)] ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 [contain-intrinsic-size:320px_280px]"
 >
 	<a
 		class={`group/card-link flex h-full min-w-0 flex-1 self-stretch no-underline ${featured ? 'flex-col md:flex-row' : 'flex-col'} w-full`}
@@ -68,14 +68,14 @@
 				className="cover"
 				alt={snippet.title}
 			/>
-			<div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-card/72 via-transparent to-white/12"></div>
+			<div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-[rgba(246,248,252,0.78)] via-transparent to-white/12"></div>
 
 			{#if featured}
-				<div class="surface-popover pointer-events-none absolute bottom-4 left-4 z-20 grid max-w-80 gap-1 rounded-[calc(var(--radius)+0.1rem)] px-4 py-3">
+				<div class="surface-popover pointer-events-none absolute bottom-4 left-4 z-20 grid max-w-80 gap-1.5 rounded-[calc(var(--radius)+0.5rem)] px-4 py-3.5">
 					<h2 class="m-0 font-(family-name:--font-display) text-[clamp(1.16rem,1.7vw,1.5rem)] leading-tight tracking-tight">
 						{snippet.title}
 					</h2>
-					<p class="m-0 text-xs text-muted-foreground">{metaLine}</p>
+					<p class="m-0 text-xs text-muted-foreground/90">{metaLine}</p>
 				</div>
 			{/if}
 		</div>
@@ -85,13 +85,13 @@
 				<h2 class="m-0 font-(family-name:--font-display) text-[0.98rem] leading-tight tracking-tight">
 					{snippet.title}
 				</h2>
-				<p class="m-0 text-[0.8rem] text-muted-foreground">{metaLine}</p>
+				<p class="m-0 text-[0.8rem] text-muted-foreground/90">{metaLine}</p>
 			</Card.Content>
 		{/if}
 	</a>
 
 	<div
-		class={`absolute right-3 top-3 z-20 inline-flex gap-1 rounded-full border border-border/70 bg-card/78 p-1 backdrop-blur-sm transition-opacity duration-[var(--motion-fast)] ${variant === 'home' && !featured ? 'opacity-40 hover:opacity-100 focus-within:opacity-100' : 'opacity-100'}`}
+		class={`glass-pill absolute right-3 top-3 z-20 inline-flex gap-1 p-1 transition-opacity duration-[var(--motion-fast)] ${variant === 'home' && !featured ? 'opacity-55 hover:opacity-100 focus-within:opacity-100' : 'opacity-100'}`}
 	>
 		{#if hasCodeCopy}
 			<CopyActionButton

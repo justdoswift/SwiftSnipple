@@ -27,6 +27,21 @@
 
 	let { data }: Props = $props();
 	const hasSecondarySelection = $derived(Boolean(data.filters.hasDemo || data.filters.hasPrompt));
+	const activeFilterCount = $derived(
+		[
+			data.filters.q,
+			data.filters.category,
+			data.filters.difficulty,
+			data.filters.platform,
+			data.filters.hasDemo,
+			data.filters.hasPrompt
+		].filter(Boolean).length
+	);
+	const resultSummary = $derived(
+		activeFilterCount === 0
+			? '当前没有额外筛选，适合直接浏览全部作品。'
+			: `已启用 ${activeFilterCount} 个筛选，结果会随输入和点选即时刷新。`
+	);
 	let manualSecondaryFilters = $state(false);
 	const showSecondaryFilters = $derived(hasSecondarySelection || manualSecondaryFilters);
 
@@ -79,6 +94,10 @@
 </svelte:head>
 
 <main class="editorial-page grid gap-5 pt-24">
+	<div class="page-orb page-orb-primary absolute -left-10 top-12 h-44 w-72"></div>
+	<div class="page-orb page-orb-soft absolute right-[10%] top-28 h-36 w-56"></div>
+	<div class="page-orb page-orb-warm absolute left-[28%] top-[22rem] h-40 w-64"></div>
+
 	<section class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 max-[1040px]:grid-cols-1">
 		<div>
 			<p class="section-kicker">Explore</p>
@@ -91,7 +110,7 @@
 	</section>
 
 	<Card.Root class="surface-card">
-		<Card.Content class="space-y-5">
+		<Card.Content class="space-y-5 py-1">
 		<div class="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 max-[1040px]:grid-cols-1">
 			<label class="search-field grid gap-2" for="search-query">
 				<span class="ui-label">搜索片段</span>
@@ -139,7 +158,7 @@
 		</div>
 
 		{#if showSecondaryFilters}
-			<div class="grid gap-4 border-t border-border/70 pt-4 md:grid-cols-2">
+			<div class="grid gap-4 border-t border-white/22 pt-4 md:grid-cols-2">
 				<FacetChips
 					label="含 Demo"
 					options={facetOptions('hasDemo', data.results.facets.hasDemo)}
@@ -165,7 +184,13 @@
 				<p class="section-kicker">已发布</p>
 				<h2 class="section-title">{data.results.total} 条可直接复用的片段</h2>
 			</div>
-			<p class="section-copy">先看合不合适，再决定要不要打开细节。</p>
+			<div class="surface-muted grid max-w-[22rem] gap-1.5 rounded-[calc(var(--radius)+0.55rem)] px-4 py-3">
+				<p class="ui-label">浏览状态</p>
+				<p class="m-0 text-sm leading-6 text-foreground/82">{resultSummary}</p>
+				<p class="m-0 text-xs leading-5 text-muted-foreground/90">
+					先看合不合适，再决定要不要打开细节。
+				</p>
+			</div>
 		</div>
 
 		{#if data.results.items.length > 0}
@@ -176,7 +201,7 @@
 			</div>
 		{:else}
 			<Card.Root class="surface-card">
-				<Card.Content class="space-y-3">
+				<Card.Content class="space-y-3 py-1">
 				<h2 class="section-title">这次没找到合适的，先看看这些更常用的。</h2>
 				<p class="section-copy">
 					换个关键词，或者直接从下面这些已经常用的片段重新开始。

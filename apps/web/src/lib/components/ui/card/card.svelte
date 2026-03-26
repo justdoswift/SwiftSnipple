@@ -15,7 +15,10 @@
 	bind:this={ref}
 	data-slot="card"
 	data-size={size}
-	class={cn("group/card flex flex-col gap-6 overflow-hidden rounded-[calc(var(--radius)+0.35rem)] border border-border/75 bg-card/96 py-6 text-sm text-card-foreground [box-shadow:var(--shadow-sm)] has-[>img:first-child]:pt-0 supports-[backdrop-filter]:bg-card/88 data-[size=sm]:gap-4 data-[size=sm]:py-4 *:[img:first-child]:rounded-t-[calc(var(--radius)+0.35rem)] *:[img:last-child]:rounded-b-[calc(var(--radius)+0.35rem)]", className)}
+	class={cn(
+		"glass-card group/card flex flex-col gap-6 overflow-hidden rounded-[calc(var(--radius)+0.75rem)] py-6 text-sm text-card-foreground has-[>img:first-child]:pt-0 data-[size=sm]:gap-4 data-[size=sm]:py-4 *:[img:first-child]:rounded-t-[calc(var(--radius)+0.75rem)] *:[img:last-child]:rounded-b-[calc(var(--radius)+0.75rem)]",
+		className
+	)}
 	{...restProps}
 >
 	{@render children?.()}

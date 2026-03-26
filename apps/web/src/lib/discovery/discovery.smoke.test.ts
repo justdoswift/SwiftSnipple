@@ -133,7 +133,7 @@ describe('discovery smoke coverage', () => {
 			}
 		});
 
-		expect(screen.getByText('没有命中，先从这些精选重新开始。')).toBeTruthy();
+		expect(screen.getByText('这次没找到合适的，先看看这些更常用的。')).toBeTruthy();
 		expect(screen.getAllByText('叠层主视觉卡片').length).toBeGreaterThan(0);
 	});
 
@@ -149,9 +149,9 @@ describe('discovery smoke coverage', () => {
 			}
 		});
 
-		expect(screen.getByText('先看精选，再去 Explore 深挖。')).toBeTruthy();
-		expect(screen.getByText('当前精选')).toBeTruthy();
-		expect(screen.getByRole('link', { name: '去 Explore 深挖' })).toBeTruthy();
+		expect(screen.getByText('每一条都可继续查看源码、提示词和可用边界。')).toBeTruthy();
+		expect(screen.getByText('本周推荐')).toBeTruthy();
+		expect(screen.getByRole('link', { name: '进入 Explore' })).toBeTruthy();
 		expect(screen.queryByText('受一线产品团队信任')).toBeNull();
 		expect(screen.getByRole('heading', { name: '叠层主视觉卡片' })).toBeTruthy();
 		expect(screen.getAllByText('瀑布流布局').length).toBeGreaterThan(0);

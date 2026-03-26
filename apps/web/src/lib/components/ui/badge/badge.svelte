@@ -2,14 +2,18 @@
 	import { type VariantProps, tv } from "tailwind-variants";
 
 	export const badgeVariants = tv({
-		base: "group/badge inline-flex h-6 w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-transparent px-2.5 py-0.5 text-[0.72rem] font-medium tracking-[0.01em] transition-[background-color,border-color,color,box-shadow] duration-[var(--motion-fast)] ease-[cubic-bezier(0.22,1,0.36,1)] has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30 aria-invalid:border-destructive aria-invalid:ring-destructive/20 [&>svg]:pointer-events-none",
+		base: "group/badge inline-flex h-6 w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border px-2.5 py-0.5 text-[0.72rem] font-medium tracking-[0.01em] transition-[background-color,border-color,color,box-shadow] duration-[var(--motion-fast)] ease-[cubic-bezier(0.22,1,0.36,1)] has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 [&>svg]:size-3! focus-visible:border-white/56 focus-visible:ring-[4px] focus-visible:ring-ring/26 aria-invalid:border-destructive aria-invalid:ring-destructive/20 [&>svg]:pointer-events-none",
 		variants: {
 			variant: {
-				default: "bg-primary/10 text-primary ring-1 ring-primary/10",
-				secondary: "bg-secondary text-secondary-foreground ring-1 ring-border/55",
-				destructive: "bg-destructive/10 text-destructive ring-1 ring-destructive/10",
-				outline: "border-border/70 bg-background/75 text-muted-foreground [a]:hover:bg-muted/70 [a]:hover:text-foreground",
-				ghost: "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
+				default:
+					"border-white/18 bg-primary/12 text-primary/92 [box-shadow:inset_0_1px_0_rgba(255,255,255,0.24)]",
+				secondary:
+					"border-white/30 bg-[linear-gradient(180deg,rgba(255,255,255,0.68)_0%,rgba(255,255,255,0.5)_100%)] text-secondary-foreground [box-shadow:inset_0_1px_0_rgba(255,255,255,0.38)]",
+				destructive:
+					"border-white/18 bg-destructive/10 text-destructive [box-shadow:inset_0_1px_0_rgba(255,255,255,0.2)]",
+				outline:
+					"border-white/32 bg-[linear-gradient(180deg,rgba(255,255,255,0.62)_0%,rgba(255,255,255,0.46)_100%)] text-muted-foreground [box-shadow:inset_0_1px_0_rgba(255,255,255,0.34)] [a]:hover:bg-white/60 [a]:hover:text-foreground",
+				ghost: "border-transparent bg-transparent text-muted-foreground hover:bg-white/48 hover:text-foreground",
 				link: "text-primary underline-offset-4 hover:underline",
 			},
 		},

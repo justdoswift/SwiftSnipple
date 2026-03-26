@@ -61,7 +61,11 @@
 	{@const acceptanceBlocks = snippet.promptBlocks.filter((block) => block.kind !== 'prompt')}
 
 	<main class="editorial-page grid gap-5 pt-24">
-		<div class="page-actions">
+		<div class="page-orb page-orb-primary absolute -left-10 top-16 h-44 w-72"></div>
+		<div class="page-orb page-orb-soft absolute right-[8%] top-24 h-40 w-60"></div>
+		<div class="page-orb page-orb-warm absolute left-[22%] top-[22rem] h-36 w-56"></div>
+
+		<div class="glass-pill inline-flex w-fit items-center gap-1 p-1">
 			<Button href="/" variant="ghost" size="sm">回首页</Button>
 			<Button href="/explore" variant="ghost" size="sm">全部片段</Button>
 		</div>
@@ -73,12 +77,12 @@
 				<p class="summary section-copy">{snippet.summary}</p>
 
 				<div class="m-0 flex flex-wrap gap-2">
-					<Badge variant="outline">{difficultyLabel(snippet.difficulty)}</Badge>
-					<Badge variant="outline">{demoAvailabilityLabel(snippet.hasDemo)}</Badge>
-					<Badge variant="outline">{promptAvailabilityLabel(snippet.hasPrompt)}</Badge>
+					<Badge variant="secondary">{difficultyLabel(snippet.difficulty)}</Badge>
+					<Badge variant="secondary">{demoAvailabilityLabel(snippet.hasDemo)}</Badge>
+					<Badge variant="secondary">{promptAvailabilityLabel(snippet.hasPrompt)}</Badge>
 				</div>
 
-				<div class="grid gap-3 border-t border-border/70 pt-4">
+				<div class="grid gap-3 border-t border-white/22 pt-4">
 					<div class="m-0 flex flex-wrap gap-2">
 						{#each snippet.platforms as platform (`${platform.os}-${platform.minVersion}`)}
 							<Badge variant="outline">{platformLabel(platform)}</Badge>
@@ -87,7 +91,7 @@
 
 					<ul class="m-0 flex flex-wrap gap-2 p-0">
 						{#each snippet.tags as tag (tag)}
-							<li><Badge variant="outline">{tag}</Badge></li>
+							<li><Badge variant="ghost">{tag}</Badge></li>
 						{/each}
 					</ul>
 				</div>
@@ -112,14 +116,26 @@
 		<Card.Root class="surface-card">
 			<Card.Content>
 				<Tabs.Root bind:value={activeTab} class="grid gap-3">
-					<Tabs.List variant="line" class="no-scrollbar flex flex-nowrap overflow-x-auto pb-1" aria-label="片段详情标签页">
-						<Tabs.Trigger value="demo">演示</Tabs.Trigger>
-						<Tabs.Trigger value="code">代码</Tabs.Trigger>
-						{#if snippet.hasPrompt}
-							<Tabs.Trigger value="prompt">提示词</Tabs.Trigger>
-						{/if}
-						<Tabs.Trigger value="license">许可</Tabs.Trigger>
-					</Tabs.List>
+					<div class="flex flex-wrap items-center justify-between gap-3">
+						<Tabs.List
+							variant="default"
+							class="no-scrollbar flex max-w-full flex-nowrap overflow-x-auto"
+							aria-label="片段详情标签页"
+						>
+							<Tabs.Trigger value="demo">演示</Tabs.Trigger>
+							<Tabs.Trigger value="code">代码</Tabs.Trigger>
+							{#if snippet.hasPrompt}
+								<Tabs.Trigger value="prompt">提示词</Tabs.Trigger>
+							{/if}
+							<Tabs.Trigger value="license">许可</Tabs.Trigger>
+						</Tabs.List>
+						<div class="surface-muted hidden max-w-[21rem] gap-1 rounded-[calc(var(--radius)+0.45rem)] px-4 py-3 min-[1080px]:grid">
+							<p class="ui-label">查看顺序</p>
+							<p class="m-0 text-sm leading-6 text-foreground/82">
+								先看演示，再按需切到代码、提示词和许可。
+							</p>
+						</div>
+					</div>
 
 					<Tabs.Content value="demo">
 						<div class="grid items-end gap-4 min-[901px]:grid-cols-[minmax(0,1.24fr)_minmax(15rem,0.76fr)]">

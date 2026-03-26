@@ -86,7 +86,7 @@ SwiftSnippet 是一个面向 SwiftUI 开发者与 Vibe Coding 用户的片段卡
 
 ## Current State
 
-v1.0 已完成并归档。SwiftSnippet 现在已经具备统一内容协议、published-only discovery 体验、可验证的 publish pipeline，以及一批可公开浏览和复用的 12 条首发内容。公开站 UI 已完成一轮大改，但当前优先级已经切到内部运营效率：`/studio` 后台与受保护的 admin API 已实现，下一步是把这条录入/发布闭环正式验证并纳入 GSD 记录。
+v1.0 已完成并归档。SwiftSnippet 现在已经具备统一内容协议、published-only discovery 体验、可验证的 publish pipeline，以及一批可公开浏览和复用的 12 条首发内容。`/studio` 后台与受保护的 admin API 已实现，并且后台与公开站都已经进一步收口到统一的 `shadcn-svelte + Tailwind` 组件体系；下一步重点回到这条录入/发布闭环的人工验收与真实使用顺滑度。
 
 ## Evolution
 
@@ -106,4 +106,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-25 after v1.2 backend milestone sync*
+*Last updated: 2026-03-26 after Phase 08 full shadcn-svelte convergence sync*

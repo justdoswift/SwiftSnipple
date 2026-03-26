@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { Badge } from '$lib/components/ui/badge/index.js';
+	import { Button } from '$lib/components/ui/button/index.js';
+	import * as Card from '$lib/components/ui/card/index.js';
 	import CodeBlock from '$lib/components/CodeBlock.svelte';
 	import {
 		categoryLabel,
@@ -9,6 +12,7 @@
 	} from '$lib/discovery/presentation';
 	import PromptBlock from '$lib/components/PromptBlock.svelte';
 	import SnippetPreviewMedia from '$lib/components/SnippetPreviewMedia.svelte';
+	import * as Tabs from '$lib/components/ui/tabs/index.js';
 	import type { PublishedSnippetRecord } from '$lib/discovery/types';
 
 	type DetailData =
@@ -36,18 +40,20 @@
 </svelte:head>
 
 {#if data.notPublic}
-	<main class="blocked-page">
-		<section class="blocked-card content-surface">
+	<main class="mx-auto grid min-h-screen w-[min(var(--page-width),calc(100vw-3rem))] items-center px-[clamp(1rem,2.2vw,1.8rem)] py-16">
+		<Card.Root class="blocked-card">
+			<Card.Content class="space-y-4">
 			<p class="section-kicker">公开可见性</p>
 			<h1>内容未公开</h1>
 			<p class="section-copy">
 				这个 slug 当前不在公开列表中。可以回到首页或 Explore，继续浏览已发布片段。
 			</p>
 			<div class="actions">
-				<a class="back-link" href="/">返回首页</a>
-				<a class="back-link" href="/explore">去发现页</a>
+				<Button href="/" variant="outline" size="sm">返回首页</Button>
+				<Button href="/explore" variant="outline" size="sm">去发现页</Button>
 			</div>
-		</section>
+			</Card.Content>
+		</Card.Root>
 	</main>
 {:else}
 	{@const snippet = data.snippet}
@@ -55,120 +61,97 @@
 	{@const acceptanceBlocks = snippet.promptBlocks.filter((block) => block.kind !== 'prompt')}
 
 	<main class="page">
-		<div class="back-row">
-			<a class="back-link" href="/">返回首页</a>
-			<a class="back-link" href="/explore">继续发现</a>
+		<div class="mb-4 flex flex-wrap gap-3">
+			<Button href="/" variant="ghost" size="sm">返回首页</Button>
+			<Button href="/explore" variant="ghost" size="sm">继续发现</Button>
 		</div>
 
-		<section class="hero">
-			<div class="hero-copy">
+		<section class="grid items-start gap-4 min-[901px]:grid-cols-[minmax(280px,0.78fr)_minmax(560px,1.22fr)]">
+			<div class="px-1 pt-1">
 				<p class="section-kicker">{categoryLabel(snippet.categoryPrimary)}</p>
 				<h1 class="section-title page-title">{snippet.title}</h1>
 				<p class="summary section-copy">{snippet.summary}</p>
 
-				<div class="signal-row">
-					<span class="badge">{difficultyLabel(snippet.difficulty)}</span>
-					<span class="badge">{demoAvailabilityLabel(snippet.hasDemo)}</span>
-					<span class="badge">{promptAvailabilityLabel(snippet.hasPrompt)}</span>
+				<div class="m-0 flex flex-wrap gap-2">
+					<Badge variant="outline">{difficultyLabel(snippet.difficulty)}</Badge>
+					<Badge variant="outline">{demoAvailabilityLabel(snippet.hasDemo)}</Badge>
+					<Badge variant="outline">{promptAvailabilityLabel(snippet.hasPrompt)}</Badge>
 				</div>
 
-				<div class="meta-panel">
-					<div class="platforms">
+				<div class="grid gap-2 border-t pt-3">
+					<div class="m-0 flex flex-wrap gap-2">
 						{#each snippet.platforms as platform (`${platform.os}-${platform.minVersion}`)}
-							<span>{platformLabel(platform)}</span>
+							<Badge variant="outline">{platformLabel(platform)}</Badge>
 						{/each}
 					</div>
 
-					<ul class="tags">
+					<ul class="m-0 flex flex-wrap gap-2 p-0">
 						{#each snippet.tags as tag (tag)}
-							<li>{tag}</li>
+							<li><Badge variant="outline">{tag}</Badge></li>
 						{/each}
 					</ul>
 				</div>
 			</div>
 
-			<div class="media-panel content-surface">
+			<Card.Root class="media-panel">
+				<Card.Content class="p-3">
 				<SnippetPreviewMedia
 					id={snippet.id}
 					coverUrl={snippet.media.coverUrl}
 					demoUrl={undefined}
 					eyebrow={categoryLabel(snippet.categoryPrimary)}
 					metaText={`${difficultyLabel(snippet.difficulty)} · ${promptAvailabilityLabel(snippet.hasPrompt)}`}
-					className="hero-media"
+					className="block min-h-[25.5rem] w-full rounded-[20px] bg-card object-cover"
 					alt={`${snippet.title} 预览图`}
 					loading="eager"
 				/>
-			</div>
+				</Card.Content>
+			</Card.Root>
 		</section>
 
-		<section class="tabs glass-panel">
-			<div class="tabs-layout">
-				<div class="tab-list" role="tablist" aria-label="片段详情标签页">
-					<button
-						type="button"
-						role="tab"
-						aria-selected={activeTab === 'demo'}
-						class:active={activeTab === 'demo'}
-						onclick={() => (activeTab = 'demo')}
-					>
-						演示
-					</button>
-					<button
-						type="button"
-						role="tab"
-						aria-selected={activeTab === 'code'}
-						class:active={activeTab === 'code'}
-						onclick={() => (activeTab = 'code')}
-					>
-						代码
-					</button>
-					{#if snippet.hasPrompt}
-						<button
-							type="button"
-							role="tab"
-							aria-selected={activeTab === 'prompt'}
-							class:active={activeTab === 'prompt'}
-							onclick={() => (activeTab = 'prompt')}
-						>
-							提示词
-						</button>
-					{/if}
-					<button
-						type="button"
-						role="tab"
-						aria-selected={activeTab === 'license'}
-						class:active={activeTab === 'license'}
-						onclick={() => (activeTab = 'license')}
-					>
-						许可
-					</button>
-				</div>
+		<Card.Root class="mt-3">
+			<Card.Content>
+				<Tabs.Root bind:value={activeTab} class="grid gap-3">
+					<Tabs.List variant="line" class="no-scrollbar flex flex-nowrap overflow-x-auto pb-1" aria-label="片段详情标签页">
+						<Tabs.Trigger value="demo">演示</Tabs.Trigger>
+						<Tabs.Trigger value="code">代码</Tabs.Trigger>
+						{#if snippet.hasPrompt}
+							<Tabs.Trigger value="prompt">提示词</Tabs.Trigger>
+						{/if}
+						<Tabs.Trigger value="license">许可</Tabs.Trigger>
+					</Tabs.List>
 
-				<div class="tab-panel">
-					{#if activeTab === 'demo'}
-						<div class="demo-panel">
+					<Tabs.Content value="demo">
+						<div class="grid items-end gap-4 min-[901px]:grid-cols-[minmax(0,1.24fr)_minmax(15rem,0.76fr)]">
 							<SnippetPreviewMedia
 								id={snippet.id}
 								coverUrl={snippet.media.coverUrl}
 								demoUrl={undefined}
 								eyebrow={categoryLabel(snippet.categoryPrimary)}
 								metaText={`${difficultyLabel(snippet.difficulty)} · ${demoAvailabilityLabel(snippet.hasDemo)}`}
-								className="tab-media"
+								className="block min-h-[18rem] w-full rounded-[20px] bg-card object-cover"
 								alt={`${snippet.title} 详情封面`}
 								loading="eager"
 							/>
-							<p class="panel-copy section-copy">
-								详情页保留完整的源码、Prompt、License 与演示上下文，用来承接卡片层的快速复制动作。
+							<Card.Root>
+								<Card.Content>
+							<p class="section-copy">
+								这里集中放演示、源码、提示词和许可，方便你判断能不能直接拿去用。
 							</p>
+								</Card.Content>
+							</Card.Root>
 						</div>
-					{:else if activeTab === 'code'}
-						<div class="stack">
+					</Tabs.Content>
+					<Tabs.Content value="code">
+						<div class="grid gap-3">
 							{#each snippet.codeBlocks as block (block.id)}
 								<CodeBlock title={block.filename} language={block.language} content={block.content} />
 							{/each}
 						</div>
-					{:else if activeTab === 'prompt' && snippet.hasPrompt}
-						<div class="stack">
+					</Tabs.Content>
+					{#if snippet.hasPrompt}
+						<Tabs.Content value="prompt">
+						<div class="grid gap-3">
 							{#each promptBlocks as block (block.id)}
 								<PromptBlock title="提示词模板" kind={block.kind} content={block.content} />
 							{/each}
@@ -176,9 +159,12 @@
 								<PromptBlock title="验收清单" kind={block.kind} content={block.content} />
 							{/each}
 						</div>
-					{:else}
-						<div class="license-grid">
-							<article class="license-card content-surface">
+						</Tabs.Content>
+					{/if}
+					<Tabs.Content value="license">
+						<div class="grid gap-3 min-[901px]:grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
+							<Card.Root class="license-card">
+								<Card.Content class="space-y-4">
 								<p class="section-kicker">许可</p>
 								<h2 class="section-title">复用边界</h2>
 								<ul>
@@ -186,9 +172,11 @@
 									<li>媒体：{snippet.license.media}</li>
 									<li>第三方声明：{snippet.license.thirdPartyNotice}</li>
 								</ul>
-							</article>
+								</Card.Content>
+							</Card.Root>
 
-							<article class="license-card content-surface">
+							<Card.Root class="license-card">
+								<Card.Content class="space-y-4">
 								<p class="section-kicker">依赖</p>
 								<h2 class="section-title">运行环境</h2>
 								{#if snippet.dependencies.length > 0}
@@ -200,242 +188,12 @@
 								{:else}
 									<p class="section-copy">没有额外披露的运行依赖。</p>
 								{/if}
-							</article>
+								</Card.Content>
+							</Card.Root>
 						</div>
-					{/if}
-				</div>
-			</div>
-		</section>
+					</Tabs.Content>
+				</Tabs.Root>
+			</Card.Content>
+		</Card.Root>
 	</main>
 {/if}
-
-<style>
-	.page,
-	.blocked-page {
-		width: min(var(--page-width), calc(100vw - 3rem));
-		margin: 0 auto;
-		padding: 6.8rem clamp(1rem, 2.2vw, 1.8rem) 4rem;
-	}
-
-	.back-row,
-	.actions {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.75rem;
-		margin-bottom: 0.9rem;
-	}
-
-	.back-link {
-		text-decoration: none;
-		color: rgba(17, 17, 17, 0.58);
-		font-size: 0.84rem;
-		font-weight: 600;
-	}
-
-	.hero,
-	.tabs,
-	.blocked-card {
-		border-radius: 24px;
-	}
-
-	.hero {
-		display: grid;
-		grid-template-columns: minmax(280px, 0.78fr) minmax(560px, 1.22fr);
-		gap: 0.86rem;
-		align-items: start;
-	}
-
-	.hero-copy,
-	.media-panel,
-	.tabs,
-	.blocked-card {
-		border-radius: 24px;
-	}
-
-	.hero-copy {
-		padding: 0.34rem 0.08rem 0.1rem;
-	}
-
-	.media-panel {
-		min-height: 27rem;
-		padding: 0.68rem;
-		align-items: stretch;
-	}
-
-	.media-panel :global(.hero-media),
-	.demo-panel :global(.tab-media) {
-		width: 100%;
-		display: block;
-		border-radius: 20px;
-		object-fit: cover;
-		background: rgba(255, 255, 255, 0.9);
-	}
-
-	.media-panel :global(.hero-media) {
-		min-height: 25.5rem;
-	}
-
-	.demo-panel :global(.tab-media) {
-		min-height: 18rem;
-	}
-
-	h1,
-	h2,
-	.summary,
-	.panel-copy {
-		margin: 0;
-	}
-
-	.page-title {
-		font-size: clamp(1.58rem, 2.2vw, 2.18rem);
-		line-height: 1.06;
-		max-width: 9ch;
-	}
-
-	.summary,
-	.panel-copy,
-	.license-card li {
-		line-height: 1.68;
-	}
-
-	.summary {
-		max-width: 22rem;
-		font-size: 0.86rem;
-	}
-
-	.signal-row,
-	.platforms,
-	.tags {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.6rem;
-		padding: 0;
-		margin: 0;
-	}
-
-	.meta-panel {
-		display: grid;
-		gap: 0.54rem;
-		padding-top: 0.62rem;
-		border-top: 1px solid rgba(0, 0, 0, 0.08);
-	}
-
-	.badge,
-	.platforms span,
-	.tags li {
-		list-style: none;
-		padding: 0.32rem 0.54rem;
-		border-radius: 999px;
-		background: rgba(255, 255, 255, 0.9);
-		color: rgba(17, 17, 17, 0.64);
-		border: 1px solid rgba(0, 0, 0, 0.08);
-		font-size: 0.68rem;
-		line-height: 1.2;
-	}
-
-	.media-panel {
-		min-height: 34rem;
-	}
-
-	.tabs {
-		margin-top: 0.8rem;
-		padding: 0.76rem;
-	}
-
-	.tabs-layout {
-		display: grid;
-		gap: 0.74rem;
-	}
-
-	.tab-list {
-		display: flex;
-		flex-wrap: nowrap;
-		overflow-x: auto;
-		gap: 0.46rem;
-		padding-bottom: 0.2rem;
-		margin: 0;
-		scrollbar-width: none;
-	}
-
-	.tab-list::-webkit-scrollbar {
-		display: none;
-	}
-
-	.tab-list button {
-		border-radius: 999px;
-		border: 1px solid rgba(0, 0, 0, 0.08);
-		background: rgba(255, 255, 255, 0.84);
-		color: rgba(17, 17, 17, 0.68);
-		padding: 0.58rem 0.78rem;
-		font: inherit;
-		font-weight: 600;
-		font-size: 0.8rem;
-		cursor: pointer;
-		text-align: left;
-		white-space: nowrap;
-	}
-
-	.tab-list button.active {
-		background: rgba(0, 132, 255, 0.08);
-		border-color: rgba(0, 132, 255, 0.18);
-		color: rgba(0, 132, 255, 0.88);
-	}
-
-	.stack,
-	.license-grid {
-		display: grid;
-		gap: 0.82rem;
-	}
-
-	.license-grid {
-		grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-	}
-
-	.license-card,
-	.blocked-card {
-		padding: 0.96rem;
-	}
-
-	.demo-panel {
-		display: grid;
-		grid-template-columns: minmax(0, 1.24fr) minmax(15rem, 0.76fr);
-		gap: 0.82rem;
-		align-items: end;
-	}
-
-	.panel-copy {
-		padding: 0.9rem 0.95rem;
-		border-radius: 20px;
-		background: rgba(255, 255, 255, 0.96);
-		border: 1px solid rgba(0, 0, 0, 0.08);
-	}
-
-	.blocked-page {
-		display: grid;
-		align-items: center;
-		min-height: 100vh;
-	}
-
-	.blocked-card h1 {
-		margin: 0;
-		font-family: var(--font-display);
-		font-size: clamp(2.6rem, 7vw, 4.6rem);
-		line-height: 0.96;
-	}
-
-	@media (max-width: 900px) {
-		.page,
-		.blocked-page {
-			padding-top: 6.3rem;
-		}
-
-		.hero,
-		.demo-panel {
-			grid-template-columns: 1fr;
-		}
-
-		.media-panel {
-			min-height: 0;
-		}
-	}
-</style>

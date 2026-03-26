@@ -1,6 +1,7 @@
 <script lang="ts">
 	import CopyActionButton from '$lib/components/CopyActionButton.svelte';
 	import SnippetPreviewMedia from '$lib/components/SnippetPreviewMedia.svelte';
+	import * as Card from '$lib/components/ui/card/index.js';
 	import { categoryLabel, difficultyLabel } from '$lib/discovery/presentation';
 	import type { PublishedSnippetCard } from '$lib/discovery/types';
 
@@ -44,8 +45,12 @@
 	}
 </script>
 
-<article class={`card content-surface ${variant} ${featured ? 'featured' : ''}`}>
-	<div class="media-shell">
+<Card.Root
+	class={`overflow-hidden ${featured ? 'flex' : 'gap-0'} content-visibility-auto [contain-intrinsic-size:320px_280px]`}
+>
+	<div
+		class={`relative overflow-hidden bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(246,250,255,0.96))] ${featured ? 'min-h-[27rem] flex-1' : 'aspect-[16/10.5]'}`}
+	>
 		<a class="media-link" href={href} aria-label={`打开 ${snippet.title}`}>
 			<SnippetPreviewMedia
 				id={snippet.id}
@@ -58,10 +63,12 @@
 				className="cover"
 				alt={snippet.title}
 			/>
-			<div class="media-overlay"></div>
+			<div class="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.01),rgba(255,255,255,0.12)_54%,rgba(255,255,255,0.38)),linear-gradient(180deg,transparent_48%,rgba(255,255,255,0.62)_100%)]"></div>
 		</a>
 
-		<div class="quick-actions">
+		<div
+			class={`absolute right-3 top-3 z-10 inline-flex gap-1 transition-opacity duration-200 ${variant === 'home' && !featured ? 'opacity-35 hover:opacity-100 focus-within:opacity-100' : 'opacity-100'}`}
+		>
 			{#if hasCodeCopy}
 				<CopyActionButton
 					icon="code"
@@ -83,174 +90,23 @@
 		</div>
 
 		{#if featured}
-			<div class="featured-copy">
+			<div class="absolute bottom-4 left-4 z-10 grid max-w-64 gap-1 rounded-xl border bg-card/95 px-4 py-3 shadow-xs">
 				<a class="title-link" href={href}>
-					<h2 class="title">{snippet.title}</h2>
+					<h2 class="m-0 font-(family-name:--font-display) text-[clamp(1.2rem,1.8vw,1.56rem)] leading-tight tracking-tight">
+						{snippet.title}
+					</h2>
 				</a>
-				<p class="meta">{metaLine}</p>
+				<p class="m-0 text-xs text-muted-foreground">{metaLine}</p>
 			</div>
 		{/if}
 	</div>
 
 	{#if !featured}
-		<div class="content">
+		<Card.Content class={`grid content-end gap-1 ${variant === 'explore' ? 'px-4 pb-4 pt-3' : 'px-3.5 pb-4 pt-3'}`}>
 			<a class="title-link" href={href}>
-				<h2 class="title">{snippet.title}</h2>
+				<h2 class="m-0 font-(family-name:--font-display) text-sm leading-tight tracking-tight">{snippet.title}</h2>
 			</a>
-			<p class="meta">{metaLine}</p>
-		</div>
+			<p class="m-0 text-xs text-muted-foreground">{metaLine}</p>
+		</Card.Content>
 	{/if}
-</article>
-
-<style>
-	.card {
-		display: grid;
-		gap: 0;
-		border-radius: 22px;
-		content-visibility: auto;
-		contain-intrinsic-size: 320px 280px;
-	}
-
-	.card.featured {
-		display: block;
-		border-radius: 30px;
-	}
-
-	.media-shell {
-		position: relative;
-		aspect-ratio: 16 / 10.5;
-		background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 250, 255, 0.96));
-		overflow: hidden;
-		border-radius: 22px;
-	}
-
-	.card.featured .media-shell {
-		aspect-ratio: auto;
-		min-height: 27rem;
-		border-radius: 28px;
-		background: linear-gradient(180deg, rgba(255, 255, 255, 0.985), rgba(247, 250, 255, 0.95));
-	}
-
-	.media-link,
-	.title-link {
-		color: inherit;
-		text-decoration: none;
-	}
-
-	.media-link {
-		display: block;
-		width: 100%;
-		height: 100%;
-	}
-
-	.card.featured .media-link,
-	.card.featured :global(.cover) {
-		min-height: 27rem;
-	}
-
-	.media-overlay {
-		position: absolute;
-		inset: 0;
-		background:
-			linear-gradient(180deg, rgba(255, 255, 255, 0.01), rgba(255, 255, 255, 0.12) 54%, rgba(255, 255, 255, 0.38)),
-			linear-gradient(180deg, transparent 48%, rgba(255, 255, 255, 0.62) 100%);
-		pointer-events: none;
-	}
-
-	.quick-actions {
-		position: absolute;
-		z-index: 1;
-	}
-
-	.quick-actions {
-		top: 0.72rem;
-		right: 0.72rem;
-		display: inline-flex;
-		gap: 0.28rem;
-	}
-
-	.card.home .quick-actions {
-		opacity: 0.34;
-		transition: opacity 180ms ease;
-	}
-
-	.card.home:hover .quick-actions,
-	.card.home:focus-within .quick-actions,
-	.card.featured .quick-actions {
-		opacity: 1;
-	}
-
-	.content {
-		display: grid;
-		align-content: end;
-		gap: 0.26rem;
-		padding: 0.72rem 0.76rem 0.78rem;
-	}
-
-	.card.home .content {
-		padding: 0.7rem 0.74rem 0.78rem;
-	}
-
-	.card.explore .content {
-		padding: 0.76rem 0.8rem 0.84rem;
-	}
-
-	.card.featured .content {
-		display: none;
-	}
-
-	.featured-copy {
-		position: absolute;
-		left: 1rem;
-		bottom: 1rem;
-		z-index: 1;
-		display: grid;
-		gap: 0.3rem;
-		max-width: 16rem;
-		padding: 0.82rem 0.86rem 0.84rem;
-		border-radius: 20px;
-		background: rgba(255, 255, 255, 0.9);
-		border: 1px solid rgba(17, 17, 17, 0.08);
-		box-shadow:
-			inset 0 1px 0 rgba(255, 255, 255, 0.92),
-			0 10px 22px rgba(17, 17, 17, 0.06);
-	}
-
-	.title {
-		margin: 0;
-		font-family: var(--font-display);
-		font-size: 0.92rem;
-		line-height: 1.12;
-		letter-spacing: -0.02em;
-	}
-
-	.card.featured .title {
-		font-size: clamp(1.2rem, 1.8vw, 1.56rem);
-		line-height: 1.04;
-		max-width: 12ch;
-	}
-
-	.meta {
-		margin: 0;
-		font-size: 0.66rem;
-		line-height: 1.32;
-		color: rgba(17, 17, 17, 0.52);
-		letter-spacing: 0.02em;
-	}
-
-	.card.featured .meta {
-		font-size: 0.74rem;
-		color: rgba(17, 17, 17, 0.52);
-	}
-
-	@media (max-width: 920px) {
-		.card.featured {
-			grid-template-columns: 1fr;
-		}
-
-		.card.featured .media-shell {
-			min-height: 0;
-			aspect-ratio: 16 / 11;
-		}
-	}
-</style>
+</Card.Root>

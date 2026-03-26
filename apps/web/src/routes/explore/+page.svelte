@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import FacetChips from '$lib/components/FacetChips.svelte';
+	import { Button } from '$lib/components/ui/button/index.js';
+	import * as Card from '$lib/components/ui/card/index.js';
+	import { Input } from '$lib/components/ui/input/index.js';
 	import {
 		booleanLabel,
 		categoryLabel,
@@ -80,21 +83,24 @@
 	/>
 </svelte:head>
 
-<main class="editorial-page gallery-page">
-	<section class="gallery-hero">
+<main class="editorial-page grid gap-3 pt-[6.55rem]">
+	<section class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 max-[1040px]:grid-cols-1">
 		<div>
 			<p class="section-kicker">Explore / 主浏览页</p>
-			<h1 class="gallery-title">全部片段，一次看完。</h1>
-			<p class="hero-copy section-copy">直接筛、直接复制；详情页只负责承接完整上下文。</p>
+			<h1 class="m-0 max-w-[7ch] font-(family-name:--font-display) text-[clamp(1.58rem,3vw,2.4rem)] leading-none tracking-[-0.04em]">
+				全部片段，一次看完。
+			</h1>
+			<p class="section-copy max-w-[22rem]">直接筛、直接复制；详情页只负责承接完整上下文。</p>
 		</div>
-		<a class="hero-link" href="/">首页看精选</a>
+		<Button href="/" variant="outline" size="sm" class="hero-link">首页看精选</Button>
 	</section>
 
-	<section class="toolbar glass-panel">
-		<div class="toolbar-top">
+	<Card.Root>
+		<Card.Content class="space-y-4">
+		<div class="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 max-[1040px]:grid-cols-1">
 			<label class="search-field" for="search-query">
-				<span>搜索片段</span>
-				<input
+				<span class="text-xs font-medium text-muted-foreground">搜索片段</span>
+				<Input
 					id="search-query"
 					name="q"
 					type="search"
@@ -104,17 +110,19 @@
 				/>
 			</label>
 
-			<button
+			<Button
 				type="button"
+				variant="outline"
+				size="sm"
 				class="secondary-toggle"
 				aria-expanded={showSecondaryFilters}
 				onclick={toggleSecondaryFilters}
 			>
 				{showSecondaryFilters ? '收起次级筛选' : '更多筛选'}
-			</button>
+			</Button>
 		</div>
 
-		<div class="facet-rows primary">
+		<div class="grid gap-3 md:grid-cols-3">
 			<FacetChips
 				label="分类"
 				options={facetOptions('category', data.results.facets.category)}
@@ -136,7 +144,7 @@
 		</div>
 
 		{#if showSecondaryFilters}
-			<div class="facet-rows secondary">
+			<div class="grid gap-3 border-t pt-3 md:grid-cols-2">
 				<FacetChips
 					label="含 Demo"
 					options={facetOptions('hasDemo', data.results.facets.hasDemo)}
@@ -153,10 +161,11 @@
 				/>
 			</div>
 		{/if}
-	</section>
+		</Card.Content>
+	</Card.Root>
 
 	<section class="results-section">
-		<div class="results-head">
+		<div class="flex flex-wrap items-end justify-between gap-3 pt-0.5">
 			<div>
 				<p class="section-kicker">结果</p>
 				<h2 class="section-title">共 {data.results.total} 条作品</h2>
@@ -165,18 +174,20 @@
 		</div>
 
 		{#if data.results.items.length > 0}
-			<div class="results-grid">
+			<div class="grid grid-cols-[repeat(auto-fit,minmax(17rem,1fr))] gap-4">
 				{#each data.results.items as snippet (snippet.id)}
 					<SnippetCard snippet={snippet} href={`/snippets/${snippet.id}`} variant="explore" />
 				{/each}
 			</div>
 		{:else}
-			<div class="zero-state content-surface">
+			<Card.Root>
+				<Card.Content class="space-y-3">
 				<h2 class="section-title">没有命中，先从这些精选重新开始。</h2>
 				<p class="section-copy">
 					放宽关键词，或者打开次级筛选重来一遍。下面这些已发布片段适合作为新的起点。
 				</p>
-			</div>
+				</Card.Content>
+			</Card.Root>
 
 			{#if (data.results.fallback ?? []).length > 0}
 				<div class="results-grid">
@@ -188,166 +199,3 @@
 		{/if}
 	</section>
 </main>
-
-<style>
-	.gallery-page {
-		display: grid;
-		gap: 0.72rem;
-		padding-top: 6.55rem;
-	}
-
-	.gallery-hero,
-	.toolbar,
-	.zero-state {
-		border-radius: 24px;
-	}
-
-	.gallery-hero {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto;
-		gap: 0.45rem;
-		padding: 0.05rem 0 0;
-		align-items: center;
-	}
-
-	.gallery-title,
-	.hero-copy {
-		margin: 0;
-	}
-
-	.gallery-title {
-		font-family: var(--font-display);
-		font-size: clamp(1.58rem, 3vw, 2.4rem);
-		line-height: 1.04;
-		letter-spacing: -0.04em;
-		max-width: 7ch;
-	}
-
-	.hero-copy {
-		max-width: 22rem;
-		font-size: 0.8rem;
-		color: rgba(17, 17, 17, 0.54);
-	}
-
-	.toolbar {
-		display: grid;
-		gap: 0.6rem;
-		padding: 0.72rem 0.74rem 0.78rem;
-	}
-
-	.zero-state {
-		display: grid;
-		gap: 0.52rem;
-		padding: 1.08rem 1rem;
-	}
-
-	.toolbar-top {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto;
-		align-items: end;
-		gap: 0.8rem;
-	}
-
-	.search-field {
-		display: grid;
-		gap: 0.48rem;
-	}
-
-	.search-field span {
-		font-size: 0.68rem;
-		font-weight: 600;
-		color: rgba(17, 17, 17, 0.54);
-	}
-
-	input {
-		width: 100%;
-		padding: 0.76rem 0.88rem;
-		border-radius: 16px;
-		border: 1px solid rgba(0, 0, 0, 0.1);
-		background: rgba(255, 255, 255, 0.9);
-		color: var(--site-text);
-		font: inherit;
-		font-size: 0.88rem;
-		box-shadow:
-			inset 0 1px 0 rgba(255, 255, 255, 0.96),
-			0 1px 2px rgba(17, 17, 17, 0.02);
-	}
-
-	.secondary-toggle,
-	.hero-link {
-		border: 1px solid rgba(0, 0, 0, 0.08);
-		background: rgba(255, 255, 255, 0.82);
-		border-radius: 999px;
-		padding: 0.58rem 0.8rem;
-		color: rgba(17, 17, 17, 0.68);
-		font: inherit;
-		font-size: 0.78rem;
-		font-weight: 600;
-		text-decoration: none;
-		cursor: pointer;
-	}
-
-	input:focus {
-		outline: none;
-		border-color: rgba(0, 132, 255, 0.28);
-		box-shadow:
-			inset 0 4px 4px rgba(255, 255, 255, 0.24),
-			0 0 0 4px rgba(0, 132, 255, 0.08);
-	}
-
-	.facet-rows,
-	.results-section {
-		display: grid;
-		gap: 0.66rem;
-	}
-
-	.facet-rows.primary {
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-	}
-
-	.facet-rows.secondary {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		padding-top: 0.18rem;
-		border-top: 1px solid rgba(0, 0, 0, 0.06);
-	}
-
-	.results-head {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: end;
-		justify-content: space-between;
-		gap: 0.72rem;
-		padding-top: 0.12rem;
-	}
-
-	.results-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
-		gap: 0.92rem;
-	}
-
-	.zero-state {
-		display: grid;
-		gap: 0.72rem;
-		padding: 0.94rem;
-	}
-
-	@media (max-width: 1040px) {
-		.gallery-hero {
-			grid-template-columns: 1fr;
-		}
-
-		.toolbar-top,
-		.facet-rows.primary,
-		.facet-rows.secondary {
-			grid-template-columns: 1fr;
-		}
-
-	}
-
-	@media (max-width: 720px) {
-		.gallery-page {
-			padding-top: 6.2rem;
-		}
-	}
-</style>

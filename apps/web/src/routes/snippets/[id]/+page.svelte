@@ -31,6 +31,12 @@
 
 	let { data }: Props = $props();
 	let activeTab = $state<'demo' | 'code' | 'prompt' | 'license'>('demo');
+
+	function formatPublishedDate(value: string) {
+		return new Intl.DateTimeFormat('zh-CN', {
+			dateStyle: 'medium'
+		}).format(new Date(value));
+	}
 </script>
 
 <svelte:head>
@@ -45,9 +51,7 @@
 			<Card.Content class="space-y-4">
 			<p class="section-kicker">公开可见性</p>
 			<h1>内容未公开</h1>
-			<p class="section-copy">
-				这条内容暂时不在公开列表里。可以先回首页，或者继续看看已经发布的片段。
-			</p>
+			<p class="section-copy">这条内容当前未公开。</p>
 			<div class="actions">
 				<Button href="/" variant="outline" size="sm">回首页</Button>
 				<Button href="/explore" variant="outline" size="sm">看全部片段</Button>
@@ -59,6 +63,7 @@
 	{@const snippet = data.snippet}
 	{@const promptBlocks = snippet.promptBlocks.filter((block) => block.kind === 'prompt')}
 	{@const acceptanceBlocks = snippet.promptBlocks.filter((block) => block.kind !== 'prompt')}
+	{@const publishedDate = formatPublishedDate(snippet.publishedAt)}
 
 	<main class="editorial-page grid gap-5 pt-24">
 		<div class="page-orb page-orb-primary absolute -left-10 top-16 h-44 w-72"></div>
@@ -82,7 +87,7 @@
 					<Badge variant="secondary">{promptAvailabilityLabel(snippet.hasPrompt)}</Badge>
 				</div>
 
-				<div class="grid gap-3 border-t border-white/22 pt-4">
+				<div class="grid gap-3 border-t border-border/70 pt-4">
 					<div class="m-0 flex flex-wrap gap-2">
 						{#each snippet.platforms as platform (`${platform.os}-${platform.minVersion}`)}
 							<Badge variant="outline">{platformLabel(platform)}</Badge>
@@ -129,11 +134,30 @@
 							{/if}
 							<Tabs.Trigger value="license">许可</Tabs.Trigger>
 						</Tabs.List>
-						<div class="surface-muted hidden max-w-[21rem] gap-1 rounded-[calc(var(--radius)+0.45rem)] px-4 py-3 min-[1080px]:grid">
-							<p class="ui-label">查看顺序</p>
-							<p class="m-0 text-sm leading-6 text-foreground/82">
-								先看演示，再按需切到代码、提示词和许可。
-							</p>
+						<div class="surface-interactive detail-note-card hidden max-w-[21rem] min-[1080px]:grid">
+							<p class="ui-label">资源信息</p>
+							<div class="detail-meta-grid">
+								<div class="detail-meta-row">
+									<div class="detail-meta-item">
+										<span class="text-[0.72rem] font-semibold tracking-[0.08em] text-foreground/46 uppercase">代码</span>
+										<span class="text-sm font-medium text-foreground">{snippet.codeBlocks.length} 个文件</span>
+									</div>
+									<div class="detail-meta-item">
+										<span class="text-[0.72rem] font-semibold tracking-[0.08em] text-foreground/46 uppercase">Prompt</span>
+										<span class="text-sm font-medium text-foreground">{promptBlocks.length} 个块</span>
+									</div>
+								</div>
+								<div class="detail-meta-row">
+									<div class="detail-meta-item">
+										<span class="text-[0.72rem] font-semibold tracking-[0.08em] text-foreground/46 uppercase">验收</span>
+										<span class="text-sm font-medium text-foreground">{acceptanceBlocks.length} 项</span>
+									</div>
+									<div class="detail-meta-item">
+										<span class="text-[0.72rem] font-semibold tracking-[0.08em] text-foreground/46 uppercase">依赖</span>
+										<span class="text-sm font-medium text-foreground">{snippet.dependencies.length} 项</span>
+									</div>
+								</div>
+							</div>
 						</div>
 					</div>
 
@@ -149,11 +173,25 @@
 								alt={`${snippet.title} 详情封面`}
 								loading="eager"
 							/>
-							<Card.Root class="surface-muted">
+							<Card.Root class="surface-interactive detail-note-card">
 								<Card.Content>
-							<p class="section-copy">
-								先确认版式、节奏和信息组织，再决定要不要直接带回项目。
-							</p>
+									<p class="ui-label">发布信息</p>
+									<div class="detail-meta-grid">
+										<div class="detail-meta-item">
+											<span class="text-[0.72rem] font-semibold tracking-[0.08em] text-foreground/46 uppercase">片段 ID</span>
+											<span class="text-sm font-medium text-foreground">{snippet.id}</span>
+										</div>
+										<div class="detail-meta-row">
+											<div class="detail-meta-item">
+												<span class="text-[0.72rem] font-semibold tracking-[0.08em] text-foreground/46 uppercase">发布时间</span>
+												<span class="text-sm font-medium text-foreground">{publishedDate}</span>
+											</div>
+											<div class="detail-meta-item">
+												<span class="text-[0.72rem] font-semibold tracking-[0.08em] text-foreground/46 uppercase">平台</span>
+												<span class="text-sm font-medium text-foreground">{snippet.platforms.length} 项</span>
+											</div>
+										</div>
+									</div>
 								</Card.Content>
 							</Card.Root>
 						</div>
@@ -179,7 +217,7 @@
 					{/if}
 					<Tabs.Content value="license">
 						<div class="grid gap-3 min-[901px]:grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
-							<Card.Root class="surface-muted license-card">
+							<Card.Root class="surface-interactive license-card">
 								<Card.Content class="space-y-4">
 								<p class="section-kicker">许可</p>
 								<h2 class="section-title">使用许可</h2>
@@ -191,7 +229,7 @@
 								</Card.Content>
 							</Card.Root>
 
-							<Card.Root class="surface-muted license-card">
+							<Card.Root class="surface-interactive license-card">
 								<Card.Content class="space-y-4">
 								<p class="section-kicker">依赖</p>
 								<h2 class="section-title">所需环境</h2>

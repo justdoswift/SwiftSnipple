@@ -2,7 +2,6 @@
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
-	import { Separator } from '$lib/components/ui/separator/index.js';
 	import ArrowRightIcon from '@lucide/svelte/icons/arrow-right';
 	import CheckCheckIcon from '@lucide/svelte/icons/check-check';
 	import CircleDotIcon from '@lucide/svelte/icons/circle-dot';
@@ -83,39 +82,39 @@
 
 <main class="grid gap-6">
 	<section class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_280px]">
-		<Card.Root class="surface-card">
+		<Card.Root class="surface-panel">
 			<Card.Header class="gap-5">
-				<div class="flex flex-wrap items-start justify-between gap-4">
-					<div class="max-w-xl space-y-2">
-						<Card.Title class="max-w-[11ch] text-3xl font-semibold leading-tight tracking-tight">
-							{homeHeadline}
-						</Card.Title>
-					</div>
-
+				<div class="max-w-xl space-y-2">
+					<Card.Title class="max-w-[11ch] text-3xl font-semibold leading-tight tracking-tight">
+						{homeHeadline}
+					</Card.Title>
+					<p class="section-copy max-w-[34rem]">
+						先把需要补媒体和复查的内容清掉，再继续新建，会更容易保持发布节奏。
+					</p>
 				</div>
 			</Card.Header>
 
 			<Card.Content class="grid gap-4 md:grid-cols-3">
 				{#each stats as stat (stat.label)}
-					<Card.Root size="sm" class="surface-muted">
-						<Card.Content class="flex items-start justify-between gap-3">
-							<p class="text-sm font-medium text-muted-foreground">{stat.label}</p>
-							<div class="bg-background/72 text-muted-foreground flex size-8 items-center justify-center rounded-[calc(var(--radius)-3px)]">
+					<article class="surface-interactive studio-stat-card">
+						<div class="flex items-start justify-between gap-3">
+							<p class="text-sm font-medium text-foreground/68">{stat.label}</p>
+							<div class="flex size-9 items-center justify-center rounded-[calc(var(--radius-control)-1px)] border border-border/70 bg-white/74 text-muted-foreground">
 								<stat.icon class="size-4" />
 							</div>
-						</Card.Content>
-						<Card.Content class="pt-0">
+						</div>
+						<div>
 							<p class="text-3xl font-semibold tracking-tight text-foreground">
 								{stat.value}
 							</p>
 							<p class="mt-2 text-sm leading-6 text-muted-foreground">{stat.copy}</p>
-						</Card.Content>
-					</Card.Root>
+						</div>
+					</article>
 				{/each}
 			</Card.Content>
 		</Card.Root>
 
-		<Card.Root class="surface-card">
+		<Card.Root class="surface-panel">
 			<Card.Header>
 				<Card.Title class="text-lg font-semibold tracking-tight">待处理</Card.Title>
 			</Card.Header>
@@ -123,7 +122,7 @@
 				{#each nextTasks as task (task.label)}
 					<a
 						href={task.href}
-					class="surface-muted flex items-center justify-between gap-3 rounded-[calc(var(--radius)-1px)] px-4 py-3 text-sm transition-[background-color,transform] duration-[var(--motion-fast)] hover:bg-muted/92 hover:-translate-y-px"
+						class="surface-interactive studio-task-link rounded-[var(--radius-control)] text-sm"
 					>
 						<div class="min-w-0">
 							<p class="truncate text-sm font-medium text-foreground">{task.label}</p>
@@ -136,7 +135,7 @@
 		</Card.Root>
 	</section>
 
-	<Card.Root class="surface-card">
+	<Card.Root class="surface-panel">
 		<Card.Header class="gap-4 md:flex-row md:items-end md:justify-between">
 			<div>
 				<Card.Title class="text-lg font-semibold tracking-tight">最近更新</Card.Title>
@@ -144,10 +143,10 @@
 		</Card.Header>
 
 		<Card.Content>
-			<div class="overflow-hidden rounded-[calc(var(--radius)+0.1rem)] border border-border/70 bg-card/72">
+			<div class="studio-list-shell">
 				{#each recentItems as item (item.id)}
 					<a
-						class="group flex flex-col gap-3 px-4 py-4 transition-[background-color] duration-[var(--motion-fast)] hover:bg-muted/72 md:flex-row md:items-center md:justify-between"
+						class="group flex flex-col gap-3 border-b border-border/60 px-4 py-4 transition-[background-color,transform] duration-[var(--motion-fast)] last:border-b-0 hover:bg-white/68 hover:-translate-y-px md:flex-row md:items-center md:justify-between"
 						href={`/studio/snippets/${item.id}`}
 					>
 						<div class="min-w-0">

@@ -15,7 +15,7 @@
 	bind:this={ref}
 	data-slot={dataSlot}
 	class={cn(
-		"border-input bg-background/92 focus-visible:border-ring hover:border-border aria-invalid:ring-destructive/20 aria-invalid:border-destructive flex min-h-24 w-full field-sizing-content rounded-[calc(var(--radius)-1px)] border px-3.5 py-3 text-sm text-foreground [box-shadow:var(--shadow-sm)] transition-[border-color,box-shadow,background-color] duration-[var(--motion-fast)] ease-[cubic-bezier(0.22,1,0.36,1)] placeholder:text-muted-foreground/90 focus-visible:ring-[3px] focus-visible:ring-ring/30 aria-invalid:ring-[3px] outline-none disabled:cursor-not-allowed disabled:bg-muted/55 disabled:text-muted-foreground disabled:opacity-100",
+		"surface-interactive flex min-h-28 w-full field-sizing-content rounded-[var(--radius-control)] border px-3.5 py-3 text-sm leading-6 text-foreground transition-[border-color,box-shadow,background-color,color] duration-[var(--motion-fast)] ease-[cubic-bezier(0.22,1,0.36,1)] placeholder:text-muted-foreground/84 hover:border-border focus-visible:border-primary/22 focus-visible:bg-[linear-gradient(180deg,rgba(255,255,255,0.94)_0%,rgba(252,253,255,0.98)_100%)] focus-visible:ring-[4px] focus-visible:ring-ring/40 aria-invalid:border-destructive/35 aria-invalid:ring-[4px] aria-invalid:ring-destructive/18 outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground disabled:cursor-not-allowed disabled:border-border/60 disabled:bg-muted/72 disabled:text-muted-foreground disabled:shadow-none disabled:opacity-100",
 		className
 	)}
 	bind:value

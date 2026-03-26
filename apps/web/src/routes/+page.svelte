@@ -43,19 +43,19 @@
 		<div class="page-orb page-orb-soft absolute left-32 top-0 h-28 w-48"></div>
 		<div class="page-orb page-orb-warm absolute left-[18%] top-[10rem] h-36 w-56"></div>
 
-		<div class="relative z-10 grid gap-6 px-0 py-3 min-[1100px]:grid-cols-[minmax(0,39rem)_minmax(0,1fr)] min-[1100px]:items-start">
-			<div class="grid max-w-[39rem] gap-4">
+		<div class="hero-grid relative z-10 grid gap-7 px-0 py-3 min-[1100px]:grid-cols-[minmax(0,40rem)_minmax(0,23rem)]">
+			<div class="hero-copy-cluster">
 				<p class="section-kicker">SwiftSnippet</p>
 				<h1 class="display-title max-w-[8.3ch] text-[clamp(2.3rem,4vw,3.5rem)]">
 					把可复用的 SwiftUI 片段直接带走。
 				</h1>
-				<p class="section-copy max-w-[25rem] text-[0.96rem] leading-7 tracking-[-0.01em]">
+				<p class="section-copy max-w-[27rem]">
 					从首屏、动效、状态到 Prompt，一眼挑中，再把代码和思路带回项目。
 				</p>
 				<div class="page-actions pt-1">
 					<Button href="/explore" size="lg" class="gap-3 pr-2.5">
 						<span>查看全部片段</span>
-						<span class="surface-muted grid size-8 place-items-center rounded-full text-primary">
+						<span class="surface-interactive grid size-8 place-items-center rounded-full text-primary">
 							<svg viewBox="0 0 20 20" aria-hidden="true">
 								<path
 									d="M6.25 10h7.5m0 0-3.125-3.125M13.75 10l-3.125 3.125"
@@ -68,39 +68,57 @@
 							</svg>
 						</span>
 					</Button>
-					<p class="max-w-64 text-sm leading-6 text-muted-foreground/90">
+					<p class="max-w-68 text-sm leading-6 text-foreground/74">
 						每一条都可继续查看源码、提示词和可用边界。
 					</p>
 				</div>
 			</div>
 
 			{#if orderedFeed.length > 0}
-				<div class="surface-popover hidden w-[21rem] justify-self-end gap-4 rounded-[calc(var(--radius)+0.9rem)] px-5 py-5 min-[1100px]:grid">
-					<div class="grid gap-1.5">
-						<p class="section-kicker !mb-0">浏览方式</p>
-						<p class="m-0 text-[0.98rem] leading-7 text-foreground/84">
-							首页先看精选，想系统筛选时再去 Explore 深挖全部内容。
-						</p>
+				<div class="hero-aside-stack hidden min-[1100px]:grid">
+					<div class="surface-floating hero-note-card">
+						<div class="grid gap-1.5">
+							<p class="section-kicker !mb-0">浏览方式</p>
+							<h2 class="m-0 font-(family-name:--font-display) text-[1.12rem] leading-tight tracking-tight text-foreground">
+								先看精选，再去系统筛选。
+							</h2>
+							<p class="m-0 text-sm leading-6 text-foreground/74">
+								首页先帮你缩小选择范围，进入 Explore 再按场景、难度和平台继续深挖。
+							</p>
+						</div>
 					</div>
-					<div class="flex flex-wrap gap-2">
-						<span class="glass-pill inline-flex items-center gap-2 px-3 py-2 text-sm text-foreground/82">
-							<strong class="font-(family-name:--font-display) text-base font-semibold text-foreground">
+					<div class="surface-floating hero-stats-card">
+						<p class="ui-label">内容状态</p>
+						<div class="hero-stat-grid">
+							<div class="hero-stat-row">
+								<strong class="hero-stat-value">
+									{orderedFeed.length}
+								</strong>
+								<span class="hero-stat-label">条已发布，可直接打开判断风格与复用价值</span>
+							</div>
+							<div class="hero-stat-row">
+								<strong class="hero-stat-value">
+									{demoReadyCount}
+								</strong>
+								<span class="hero-stat-label">条含 Demo，适合先看动效和状态表现</span>
+							</div>
+							<div class="hero-stat-row">
+								<strong class="hero-stat-value">
+									{promptReadyCount}
+								</strong>
+								<span class="hero-stat-label">条含 Prompt，可直接带回 AI 协作工作流</span>
+							</div>
+						</div>
+						<div class="flex flex-wrap gap-2 pt-1">
+							<span class="glass-pill inline-flex items-center gap-2 px-3 py-2 text-xs text-foreground/76">
 								{orderedFeed.length}
-							</strong>
-							<span>条已发布</span>
-						</span>
-						<span class="glass-pill inline-flex items-center gap-2 px-3 py-2 text-sm text-foreground/82">
-							<strong class="font-(family-name:--font-display) text-base font-semibold text-foreground">
+								<span>精选库</span>
+							</span>
+							<span class="glass-pill inline-flex items-center gap-2 px-3 py-2 text-xs text-foreground/76">
 								{demoReadyCount}
-							</strong>
-							<span>条含 Demo</span>
-						</span>
-						<span class="glass-pill inline-flex items-center gap-2 px-3 py-2 text-sm text-foreground/82">
-							<strong class="font-(family-name:--font-display) text-base font-semibold text-foreground">
-								{promptReadyCount}
-							</strong>
-							<span>条含 Prompt</span>
-						</span>
+								<span>可看演示</span>
+							</span>
+						</div>
 					</div>
 				</div>
 			{/if}
@@ -108,19 +126,19 @@
 	</section>
 
 	{#if featuredSnippet}
-		<section class="editorial-page grid gap-4" id="feed">
-			<div class="flex flex-wrap items-end justify-between gap-4">
-				<div>
-					<p class="section-kicker">本周推荐</p>
-					<h2 class="section-title">先从这一条开始</h2>
+			<section class="editorial-page grid gap-4" id="feed">
+				<div class="flex flex-wrap items-end justify-between gap-4">
+					<div>
+						<p class="section-kicker">本周推荐</p>
+						<h2 class="section-title">先从这一条开始</h2>
+					</div>
+					<div class="surface-interactive home-section-note grid">
+						<p class="ui-label">门面卡</p>
+						<p class="m-0 text-sm leading-6 text-foreground/76">
+							适合直接打开、判断风格，再决定要不要继续复用。
+						</p>
+					</div>
 				</div>
-				<div class="surface-muted grid max-w-[21rem] gap-1 rounded-[calc(var(--radius)+0.45rem)] px-4 py-3">
-					<p class="ui-label">门面卡</p>
-					<p class="m-0 text-sm leading-6 text-foreground/82">
-						适合直接打开、判断风格，再决定要不要继续复用。
-					</p>
-				</div>
-			</div>
 
 			<SnippetCard
 				snippet={featuredSnippet}
@@ -132,20 +150,25 @@
 	{/if}
 
 	{#if galleryFeed.length > 0}
-		<section class="editorial-page grid gap-4">
-			<div class="flex flex-wrap items-center justify-between gap-4">
-				<div>
-					<p class="section-kicker">继续浏览</p>
-					<h2 class="section-title">更多可直接复用的片段</h2>
+			<section class="editorial-page grid gap-4">
+				<div class="flex flex-wrap items-center justify-between gap-4">
+					<div>
+						<p class="section-kicker">继续浏览</p>
+						<h2 class="section-title">更多可直接复用的片段</h2>
 				</div>
 				<Button href="/explore" variant="ghost" size="sm">进入 Explore</Button>
 			</div>
 
-			<div class="grid grid-cols-[repeat(auto-fit,minmax(16rem,1fr))] gap-4 md:gap-5">
-				{#each galleryFeed as snippet (snippet.id)}
-					<SnippetCard snippet={snippet} href={`/snippets/${snippet.id}`} variant="home" />
-				{/each}
-			</div>
-		</section>
-	{/if}
+				<div class="home-gallery-grid">
+					{#each galleryFeed as snippet, index (snippet.id)}
+						<SnippetCard
+							snippet={snippet}
+							href={`/snippets/${snippet.id}`}
+							variant="home"
+							accented={index % 6 === 0}
+						/>
+					{/each}
+				</div>
+			</section>
+		{/if}
 </main>

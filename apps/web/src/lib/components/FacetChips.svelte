@@ -21,12 +21,14 @@
 	<p class={`ui-label ${tone === 'secondary' ? 'opacity-80' : ''}`}>
 		{label}
 	</p>
-	<div class="flex flex-wrap gap-2">
+	<div class="facet-chip-row">
 		<Button
 			type="button"
-			variant={activeValue === '' ? 'secondary' : 'ghost'}
+			variant={activeValue === '' ? 'outline' : 'ghost'}
 			size={tone === 'secondary' ? 'xs' : 'sm'}
-			class={`rounded-full px-3 ${activeValue === '' ? '' : 'text-muted-foreground/84'}`}
+			aria-pressed={activeValue === ''}
+			data-active={activeValue === ''}
+			class={`facet-chip-button rounded-full ${activeValue === '' ? 'text-foreground' : 'text-muted-foreground/84'}`}
 			onclick={() => onselect?.('')}
 		>
 			全部
@@ -35,16 +37,18 @@
 		{#each options as option (option.value)}
 			<Button
 				type="button"
-				variant={activeValue === option.value ? 'secondary' : 'ghost'}
+				variant={activeValue === option.value ? 'outline' : 'ghost'}
 				size={tone === 'secondary' ? 'xs' : 'sm'}
-				class={`rounded-full px-3 ${activeValue === option.value ? '' : 'text-muted-foreground/84'}`}
+				aria-pressed={activeValue === option.value}
+				data-active={activeValue === option.value}
+				class={`facet-chip-button rounded-full ${activeValue === option.value ? 'text-foreground' : 'text-muted-foreground/84'}`}
 				onclick={() => onselect?.(option.value)}
 			>
 				<span>{option.label}</span>
 				{#if option.count !== undefined}
 					<Badge
 						variant={activeValue === option.value ? 'secondary' : 'outline'}
-						class={`h-5 px-1.5 text-[0.68rem] ${activeValue === option.value ? '' : 'opacity-72'}`}
+						class={`h-5 px-1.5 text-[0.68rem] ${activeValue === option.value ? 'opacity-100' : 'opacity-72'}`}
 					>
 						{option.count}
 					</Badge>

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { Alert, AlertDescription, AlertTitle } from '$lib/components/ui/alert/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
@@ -20,13 +19,13 @@
 </svelte:head>
 
 <main class="mx-auto grid w-full max-w-[480px]">
-	<Card.Root class="surface-card">
+	<Card.Root class="surface-panel">
 		<Card.Header class="gap-4">
 			<div class="flex items-start justify-between gap-3">
 				<div>
 					<Card.Title class="text-2xl font-semibold tracking-tight">登录</Card.Title>
 				</div>
-				<div class="surface-muted text-muted-foreground flex size-10 items-center justify-center rounded-[calc(var(--radius)-1px)]">
+				<div class="surface-interactive text-muted-foreground flex size-10 items-center justify-center rounded-[var(--radius-control)]">
 					<ShieldCheckIcon class="size-5" />
 				</div>
 			</div>

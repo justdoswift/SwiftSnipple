@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import StudioSidebar from '$lib/components/studio/StudioSidebar.svelte';
+	import { Alert, AlertDescription, AlertTitle } from '$lib/components/ui/alert/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
@@ -69,10 +70,10 @@
 		<div class="studio-page-shell flex min-h-screen items-center px-4 py-8 md:px-6">
 			<div class="mx-auto w-full max-w-5xl">
 				{#if data.sessionError}
-					<div class="mb-4 rounded-[calc(var(--radius)+0.1rem)] border border-destructive/20 bg-card px-5 py-4 text-sm text-destructive [box-shadow:var(--shadow-sm)]">
-						<strong class="block font-semibold">后台服务暂时不可用</strong>
-						<span class="mt-1 block">{data.sessionError}</span>
-					</div>
+					<Alert variant="destructive" class="mb-4">
+						<AlertTitle>后台服务暂时不可用</AlertTitle>
+						<AlertDescription>{data.sessionError}</AlertDescription>
+					</Alert>
 				{/if}
 				{@render children()}
 			</div>
@@ -84,13 +85,13 @@
 
 		<Sidebar.Inset class="bg-transparent">
 			<div class={`studio-page-shell mx-auto flex w-full flex-1 flex-col px-3 pb-8 pt-3 md:px-4 ${shellWidthClass}`}>
-				<header class="surface-popover sticky top-3 z-30 mb-5 rounded-[calc(var(--radius)+0.25rem)] px-4 py-3 md:px-5">
+				<header class="surface-panel studio-shell-header sticky top-3 z-30 mb-5">
 					<div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
 						<div class="flex min-w-0 items-start gap-3">
 							<Sidebar.Trigger class="mt-0.5 md:hidden" />
 
 							<div class="min-w-0">
-								<div class="flex flex-wrap items-center gap-2 text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
+								<div class="flex flex-wrap items-center gap-2 text-[0.72rem] font-semibold tracking-[0.14em] text-foreground/48 uppercase">
 									<span>SwiftSnippet</span>
 									<ChevronRightIcon class="size-3" />
 									<span>Studio</span>
@@ -98,30 +99,30 @@
 									<span>{routeMeta(page.url.pathname).title}</span>
 								</div>
 
-								<h1 class="mt-2 text-2xl font-semibold tracking-tight text-foreground">
+								<h1 class="mt-2 text-[1.75rem] font-semibold tracking-tight text-foreground">
 									{routeMeta(page.url.pathname).title}
 								</h1>
 								{#if routeMeta(page.url.pathname).description}
-									<p class="mt-1 max-w-xl text-sm leading-6 text-muted-foreground">
+									<p class="mt-1 max-w-xl text-sm leading-6 text-foreground/64">
 										{routeMeta(page.url.pathname).description}
 									</p>
 								{/if}
 							</div>
 						</div>
 
-						<div class="flex flex-wrap items-center gap-3 lg:justify-end">
-							<Badge variant="outline">
+						<div class="flex flex-wrap items-center gap-2.5 lg:justify-end">
+							<Badge variant="secondary">
 								内部运营
 							</Badge>
-							<div class="surface-muted rounded-[calc(var(--radius)-1px)] px-3 py-2">
-								<p class="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+							<div class="surface-interactive rounded-[var(--radius-control)] px-3 py-2.5">
+								<p class="text-[0.68rem] font-semibold tracking-[0.1em] text-foreground/46 uppercase">
 									当前会话
 								</p>
-								<p class="mt-1 text-sm font-medium text-foreground">{data.session.username}</p>
+								<p class="mt-1 text-sm font-medium text-foreground/82">{data.session.username}</p>
 							</div>
 							<Button
 								type="button"
-								variant="outline"
+								variant="ghost"
 								size="sm"
 								onclick={handleLogout}
 							>
@@ -130,7 +131,7 @@
 							</Button>
 						</div>
 					</div>
-					<Separator class="mt-3" />
+					<Separator class="mt-3 opacity-60" />
 				</header>
 
 				{#if isStudioRoute}

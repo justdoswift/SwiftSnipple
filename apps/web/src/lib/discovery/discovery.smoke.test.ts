@@ -133,7 +133,7 @@ describe('discovery smoke coverage', () => {
 			}
 		});
 
-		expect(screen.getByText('这次没找到合适的，先看看这些更常用的。')).toBeTruthy();
+		expect(screen.getByText('没有匹配结果')).toBeTruthy();
 		expect(screen.getAllByText('叠层主视觉卡片').length).toBeGreaterThan(0);
 	});
 

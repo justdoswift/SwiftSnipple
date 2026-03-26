@@ -39,23 +39,23 @@
 	collapsible="icon"
 	class="border-sidebar-border/60 bg-transparent"
 >
-	<Sidebar.Header class="border-sidebar-border bg-sidebar border-b px-3 py-3">
+	<Sidebar.Header class="border-sidebar-border/70 bg-sidebar/90 border-b px-3 py-3.5">
 		<div class="flex items-start gap-3 px-1">
-			<div class="surface-muted text-primary flex size-9 items-center justify-center rounded-[calc(var(--radius)-1px)]">
+			<div class="surface-interactive text-primary flex size-9 items-center justify-center rounded-[var(--radius-control)]">
 				<SparklesIcon class="size-4" />
 			</div>
 			<div class="min-w-0 group-data-[collapsible=icon]:hidden">
-				<p class="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+				<p class="text-[0.7rem] font-semibold tracking-[0.1em] text-foreground/46 uppercase">
 					SwiftSnippet
 				</p>
-				<h2 class="mt-1 text-sm font-medium text-foreground">Studio</h2>
+				<h2 class="mt-1 text-sm font-medium text-foreground/82">Studio</h2>
 			</div>
 		</div>
 	</Sidebar.Header>
 
-	<Sidebar.Content class="px-2 py-3">
+	<Sidebar.Content class="px-2 py-3.5">
 		<Sidebar.Group>
-			<Sidebar.GroupLabel class="px-2 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+			<Sidebar.GroupLabel class="px-2 text-[0.68rem] font-semibold tracking-[0.1em] text-foreground/42 uppercase">
 				工作区
 			</Sidebar.GroupLabel>
 			<Sidebar.GroupContent>
@@ -85,7 +85,7 @@
 		</Sidebar.Group>
 
 		<Sidebar.Group class="mt-5">
-			<Sidebar.GroupLabel class="px-2 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+			<Sidebar.GroupLabel class="px-2 text-[0.68rem] font-semibold tracking-[0.1em] text-foreground/42 uppercase">
 				快捷入口
 			</Sidebar.GroupLabel>
 			<Sidebar.GroupContent class="px-2 pt-2">
@@ -101,16 +101,16 @@
 		</Sidebar.Group>
 	</Sidebar.Content>
 
-	<Sidebar.Footer class="border-sidebar-border border-t px-3 py-3">
-		<div class="surface-muted group-data-[collapsible=icon]:hidden rounded-[calc(var(--radius)-1px)] px-3 py-3">
+	<Sidebar.Footer class="border-sidebar-border/72 border-t px-3 py-3">
+		<div class="surface-interactive group-data-[collapsible=icon]:hidden rounded-[var(--radius-control)] px-3 py-3">
 			<div class="flex items-center justify-between gap-3">
 				<div class="min-w-0">
-					<p class="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+					<p class="text-[0.68rem] font-semibold tracking-[0.1em] text-foreground/46 uppercase">
 						当前会话
 					</p>
-					<p class="mt-1 truncate text-sm font-medium text-foreground">{username}</p>
+					<p class="mt-1 truncate text-sm font-medium text-foreground/82">{username}</p>
 				</div>
-				<Badge variant="outline">
+				<Badge variant="secondary">
 					内部
 				</Badge>
 			</div>

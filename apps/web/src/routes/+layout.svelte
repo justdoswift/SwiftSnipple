@@ -19,8 +19,12 @@
 	];
 
 	function isActive(href: string, pathname: string) {
-		if (href.startsWith('/#')) {
+		if (href === '/#hero') {
 			return pathname === '/';
+		}
+
+		if (href.startsWith('/#')) {
+			return false;
 		}
 
 		return href === '/' ? pathname === '/' : pathname.startsWith(href);
@@ -38,7 +42,7 @@
 		<div class="page-orb page-orb-warm absolute left-[18%] top-[26rem] z-0 h-52 w-64"></div>
 
 		<header class="pointer-events-none sticky top-5 z-20 flex justify-center px-5 max-[900px]:top-4">
-			<div class="surface-popover pointer-events-auto inline-flex w-fit items-center gap-3 rounded-[calc(var(--radius)+0.25rem)] px-3 py-2 max-[900px]:w-full max-[900px]:max-w-[calc(100vw-1.5rem)] max-[900px]:justify-between max-[900px]:px-3.5">
+			<div class="surface-floating site-nav-shell pointer-events-auto inline-flex w-fit items-center rounded-[var(--radius-card)] max-[900px]:w-full max-[900px]:max-w-[calc(100vw-1.5rem)] max-[900px]:justify-between max-[900px]:px-3.5">
 				<a class="inline-flex items-center no-underline" href="/">
 					<span class="font-(family-name:--font-display) text-base font-bold tracking-tight">
 						SwiftSnippet
@@ -48,11 +52,8 @@
 				<nav class="flex flex-wrap items-center gap-0.5 max-[900px]:hidden" aria-label="主导航">
 					{#each navigation as item (item.href)}
 						<a
-							class={`rounded-[calc(var(--radius)-2px)] px-3 py-2 text-sm font-medium no-underline transition-[background-color,color] duration-[var(--motion-fast)] ${
-								isActive(item.href, page.url.pathname)
-									? 'glass-pill text-foreground'
-									: 'text-muted-foreground hover:bg-white/50 hover:text-foreground focus-visible:bg-white/50 focus-visible:text-foreground'
-							}`}
+							class="site-nav-link text-sm font-medium"
+							data-active={isActive(item.href, page.url.pathname)}
 							href={item.href}
 						>
 							{item.label}

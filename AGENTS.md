@@ -14,6 +14,7 @@
 - For debugging and investigations, prefer `$gsd-debug`.
 - For planned roadmap work, continue with `$gsd-plan-phase <n>` or `$gsd-discuss-phase <n>`.
 - Treat `.planning/` as project memory. Read it before changing code or scope.
+- If a task uses HeroUI React v3, consult `HEROUI-AGENTS.md` for the downloaded official docs index before implementation.
 
 ## Current Constraints
 

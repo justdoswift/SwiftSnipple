@@ -37,11 +37,6 @@
 			data.filters.hasPrompt
 		].filter(Boolean).length
 	);
-	const resultSummary = $derived(
-		activeFilterCount === 0
-			? '当前没有额外筛选，适合直接浏览全部作品。'
-			: `已启用 ${activeFilterCount} 个筛选，结果会随输入和点选即时刷新。`
-	);
 	let manualSecondaryFilters = $state(false);
 	const showSecondaryFilters = $derived(hasSecondarySelection || manualSecondaryFilters);
 
@@ -109,10 +104,9 @@
 		<Button href="/" variant="outline" size="sm" class="hero-link">回首页</Button>
 	</section>
 
-	<Card.Root class="surface-card">
-		<Card.Content class="space-y-5 py-1">
-		<div class="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 max-[1040px]:grid-cols-1">
-			<label class="search-field grid gap-2" for="search-query">
+	<Card.Root class="surface-panel explore-toolbar-panel">
+		<div class="grid grid-cols-[minmax(0,25rem)_auto] items-end gap-3 max-[1040px]:grid-cols-1">
+			<label class="search-field grid max-w-[25rem] gap-2" for="search-query">
 				<span class="ui-label">搜索片段</span>
 				<Input
 					id="search-query"
@@ -128,7 +122,7 @@
 				type="button"
 				variant="outline"
 				size="sm"
-				class="secondary-toggle"
+				class="secondary-toggle justify-self-start"
 				aria-expanded={showSecondaryFilters}
 				onclick={toggleSecondaryFilters}
 			>
@@ -158,7 +152,7 @@
 		</div>
 
 		{#if showSecondaryFilters}
-			<div class="grid gap-4 border-t border-white/22 pt-4 md:grid-cols-2">
+			<div class="explore-secondary-panel md:grid-cols-2">
 				<FacetChips
 					label="含 Demo"
 					options={facetOptions('hasDemo', data.results.facets.hasDemo)}
@@ -175,7 +169,6 @@
 				/>
 			</div>
 		{/if}
-		</Card.Content>
 	</Card.Root>
 
 	<section class="results-section grid gap-4">
@@ -184,12 +177,20 @@
 				<p class="section-kicker">已发布</p>
 				<h2 class="section-title">{data.results.total} 条可直接复用的片段</h2>
 			</div>
-			<div class="surface-muted grid max-w-[22rem] gap-1.5 rounded-[calc(var(--radius)+0.55rem)] px-4 py-3">
-				<p class="ui-label">浏览状态</p>
-				<p class="m-0 text-sm leading-6 text-foreground/82">{resultSummary}</p>
-				<p class="m-0 text-xs leading-5 text-muted-foreground/90">
-					先看合不合适，再决定要不要打开细节。
-				</p>
+			<div class="surface-interactive explore-status-card">
+				<p class="ui-label">结果概览</p>
+				<div class="explore-status-grid">
+					<div class="explore-status-item">
+						<span class="text-[0.72rem] font-semibold tracking-[0.08em] text-foreground/46 uppercase">结果</span>
+						<span class="text-sm font-medium text-foreground">{data.results.total} 条</span>
+					</div>
+					<div class="explore-status-item">
+						<span class="text-[0.72rem] font-semibold tracking-[0.08em] text-foreground/46 uppercase">筛选</span>
+						<span class="text-sm font-medium text-foreground">
+							{activeFilterCount === 0 ? '全部' : `${activeFilterCount} 项`}
+						</span>
+					</div>
+				</div>
 			</div>
 		</div>
 
@@ -200,12 +201,10 @@
 				{/each}
 			</div>
 		{:else}
-			<Card.Root class="surface-card">
+			<Card.Root class="surface-panel">
 				<Card.Content class="space-y-3 py-1">
-				<h2 class="section-title">这次没找到合适的，先看看这些更常用的。</h2>
-				<p class="section-copy">
-					换个关键词，或者直接从下面这些已经常用的片段重新开始。
-				</p>
+				<p class="section-kicker">热门片段</p>
+				<h2 class="section-title">没有匹配结果</h2>
 				</Card.Content>
 			</Card.Root>
 

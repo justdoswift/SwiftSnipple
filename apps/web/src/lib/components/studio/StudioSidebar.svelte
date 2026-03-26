@@ -18,13 +18,11 @@
 		{
 			href: '/studio',
 			label: '总览',
-			description: '今日工作面',
 			icon: LayoutDashboardIcon
 		},
 		{
 			href: '/studio/snippets',
 			label: '内容管理',
-			description: '列表与筛选',
 			icon: LibraryBigIcon
 		}
 	];
@@ -41,24 +39,23 @@
 	collapsible="icon"
 	class="border-sidebar-border/60 bg-transparent"
 >
-	<Sidebar.Header class="border-sidebar-border/70 bg-white/72 supports-[backdrop-filter]:bg-white/58 border-b px-3 py-3 backdrop-blur-xl">
+	<Sidebar.Header class="border-sidebar-border bg-sidebar border-b px-3 py-3">
 		<div class="flex items-start gap-3 px-1">
-			<div class="from-primary/18 to-primary/8 flex size-9 items-center justify-center rounded-2xl bg-gradient-to-br text-primary shadow-sm ring-1 ring-black/5">
+			<div class="bg-primary/10 text-primary flex size-9 items-center justify-center rounded-lg">
 				<SparklesIcon class="size-4" />
 			</div>
 			<div class="min-w-0 group-data-[collapsible=icon]:hidden">
-				<p class="text-[0.68rem] font-semibold tracking-[0.18em] text-slate-500 uppercase">
+				<p class="text-xs font-medium tracking-wider text-muted-foreground uppercase">
 					SwiftSnippet
 				</p>
-				<h2 class="mt-1 text-sm font-semibold tracking-[-0.03em] text-slate-950">Studio</h2>
-				<p class="mt-1 text-xs leading-5 text-slate-500">内容录入、校验与发布工作台。</p>
+				<h2 class="mt-1 text-sm font-medium text-foreground">Studio</h2>
 			</div>
 		</div>
 	</Sidebar.Header>
 
 	<Sidebar.Content class="px-2 py-3">
 		<Sidebar.Group>
-			<Sidebar.GroupLabel class="px-2 text-[0.68rem] font-semibold tracking-[0.14em] text-slate-400 uppercase">
+			<Sidebar.GroupLabel class="px-2 text-xs font-medium tracking-wider text-muted-foreground uppercase">
 				工作区
 			</Sidebar.GroupLabel>
 			<Sidebar.GroupContent>
@@ -74,13 +71,10 @@
 									<a
 										{...props}
 										href={item.href}
-										class={`${String(props.class ?? '')} rounded-2xl px-3 py-3`}
+										class={`${String(props.class ?? '')} px-3`}
 									>
 										<item.icon class="size-4" />
 										<span>{item.label}</span>
-										<span class="ml-auto text-[11px] text-slate-400 group-data-[collapsible=icon]:hidden">
-											{item.description}
-										</span>
 									</a>
 								{/snippet}
 							</Sidebar.MenuButton>
@@ -91,13 +85,14 @@
 		</Sidebar.Group>
 
 		<Sidebar.Group class="mt-5">
-			<Sidebar.GroupLabel class="px-2 text-[0.68rem] font-semibold tracking-[0.14em] text-slate-400 uppercase">
+			<Sidebar.GroupLabel class="px-2 text-xs font-medium tracking-wider text-muted-foreground uppercase">
 				快捷入口
 			</Sidebar.GroupLabel>
 			<Sidebar.GroupContent class="px-2 pt-2">
 				<Button
 					href="/studio/snippets/new"
-					class="h-11 w-full justify-start rounded-2xl px-3 shadow-none group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+					size="sm"
+					class="w-full justify-start group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
 				>
 					<PlusIcon class="size-4" />
 					<span class="group-data-[collapsible=icon]:hidden">新建内容</span>
@@ -106,16 +101,16 @@
 		</Sidebar.Group>
 	</Sidebar.Content>
 
-	<Sidebar.Footer class="border-sidebar-border/70 border-t px-3 py-3">
-		<div class="group-data-[collapsible=icon]:hidden rounded-2xl border border-slate-200/80 bg-white/88 px-3 py-3 shadow-xs">
+	<Sidebar.Footer class="border-sidebar-border border-t px-3 py-3">
+		<div class="group-data-[collapsible=icon]:hidden rounded-lg border bg-background px-3 py-3">
 			<div class="flex items-center justify-between gap-3">
 				<div class="min-w-0">
-					<p class="text-[0.68rem] font-semibold tracking-[0.14em] text-slate-400 uppercase">
+					<p class="text-xs font-medium tracking-wider text-muted-foreground uppercase">
 						当前会话
 					</p>
-					<p class="mt-1 truncate text-sm font-semibold text-slate-900">{username}</p>
+					<p class="mt-1 truncate text-sm font-medium text-foreground">{username}</p>
 				</div>
-				<Badge variant="outline" class="rounded-full border-slate-200 bg-slate-50 px-2 py-1 text-[11px] text-slate-600">
+				<Badge variant="outline">
 					内部
 				</Badge>
 			</div>

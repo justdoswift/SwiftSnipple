@@ -60,6 +60,10 @@ SwiftSnippet 是一个面向 SwiftUI 开发者与 Vibe Coding 用户的片段卡
 - **Tech stack**: 前端优先采用 SvelteKit，后端优先采用 Go — 初始设想已经围绕这套分层展开，便于前后端职责清晰拆分
 - **Content protocol**: 所有片段必须遵守统一仓库协议 — 否则无法保证自动校验、审核发布、搜索建索引和回滚一致性
 - **Quality**: 片段必须尽量做到可运行、可复制、可验证 — 平台价值建立在“可信内容”而不是纯展示素材上
+- **UI density**: 页面宁可更克制、更有留白，也不要为了“填满画面”把信息和控件堆得过密 — 低心智压力优先于高信息密度
+- **UI copy**: 所有界面文案都必须是真实、面向用户的产品文案，不允许出现解释组件用途、提示开发意图或明显占位的说明性文字
+- **UI sizing**: 标题层级、按钮高度、输入框高度、圆角和间距必须复用统一尺寸体系，避免页面级任意值导致界面没有章法
+- **Component system**: 既然前端已接入 `shadcn-svelte`，后续后台与公开站都应尽量回到共享组件体系，而不是在页面层大量覆写成另一套视觉
 - **Search UX**: 搜索必须支持分面与权重排序 — 片段库可发现性是核心体验，简单全文检索不够
 - **Security**: 上传、鉴权、速率限制、秘密扫描必须在早期进入底线设计 — 内容平台天然涉及媒体、第三方贡献与公开仓库风险
 - **Scope**: v1 必须先完成最小闭环，而不是一次性做完商业化与企业能力 — 需要尽快验证核心价值，避免长周期空转
@@ -75,6 +79,10 @@ SwiftSnippet 是一个面向 SwiftUI 开发者与 Vibe Coding 用户的片段卡
 | 路线图先收敛在 MVP 闭环，后置订阅、企业和增长体系 | 保持初始阶段可执行，减少一次性铺太宽的交付风险 | Still active after Phase 1 |
 | 首发内容批次锁定为 12 条 SwiftUI 内容并优先展示多样性 | 首发必须同时证明“平台可用”与“内容值得消费” | Phase 4 shipped a 12-item published batch with 4 demo-backed highlights |
 | 后台录入继续以文件协议为权威源，而不是引入独立 CMS 数据模型 | 这样可以复用现有 validator、publish pipeline 和仓库审阅流，避免双写 | Phase 8 admin studio implementation follows this decision |
+| 视觉打磨默认优先留白与低压阅读节奏，而不是追求更高密度的信息堆叠 | 用户明确要求“不要怕空，怕太密”，后续 UI 决策应优先降低认知负担 | Locked on 2026-03-26 during Studio UI refinement |
+| 所有 UI 文案必须像真实产品，而不是解释性说明或组件占位提示 | 用户明确要求界面里的文字不能带“给开发者看”的味道，后续所有页面都要按真实产品语气重写 | Locked on 2026-03-26 during Studio UI refinement |
+| 所有 UI 尺寸必须复用统一层级与尺寸 token，而不是页面里各写各的字号、按钮和输入框高度 | 用户明确指出“字体大小没有章法”，后续所有 UI 必须先保证尺寸系统一致 | Locked on 2026-03-26 during Studio consistency audit |
+| `shadcn-svelte` 必须作为真实共享组件体系来使用，而不是只保留组件壳再由页面层大面积覆写成另一套视觉 | 用户明确指出当前存在“已接入但不一致”的问题，后续重构应优先减少页面级覆写 | Locked on 2026-03-26 during Studio consistency audit |
 
 ## Current State
 

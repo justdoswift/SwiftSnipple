@@ -9,6 +9,7 @@
 	import * as Tabs from '$lib/components/ui/tabs/index.js';
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import {
+		loadAdminSnippet,
 		moveSnippetToReview,
 		normalizeAdminSnippetEditorPayload,
 		publishSnippetVersion,
@@ -26,9 +27,12 @@
 
 	const cloneEditor = () =>
 		structuredClone(normalizeAdminSnippetEditorPayload(data.editor)) as AdminSnippetEditorPayload;
+	const snapshotEditor = (value: AdminSnippetEditorPayload) => JSON.stringify(value);
+	const initialEditor = cloneEditor();
 
-	let editor = $state<AdminSnippetEditorPayload>(cloneEditor());
-	let tagsText = $state(cloneEditor().tags.join(', '));
+	let editor = $state<AdminSnippetEditorPayload>(initialEditor);
+	let tagsText = $state(initialEditor.tags.join(', '));
+	let savedSnapshot = $state(snapshotEditor(initialEditor));
 	let validation = $state<AdminValidationResponse | null>(null);
 	let saveMessage = $state('');
 	let saveTone = $state<'success' | 'error'>('success');
@@ -38,6 +42,20 @@
 	let pendingPublish = $state(false);
 	let dirty = $state(false);
 	let activeTab = $state('meta');
+	let actionBanner = $state<{
+		tone: 'neutral' | 'success' | 'error' | 'warning';
+		title: string;
+		description: string;
+	} | null>(null);
+	let assetFeedback = $state<
+		Record<
+			'cover' | 'demo',
+			{ status: 'idle' | 'uploading' | 'success' | 'error'; fileName: string; message: string }
+		>
+	>({
+		cover: { status: 'idle', fileName: '', message: '推荐上传横向封面。' },
+		demo: { status: 'idle', fileName: '', message: '可稍后补充演示。' }
+	});
 
 	const statusLabel = $derived(
 		editor.state === 'published' ? '已发布' : editor.state === 'review' ? '待评审' : '草稿'
@@ -45,11 +63,100 @@
 
 	const statusClass = $derived(
 		editor.state === 'published'
-			? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+			? 'default'
 			: editor.state === 'review'
-				? 'border-amber-200 bg-amber-50 text-amber-700'
-				: 'border-slate-200 bg-slate-50 text-slate-600'
+				? 'secondary'
+				: 'outline'
 	);
+
+	const actionBannerVariant = $derived(actionBanner?.tone === 'error' ? 'destructive' : 'default');
+
+	function assetBadgeVariant(status: 'idle' | 'uploading' | 'success' | 'error') {
+		if (status === 'success') return 'default';
+		if (status === 'uploading') return 'secondary';
+		if (status === 'error') return 'destructive';
+		return 'outline';
+	}
+
+	function readinessVariant(ready: boolean) {
+		return ready ? 'default' : 'outline';
+	}
+
+	const nextStep = $derived.by(() => {
+		if (dirty) {
+			return '先保存当前修改。';
+		}
+		if (!validation) {
+			return '先运行校验。';
+		}
+		if (!validation.ok) {
+			return '先处理校验项。';
+		}
+		if (editor.state === 'draft') {
+			return '可以送审。';
+		}
+		if (editor.state === 'review') {
+			return '可以发布。';
+		}
+		return '可以继续更新。';
+	});
+
+	const readinessItems = $derived.by(() => [
+		{
+			label: '标题与摘要',
+			ready: editor.title.trim().length > 0 && editor.summary.trim().length > 0,
+			detail: ''
+		},
+		{
+			label: '代码内容',
+			ready: editor.codeFiles.some((file) => file.content.trim().length > 0),
+			detail: ''
+		},
+		{
+			label: '提示词',
+			ready: editor.promptFiles.some((file) => file.content.trim().length > 0),
+			detail: ''
+		},
+		{
+			label: '平台边界',
+			ready: editor.platforms.some(
+				(platform) => platform.os.trim().length > 0 && platform.minVersion.trim().length > 0
+			),
+			detail: ''
+		},
+		{
+			label: '封面媒体',
+			ready: Boolean(editor.assets.coverPreviewUrl),
+			detail: ''
+		}
+	]);
+
+	const readyCount = $derived(readinessItems.filter((item) => item.ready).length);
+	const totalAssetCount = $derived(
+		[editor.assets.coverPreviewUrl, editor.assets.demoPreviewUrl].filter(Boolean).length
+	);
+	const workflowCards = $derived.by(() => [
+		{
+			label: '当前阶段',
+			value: statusLabel,
+			detail:
+				editor.state === 'published'
+					? '已经对外可见'
+					: editor.state === 'review'
+						? '等待发布'
+						: '继续完善内容'
+		},
+		{
+			label: '就绪项',
+			value: `${readyCount}/${readinessItems.length}`,
+			detail: readyCount === readinessItems.length ? '可以继续推进' : '还有内容待补充'
+		},
+		{
+			label: '媒体状态',
+			value: `${totalAssetCount}/2`,
+			detail: editor.assets.demoPreviewUrl ? '封面和演示都已准备好' : '可以继续补素材'
+		}
+	]);
 
 	$effect(() => {
 		const handler = (event: BeforeUnloadEvent) => {
@@ -61,8 +168,21 @@
 		return () => window.removeEventListener('beforeunload', handler);
 	});
 
+	$effect(() => {
+		const nextDirty = snapshotEditor(editor) !== savedSnapshot;
+		if (nextDirty === dirty) return;
+		dirty = nextDirty;
+		if (dirty) {
+			saveMessage = '';
+			actionBanner = {
+				tone: 'warning',
+				title: '你有未保存修改',
+				description: '离开前记得先保存。'
+			};
+		}
+	});
+
 	function touch() {
-		dirty = true;
 		saveMessage = '';
 	}
 
@@ -99,12 +219,23 @@
 				.filter(Boolean);
 			editor = await saveAdminSnippet(fetch, editor.id, editor);
 			tagsText = editor.tags.join(', ');
+			savedSnapshot = snapshotEditor(editor);
 			saveTone = 'success';
 			saveMessage = '已保存草稿';
 			dirty = false;
+			actionBanner = {
+				tone: 'success',
+				title: '草稿已保存',
+				description: '刚才的修改已经保存，可以继续下一步。'
+			};
 		} catch (error) {
 			saveTone = 'error';
 			saveMessage = error instanceof Error ? error.message : '保存失败';
+			actionBanner = {
+				tone: 'error',
+				title: '保存失败',
+				description: error instanceof Error ? error.message : '保存失败，请稍后重试。'
+			};
 		} finally {
 			pendingSave = false;
 		}
@@ -114,6 +245,17 @@
 		pendingValidate = true;
 		try {
 			validation = await validateAdminSnippet(fetch, editor.id);
+			actionBanner = validation.ok
+				? {
+						tone: 'success',
+						title: '校验通过',
+						description: '这条内容已经可以继续发布。'
+					}
+				: {
+						tone: 'warning',
+						title: '校验未通过',
+						description: `还有 ${validation.issues.length} 项需要处理。`
+					};
 		} finally {
 			pendingValidate = false;
 		}
@@ -143,8 +285,46 @@
 		const input = event.currentTarget as HTMLInputElement;
 		const file = input.files?.[0];
 		if (!file) return;
-		await uploadAdminAsset(fetch, editor.id, kind, file);
-		await goto(`/studio/snippets/${editor.id}`, { invalidateAll: true });
+		assetFeedback[kind] = {
+			status: 'uploading',
+			fileName: file.name,
+			message: '上传中，完成后会自动刷新当前预览。'
+		};
+		actionBanner = {
+			tone: 'neutral',
+			title: `正在上传${kind === 'cover' ? '封面' : '演示'}`,
+			description: `${file.name} 上传中，稍后会更新预览。`
+		};
+		try {
+			await uploadAdminAsset(fetch, editor.id, kind, file);
+			editor = await loadAdminSnippet(fetch, editor.id);
+			tagsText = editor.tags.join(', ');
+			savedSnapshot = snapshotEditor(editor);
+			dirty = false;
+			assetFeedback[kind] = {
+				status: 'success',
+				fileName: file.name,
+				message: '上传成功，预览已经更新。'
+			};
+			actionBanner = {
+				tone: 'success',
+				title: `${kind === 'cover' ? '封面' : '演示'}已更新`,
+				description: `${file.name} 已更新。`
+			};
+		} catch (error) {
+			assetFeedback[kind] = {
+				status: 'error',
+				fileName: file.name,
+				message: error instanceof Error ? error.message : '上传失败'
+			};
+			actionBanner = {
+				tone: 'error',
+				title: `${kind === 'cover' ? '封面' : '演示'}上传失败`,
+				description: error instanceof Error ? error.message : '上传失败，请稍后重试。'
+			};
+		} finally {
+			input.value = '';
+		}
 	}
 </script>
 
@@ -153,27 +333,24 @@
 </svelte:head>
 
 <main class="grid gap-5">
-	<Card.Root class="studio-surface rounded-[30px] border-white/70 shadow-[0_18px_45px_rgba(15,23,42,0.05)]">
-		<Card.Header class="gap-5 p-6 md:flex-row md:items-start md:justify-between">
+	<Card.Root>
+		<Card.Header class="gap-5 md:flex-row md:items-start md:justify-between">
 			<div class="space-y-3">
 				<div class="flex flex-wrap items-center gap-2">
-					<Badge variant="outline" class={`rounded-full px-2.5 py-1 ${statusClass}`}>
+					<Badge variant={statusClass}>
 						{statusLabel}
 					</Badge>
-					<Badge variant="outline" class="rounded-full border-slate-200 bg-white px-2.5 py-1 text-slate-600">
-						{editor.id}
+					<Badge variant="outline">
+						内容 ID · {editor.id}
 					</Badge>
 				</div>
 				<div>
-					<h2
-						class="text-[2.25rem] tracking-[-0.05em] text-slate-950"
-						style="font-family: var(--font-display)"
-					>
-						{editor.title}
-					</h2>
-					<Card.Description class="mt-2 max-w-3xl text-sm leading-7 text-slate-600">
-						{editor.summary || '这条内容还没有摘要，建议先补一句面向用户的说明。'}
-					</Card.Description>
+					<h2 class="text-2xl font-semibold tracking-tight text-foreground">{editor.title}</h2>
+					{#if editor.summary}
+						<Card.Description class="mt-2 max-w-2xl text-sm leading-7 text-muted-foreground">
+							{editor.summary}
+						</Card.Description>
+					{/if}
 				</div>
 			</div>
 
@@ -182,128 +359,153 @@
 					<Button
 						type="button"
 						variant="outline"
-						class="rounded-2xl border-slate-200 bg-white/80 shadow-none"
+						size="sm"
 						onclick={handleValidate}
 						disabled={pendingValidate}
 					>
 						{pendingValidate ? '校验中...' : '运行校验'}
 					</Button>
-					<Button type="button" class="rounded-2xl shadow-none" onclick={handleSave} disabled={pendingSave}>
-						{pendingSave ? '保存中...' : '保存草稿'}
+					<Button
+						type="button"
+						size="sm"
+						onclick={handleSave}
+						disabled={pendingSave}
+					>
+						{pendingSave ? '保存中...' : dirty ? '保存修改' : '保存草稿'}
 					</Button>
 				</div>
-				<p class="text-sm leading-6 text-slate-500">
-					当前版本 {editor.version} · {dirty ? '你有未保存修改' : '当前内容已同步到工作区文件'}
+				<p class="text-sm leading-6 text-muted-foreground">
+					当前版本 {editor.version} · {dirty ? '尚未保存' : '已保存'}
 				</p>
 			</div>
 		</Card.Header>
 	</Card.Root>
 
-	<div class="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(340px,0.82fr)]">
+	{#if actionBanner}
+		<Alert variant={actionBannerVariant}>
+			<AlertTitle>{actionBanner.title}</AlertTitle>
+			<AlertDescription>{actionBanner.description}</AlertDescription>
+		</Alert>
+	{/if}
+
+	<div class="grid gap-3 md:grid-cols-3">
+		{#each workflowCards as card (card.label)}
+			<Card.Root size="sm">
+				<Card.Content class="pt-0">
+					<p class="text-xs font-medium text-muted-foreground">{card.label}</p>
+					<p class="mt-2 text-2xl font-semibold tracking-tight text-foreground">{card.value}</p>
+				</Card.Content>
+			</Card.Root>
+		{/each}
+	</div>
+
+	<div class="grid gap-5 xl:grid-cols-[minmax(0,1.5fr)_320px]">
 		<div class="grid gap-5">
 			<Tabs.Root bind:value={activeTab} class="gap-4">
-				<Tabs.List
-					variant="line"
-					class="liquid-glass rounded-[24px] px-2 py-2 text-slate-600"
-				>
-					<Tabs.Trigger value="meta" class="rounded-2xl px-4">基本信息</Tabs.Trigger>
-					<Tabs.Trigger value="code" class="rounded-2xl px-4">源码</Tabs.Trigger>
-					<Tabs.Trigger value="prompt" class="rounded-2xl px-4">Prompt / 许可</Tabs.Trigger>
-				</Tabs.List>
+					<Tabs.List variant="line">
+						<Tabs.Trigger value="meta">基本信息</Tabs.Trigger>
+						<Tabs.Trigger value="code">源码</Tabs.Trigger>
+						<Tabs.Trigger value="prompt">提示词与许可</Tabs.Trigger>
+					</Tabs.List>
 
 				<Tabs.Content value="meta">
-					<Card.Root class="studio-surface rounded-[30px] border-white/70 shadow-[0_18px_45px_rgba(15,23,42,0.05)]">
-						<Card.Header class="gap-3 p-6">
-							<Badge variant="outline" class="w-fit rounded-full border-slate-200 bg-white/80 px-2.5 py-1 text-[11px] text-slate-500">
-								Metadata
-							</Badge>
-							<Card.Title
-								class="text-[1.85rem] tracking-[-0.05em] text-slate-950"
-								style="font-family: var(--font-display)"
-							>
-								基本信息
-							</Card.Title>
+					<Card.Root>
+						<Card.Header>
+							<Card.Title class="text-lg font-semibold tracking-tight">基本信息</Card.Title>
 						</Card.Header>
-						<Card.Content class="grid gap-5 px-6 pb-6">
-							<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-								<label class="grid gap-2 md:col-span-2 xl:col-span-1">
-									<span class="text-[0.76rem] font-semibold tracking-[0.06em] text-slate-500 uppercase">标题</span>
-									<Input bind:value={editor.title} class="h-11 rounded-2xl border-slate-200 bg-white shadow-none" oninput={touch} />
-								</label>
-								<label class="grid gap-2">
-									<span class="text-[0.76rem] font-semibold tracking-[0.06em] text-slate-500 uppercase">Slug</span>
-									<Input bind:value={editor.id} disabled class="h-11 rounded-2xl border-slate-200 bg-slate-50 text-slate-500 shadow-none" />
-								</label>
-								<label class="grid gap-2">
-									<span class="text-[0.76rem] font-semibold tracking-[0.06em] text-slate-500 uppercase">分类</span>
-									<Input bind:value={editor.categoryPrimary} class="h-11 rounded-2xl border-slate-200 bg-white shadow-none" oninput={touch} />
-								</label>
-								<label class="grid gap-2">
-									<span class="text-[0.76rem] font-semibold tracking-[0.06em] text-slate-500 uppercase">难度</span>
-									<Input bind:value={editor.difficulty} class="h-11 rounded-2xl border-slate-200 bg-white shadow-none" oninput={touch} />
-								</label>
-								<label class="grid gap-2">
-									<span class="text-[0.76rem] font-semibold tracking-[0.06em] text-slate-500 uppercase">版本</span>
-									<Input bind:value={editor.version} class="h-11 rounded-2xl border-slate-200 bg-white shadow-none" oninput={touch} />
-								</label>
-								<label class="grid gap-2">
-									<span class="text-[0.76rem] font-semibold tracking-[0.06em] text-slate-500 uppercase">Source revision</span>
-									<Input bind:value={editor.sourceRevision} class="h-11 rounded-2xl border-slate-200 bg-white shadow-none" oninput={touch} />
-								</label>
+						<Card.Content class="grid gap-5">
+							<div class="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.9fr)]">
+								<Card.Root size="sm">
+									<Card.Header>
+										<Card.Title>识别信息</Card.Title>
+									</Card.Header>
+									<Card.Content class="grid gap-4">
+									<div class="grid gap-4">
+										<label class="grid gap-2">
+											<span class="text-sm font-medium text-muted-foreground">标题</span>
+											<Input bind:value={editor.title} oninput={touch} />
+										</label>
+										<label class="grid gap-2">
+											<span class="text-sm font-medium text-muted-foreground">内容 ID</span>
+											<Input bind:value={editor.id} disabled />
+										</label>
+										<label class="grid gap-2">
+											<span class="text-sm font-medium text-muted-foreground">摘要</span>
+											<Textarea bind:value={editor.summary} rows={5} class="min-h-32" oninput={touch} />
+										</label>
+									</div>
+									</Card.Content>
+								</Card.Root>
+
+								<Card.Root size="sm">
+									<Card.Header>
+										<Card.Title>发现与版本</Card.Title>
+									</Card.Header>
+									<Card.Content class="grid gap-4">
+									<div class="grid gap-4">
+										<div class="grid gap-4 md:grid-cols-2">
+											<label class="grid gap-2">
+												<span class="text-sm font-medium text-muted-foreground">分类</span>
+												<Input bind:value={editor.categoryPrimary} oninput={touch} />
+											</label>
+											<label class="grid gap-2">
+												<span class="text-sm font-medium text-muted-foreground">难度</span>
+												<Input bind:value={editor.difficulty} oninput={touch} />
+											</label>
+											<label class="grid gap-2">
+												<span class="text-sm font-medium text-muted-foreground">版本</span>
+												<Input bind:value={editor.version} oninput={touch} />
+											</label>
+											<label class="grid gap-2">
+												<span class="text-sm font-medium text-muted-foreground">来源版本</span>
+												<Input bind:value={editor.sourceRevision} oninput={touch} />
+											</label>
+										</div>
+										<label class="grid gap-2">
+											<span class="text-sm font-medium text-muted-foreground">
+												标签（逗号分隔）
+											</span>
+											<Input bind:value={tagsText} oninput={syncTags} />
+										</label>
+									</div>
+									</Card.Content>
+								</Card.Root>
 							</div>
 
-							<label class="grid gap-2">
-								<span class="text-[0.76rem] font-semibold tracking-[0.06em] text-slate-500 uppercase">摘要</span>
-								<Textarea bind:value={editor.summary} rows={4} class="min-h-28 rounded-[24px] border-slate-200 bg-white shadow-none" oninput={touch} />
-							</label>
-
-							<label class="grid gap-2">
-								<span class="text-[0.76rem] font-semibold tracking-[0.06em] text-slate-500 uppercase">
-									标签（逗号分隔）
-								</span>
-								<Input bind:value={tagsText} class="h-11 rounded-2xl border-slate-200 bg-white shadow-none" oninput={syncTags} />
-							</label>
-
-							<div class="rounded-[26px] border border-slate-200/80 bg-white/88 p-4">
+							<Card.Root size="sm">
+								<Card.Header class="flex-row items-center justify-between">
 								<div class="flex flex-wrap items-start justify-between gap-3">
 									<div>
-										<p class="text-sm font-semibold text-slate-900">Platforms</p>
-										<p class="mt-1 text-sm leading-6 text-slate-500">
-											只保留真实需要的运行边界，减少表单噪音。
-										</p>
+										<Card.Title>平台</Card.Title>
 									</div>
 									<Button
 										type="button"
 										variant="outline"
-										class="rounded-2xl border-slate-200 bg-white shadow-none"
+										size="sm"
 										onclick={addPlatform}
 									>
 										新增平台
 									</Button>
 								</div>
-
-								<div class="mt-4 grid gap-4">
+								</Card.Header>
+								<Card.Content class="grid gap-4">
 									{#if editor.platforms.length === 0}
-										<div class="rounded-[20px] border border-dashed border-slate-300 bg-slate-50/70 px-4 py-4 text-sm text-slate-500">
-											当前还没有平台边界，建议至少补一条系统和最低版本。
-										</div>
+										<div class="text-muted-foreground rounded-lg border border-dashed px-4 py-4 text-sm">暂无平台信息</div>
 									{:else}
 										{#each editor.platforms as platform, index (`${index}-${platform.os}`)}
 											<div class="grid gap-4 md:grid-cols-2">
 												<label class="grid gap-2">
-													<span class="text-[0.76rem] font-semibold tracking-[0.06em] text-slate-500 uppercase">OS</span>
+													<span class="text-sm font-medium text-muted-foreground">系统</span>
 													<Input
 														value={platform.os}
-														class="h-11 rounded-2xl border-slate-200 bg-white shadow-none"
 														oninput={(event) =>
 															updatePlatform(index, 'os', (event.currentTarget as HTMLInputElement).value)}
 													/>
 												</label>
 												<label class="grid gap-2">
-													<span class="text-[0.76rem] font-semibold tracking-[0.06em] text-slate-500 uppercase">最低版本</span>
+													<span class="text-sm font-medium text-muted-foreground">最低版本</span>
 													<Input
 														value={platform.minVersion}
-														class="h-11 rounded-2xl border-slate-200 bg-white shadow-none"
 														oninput={(event) =>
 															updatePlatform(index, 'minVersion', (event.currentTarget as HTMLInputElement).value)}
 													/>
@@ -311,97 +513,85 @@
 											</div>
 										{/each}
 									{/if}
-								</div>
-							</div>
+								</Card.Content>
+							</Card.Root>
 						</Card.Content>
 					</Card.Root>
 				</Tabs.Content>
 
 				<Tabs.Content value="code">
-					<Card.Root class="studio-surface rounded-[30px] border-white/70 shadow-[0_18px_45px_rgba(15,23,42,0.05)]">
-						<Card.Header class="gap-3 p-6">
-							<Badge variant="outline" class="w-fit rounded-full border-slate-200 bg-white/80 px-2.5 py-1 text-[11px] text-slate-500">
-								Code
-							</Badge>
-							<Card.Title
-								class="text-[1.85rem] tracking-[-0.05em] text-slate-950"
-								style="font-family: var(--font-display)"
-							>
-								源码
-							</Card.Title>
+					<Card.Root>
+						<Card.Header>
+							<Card.Title class="text-lg font-semibold tracking-tight">源码</Card.Title>
 						</Card.Header>
-						<Card.Content class="grid gap-4 px-6 pb-6">
+						<Card.Content class="grid gap-4">
 							{#each editor.codeFiles as file, index (file.path)}
-								<div class="rounded-[26px] border border-slate-200/80 bg-white/90 p-4 shadow-xs">
-									<div class="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-900">
-										<FileCode2Icon class="size-4 text-slate-500" />
+								<Card.Root size="sm">
+									<Card.Content>
+									<div class="mb-3 flex items-center gap-2 text-sm font-medium text-foreground">
+										<FileCode2Icon class="text-muted-foreground size-4" />
 										<span>{file.path}</span>
 									</div>
 									<Textarea
 										rows={14}
 										value={file.content}
-										class="min-h-72 rounded-[24px] border-slate-200 bg-slate-950 px-4 py-3 font-mono text-[13px] leading-6 text-slate-100 shadow-none"
+										class="min-h-72 font-mono text-sm leading-6"
 										oninput={(event) =>
 											updateFile('codeFiles', index, (event.currentTarget as HTMLTextAreaElement).value)}
 									/>
-								</div>
+									</Card.Content>
+								</Card.Root>
 							{/each}
 						</Card.Content>
 					</Card.Root>
 				</Tabs.Content>
 
 				<Tabs.Content value="prompt">
-					<Card.Root class="studio-surface rounded-[30px] border-white/70 shadow-[0_18px_45px_rgba(15,23,42,0.05)]">
-						<Card.Header class="gap-3 p-6">
-							<Badge variant="outline" class="w-fit rounded-full border-slate-200 bg-white/80 px-2.5 py-1 text-[11px] text-slate-500">
-								Prompt & License
-							</Badge>
-							<Card.Title
-								class="text-[1.85rem] tracking-[-0.05em] text-slate-950"
-								style="font-family: var(--font-display)"
-							>
-								Prompt 与说明
-							</Card.Title>
+					<Card.Root>
+						<Card.Header>
+							<Card.Title class="text-lg font-semibold tracking-tight">提示词与许可</Card.Title>
 						</Card.Header>
-						<Card.Content class="grid gap-5 px-6 pb-6">
+						<Card.Content class="grid gap-5">
 							<div class="grid gap-4">
 								{#each editor.promptFiles as file, index (file.path)}
-									<div class="rounded-[26px] border border-slate-200/80 bg-white/90 p-4 shadow-xs">
-										<div class="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-900">
-											<SparklesIcon class="size-4 text-slate-500" />
+									<Card.Root size="sm">
+										<Card.Content>
+										<div class="mb-3 flex items-center gap-2 text-sm font-medium text-foreground">
+											<SparklesIcon class="text-muted-foreground size-4" />
 											<span>{file.path}</span>
 										</div>
 										<Textarea
 											rows={10}
 											value={file.content}
-											class="min-h-56 rounded-[24px] border-slate-200 bg-white shadow-none"
+											class="min-h-56"
 											oninput={(event) =>
 												updateFile('promptFiles', index, (event.currentTarget as HTMLTextAreaElement).value)}
 										/>
-									</div>
+										</Card.Content>
+									</Card.Root>
 								{/each}
 							</div>
 
-							<Separator class="bg-slate-200/80" />
+							<Separator />
 
 							<div class="grid gap-4 md:grid-cols-3">
 								<label class="grid gap-2">
-									<span class="text-[0.76rem] font-semibold tracking-[0.06em] text-slate-500 uppercase">代码许可</span>
-									<Input bind:value={editor.license.code} class="h-11 rounded-2xl border-slate-200 bg-white shadow-none" oninput={touch} />
+									<span class="text-sm font-medium text-muted-foreground">代码许可</span>
+									<Input bind:value={editor.license.code} oninput={touch} />
 								</label>
 								<label class="grid gap-2">
-									<span class="text-[0.76rem] font-semibold tracking-[0.06em] text-slate-500 uppercase">媒体许可</span>
-									<Input bind:value={editor.license.media} class="h-11 rounded-2xl border-slate-200 bg-white shadow-none" oninput={touch} />
+									<span class="text-sm font-medium text-muted-foreground">媒体许可</span>
+									<Input bind:value={editor.license.media} oninput={touch} />
 								</label>
 								<label class="grid gap-2">
-									<span class="text-[0.76rem] font-semibold tracking-[0.06em] text-slate-500 uppercase">第三方声明路径</span>
-									<Input bind:value={editor.license.thirdPartyNotice} class="h-11 rounded-2xl border-slate-200 bg-white shadow-none" oninput={touch} />
+									<span class="text-sm font-medium text-muted-foreground">第三方声明文件</span>
+									<Input bind:value={editor.license.thirdPartyNotice} oninput={touch} />
 								</label>
 							</div>
 
 							<label class="grid gap-2">
-								<span class="text-[0.76rem] font-semibold tracking-[0.06em] text-slate-500 uppercase">第三方声明内容</span>
-								<Textarea bind:value={editor.license.thirdPartyText} rows={7} class="min-h-40 rounded-[24px] border-slate-200 bg-white shadow-none" oninput={touch} />
+								<span class="text-sm font-medium text-muted-foreground">第三方说明</span>
+								<Textarea bind:value={editor.license.thirdPartyText} rows={7} class="min-h-40" oninput={touch} />
 							</label>
 						</Card.Content>
 					</Card.Root>
@@ -409,101 +599,140 @@
 			</Tabs.Root>
 		</div>
 
-		<aside class="grid gap-5 xl:sticky xl:top-28 xl:self-start">
-			<Card.Root class="studio-surface rounded-[30px] border-white/70 shadow-[0_18px_45px_rgba(15,23,42,0.05)]">
-				<Card.Header class="gap-3 p-6">
-					<Badge variant="outline" class="w-fit rounded-full border-slate-200 bg-white/80 px-2.5 py-1 text-[11px] text-slate-500">
-						Media
-					</Badge>
-					<Card.Title
-						class="text-[1.85rem] tracking-[-0.05em] text-slate-950"
-						style="font-family: var(--font-display)"
-					>
-						封面与 Demo
-					</Card.Title>
+		<aside class="grid gap-5 xl:sticky xl:top-24 xl:self-start">
+			<Card.Root>
+				<Card.Header>
+					<Card.Title class="text-lg font-semibold tracking-tight">封面与演示</Card.Title>
 				</Card.Header>
-				<Card.Content class="grid gap-4 px-6 pb-6">
-					<div class="rounded-[26px] border border-slate-200/80 bg-white/90 p-4 shadow-xs">
-						<div class="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-900">
-							<ImageIcon class="size-4 text-slate-500" />
-							<span>Cover</span>
+				<Card.Content class="grid gap-4">
+					<Card.Root size="sm">
+						<Card.Content>
+						<div class="mb-3 flex items-center justify-between gap-3">
+							<div class="flex items-center gap-2 text-sm font-medium text-foreground">
+								<ImageIcon class="text-muted-foreground size-4" />
+								<span>封面</span>
+							</div>
+							<Badge variant={assetBadgeVariant(assetFeedback.cover.status)}>
+								{assetFeedback.cover.status === 'success'
+									? '已更新'
+									: assetFeedback.cover.status === 'uploading'
+										? '上传中'
+										: assetFeedback.cover.status === 'error'
+											? '失败'
+											: editor.assets.coverPreviewUrl
+												? '已有封面'
+												: '待补充'}
+							</Badge>
 						</div>
-						<div class="overflow-hidden rounded-[22px] border border-slate-200 bg-slate-50">
+						<div class="overflow-hidden rounded-lg border bg-muted/50">
 							{#if editor.assets.coverPreviewUrl}
 								<img class="block aspect-[16/10] w-full object-cover" src={editor.assets.coverPreviewUrl} alt="当前 cover" />
 							{:else}
-								<div class="flex aspect-[16/10] items-center justify-center px-4 text-sm text-slate-500">
+								<div class="text-muted-foreground flex aspect-[16/10] items-center justify-center px-4 text-sm">
 									暂无封面
 								</div>
 							{/if}
 						</div>
 						<label class="mt-4 grid gap-2">
-							<span class="text-[0.76rem] font-semibold tracking-[0.06em] text-slate-500 uppercase">上传 Cover</span>
-							<Input type="file" accept="image/*" class="h-11 rounded-2xl border-slate-200 bg-white shadow-none" onchange={(event) => handleAssetUpload('cover', event)} />
+							<span class="text-sm font-medium text-muted-foreground">上传封面</span>
+							<Input type="file" accept="image/*" onchange={(event) => handleAssetUpload('cover', event)} />
 						</label>
-					</div>
-
-					<div class="rounded-[26px] border border-slate-200/80 bg-white/90 p-4 shadow-xs">
-						<div class="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-900">
-							<ImageIcon class="size-4 text-slate-500" />
-							<span>Demo</span>
+						<div class="text-muted-foreground mt-3 text-sm leading-6">
+							<p>{assetFeedback.cover.fileName ? `${assetFeedback.cover.fileName} · ` : ''}{assetFeedback.cover.message}</p>
 						</div>
-						<div class="overflow-hidden rounded-[22px] border border-slate-200 bg-slate-50">
+						</Card.Content>
+					</Card.Root>
+
+					<Card.Root size="sm">
+						<Card.Content>
+						<div class="mb-3 flex items-center justify-between gap-3">
+							<div class="flex items-center gap-2 text-sm font-medium text-foreground">
+								<ImageIcon class="text-muted-foreground size-4" />
+								<span>演示</span>
+							</div>
+							<Badge variant={assetBadgeVariant(assetFeedback.demo.status)}>
+								{assetFeedback.demo.status === 'success'
+									? '已更新'
+									: assetFeedback.demo.status === 'uploading'
+										? '上传中'
+										: assetFeedback.demo.status === 'error'
+											? '失败'
+											: editor.assets.demoPreviewUrl
+												? '已有演示'
+												: '可补充'}
+							</Badge>
+						</div>
+						<div class="overflow-hidden rounded-lg border bg-muted/50">
 							{#if editor.assets.demoPreviewUrl}
 								<video class="block aspect-[16/10] w-full object-cover" src={editor.assets.demoPreviewUrl} controls muted playsinline></video>
 							{:else}
-								<div class="flex aspect-[16/10] items-center justify-center px-4 text-sm text-slate-500">
-									暂无 Demo
-								</div>
+								<div class="text-muted-foreground flex aspect-[16/10] items-center justify-center px-4 text-sm">暂无演示</div>
 							{/if}
 						</div>
 						<label class="mt-4 grid gap-2">
-							<span class="text-[0.76rem] font-semibold tracking-[0.06em] text-slate-500 uppercase">上传 Demo</span>
-							<Input type="file" accept="video/*" class="h-11 rounded-2xl border-slate-200 bg-white shadow-none" onchange={(event) => handleAssetUpload('demo', event)} />
+							<span class="text-sm font-medium text-muted-foreground">上传演示</span>
+							<Input type="file" accept="video/*" onchange={(event) => handleAssetUpload('demo', event)} />
 						</label>
-					</div>
+						<div class="text-muted-foreground mt-3 text-sm leading-6">
+							<p>{assetFeedback.demo.fileName ? `${assetFeedback.demo.fileName} · ` : ''}{assetFeedback.demo.message}</p>
+						</div>
+						</Card.Content>
+					</Card.Root>
 				</Card.Content>
 			</Card.Root>
 
-			<Card.Root class="studio-surface rounded-[30px] border-white/70 shadow-[0_18px_45px_rgba(15,23,42,0.05)]">
-				<Card.Header class="gap-3 p-6">
-					<Badge variant="outline" class="w-fit rounded-full border-slate-200 bg-white/80 px-2.5 py-1 text-[11px] text-slate-500">
-						Publish
-					</Badge>
-					<Card.Title
-						class="text-[1.85rem] tracking-[-0.05em] text-slate-950"
-						style="font-family: var(--font-display)"
-					>
-						发布动作
-					</Card.Title>
+			<Card.Root>
+				<Card.Header>
+					<Card.Title class="text-lg font-semibold tracking-tight">发布</Card.Title>
 				</Card.Header>
-				<Card.Content class="grid gap-4 px-6 pb-6">
-					<div class="rounded-[24px] border border-slate-200/80 bg-white/88 p-4 shadow-xs">
+				<Card.Content class="grid gap-4">
+					<Card.Root size="sm">
+						<Card.Content>
 						<div class="flex items-center justify-between gap-3">
-							<span class="text-sm text-slate-500">当前状态</span>
-							<Badge variant="outline" class={`rounded-full px-2.5 py-1 ${statusClass}`}>
+							<span class="text-sm text-muted-foreground">当前状态</span>
+							<Badge variant={statusClass}>
 								{statusLabel}
 							</Badge>
 						</div>
 						<div class="mt-3 flex items-center justify-between gap-3 text-sm">
-							<span class="text-slate-500">当前版本</span>
-							<strong class="text-slate-900">{editor.version}</strong>
+							<span class="text-muted-foreground">当前版本</span>
+							<strong class="text-foreground">{editor.version}</strong>
 						</div>
-					</div>
+						<p class="text-muted-foreground mt-3 text-sm leading-6">{nextStep}</p>
+						</Card.Content>
+					</Card.Root>
+
+					<Card.Root size="sm">
+						<Card.Content>
+						<p class="text-sm font-medium text-foreground">检查项</p>
+						<div class="mt-3 grid gap-2">
+							{#each readinessItems as item (item.label)}
+								<div class="bg-muted/40 flex items-start justify-between gap-3 rounded-md border px-3 py-3">
+								<div class="min-w-0">
+									<p class="text-sm font-medium text-foreground">{item.label}</p>
+								</div>
+									<Badge variant={readinessVariant(item.ready)} class="mt-0.5 shrink-0">
+										{item.ready ? '已就绪' : '待补充'}
+									</Badge>
+								</div>
+							{/each}
+						</div>
+						</Card.Content>
+					</Card.Root>
 
 					<div class="grid gap-2">
 						<Button
 							type="button"
 							variant="outline"
-							class="h-11 rounded-2xl border-slate-200 bg-white shadow-none"
+							size="lg"
 							onclick={handleReview}
 							disabled={pendingReview || editor.state !== 'draft'}
 						>
-							{pendingReview ? '提交中...' : '提交 Review'}
+							{pendingReview ? '提交中...' : '送审'}
 						</Button>
 						<Button
 							type="button"
-							class="h-11 rounded-2xl shadow-none"
+							size="lg"
 							onclick={handlePublish}
 							disabled={pendingPublish || editor.state !== 'review'}
 						>
@@ -512,28 +741,14 @@
 					</div>
 
 					{#if saveMessage}
-						<Alert
-							variant={saveTone === 'success' ? 'default' : 'destructive'}
-							class={`rounded-[24px] shadow-none ${
-								saveTone === 'success'
-									? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-									: 'border-rose-200 bg-rose-50 text-rose-700'
-							}`}
-						>
+						<Alert variant={saveTone === 'success' ? 'default' : 'destructive'}>
 							<AlertTitle>{saveTone === 'success' ? '保存完成' : '保存失败'}</AlertTitle>
 							<AlertDescription>{saveMessage}</AlertDescription>
 						</Alert>
 					{/if}
 
 					{#if validation}
-						<Alert
-							variant={validation.ok ? 'default' : 'destructive'}
-							class={`rounded-[24px] shadow-none ${
-								validation.ok
-									? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-									: 'border-amber-200 bg-amber-50 text-amber-800'
-							}`}
-						>
+						<Alert variant={validation.ok ? 'default' : 'destructive'}>
 							<AlertTitle class="flex items-center gap-2">
 								<CheckCircle2Icon class="size-4" />
 								{validation.ok ? '校验通过' : '校验未通过'}
@@ -546,7 +761,7 @@
 										{/each}
 									</ul>
 								{:else}
-									<p>当前版本已经满足 publish-ready 要求。</p>
+									<p>当前版本可以发布。</p>
 								{/if}
 							</AlertDescription>
 						</Alert>

@@ -13,39 +13,48 @@
 	let { children, data } = $props();
 
 	const isStudioRoute = $derived(page.url.pathname.startsWith('/studio'));
+	const shellWidthClass = $derived(
+		page.url.pathname.startsWith('/studio/snippets/')
+			? 'max-w-6xl'
+			: page.url.pathname === '/studio'
+				? 'max-w-5xl'
+				: page.url.pathname === '/studio/snippets'
+					? 'max-w-5xl'
+					: 'max-w-4xl'
+	);
 
 	function routeMeta(pathname: string) {
 		if (pathname === '/studio') {
 			return {
 				title: '内容运营台',
-				description: '把录入、补媒体、校验和发布收在同一套后台骨架里。'
+				description: ''
 			};
 		}
 
 		if (pathname === '/studio/snippets') {
 			return {
 				title: '内容管理',
-				description: '筛选、扫描并进入单条内容的编辑与发布工作流。'
+				description: ''
 			};
 		}
 
 		if (pathname === '/studio/snippets/new') {
 			return {
-				title: '新建骨架',
-				description: '先生成标准目录，再进入完整编辑。'
+				title: '新建内容',
+				description: ''
 			};
 		}
 
 		if (pathname.startsWith('/studio/snippets/')) {
 			return {
 				title: '编辑内容',
-				description: '围绕文件协议直接编辑，避免后台和仓库产生双份真相。'
+				description: ''
 			};
 		}
 
 		return {
 			title: 'Studio',
-			description: '内部内容运营后台。'
+			description: ''
 		};
 	}
 
@@ -60,7 +69,7 @@
 		<div class="studio-page-shell flex min-h-screen items-center px-4 py-8 md:px-6">
 			<div class="mx-auto w-full max-w-5xl">
 				{#if data.sessionError}
-					<div class="mb-4 rounded-3xl border border-rose-200 bg-rose-50/90 px-5 py-4 text-sm text-rose-700 shadow-sm">
+					<div class="mb-4 rounded-lg border border-destructive/20 bg-card px-5 py-4 text-sm text-destructive">
 						<strong class="block font-semibold">后台服务暂时不可用</strong>
 						<span class="mt-1 block">{data.sessionError}</span>
 					</div>
@@ -74,14 +83,14 @@
 		<StudioSidebar username={data.session.username} />
 
 		<Sidebar.Inset class="bg-transparent">
-			<div class="studio-page-shell flex flex-1 flex-col px-3 pb-8 pt-3 md:px-4">
-				<header class="liquid-glass sticky top-3 z-30 mb-5 rounded-[28px] px-4 py-3 md:px-5">
+			<div class={`studio-page-shell mx-auto flex w-full flex-1 flex-col px-3 pb-8 pt-3 md:px-4 ${shellWidthClass}`}>
+				<header class="sticky top-3 z-30 mb-5 rounded-xl border bg-card px-4 py-3 shadow-xs md:px-5">
 					<div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
 						<div class="flex min-w-0 items-start gap-3">
-							<Sidebar.Trigger class="mt-0.5 rounded-2xl border border-white/60 bg-white/70 text-slate-700 shadow-none hover:bg-white/90 md:hidden" />
+							<Sidebar.Trigger class="mt-0.5 md:hidden" />
 
 							<div class="min-w-0">
-								<div class="flex flex-wrap items-center gap-2 text-[0.7rem] font-semibold tracking-[0.16em] text-slate-500 uppercase">
+								<div class="flex flex-wrap items-center gap-2 text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
 									<span>SwiftSnippet</span>
 									<ChevronRightIcon class="size-3" />
 									<span>Studio</span>
@@ -89,35 +98,31 @@
 									<span>{routeMeta(page.url.pathname).title}</span>
 								</div>
 
-								<h1
-									class="mt-2 text-2xl tracking-[-0.04em] text-slate-950 md:text-[2rem]"
-									style="font-family: var(--font-display)"
-								>
+								<h1 class="mt-2 text-2xl font-semibold tracking-tight text-foreground">
 									{routeMeta(page.url.pathname).title}
 								</h1>
-								<p class="mt-1 max-w-2xl text-sm leading-6 text-slate-600">
-									{routeMeta(page.url.pathname).description}
-								</p>
+								{#if routeMeta(page.url.pathname).description}
+									<p class="mt-1 max-w-xl text-sm leading-6 text-muted-foreground">
+										{routeMeta(page.url.pathname).description}
+									</p>
+								{/if}
 							</div>
 						</div>
 
 						<div class="flex flex-wrap items-center gap-3 lg:justify-end">
-							<Badge
-								variant="outline"
-								class="rounded-full border-white/80 bg-white/72 px-2.5 py-1 text-[11px] font-medium text-slate-600"
-							>
+							<Badge variant="outline">
 								内部运营
 							</Badge>
-							<div class="rounded-2xl border border-white/80 bg-white/80 px-3 py-2 shadow-xs">
-								<p class="text-[0.68rem] font-semibold tracking-[0.14em] text-slate-400 uppercase">
+							<div class="rounded-lg border bg-background px-3 py-2">
+								<p class="text-xs font-medium tracking-wider text-muted-foreground uppercase">
 									当前会话
 								</p>
-								<p class="mt-1 text-sm font-semibold text-slate-900">{data.session.username}</p>
+								<p class="mt-1 text-sm font-medium text-foreground">{data.session.username}</p>
 							</div>
 							<Button
 								type="button"
 								variant="outline"
-								class="rounded-2xl border-white/80 bg-white/80 shadow-none hover:bg-white"
+								size="sm"
 								onclick={handleLogout}
 							>
 								<LogOutIcon class="size-4" />
@@ -125,7 +130,7 @@
 							</Button>
 						</div>
 					</div>
-					<Separator class="mt-3 bg-white/70" />
+					<Separator class="mt-3" />
 				</header>
 
 				{#if isStudioRoute}

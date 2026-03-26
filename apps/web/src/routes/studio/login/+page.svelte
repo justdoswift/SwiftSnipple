@@ -20,13 +20,13 @@
 </svelte:head>
 
 <main class="mx-auto grid w-full max-w-[480px]">
-	<Card.Root>
+	<Card.Root class="surface-card">
 		<Card.Header class="gap-4">
 			<div class="flex items-start justify-between gap-3">
 				<div>
 					<Card.Title class="text-2xl font-semibold tracking-tight">登录</Card.Title>
 				</div>
-				<div class="bg-muted text-muted-foreground flex size-10 items-center justify-center rounded-lg">
+				<div class="surface-muted text-muted-foreground flex size-10 items-center justify-center rounded-[calc(var(--radius)-1px)]">
 					<ShieldCheckIcon class="size-5" />
 				</div>
 			</div>
@@ -35,7 +35,7 @@
 		<Card.Content>
 			<form class="grid gap-5" method="POST">
 				<label class="grid gap-2">
-					<span class="text-sm font-medium text-muted-foreground">管理员密码</span>
+					<span class="ui-label">管理员密码</span>
 					<Input
 						name="password"
 						type="password"
@@ -51,7 +51,7 @@
 					</Alert>
 				{/if}
 
-				<Button type="submit" size="lg">
+				<Button type="submit" size="lg" class="w-full">
 					进入 Studio
 				</Button>
 			</form>

@@ -40,17 +40,17 @@
 </svelte:head>
 
 {#if data.notPublic}
-	<main class="mx-auto grid min-h-screen w-[min(var(--page-width),calc(100vw-3rem))] items-center px-[clamp(1rem,2.2vw,1.8rem)] py-16">
-		<Card.Root class="blocked-card">
+	<main class="editorial-page grid min-h-screen items-center py-16">
+		<Card.Root class="surface-card blocked-card">
 			<Card.Content class="space-y-4">
 			<p class="section-kicker">公开可见性</p>
 			<h1>内容未公开</h1>
 			<p class="section-copy">
-				这个 slug 当前不在公开列表中。可以回到首页或 Explore，继续浏览已发布片段。
+				这条内容暂时不在公开列表里。可以先回首页，或者继续看看已经发布的片段。
 			</p>
 			<div class="actions">
-				<Button href="/" variant="outline" size="sm">返回首页</Button>
-				<Button href="/explore" variant="outline" size="sm">去发现页</Button>
+				<Button href="/" variant="outline" size="sm">回首页</Button>
+				<Button href="/explore" variant="outline" size="sm">看全部片段</Button>
 			</div>
 			</Card.Content>
 		</Card.Root>
@@ -60,14 +60,14 @@
 	{@const promptBlocks = snippet.promptBlocks.filter((block) => block.kind === 'prompt')}
 	{@const acceptanceBlocks = snippet.promptBlocks.filter((block) => block.kind !== 'prompt')}
 
-	<main class="page">
-		<div class="mb-4 flex flex-wrap gap-3">
-			<Button href="/" variant="ghost" size="sm">返回首页</Button>
-			<Button href="/explore" variant="ghost" size="sm">继续发现</Button>
+	<main class="editorial-page grid gap-5 pt-24">
+		<div class="page-actions">
+			<Button href="/" variant="ghost" size="sm">回首页</Button>
+			<Button href="/explore" variant="ghost" size="sm">全部片段</Button>
 		</div>
 
-		<section class="grid items-start gap-4 min-[901px]:grid-cols-[minmax(280px,0.78fr)_minmax(560px,1.22fr)]">
-			<div class="px-1 pt-1">
+		<section class="grid items-start gap-5 min-[901px]:grid-cols-[minmax(280px,0.76fr)_minmax(560px,1.24fr)]">
+			<div class="grid gap-4 px-1 pt-1">
 				<p class="section-kicker">{categoryLabel(snippet.categoryPrimary)}</p>
 				<h1 class="section-title page-title">{snippet.title}</h1>
 				<p class="summary section-copy">{snippet.summary}</p>
@@ -78,7 +78,7 @@
 					<Badge variant="outline">{promptAvailabilityLabel(snippet.hasPrompt)}</Badge>
 				</div>
 
-				<div class="grid gap-2 border-t pt-3">
+				<div class="grid gap-3 border-t border-border/70 pt-4">
 					<div class="m-0 flex flex-wrap gap-2">
 						{#each snippet.platforms as platform (`${platform.os}-${platform.minVersion}`)}
 							<Badge variant="outline">{platformLabel(platform)}</Badge>
@@ -93,7 +93,7 @@
 				</div>
 			</div>
 
-			<Card.Root class="media-panel">
+			<Card.Root class="surface-card media-panel">
 				<Card.Content class="p-3">
 				<SnippetPreviewMedia
 					id={snippet.id}
@@ -101,7 +101,7 @@
 					demoUrl={undefined}
 					eyebrow={categoryLabel(snippet.categoryPrimary)}
 					metaText={`${difficultyLabel(snippet.difficulty)} · ${promptAvailabilityLabel(snippet.hasPrompt)}`}
-					className="block min-h-[25.5rem] w-full rounded-[20px] bg-card object-cover"
+					className="block min-h-[25.5rem] w-full rounded-[calc(var(--radius)+0.2rem)] bg-card object-cover"
 					alt={`${snippet.title} 预览图`}
 					loading="eager"
 				/>
@@ -109,7 +109,7 @@
 			</Card.Root>
 		</section>
 
-		<Card.Root class="mt-3">
+		<Card.Root class="surface-card">
 			<Card.Content>
 				<Tabs.Root bind:value={activeTab} class="grid gap-3">
 					<Tabs.List variant="line" class="no-scrollbar flex flex-nowrap overflow-x-auto pb-1" aria-label="片段详情标签页">
@@ -129,14 +129,14 @@
 								demoUrl={undefined}
 								eyebrow={categoryLabel(snippet.categoryPrimary)}
 								metaText={`${difficultyLabel(snippet.difficulty)} · ${demoAvailabilityLabel(snippet.hasDemo)}`}
-								className="block min-h-[18rem] w-full rounded-[20px] bg-card object-cover"
+								className="block min-h-[18rem] w-full rounded-[calc(var(--radius)+0.2rem)] bg-card object-cover"
 								alt={`${snippet.title} 详情封面`}
 								loading="eager"
 							/>
-							<Card.Root>
+							<Card.Root class="surface-muted">
 								<Card.Content>
 							<p class="section-copy">
-								这里集中放演示、源码、提示词和许可，方便你判断能不能直接拿去用。
+								先确认版式、节奏和信息组织，再决定要不要直接带回项目。
 							</p>
 								</Card.Content>
 							</Card.Root>
@@ -163,10 +163,10 @@
 					{/if}
 					<Tabs.Content value="license">
 						<div class="grid gap-3 min-[901px]:grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
-							<Card.Root class="license-card">
+							<Card.Root class="surface-muted license-card">
 								<Card.Content class="space-y-4">
 								<p class="section-kicker">许可</p>
-								<h2 class="section-title">复用边界</h2>
+								<h2 class="section-title">使用许可</h2>
 								<ul>
 									<li>代码：{snippet.license.code}</li>
 									<li>媒体：{snippet.license.media}</li>
@@ -175,10 +175,10 @@
 								</Card.Content>
 							</Card.Root>
 
-							<Card.Root class="license-card">
+							<Card.Root class="surface-muted license-card">
 								<Card.Content class="space-y-4">
 								<p class="section-kicker">依赖</p>
-								<h2 class="section-title">运行环境</h2>
+								<h2 class="section-title">所需环境</h2>
 								{#if snippet.dependencies.length > 0}
 									<ul>
 										{#each snippet.dependencies as dependency (dependency)}

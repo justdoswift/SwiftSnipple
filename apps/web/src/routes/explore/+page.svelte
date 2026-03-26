@@ -27,7 +27,8 @@
 
 	let { data }: Props = $props();
 	const hasSecondarySelection = $derived(Boolean(data.filters.hasDemo || data.filters.hasPrompt));
-	let showSecondaryFilters = $state(false);
+	let manualSecondaryFilters = $state(false);
+	const showSecondaryFilters = $derived(hasSecondarySelection || manualSecondaryFilters);
 
 	function facetOptions(key: DiscoveryFilterKey, counts: Record<string, number>): FacetOption[] {
 		return Object.entries(counts)
@@ -65,41 +66,35 @@
 	}
 
 	function toggleSecondaryFilters() {
-		showSecondaryFilters = !showSecondaryFilters;
+		manualSecondaryFilters = !manualSecondaryFilters;
 	}
-
-	$effect(() => {
-		if (hasSecondarySelection) {
-			showSecondaryFilters = true;
-		}
-	});
 </script>
 
 <svelte:head>
 	<title>SwiftSnippet | 发现公开片段</title>
 	<meta
 		name="description"
-		content="Explore 是 SwiftSnippet 的主浏览页，用轻工具条筛选并直接复制 SwiftUI 片段资产。"
+		content="Explore 汇集已发布的 SwiftUI 片段，方便你按场景与难度挑到合适的一条。"
 	/>
 </svelte:head>
 
-<main class="editorial-page grid gap-3 pt-[6.55rem]">
-	<section class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 max-[1040px]:grid-cols-1">
+<main class="editorial-page grid gap-5 pt-24">
+	<section class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 max-[1040px]:grid-cols-1">
 		<div>
-			<p class="section-kicker">Explore / 主浏览页</p>
-			<h1 class="m-0 max-w-[7ch] font-(family-name:--font-display) text-[clamp(1.58rem,3vw,2.4rem)] leading-none tracking-[-0.04em]">
-				全部片段，一次看完。
+			<p class="section-kicker">Explore</p>
+			<h1 class="m-0 max-w-[7ch] font-(family-name:--font-display) text-[clamp(1.7rem,3vw,2.55rem)] leading-none tracking-[-0.04em]">
+				挑一条，直接开做。
 			</h1>
-			<p class="section-copy max-w-[22rem]">直接筛、直接复制；详情页只负责承接完整上下文。</p>
+			<p class="section-copy max-w-[24rem]">适合首屏、动效、状态和 Prompt 协作的内容都集中在这里。</p>
 		</div>
-		<Button href="/" variant="outline" size="sm" class="hero-link">首页看精选</Button>
+		<Button href="/" variant="outline" size="sm" class="hero-link">回首页</Button>
 	</section>
 
-	<Card.Root>
-		<Card.Content class="space-y-4">
+	<Card.Root class="surface-card">
+		<Card.Content class="space-y-5">
 		<div class="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 max-[1040px]:grid-cols-1">
-			<label class="search-field" for="search-query">
-				<span class="text-xs font-medium text-muted-foreground">搜索片段</span>
+			<label class="search-field grid gap-2" for="search-query">
+				<span class="ui-label">搜索片段</span>
 				<Input
 					id="search-query"
 					name="q"
@@ -122,7 +117,7 @@
 			</Button>
 		</div>
 
-		<div class="grid gap-3 md:grid-cols-3">
+		<div class="grid gap-4 md:grid-cols-3">
 			<FacetChips
 				label="分类"
 				options={facetOptions('category', data.results.facets.category)}
@@ -144,7 +139,7 @@
 		</div>
 
 		{#if showSecondaryFilters}
-			<div class="grid gap-3 border-t pt-3 md:grid-cols-2">
+			<div class="grid gap-4 border-t border-border/70 pt-4 md:grid-cols-2">
 				<FacetChips
 					label="含 Demo"
 					options={facetOptions('hasDemo', data.results.facets.hasDemo)}
@@ -164,27 +159,27 @@
 		</Card.Content>
 	</Card.Root>
 
-	<section class="results-section">
+	<section class="results-section grid gap-4">
 		<div class="flex flex-wrap items-end justify-between gap-3 pt-0.5">
 			<div>
-				<p class="section-kicker">结果</p>
-				<h2 class="section-title">共 {data.results.total} 条作品</h2>
+				<p class="section-kicker">已发布</p>
+				<h2 class="section-title">{data.results.total} 条可直接复用的片段</h2>
 			</div>
-			<p class="section-copy">先看封面与节奏，需要时再进详情。</p>
+			<p class="section-copy">先看合不合适，再决定要不要打开细节。</p>
 		</div>
 
 		{#if data.results.items.length > 0}
-			<div class="grid grid-cols-[repeat(auto-fit,minmax(17rem,1fr))] gap-4">
+			<div class="grid grid-cols-[repeat(auto-fit,minmax(17rem,1fr))] gap-4 md:gap-5">
 				{#each data.results.items as snippet (snippet.id)}
 					<SnippetCard snippet={snippet} href={`/snippets/${snippet.id}`} variant="explore" />
 				{/each}
 			</div>
 		{:else}
-			<Card.Root>
+			<Card.Root class="surface-card">
 				<Card.Content class="space-y-3">
-				<h2 class="section-title">没有命中，先从这些精选重新开始。</h2>
+				<h2 class="section-title">这次没找到合适的，先看看这些更常用的。</h2>
 				<p class="section-copy">
-					放宽关键词，或者打开次级筛选重来一遍。下面这些已发布片段适合作为新的起点。
+					换个关键词，或者直接从下面这些已经常用的片段重新开始。
 				</p>
 				</Card.Content>
 			</Card.Root>

@@ -15,10 +15,10 @@
 </script>
 
 <section
-	class={`grid ${tone === 'secondary' ? 'gap-1.5' : 'gap-2'}`}
+	class={`grid ${tone === 'secondary' ? 'gap-2' : 'gap-2.5'}`}
 	aria-label={label}
 >
-	<p class={`m-0 text-xs font-medium uppercase tracking-wide text-muted-foreground ${tone === 'secondary' ? 'opacity-80' : ''}`}>
+	<p class={`ui-label ${tone === 'secondary' ? 'opacity-80' : ''}`}>
 		{label}
 	</p>
 	<div class="flex flex-wrap gap-2">
@@ -26,7 +26,7 @@
 			type="button"
 			variant={activeValue === '' ? 'secondary' : 'outline'}
 			size={tone === 'secondary' ? 'xs' : 'sm'}
-			class="rounded-full"
+			class="rounded-full px-3"
 			onclick={() => onselect?.('')}
 		>
 			全部
@@ -37,12 +37,12 @@
 				type="button"
 				variant={activeValue === option.value ? 'secondary' : 'outline'}
 				size={tone === 'secondary' ? 'xs' : 'sm'}
-				class="rounded-full"
+				class="rounded-full px-3"
 				onclick={() => onselect?.(option.value)}
 			>
 				<span>{option.label}</span>
 				{#if option.count !== undefined}
-					<Badge variant="outline" class="text-[0.7rem]">{option.count}</Badge>
+					<Badge variant="secondary" class="h-5 px-1.5 text-[0.68rem]">{option.count}</Badge>
 				{/if}
 			</Button>
 		{/each}

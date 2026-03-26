@@ -46,28 +46,28 @@
 </script>
 
 <Card.Root
-	class={`overflow-hidden ${featured ? 'flex' : 'gap-0'} content-visibility-auto [contain-intrinsic-size:320px_280px]`}
+	data-testid={`snippet-card-${snippet.id}`}
+	class={`content-visibility-auto relative overflow-hidden [contain-intrinsic-size:320px_280px] ${featured ? 'flex flex-col md:flex-row' : 'gap-0'}`}
 >
+	<a class="absolute inset-0 z-10" href={href} aria-label={`打开 ${snippet.title}`}></a>
 	<div
-		class={`relative overflow-hidden bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(246,250,255,0.96))] ${featured ? 'min-h-[27rem] flex-1' : 'aspect-[16/10.5]'}`}
+		class={`preview-canvas relative overflow-hidden ${featured ? 'min-h-[28rem] flex-1' : 'aspect-[16/10.8]'}`}
 	>
-		<a class="media-link" href={href} aria-label={`打开 ${snippet.title}`}>
-			<SnippetPreviewMedia
-				id={snippet.id}
-				coverUrl={snippet.media.coverUrl}
-				demoUrl={undefined}
-				videoMode="controls"
-				variant="gallery"
-				eyebrow={categoryLabel(snippet.categoryPrimary)}
-				metaText={`${difficultyLabel(snippet.difficulty)} · ${reuseLabel}`}
-				className="cover"
-				alt={snippet.title}
-			/>
-			<div class="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.01),rgba(255,255,255,0.12)_54%,rgba(255,255,255,0.38)),linear-gradient(180deg,transparent_48%,rgba(255,255,255,0.62)_100%)]"></div>
-		</a>
+		<SnippetPreviewMedia
+			id={snippet.id}
+			coverUrl={snippet.media.coverUrl}
+			demoUrl={undefined}
+			videoMode="controls"
+			variant="gallery"
+			eyebrow={categoryLabel(snippet.categoryPrimary)}
+			metaText={`${difficultyLabel(snippet.difficulty)} · ${reuseLabel}`}
+			className="cover"
+			alt={snippet.title}
+		/>
+		<div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-card/72 via-transparent to-white/12"></div>
 
 		<div
-			class={`absolute right-3 top-3 z-10 inline-flex gap-1 transition-opacity duration-200 ${variant === 'home' && !featured ? 'opacity-35 hover:opacity-100 focus-within:opacity-100' : 'opacity-100'}`}
+			class={`absolute right-3 top-3 z-20 inline-flex gap-1 rounded-full border border-border/70 bg-card/78 p-1 backdrop-blur-sm transition-opacity duration-[var(--motion-fast)] ${variant === 'home' && !featured ? 'opacity-40 hover:opacity-100 focus-within:opacity-100' : 'opacity-100'}`}
 		>
 			{#if hasCodeCopy}
 				<CopyActionButton
@@ -90,23 +90,19 @@
 		</div>
 
 		{#if featured}
-			<div class="absolute bottom-4 left-4 z-10 grid max-w-64 gap-1 rounded-xl border bg-card/95 px-4 py-3 shadow-xs">
-				<a class="title-link" href={href}>
-					<h2 class="m-0 font-(family-name:--font-display) text-[clamp(1.2rem,1.8vw,1.56rem)] leading-tight tracking-tight">
-						{snippet.title}
-					</h2>
-				</a>
+			<div class="surface-popover absolute bottom-4 left-4 z-20 grid max-w-80 gap-1 rounded-[calc(var(--radius)+0.1rem)] px-4 py-3">
+				<h2 class="m-0 font-(family-name:--font-display) text-[clamp(1.16rem,1.7vw,1.5rem)] leading-tight tracking-tight">
+					{snippet.title}
+				</h2>
 				<p class="m-0 text-xs text-muted-foreground">{metaLine}</p>
 			</div>
 		{/if}
 	</div>
 
 	{#if !featured}
-		<Card.Content class={`grid content-end gap-1 ${variant === 'explore' ? 'px-4 pb-4 pt-3' : 'px-3.5 pb-4 pt-3'}`}>
-			<a class="title-link" href={href}>
-				<h2 class="m-0 font-(family-name:--font-display) text-sm leading-tight tracking-tight">{snippet.title}</h2>
-			</a>
-			<p class="m-0 text-xs text-muted-foreground">{metaLine}</p>
+		<Card.Content class={`grid content-end gap-1.5 ${variant === 'explore' ? 'px-4 pb-4 pt-3.5' : 'px-4 pb-4 pt-3.5'}`}>
+			<h2 class="m-0 font-(family-name:--font-display) text-[0.98rem] leading-tight tracking-tight">{snippet.title}</h2>
+			<p class="m-0 text-[0.8rem] text-muted-foreground">{metaLine}</p>
 		</Card.Content>
 	{/if}
 </Card.Root>

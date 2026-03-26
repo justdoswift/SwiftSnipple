@@ -41,7 +41,7 @@
 >
 	<Sidebar.Header class="border-sidebar-border bg-sidebar border-b px-3 py-3">
 		<div class="flex items-start gap-3 px-1">
-			<div class="bg-primary/10 text-primary flex size-9 items-center justify-center rounded-lg">
+			<div class="surface-muted text-primary flex size-9 items-center justify-center rounded-[calc(var(--radius)-1px)]">
 				<SparklesIcon class="size-4" />
 			</div>
 			<div class="min-w-0 group-data-[collapsible=icon]:hidden">
@@ -102,7 +102,7 @@
 	</Sidebar.Content>
 
 	<Sidebar.Footer class="border-sidebar-border border-t px-3 py-3">
-		<div class="group-data-[collapsible=icon]:hidden rounded-lg border bg-background px-3 py-3">
+		<div class="surface-muted group-data-[collapsible=icon]:hidden rounded-[calc(var(--radius)-1px)] px-3 py-3">
 			<div class="flex items-center justify-between gap-3">
 				<div class="min-w-0">
 					<p class="text-xs font-medium tracking-wider text-muted-foreground uppercase">

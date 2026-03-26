@@ -33,11 +33,11 @@
 	<div class="relative min-h-screen">{@render children()}</div>
 {:else}
 	<div class="relative min-h-screen">
-		<div class="pointer-events-none absolute -left-20 -top-36 z-0 h-48 w-88 rounded-full bg-[#60b1ff]/15 blur-3xl"></div>
-		<div class="pointer-events-none absolute left-32 top-[-4rem] z-0 h-36 w-56 rounded-full bg-[#319aff]/10 blur-3xl"></div>
+		<div class="page-orb page-orb-primary absolute -left-20 -top-36 z-0 h-48 w-88"></div>
+		<div class="page-orb page-orb-soft absolute left-32 top-[-4rem] z-0 h-36 w-56"></div>
 
-		<header class="sticky top-[30px] z-20 flex justify-center px-5 max-[900px]:top-4">
-			<div class="inline-flex w-fit items-center gap-3 rounded-2xl border bg-card/92 px-3 py-2 shadow-xs backdrop-blur-sm max-[900px]:w-full max-[900px]:max-w-[calc(100vw-1.5rem)] max-[900px]:justify-between max-[900px]:px-3.5">
+		<header class="pointer-events-none sticky top-5 z-20 flex justify-center px-5 max-[900px]:top-4">
+			<div class="surface-popover pointer-events-auto inline-flex w-fit items-center gap-3 rounded-[calc(var(--radius)+0.25rem)] px-3 py-2 max-[900px]:w-full max-[900px]:max-w-[calc(100vw-1.5rem)] max-[900px]:justify-between max-[900px]:px-3.5">
 				<a class="inline-flex items-center no-underline" href="/">
 					<span class="font-(family-name:--font-display) text-base font-bold tracking-tight">
 						SwiftSnippet
@@ -47,10 +47,10 @@
 				<nav class="flex flex-wrap items-center gap-0.5 max-[900px]:hidden" aria-label="主导航">
 					{#each navigation as item (item.href)}
 						<a
-							class={`rounded-xl px-3 py-2 text-sm font-medium no-underline transition-colors ${
+							class={`rounded-[calc(var(--radius)-2px)] px-3 py-2 text-sm font-medium no-underline transition-[background-color,color] duration-[var(--motion-fast)] ${
 								isActive(item.href, page.url.pathname)
-									? 'bg-background text-foreground'
-									: 'text-foreground/75 hover:bg-background hover:text-foreground focus-visible:bg-background focus-visible:text-foreground'
+									? 'bg-background text-foreground [box-shadow:var(--shadow-sm)]'
+									: 'text-muted-foreground hover:bg-muted/72 hover:text-foreground focus-visible:bg-muted/72 focus-visible:text-foreground'
 							}`}
 							href={item.href}
 						>
@@ -59,7 +59,7 @@
 					{/each}
 				</nav>
 
-				<Button href="/explore" variant="outline" size="sm" class="rounded-full">
+				<Button href="/explore" variant="outline" size="sm">
 					<span>开始浏览</span>
 
 					<svg class="size-4" viewBox="0 0 20 20" aria-hidden="true">

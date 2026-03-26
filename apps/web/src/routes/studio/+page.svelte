@@ -81,9 +81,9 @@
 	<title>Studio | SwiftSnippet</title>
 </svelte:head>
 
-<main class="grid gap-5">
+<main class="grid gap-6">
 	<section class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_280px]">
-		<Card.Root>
+		<Card.Root class="surface-card">
 			<Card.Header class="gap-5">
 				<div class="flex flex-wrap items-start justify-between gap-4">
 					<div class="max-w-xl space-y-2">
@@ -97,10 +97,10 @@
 
 			<Card.Content class="grid gap-4 md:grid-cols-3">
 				{#each stats as stat (stat.label)}
-					<Card.Root size="sm">
+					<Card.Root size="sm" class="surface-muted">
 						<Card.Content class="flex items-start justify-between gap-3">
 							<p class="text-sm font-medium text-muted-foreground">{stat.label}</p>
-							<div class="bg-muted text-muted-foreground flex size-8 items-center justify-center rounded-md">
+							<div class="bg-background/72 text-muted-foreground flex size-8 items-center justify-center rounded-[calc(var(--radius)-3px)]">
 								<stat.icon class="size-4" />
 							</div>
 						</Card.Content>
@@ -115,7 +115,7 @@
 			</Card.Content>
 		</Card.Root>
 
-		<Card.Root>
+		<Card.Root class="surface-card">
 			<Card.Header>
 				<Card.Title class="text-lg font-semibold tracking-tight">待处理</Card.Title>
 			</Card.Header>
@@ -123,7 +123,7 @@
 				{#each nextTasks as task (task.label)}
 					<a
 						href={task.href}
-						class="bg-card hover:bg-muted flex items-center justify-between gap-3 rounded-lg border px-4 py-3 text-sm transition-colors"
+					class="surface-muted flex items-center justify-between gap-3 rounded-[calc(var(--radius)-1px)] px-4 py-3 text-sm transition-[background-color,transform] duration-[var(--motion-fast)] hover:bg-muted/92 hover:-translate-y-px"
 					>
 						<div class="min-w-0">
 							<p class="truncate text-sm font-medium text-foreground">{task.label}</p>
@@ -136,7 +136,7 @@
 		</Card.Root>
 	</section>
 
-	<Card.Root>
+	<Card.Root class="surface-card">
 		<Card.Header class="gap-4 md:flex-row md:items-end md:justify-between">
 			<div>
 				<Card.Title class="text-lg font-semibold tracking-tight">最近更新</Card.Title>
@@ -144,10 +144,10 @@
 		</Card.Header>
 
 		<Card.Content>
-			<div class="divide-y rounded-lg border bg-card">
+			<div class="overflow-hidden rounded-[calc(var(--radius)+0.1rem)] border border-border/70 bg-card/72">
 				{#each recentItems as item (item.id)}
 					<a
-						class="group hover:bg-muted flex flex-col gap-3 px-4 py-4 transition-colors md:flex-row md:items-center md:justify-between"
+						class="group flex flex-col gap-3 px-4 py-4 transition-[background-color] duration-[var(--motion-fast)] hover:bg-muted/72 md:flex-row md:items-center md:justify-between"
 						href={`/studio/snippets/${item.id}`}
 					>
 						<div class="min-w-0">

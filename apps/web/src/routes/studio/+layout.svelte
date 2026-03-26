@@ -69,7 +69,7 @@
 		<div class="studio-page-shell flex min-h-screen items-center px-4 py-8 md:px-6">
 			<div class="mx-auto w-full max-w-5xl">
 				{#if data.sessionError}
-					<div class="mb-4 rounded-lg border border-destructive/20 bg-card px-5 py-4 text-sm text-destructive">
+					<div class="mb-4 rounded-[calc(var(--radius)+0.1rem)] border border-destructive/20 bg-card px-5 py-4 text-sm text-destructive [box-shadow:var(--shadow-sm)]">
 						<strong class="block font-semibold">后台服务暂时不可用</strong>
 						<span class="mt-1 block">{data.sessionError}</span>
 					</div>
@@ -84,7 +84,7 @@
 
 		<Sidebar.Inset class="bg-transparent">
 			<div class={`studio-page-shell mx-auto flex w-full flex-1 flex-col px-3 pb-8 pt-3 md:px-4 ${shellWidthClass}`}>
-				<header class="sticky top-3 z-30 mb-5 rounded-xl border bg-card px-4 py-3 shadow-xs md:px-5">
+				<header class="surface-popover sticky top-3 z-30 mb-5 rounded-[calc(var(--radius)+0.25rem)] px-4 py-3 md:px-5">
 					<div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
 						<div class="flex min-w-0 items-start gap-3">
 							<Sidebar.Trigger class="mt-0.5 md:hidden" />
@@ -113,7 +113,7 @@
 							<Badge variant="outline">
 								内部运营
 							</Badge>
-							<div class="rounded-lg border bg-background px-3 py-2">
+							<div class="surface-muted rounded-[calc(var(--radius)-1px)] px-3 py-2">
 								<p class="text-xs font-medium tracking-wider text-muted-foreground uppercase">
 									当前会话
 								</p>

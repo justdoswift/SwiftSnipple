@@ -24,9 +24,9 @@
 
 <Button
 	type="button"
-	variant={copied ? 'default' : 'outline'}
-	size={compact ? 'sm' : 'default'}
-	class={`copy-action rounded-full ${compact ? 'px-1.5' : 'px-2'} hover:-translate-y-px`}
+	variant={copied ? 'secondary' : 'outline'}
+	size={compact ? 'xs' : 'sm'}
+	class={`copy-action min-w-0 ${compact ? 'px-2' : 'px-3'}`}
 	aria-label={visibleLabel}
 	title={visibleLabel}
 	onclick={() => onclick?.()}
@@ -53,7 +53,7 @@
 		{/if}
 	</span>
 	<span
-		class={`overflow-hidden whitespace-nowrap text-xs font-medium transition-all duration-200 ${
+		class={`overflow-hidden whitespace-nowrap text-xs font-medium transition-all duration-[var(--motion-fast)] ${
 			copied
 				? 'max-w-20 opacity-100'
 				: 'max-w-0 opacity-0 group-hover/button:max-w-20 group-hover/button:opacity-100 group-focus-visible/button:max-w-20 group-focus-visible/button:opacity-100'

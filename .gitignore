@@ -18,3 +18,5 @@ apps/api/.tmp/
 .env.*
 !.env.example
 .swiftsnippet.pids
+# heroui-agents-md
+.heroui-docs/

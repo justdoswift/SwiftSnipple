@@ -1,5 +1,5 @@
+import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
-import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig, loadEnv } from 'vite';
 
 export default defineConfig(({ mode }) => {
@@ -7,9 +7,14 @@ export default defineConfig(({ mode }) => {
 	const apiBaseURL = env.API_BASE_URL || 'http://127.0.0.1:18080';
 
 	return {
-		plugins: [tailwindcss(), sveltekit()],
+		plugins: [react(), tailwindcss()],
 		server: {
-			proxy: { '/api': { target: apiBaseURL, changeOrigin: true } }
+			proxy: {
+				'/api': {
+					target: apiBaseURL,
+					changeOrigin: true
+				}
+			}
 		}
 	};
 });

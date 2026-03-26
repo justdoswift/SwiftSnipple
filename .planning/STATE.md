@@ -1,18 +1,18 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: 视觉重构
-current_phase: "05"
-current_phase_name: visual-system-reset
-current_plan: "3"
+milestone: v1.2
+milestone_name: 内容运营后台
+current_phase: "08"
+current_phase_name: admin-studio-v1
+current_plan: "2"
 status: execution_complete
-stopped_at: Phase 05 implemented; ready to verify
-last_updated: "2026-03-25T03:55:00Z"
+stopped_at: Phase 08 Studio UI moved onto shadcn-svelte foundation; ready to verify refreshed admin studio workflow
+last_updated: "2026-03-26T02:02:00Z"
 progress:
-  total_phases: 3
-  completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_phases: 1
+  completed_phases: 0
+  total_plans: 2
+  completed_plans: 2
 ---
 
 # Project State
@@ -22,12 +22,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-25)
 
 **Core value:** 用户必须能在几秒内找到一个可信、可复制、可复用的 SwiftUI 片段，并立即把它带回自己的项目或 AI 工作流中。
-**Current focus:** Phase 05 — visual-system-reset
+**Current focus:** Phase 08 — admin-studio-v1
 
 ## Current Position
 
-Phase: 05 (visual-system-reset) — EXECUTION COMPLETE
-Plan: 3 of 3
+Phase: 08 (admin-studio-v1) — EXECUTION COMPLETE
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -48,12 +48,14 @@ Plan: 3 of 3
 
 **Recent Trend:**
 
-- Last 5 plans: 40min, 25min, 8min, 10min, 16min
-- Trend: Milestone closed with all 4 phases executed and verified
+- Last 5 plans: 25min, 8min, 10min, 16min, see 08 summaries
+- Trend: backend milestone is now shifting from “first usable” to “polished internal product surface”
 
 | Phase 02 P01 | 8min | 2 tasks | 7 files |
 | Phase 02 P02 | 10min | 2 tasks | 8 files |
 | Phase 02 P03 | 16min | 2 tasks | 17 files |
+| Phase 08 P01 | see summary | studio backend + admin UI + e2e |
+| Phase 08 P02 | see summary | shadcn-svelte foundation + studio shell refactor |
 
 ## Accumulated Context
 
@@ -67,6 +69,8 @@ Recent decisions affecting current work:
 - [Phase 03]: 发布闭环继续沿用 `draft -> review -> published` 三态，并以生成 published snapshot / visibility registry / search documents 作为公开读路径的唯一产物边界。
 - [Phase 04]: 首发批次锁定为 12 条真实 SwiftUI 内容，必须覆盖卡片流 UI、交互动效、数据状态和 AI 协作模板四类场景。
 - [Phase 04]: 首发媒体策略锁定为“4 条 demo 门面内容 + 8 条 cover-only”，以展示优先但不让视频生产阻塞发布节奏。
+- [Phase 08]: 内部运营台继续以文件协议为权威源，后台保存直接写回 `content/snippets`，不引入独立 CMS 数据模型。
+- [Phase 08]: Studio UI 优先迁到统一组件体系，公开站本轮只做兼容，不做全面 shadcn 化重写。
 
 ### Pending Todos
 
@@ -74,10 +78,10 @@ None yet.
 
 ### Blockers/Concerns
 
-None active. Next step is verification for Phase 05.
+None active. Next step is verification for Phase 08.
 
 ## Session Continuity
 
-Last session: 2026-03-25T19:10:00+0800
-Stopped at: Phase 05 code/content changes completed
-Resume file: .planning/phases/05-visual-system-reset/05-VERIFICATION.md
+Last session: 2026-03-26T10:02:00+0800
+Stopped at: Phase 08 Studio UI foundation and shadcn migration completed
+Resume file: .planning/phases/08-admin-studio-v1/08-VERIFICATION.md

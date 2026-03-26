@@ -19,24 +19,24 @@ SwiftSnippet 是一个面向 SwiftUI 开发者与 Vibe Coding 用户的片段卡
 
 ### Active
 
-- [ ] 公开站需要从现有的功能可用 UI 升级到更有辨识度的视觉系统，并保留 Discovery 的核心效率
-- [ ] 首页、Explore、详情页的主浏览文案需要切成中文，降低首次理解成本
-- [ ] 新一轮 UI 重构必须保持 SwiftSnippet 的 SwiftUI-first 内容定位，不把精力扩散到后台或新平台能力
+- [ ] 维护者需要一个受保护的内部运营台来录入和编辑 snippet，而不是继续手工维护 `content/snippets`
+- [ ] 后台保存必须继续以文件协议为权威源，避免后台数据与仓库内容分叉
+- [ ] 内容录入、校验、Review、Publish 必须在同一条后台链路里闭环，减少运营切换成本
 
-## Current Milestone: v1.1 视觉重构
+## Current Milestone: v1.2 内容运营后台
 
-**Goal:** 用更统一、更高级、中文优先的公开站视觉系统，提升首屏吸引力、浏览效率和品牌辨识度。
+**Goal:** 把内部内容录入、编辑、校验与发布闭环包进 `/studio` 运营后台，降低新增 snippet 的维护成本。
 
 **Target features:**
-- 首页采用更强的海报式首屏和深色视觉语言
-- Explore 与详情页共享统一的深色组件、筛选与信息层级
-- 主浏览流程的导航、状态、操作文案改成中文
+- `/studio` 提供管理员登录、snippet 列表、新建与编辑页
+- 后台可以直接读写 `content/snippets/<id>/...` 与相关资产
+- 后台复用现有 publish pipeline 的校验、review、publish 能力而不重写状态机
 
 ## Next Milestone Goals
 
-- 把公开站从“功能已通”升级到“风格明确、记忆点强、截图也成立”的视觉层级
-- 在不改写 Discovery / Publish 后端边界的前提下，提升首页、Explore、详情页的一致性与可读性
-- 为后续 UI phase / verification 留出清晰的中文文案与视觉标准，而不是继续沿用 v1 的英文占位语气
+- 让维护者从“手工编辑仓库文件”切换到“在后台完成录入与发布”
+- 为后续批量补内容、补媒体和持续上新建立可复制的内部操作面
+- 后台闭环稳定后，再决定是否回到公开站视觉 phase 收尾 v1.1 的剩余 UI 工作
 
 ### Out of Scope
 
@@ -45,6 +45,7 @@ SwiftSnippet 是一个面向 SwiftUI 开发者与 Vibe Coding 用户的片段卡
 - 完整订阅付费系统与配额控制 — 属于验证后增长阶段，不阻塞核心价值验证
 - 实时协作、评论社区、站内社交关系链 — 会显著放大复杂度，且不是 v1 的核心内容消费路径
 - 面向所有前端/后端框架的通用代码片段库 — 当前聚焦 SwiftUI，避免协议和内容标准过早发散
+- 多人角色权限、Git 提交历史管理与可视化审计 — 这轮先把单管理员内部运营闭环跑通
 
 ## Context
 
@@ -73,10 +74,11 @@ SwiftSnippet 是一个面向 SwiftUI 开发者与 Vibe Coding 用户的片段卡
 | 内容协议以 `snippet.yaml` 和固定目录结构驱动 | 便于 CI、AI 校验、索引构建、许可证追踪与回滚 | Phase 1 validated this via JSON Schema, CLI, and fixtures |
 | 路线图先收敛在 MVP 闭环，后置订阅、企业和增长体系 | 保持初始阶段可执行，减少一次性铺太宽的交付风险 | Still active after Phase 1 |
 | 首发内容批次锁定为 12 条 SwiftUI 内容并优先展示多样性 | 首发必须同时证明“平台可用”与“内容值得消费” | Phase 4 shipped a 12-item published batch with 4 demo-backed highlights |
+| 后台录入继续以文件协议为权威源，而不是引入独立 CMS 数据模型 | 这样可以复用现有 validator、publish pipeline 和仓库审阅流，避免双写 | Phase 8 admin studio implementation follows this decision |
 
 ## Current State
 
-v1.0 已完成并归档。SwiftSnippet 现在已经具备统一内容协议、published-only discovery 体验、可验证的 publish pipeline，以及一批可公开浏览和复用的 12 条首发内容。当前进入 v1.1，重点不是补新平台边界，而是把公开站 UI 做成更有辨识度、中文优先、适合公开展示的版本。
+v1.0 已完成并归档。SwiftSnippet 现在已经具备统一内容协议、published-only discovery 体验、可验证的 publish pipeline，以及一批可公开浏览和复用的 12 条首发内容。公开站 UI 已完成一轮大改，但当前优先级已经切到内部运营效率：`/studio` 后台与受保护的 admin API 已实现，下一步是把这条录入/发布闭环正式验证并纳入 GSD 记录。
 
 ## Evolution
 
@@ -96,4 +98,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-25 after v1.1 milestone kickoff*
+*Last updated: 2026-03-25 after v1.2 backend milestone sync*

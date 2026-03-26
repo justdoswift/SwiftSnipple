@@ -153,7 +153,7 @@ describe('discovery smoke coverage', () => {
 		expect(screen.getByText('当前精选')).toBeTruthy();
 		expect(screen.getByRole('link', { name: '去 Explore 深挖' })).toBeTruthy();
 		expect(screen.queryByText('受一线产品团队信任')).toBeNull();
-		expect(screen.getByText('叠层主视觉卡片')).toBeTruthy();
+		expect(screen.getByRole('heading', { name: '叠层主视觉卡片' })).toBeTruthy();
 		expect(screen.getAllByText('瀑布流布局').length).toBeGreaterThan(0);
 	});
 

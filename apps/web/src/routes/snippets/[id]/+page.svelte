@@ -152,10 +152,10 @@
 					{#if snippet.hasPrompt}
 						<Tabs.Content value="prompt">
 						<div class="grid gap-3">
-							{#each promptBlocks as block (block.id)}
+							{#each promptBlocks as block, index (`prompt-${block.id}-${index}`)}
 								<PromptBlock title="提示词模板" kind={block.kind} content={block.content} />
 							{/each}
-							{#each acceptanceBlocks as block (block.id)}
+							{#each acceptanceBlocks as block, index (`acceptance-${block.id}-${index}`)}
 								<PromptBlock title="验收清单" kind={block.kind} content={block.content} />
 							{/each}
 						</div>

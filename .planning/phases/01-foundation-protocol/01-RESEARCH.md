@@ -1,5 +1,7 @@
 # Phase 1: Foundation Protocol - Research
 
+> Historical note: this Phase 1 research reflects the original stack exploration. `SvelteKit` references are preserved for history and do not describe the current frontend codebase.
+
 **Researched:** 2026-03-24
 **Domain:** greenfield monorepo foundations for SvelteKit + Go + PostgreSQL + schema-driven content contracts
 **Confidence:** HIGH

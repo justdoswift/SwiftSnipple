@@ -39,6 +39,8 @@ duration: same-session retroactive sync
 completed: 2026-03-26
 ---
 
+> Historical note: this summary reflects the naming and stack assumptions at the time. `shadcn-svelte` mentions are historical context only.
+
 # Phase 8 Plan 3: Full shadcn-svelte Convergence Summary
 
 **这轮把“Studio 用 shadcn-svelte、公开站还保留另一套表皮”的状态彻底收口了。**

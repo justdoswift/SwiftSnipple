@@ -1,5 +1,7 @@
 # Milestones
 
+> Historical note: this document includes early-phase references to `SvelteKit` and `shadcn-svelte`. Those describe a previous planning/implementation path only. The current frontend stack is `React + Vite` with `HeroUI React + Tailwind`.
+
 ## v1.0 MVP (Shipped: 2026-03-25)
 
 **Phases completed:** 4 phases, 13 plans, 25 tasks

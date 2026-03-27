@@ -1,11 +1,11 @@
 # SwiftSnippet
 
-SwiftSnippet 是一个面向 SwiftUI 开发者与 Vibe Coding 用户的片段卡片流平台。当前仓库实现的是 Phase 1 的基础协议与项目骨架：内容协议、可运行 stub、本地 PostgreSQL、以及最小 CI 门槛。
+SwiftSnippet 是一个面向 SwiftUI 开发者与 Vibe Coding 用户的片段卡片流平台。当前仓库已经包含可运行的公开发现站、Go API、内部 `/studio` 运营后台、本地 PostgreSQL，以及内容协议和发布链路。
 
 ## Repository Layout
 
-- `apps/web` — SvelteKit Web stub
-- `apps/api` — Go API stub
+- `apps/web` — React + Vite Web app（公开发现站 + `/studio`）
+- `apps/api` — Go API
 - `packages/snippet-schema` — `snippet.yaml` JSON Schema、TypeScript 类型与校验 CLI
 - `content/snippets` — 真实 snippet 内容目录，后续 phases 在这里增加内容
 - `infra/postgres` — 本地 PostgreSQL 与 migration
@@ -33,7 +33,7 @@ pnpm dev
 - 复用现有 `DATABASE_URL`，如果连不上再回退到 `infra/postgres/docker-compose.yml`
 - 执行数据库 migration
 - 启动 Go API
-- 启动 SvelteKit Web
+- 启动 React Web
 
 默认数据库连接：
 
@@ -104,7 +104,7 @@ pnpm verify:snippets
 当前核心门禁包括：
 
 - Snippet schema / 目录结构校验
-- Web stub type / build check
+- Web type / build / e2e check
 - Go API build / test
 - Swift format / lint / build 检查入口
 
@@ -150,3 +150,11 @@ pnpm check:published-index
 - Phase 2 的 published 内容展示必须建立在 Phase 1 定义的最小字段上：identity、classification、platform、assets、code/prompt/license metadata。
 - Phase 3 必须复用数据库中的 publish state 与 asset contract，不应重新定义状态机。
 - Redis、Meilisearch、上传签名、媒体处理和发布索引不在本阶段实现，只允许为它们预留扩展接口。
+
+## Frontend Deployment Note
+
+`apps/web` 当前通过 `VITE_API_BASE_URL` 读取外部 API 地址；本地开发未设置时继续走相对 `/api` 路径和 Vite 代理。要部署前端预览时，请同时准备：
+
+- 一个可访问的 Go API 地址
+- 对应 API 使用的 PostgreSQL
+- 前端环境变量 `VITE_API_BASE_URL`

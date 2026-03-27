@@ -7,14 +7,57 @@ import { categoryLabel, difficultyLabel, formatDate } from '../lib/utils/format'
 
 type DetailTab = 'code' | 'prompt' | 'license';
 
+async function copyText(value: string) {
+	if (navigator.clipboard?.writeText) {
+		try {
+			await navigator.clipboard.writeText(value);
+			return true;
+		} catch {
+			// Fall through to the legacy copy path below.
+		}
+	}
+
+	const textarea = document.createElement('textarea');
+	textarea.value = value;
+	textarea.setAttribute('readonly', 'true');
+	textarea.style.position = 'fixed';
+	textarea.style.opacity = '0';
+	textarea.style.pointerEvents = 'none';
+	document.body.appendChild(textarea);
+	textarea.focus();
+	textarea.select();
+	textarea.setSelectionRange(0, value.length);
+
+	try {
+		return document.execCommand('copy');
+	} finally {
+		document.body.removeChild(textarea);
+	}
+}
+
 export function SnippetDetailPage() {
 	const navigate = useNavigate();
 	const { id = '' } = useParams();
 	const [tab, setTab] = useState<DetailTab>('code');
 	const [record, setRecord] = useState<PublishedSnippetRecord | null>(null);
+	const [copyStatus, setCopyStatus] = useState<string | null>(null);
 	const [notPublic, setNotPublic] = useState(false);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+
+	const handleCopy = async (value: string | undefined, successText: string) => {
+		if (!value) {
+			setCopyStatus('当前没有可复制的内容');
+			return;
+		}
+
+		try {
+			const copied = await copyText(value);
+			setCopyStatus(copied ? successText : '复制失败，请手动选择内容后再试');
+		} catch {
+			setCopyStatus('复制失败，请手动选择内容后再试');
+		}
+	};
 
 	useEffect(() => {
 		let active = true;
@@ -30,7 +73,11 @@ export function SnippetDetailPage() {
 				}
 			} catch (fetchError) {
 				if (active) {
-					if (fetchError instanceof DiscoveryApiError && fetchError.status === 404) {
+					if (
+						fetchError instanceof DiscoveryApiError &&
+						(fetchError.status === 404 ||
+							(fetchError.status === 403 && fetchError.code === 'not_public'))
+					) {
 						setNotPublic(true);
 					} else {
 						setError(fetchError instanceof Error ? fetchError.message : '详情页加载失败');
@@ -96,7 +143,7 @@ export function SnippetDetailPage() {
 	}
 
 	return (
-		<main className="page-shell page-grid pb-10">
+		<main className="page-shell page-grid pb-10" id="main-content">
 			<Card className="surface-panel surface-panel-strong overflow-hidden rounded-[36px] p-2">
 				<Card.Content className="grid gap-6 p-4 lg:grid-cols-[1.1fr_0.9fr]">
 					<div
@@ -118,8 +165,8 @@ export function SnippetDetailPage() {
 							</Chip>
 						</div>
 						<div>
-							<p className="eyebrow">Snippet detail</p>
-							<h1 className="display-title mt-3 text-5xl">{record.title}</h1>
+							<p className="eyebrow">片段详情</p>
+							<h1 className="display-title mt-3 text-5xl text-balance">{record.title}</h1>
 							<p className="subtle-text mt-4 text-lg">{record.summary}</p>
 						</div>
 						<div className="flex flex-wrap gap-2">
@@ -147,7 +194,10 @@ export function SnippetDetailPage() {
 							<Button className="bg-[var(--app-accent)] text-white" onPress={() => navigate('/explore')}>
 								全部片段
 							</Button>
-							<Button className="bg-white/75" onPress={() => navigator.clipboard.writeText(record.codeBlocks[0]?.content ?? '')}>
+							<Button
+								className="bg-white/75"
+								onPress={() => void handleCopy(record.codeBlocks[0]?.content, '已复制主代码块')}
+							>
 								复制主代码块
 							</Button>
 						</div>
@@ -155,24 +205,43 @@ export function SnippetDetailPage() {
 				</Card.Content>
 			</Card>
 
+			{copyStatus ? (
+				<div
+					aria-live="polite"
+					className="rounded-[18px] bg-white/72 px-5 py-4 text-sm text-[var(--app-muted)]"
+					role="status"
+				>
+					{copyStatus}
+				</div>
+			) : null}
+
 			<div className="flex flex-wrap gap-3" role="tablist" aria-label="片段详情标签页">
 				{[
 					['code', '源码'],
 					['prompt', 'Prompt'],
 					['license', '许可']
 				].map(([value, label]) => (
-					<Button
+					<button
+						aria-controls={`detail-panel-${value}`}
+						aria-selected={tab === value}
 						key={value}
-						className={tab === value ? 'bg-[var(--app-accent)] text-white' : 'bg-white/72'}
-						onPress={() => setTab(value as DetailTab)}
+						className={
+							tab === value
+								? 'rounded-full bg-[var(--app-accent)] px-4 py-2 text-sm text-white'
+								: 'rounded-full bg-white/72 px-4 py-2 text-sm text-[var(--app-ink)]'
+						}
+						id={`detail-tab-${value}`}
+						onClick={() => setTab(value as DetailTab)}
+						role="tab"
+						type="button"
 					>
 						{label}
-					</Button>
+					</button>
 				))}
 			</div>
 
 			{tab === 'code' ? (
-				<div className="grid gap-5">
+				<div className="grid gap-5" id="detail-panel-code" role="tabpanel" aria-labelledby="detail-tab-code">
 					{record.codeBlocks.map((block) => (
 						<Card key={block.id} className="surface-panel rounded-[var(--app-radius-xl)]">
 							<Card.Header className="flex flex-wrap items-center justify-between gap-3 p-5 pb-0">
@@ -180,7 +249,10 @@ export function SnippetDetailPage() {
 									<p className="m-0 text-sm font-semibold">{block.filename}</p>
 									<p className="m-0 text-sm text-[var(--app-muted)]">{block.language}</p>
 								</div>
-								<Button className="bg-white/72" onPress={() => navigator.clipboard.writeText(block.content)}>
+								<Button
+									className="bg-white/72"
+									onPress={() => void handleCopy(block.content, `已复制 ${block.filename}`)}
+								>
 									复制
 								</Button>
 							</Card.Header>
@@ -193,7 +265,7 @@ export function SnippetDetailPage() {
 			) : null}
 
 			{tab === 'prompt' ? (
-				<div className="grid gap-5">
+				<div className="grid gap-5" id="detail-panel-prompt" role="tabpanel" aria-labelledby="detail-tab-prompt">
 					{record.promptBlocks.map((block) => (
 						<Card key={block.id} className="surface-panel rounded-[var(--app-radius-xl)]">
 							<Card.Content className="grid gap-4 p-5">
@@ -201,7 +273,10 @@ export function SnippetDetailPage() {
 									<p className="m-0 text-sm font-semibold uppercase tracking-[0.16em] text-[var(--app-accent)]">
 										{block.kind}
 									</p>
-									<Button className="bg-white/72" onPress={() => navigator.clipboard.writeText(block.content)}>
+									<Button
+										className="bg-white/72"
+										onPress={() => void handleCopy(block.content, `已复制 ${block.kind}`)}
+									>
 										复制
 									</Button>
 								</div>
@@ -222,7 +297,12 @@ export function SnippetDetailPage() {
 			) : null}
 
 			{tab === 'license' ? (
-				<Card className="surface-panel rounded-[var(--app-radius-xl)]">
+				<Card
+					aria-labelledby="detail-tab-license"
+					className="surface-panel rounded-[var(--app-radius-xl)]"
+					id="detail-panel-license"
+					role="tabpanel"
+				>
 					<Card.Content className="grid gap-4 p-6">
 						<div className="flex flex-wrap justify-between gap-3">
 							<span className="text-sm text-[var(--app-muted)]">代码许可</span>

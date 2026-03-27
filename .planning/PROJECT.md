@@ -49,7 +49,7 @@ SwiftSnippet 是一个面向 SwiftUI 开发者与 Vibe Coding 用户的片段卡
 
 ## Context
 
-这个项目起点是一份较完整的产品与架构设想文档，已经明确了内容卡片的三段式价值主张：演示视频、源代码、提示词模板。文档同时提出了前后端解耦的方向，倾向于用 SvelteKit 负责 Web 展示层、Go 负责 API 与发布/审核相关服务，再用对象存储和搜索引擎承接媒体与索引能力。
+这个项目起点是一份较完整的产品与架构设想文档，已经明确了内容卡片的三段式价值主张：演示视频、源代码、提示词模板。当前仓库的真实实现已经收口为 React + Vite 负责 Web 展示层，Go 负责 API 与发布/审核相关服务，再用对象存储和搜索引擎承接媒体与索引能力。
 
 项目核心不是单纯“做一个教程站”，而是把内容协议和工程发布体系设计成产品本身的一部分。每个 snippet 需要有固定目录结构、结构化元数据、媒体与 license 声明、提示词模板与验收清单，这样后续 CI、AI 校验、审核发布和搜索索引才能稳定扩展。
 
@@ -57,13 +57,13 @@ SwiftSnippet 是一个面向 SwiftUI 开发者与 Vibe Coding 用户的片段卡
 
 ## Constraints
 
-- **Tech stack**: 前端优先采用 SvelteKit，后端优先采用 Go — 初始设想已经围绕这套分层展开，便于前后端职责清晰拆分
+- **Tech stack**: 前端当前采用 React + Vite，后端采用 Go — 后续 planning、部署和验收都必须以真实实现为准，避免文档与代码继续漂移
 - **Content protocol**: 所有片段必须遵守统一仓库协议 — 否则无法保证自动校验、审核发布、搜索建索引和回滚一致性
 - **Quality**: 片段必须尽量做到可运行、可复制、可验证 — 平台价值建立在“可信内容”而不是纯展示素材上
 - **UI density**: 页面宁可更克制、更有留白，也不要为了“填满画面”把信息和控件堆得过密 — 低心智压力优先于高信息密度
 - **UI copy**: 所有界面文案都必须是真实、面向用户的产品文案，不允许出现解释组件用途、提示开发意图或明显占位的说明性文字
 - **UI sizing**: 标题层级、按钮高度、输入框高度、圆角和间距必须复用统一尺寸体系，避免页面级任意值导致界面没有章法
-- **Component system**: 既然前端已接入 `shadcn-svelte`，后续后台与公开站都应尽量回到共享组件体系，而不是在页面层大量覆写成另一套视觉
+- **Component system**: 既然前端已收口到 `HeroUI React + Tailwind`，后续后台与公开站都应继续复用共享组件与 token，而不是在页面层大量覆写成另一套视觉
 - **Search UX**: 搜索必须支持分面与权重排序 — 片段库可发现性是核心体验，简单全文检索不够
 - **Security**: 上传、鉴权、速率限制、秘密扫描必须在早期进入底线设计 — 内容平台天然涉及媒体、第三方贡献与公开仓库风险
 - **Scope**: v1 必须先完成最小闭环，而不是一次性做完商业化与企业能力 — 需要尽快验证核心价值，避免长周期空转
@@ -82,11 +82,11 @@ SwiftSnippet 是一个面向 SwiftUI 开发者与 Vibe Coding 用户的片段卡
 | 视觉打磨默认优先留白与低压阅读节奏，而不是追求更高密度的信息堆叠 | 用户明确要求“不要怕空，怕太密”，后续 UI 决策应优先降低认知负担 | Locked on 2026-03-26 during Studio UI refinement |
 | 所有 UI 文案必须像真实产品，而不是解释性说明或组件占位提示 | 用户明确要求界面里的文字不能带“给开发者看”的味道，后续所有页面都要按真实产品语气重写 | Locked on 2026-03-26 during Studio UI refinement |
 | 所有 UI 尺寸必须复用统一层级与尺寸 token，而不是页面里各写各的字号、按钮和输入框高度 | 用户明确指出“字体大小没有章法”，后续所有 UI 必须先保证尺寸系统一致 | Locked on 2026-03-26 during Studio consistency audit |
-| `shadcn-svelte` 必须作为真实共享组件体系来使用，而不是只保留组件壳再由页面层大面积覆写成另一套视觉 | 用户明确指出当前存在“已接入但不一致”的问题，后续重构应优先减少页面级覆写 | Locked on 2026-03-26 during Studio consistency audit |
+| `HeroUI React + Tailwind` 必须作为真实共享组件体系来使用，而不是只保留组件壳再由页面层大面积覆写成另一套视觉 | 当前仓库已经不是 Svelte 路径，后续 UI 收口和部署都必须基于真实前端栈推进 | Updated on 2026-03-27 during UI cleanup |
 
 ## Current State
 
-v1.0 已完成并归档。SwiftSnippet 现在已经具备统一内容协议、published-only discovery 体验、可验证的 publish pipeline，以及一批可公开浏览和复用的 12 条首发内容。`/studio` 后台与受保护的 admin API 已实现，并且后台与公开站都已经进一步收口到统一的 `shadcn-svelte + Tailwind` 组件体系；下一步重点回到这条录入/发布闭环的人工验收与真实使用顺滑度。
+v1.0 已完成并归档。SwiftSnippet 现在已经具备统一内容协议、published-only discovery 体验、可验证的 publish pipeline，以及一批可公开浏览和复用的 12 条首发内容。`/studio` 后台与受保护的 admin API 已实现，并且后台与公开站都已经进一步收口到统一的 `HeroUI React + Tailwind` 组件体系；下一步重点回到这条录入/发布闭环的人工验收与真实使用顺滑度。
 
 ## Evolution
 
@@ -106,4 +106,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-26 after Phase 08 full shadcn-svelte convergence sync*
+*Last updated: 2026-03-27 after current-stack documentation cleanup*

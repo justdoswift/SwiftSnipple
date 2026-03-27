@@ -1,5 +1,7 @@
 # Phase 2: Discovery Experience - Context
 
+> Historical note: this context file was created during the earlier `SvelteKit` route structure. Those references are preserved as planning history only.
+
 **Gathered:** 2026-03-24
 **Status:** Ready for planning
 

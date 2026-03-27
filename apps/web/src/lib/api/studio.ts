@@ -7,9 +7,10 @@ import type {
 	AdminSnippetEditorPayload,
 	AdminValidationResponse
 } from '../types/studio';
+import { buildApiURL } from './base';
 
 async function requestJSON<T>(input: string, init?: RequestInit): Promise<T> {
-	const response = await fetch(input, init);
+	const response = await fetch(buildApiURL(input), init);
 
 	if (!response.ok) {
 		let message = `Request failed with status ${response.status}`;
@@ -103,7 +104,7 @@ export function normalizeAdminSnippetEditorPayload(
 }
 
 export async function loadAdminSession(): Promise<AdminSessionResponse> {
-	const response = await fetch('/api/v1/admin/session');
+	const response = await fetch(buildApiURL('/api/v1/admin/session'));
 	if (response.status === 401) {
 		return { authenticated: false, username: '' };
 	}
@@ -122,7 +123,7 @@ export function loginAdmin(password: string) {
 }
 
 export async function logoutAdmin() {
-	const response = await fetch('/api/v1/admin/session', { method: 'DELETE' });
+	const response = await fetch(buildApiURL('/api/v1/admin/session'), { method: 'DELETE' });
 	if (!response.ok) {
 		throw new Error(`Logout failed with status ${response.status}`);
 	}

@@ -15,6 +15,8 @@ human_verification:
     why_human: "API 与页面加载逻辑已通过自动验证，但阻断页的文案清晰度和用户理解成本需要人工确认。"
 ---
 
+> Historical note: this verification report references the earlier `SvelteKit` file structure that existed during Phase 2. Treat those paths and stack mentions as historical record only.
+
 # Phase 2: Discovery Experience Verification Report
 
 **Phase Goal:** 交付用户真正可使用的公开浏览体验，包括卡片流、详情页与可筛选搜索。  

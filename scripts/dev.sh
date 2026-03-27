@@ -125,8 +125,8 @@ if [[ ! -x "$ROOT_DIR/node_modules/.bin/pnpm" && ! -d "$ROOT_DIR/node_modules" ]
 	pnpm install
 fi
 
-echo "Syncing SvelteKit config..."
-(cd "$ROOT_DIR/apps/web" && pnpm exec svelte-kit sync)
+echo "Ensuring web dependencies are installed..."
+(cd "$ROOT_DIR/apps/web" && pnpm install --frozen-lockfile)
 
 echo "Starting API on http://127.0.0.1:$API_PORT ..."
 free_port "$API_PORT"

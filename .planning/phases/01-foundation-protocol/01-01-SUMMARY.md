@@ -32,6 +32,8 @@ duration: 35min
 completed: 2026-03-24
 ---
 
+> Historical note: this summary reflects the implementation path at the time. `SvelteKit` references are historical and no longer match the active frontend stack.
+
 # Phase 1: Foundation Protocol Summary
 
 **Runnable monorepo foundations with SvelteKit and Go stubs plus a PostgreSQL schema baseline for future snippet publishing**

@@ -42,6 +42,18 @@ function emptyDraft(): AdminSnippetEditorPayload {
 	};
 }
 
+function buildEditorFingerprint(
+	draft: AdminSnippetEditorPayload,
+	tagsText: string,
+	platformsText: string
+) {
+	return JSON.stringify({
+		...draft,
+		tags: parseTags(tagsText),
+		platforms: parsePlatforms(platformsText)
+	});
+}
+
 function FileEditor(props: {
 	title: string;
 	files: AdminEditableFile[];
@@ -73,7 +85,10 @@ function FileEditor(props: {
 						<div key={`${file.path}-${index}`} className="grid gap-3 rounded-[20px] bg-white/72 p-4">
 							<div className="grid gap-3 lg:grid-cols-2">
 								<input
+									aria-label="文件路径"
+									autoComplete="off"
 									className="native-field"
+									name={`file-path-${index}`}
 									placeholder="文件路径"
 									value={file.path}
 									onChange={(event) => {
@@ -83,7 +98,10 @@ function FileEditor(props: {
 									}}
 								/>
 								<input
+									aria-label="显示名称"
+									autoComplete="off"
 									className="native-field"
+									name={`file-label-${index}`}
 									placeholder="显示名称"
 									value={file.label}
 									onChange={(event) => {
@@ -94,7 +112,9 @@ function FileEditor(props: {
 								/>
 							</div>
 							<textarea
+								aria-label="文件内容"
 								className="native-textarea"
+								name={`file-content-${index}`}
 								placeholder="文件内容"
 								value={file.content}
 								onChange={(event) => {
@@ -116,13 +136,16 @@ export function StudioEditorPage() {
 	const { id = 'new' } = useParams();
 	const isNew = id === 'new';
 	const [draft, setDraft] = useState<AdminSnippetEditorPayload>(emptyDraft());
-	const [tagsText, setTagsText] = useState('ios, card');
+	const [tagsText, setTagsText] = useState('');
 	const [platformsText, setPlatformsText] = useState('ios:17.0');
 	const [loading, setLoading] = useState(!isNew);
 	const [saving, setSaving] = useState(false);
 	const [status, setStatus] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [validation, setValidation] = useState<AdminValidationResponse | null>(null);
+	const [baselineFingerprint, setBaselineFingerprint] = useState(() =>
+		buildEditorFingerprint(emptyDraft(), '', 'ios:17.0')
+	);
 
 	useEffect(() => {
 		if (isNew) {
@@ -139,6 +162,13 @@ export function StudioEditorPage() {
 					setDraft(payload);
 					setTagsText(payload.tags.join(', '));
 					setPlatformsText(formatPlatforms(payload.platforms));
+					setBaselineFingerprint(
+						buildEditorFingerprint(
+							payload,
+							payload.tags.join(', '),
+							formatPlatforms(payload.platforms)
+						)
+					);
 				}
 			} catch (fetchError) {
 				if (active) {
@@ -156,11 +186,6 @@ export function StudioEditorPage() {
 		};
 	}, [id, isNew]);
 
-	const dirty = useMemo(
-		() => JSON.stringify(draft.tags) !== JSON.stringify(parseTags(tagsText)) || formatPlatforms(draft.platforms) !== platformsText,
-		[draft.platforms, draft.tags, platformsText, tagsText]
-	);
-
 	const updateDraft = <K extends keyof AdminSnippetEditorPayload>(
 		key: K,
 		value: AdminSnippetEditorPayload[K]
@@ -173,6 +198,26 @@ export function StudioEditorPage() {
 		tags: parseTags(tagsText),
 		platforms: parsePlatforms(platformsText)
 	};
+	const dirty = useMemo(
+		() => buildEditorFingerprint(draft, tagsText, platformsText) !== baselineFingerprint,
+		[baselineFingerprint, draft, platformsText, tagsText]
+	);
+
+	useEffect(() => {
+		if (!dirty) {
+			return;
+		}
+
+		const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+			event.preventDefault();
+			event.returnValue = '';
+		};
+
+		window.addEventListener('beforeunload', handleBeforeUnload);
+		return () => {
+			window.removeEventListener('beforeunload', handleBeforeUnload);
+		};
+	}, [dirty]);
 
 	const handleCreate = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
@@ -188,6 +233,7 @@ export function StudioEditorPage() {
 		try {
 			setSaving(true);
 			setError(null);
+			setStatus(null);
 			const created = await createAdminSnippet(payload);
 			navigate(`/studio/snippets/${created.id}`, { replace: true });
 		} catch (submitError) {
@@ -201,10 +247,18 @@ export function StudioEditorPage() {
 		try {
 			setSaving(true);
 			setStatus(null);
+			setError(null);
 			const saved = await saveAdminSnippet(draft.id, normalizedDraft);
 			setDraft(saved);
 			setTagsText(saved.tags.join(', '));
 			setPlatformsText(formatPlatforms(saved.platforms));
+			setBaselineFingerprint(
+				buildEditorFingerprint(
+					saved,
+					saved.tags.join(', '),
+					formatPlatforms(saved.platforms)
+				)
+			);
 			setStatus('已保存修改');
 		} catch (submitError) {
 			setError(submitError instanceof Error ? submitError.message : '保存失败');
@@ -215,6 +269,8 @@ export function StudioEditorPage() {
 
 	const handleValidation = async () => {
 		try {
+			setError(null);
+			setStatus(null);
 			setValidation(await validateAdminSnippet(draft.id));
 			setStatus('已刷新校验结果');
 		} catch (submitError) {
@@ -232,6 +288,8 @@ export function StudioEditorPage() {
 		}
 
 		try {
+			setError(null);
+			setStatus(null);
 			const response = await uploadAdminAsset(draft.id, kind, file);
 			setDraft((current) => ({
 				...current,
@@ -259,8 +317,10 @@ export function StudioEditorPage() {
 		<div className="page-grid pb-10">
 			<div className="flex flex-wrap items-end justify-between gap-4">
 				<div>
-					<p className="eyebrow">Studio / editor</p>
-					<h1 className="display-title mt-3 text-4xl">{isNew ? '新建内容' : draft.title}</h1>
+					<p className="eyebrow">内容编辑</p>
+					<h1 className="display-title mt-3 text-4xl text-balance">
+						{isNew ? '新建内容' : draft.title}
+					</h1>
 					<p className="subtle-text mt-3">
 						{isNew
 							? '先生成内容骨架，随后再补代码、Prompt、媒体和许可。'
@@ -275,8 +335,15 @@ export function StudioEditorPage() {
 						<Button
 							className="bg-white/75"
 							onPress={async () => {
-								await moveSnippetToReview(draft.id);
-								setStatus('已移入待发布');
+								try {
+									setError(null);
+									setStatus(null);
+									await moveSnippetToReview(draft.id);
+									setDraft((current) => ({ ...current, state: 'review' }));
+									setStatus('已移入待发布');
+								} catch (submitError) {
+									setError(submitError instanceof Error ? submitError.message : '移入待发布失败');
+								}
 							}}
 						>
 							进入 Review
@@ -284,8 +351,15 @@ export function StudioEditorPage() {
 						<Button
 							className="bg-[var(--app-accent)] text-white"
 							onPress={async () => {
-								const result = await publishSnippetVersion(draft.id, draft.version);
-								setStatus(`已发布 ${result.publishedVersion}`);
+								try {
+									setError(null);
+									setStatus(null);
+									const result = await publishSnippetVersion(draft.id, draft.version);
+									setDraft((current) => ({ ...current, state: result.state }));
+									setStatus(`已发布 ${result.publishedVersion}`);
+								} catch (submitError) {
+									setError(submitError instanceof Error ? submitError.message : '发布失败');
+								}
 							}}
 						>
 							直接发布
@@ -295,12 +369,20 @@ export function StudioEditorPage() {
 			</div>
 
 			{status ? (
-				<div className="rounded-[18px] bg-[#eef7ef] px-5 py-4 text-sm text-[var(--app-success)]">
+				<div
+					aria-live="polite"
+					className="rounded-[18px] bg-[#eef7ef] px-5 py-4 text-sm text-[var(--app-success)]"
+					role="status"
+				>
 					{status}
 				</div>
 			) : null}
 			{error ? (
-				<div className="rounded-[18px] bg-[#fef0ed] px-5 py-4 text-sm text-[var(--app-danger)]">
+				<div
+					aria-live="polite"
+					className="rounded-[18px] bg-[#fef0ed] px-5 py-4 text-sm text-[var(--app-danger)]"
+					role="alert"
+				>
 					{error}
 				</div>
 			) : null}
@@ -313,21 +395,27 @@ export function StudioEditorPage() {
 						</div>
 						<input
 							aria-label="Snippet ID"
+							autoComplete="off"
 							className="native-field"
+							name="id"
 							placeholder="Snippet ID"
 							value={draft.id}
 							onChange={(event) => updateDraft('id', event.target.value)}
 						/>
 						<input
 							aria-label="版本号"
+							autoComplete="off"
 							className="native-field"
+							name="version"
 							placeholder="版本号"
 							value={draft.version}
 							onChange={(event) => updateDraft('version', event.target.value)}
 						/>
 						<input
 							aria-label="标题"
+							autoComplete="off"
 							className="native-field lg:col-span-2"
+							name="title"
 							placeholder="标题"
 							value={draft.title}
 							onChange={(event) => updateDraft('title', event.target.value)}
@@ -335,6 +423,7 @@ export function StudioEditorPage() {
 						<textarea
 							aria-label="摘要"
 							className="native-textarea lg:col-span-2"
+							name="summary"
 							placeholder="摘要"
 							value={draft.summary}
 							onChange={(event) => updateDraft('summary', event.target.value)}
@@ -342,6 +431,7 @@ export function StudioEditorPage() {
 						<select
 							aria-label="分类"
 							className="native-select"
+							name="categoryPrimary"
 							value={draft.categoryPrimary}
 							onChange={(event) => updateDraft('categoryPrimary', event.target.value)}
 						>
@@ -355,6 +445,7 @@ export function StudioEditorPage() {
 						<select
 							aria-label="难度"
 							className="native-select"
+							name="difficulty"
 							value={draft.difficulty}
 							onChange={(event) => updateDraft('difficulty', event.target.value)}
 						>
@@ -364,7 +455,9 @@ export function StudioEditorPage() {
 						</select>
 						<input
 							aria-label="标签"
+							autoComplete="off"
 							className="native-field"
+							name="tags"
 							placeholder="标签，逗号分隔"
 							value={tagsText}
 							onChange={(event) => setTagsText(event.target.value)}
@@ -372,6 +465,7 @@ export function StudioEditorPage() {
 						<textarea
 							aria-label="平台"
 							className="native-textarea"
+							name="platforms"
 							placeholder="平台，每行 os:minVersion"
 							value={platformsText}
 							onChange={(event) => setPlatformsText(event.target.value)}
@@ -386,7 +480,9 @@ export function StudioEditorPage() {
 						</div>
 						<input
 							aria-label="封面路径"
+							autoComplete="off"
 							className="native-field"
+							name="cover"
 							placeholder="封面路径"
 							value={draft.assets.cover}
 							onChange={(event) =>
@@ -395,7 +491,9 @@ export function StudioEditorPage() {
 						/>
 						<input
 							aria-label="演示路径"
+							autoComplete="off"
 							className="native-field"
+							name="demo"
 							placeholder="演示路径"
 							value={draft.assets.demo ?? ''}
 							onChange={(event) =>
@@ -412,7 +510,9 @@ export function StudioEditorPage() {
 						</label>
 						<input
 							aria-label="代码许可"
+							autoComplete="off"
 							className="native-field"
+							name="license-code"
 							placeholder="代码许可"
 							value={draft.license.code}
 							onChange={(event) =>
@@ -421,7 +521,9 @@ export function StudioEditorPage() {
 						/>
 						<input
 							aria-label="媒体许可"
+							autoComplete="off"
 							className="native-field"
+							name="license-media"
 							placeholder="媒体许可"
 							value={draft.license.media}
 							onChange={(event) =>
@@ -430,7 +532,9 @@ export function StudioEditorPage() {
 						/>
 						<input
 							aria-label="第三方声明路径"
+							autoComplete="off"
 							className="native-field lg:col-span-2"
+							name="license-third-party-notice"
 							placeholder="第三方声明路径"
 							value={draft.license.thirdPartyNotice}
 							onChange={(event) =>
@@ -443,6 +547,7 @@ export function StudioEditorPage() {
 						<textarea
 							aria-label="第三方声明正文"
 							className="native-textarea lg:col-span-2"
+							name="license-third-party-text"
 							placeholder="第三方声明正文"
 							value={draft.license.thirdPartyText ?? ''}
 							onChange={(event) =>

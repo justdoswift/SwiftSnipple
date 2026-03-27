@@ -13,7 +13,7 @@ api:
 
 web:
 	if [ ! -d node_modules ]; then pnpm install; fi
-	cd apps/web && API_BASE_URL=$${API_BASE_URL:-http://127.0.0.1:$${API_PORT:-18080}} pnpm exec svelte-kit sync && pnpm exec vite dev --host 0.0.0.0 --port $${WEB_PORT:-13000}
+	cd apps/web && API_BASE_URL=$${API_BASE_URL:-http://127.0.0.1:$${API_PORT:-18080}} pnpm exec vite dev --host 0.0.0.0 --port $${WEB_PORT:-13000}
 
 dev-all:
 	bash scripts/dev.sh

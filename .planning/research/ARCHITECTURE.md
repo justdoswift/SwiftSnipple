@@ -1,5 +1,7 @@
 # Architecture Research
 
+> Historical note: this research was produced before the frontend stack converged on the current codebase. References to `SvelteKit` describe an early recommendation, not the present implementation.
+
 **Domain:** SwiftUI snippet card-feed platform
 **Researched:** 2026-03-24
 **Confidence:** MEDIUM

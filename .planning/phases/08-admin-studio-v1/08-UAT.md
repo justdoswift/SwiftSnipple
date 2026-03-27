@@ -8,6 +8,8 @@ started: 2026-03-25T10:35:14Z
 updated: 2026-03-26T10:05:00Z
 ---
 
+> Historical note: this UAT file mentions the earlier `shadcn-svelte` UI shell naming. Treat that wording as historical context rather than the current stack label.
+
 ## Current Test
 
 number: 1

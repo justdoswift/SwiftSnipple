@@ -36,6 +36,7 @@ test.describe('studio surface', () => {
 		await page.goto('/studio/snippets/basic-card-feed');
 
 		await page.getByLabel('标题').fill('基础卡片流 临时修改');
+		await expect(page.getByText('你有未保存修改')).toBeVisible();
 		await expect(page.getByRole('button', { name: '保存修改' })).toBeVisible();
 
 		await expect(page.getByLabel('代码许可')).toBeVisible();

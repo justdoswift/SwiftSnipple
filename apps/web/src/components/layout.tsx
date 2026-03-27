@@ -27,6 +27,12 @@ const studioLinks = [
 export function PublicLayout() {
 	return (
 		<div className="min-h-screen">
+			<a
+				className="sr-only absolute left-4 top-4 z-50 rounded-full bg-[var(--app-accent)] px-4 py-2 text-sm text-white focus:not-sr-only"
+				href="#main-content"
+			>
+				跳到正文
+			</a>
 			<header className="page-shell">
 				<div className="surface-panel surface-panel-strong flex flex-wrap items-center justify-between gap-4 rounded-[var(--app-radius-xl)] px-5 py-4">
 					<Link className="flex items-center gap-3" to="/">
@@ -38,7 +44,7 @@ export function PublicLayout() {
 								SwiftSnippet
 							</p>
 							<p className="m-0 text-sm text-[var(--app-muted)]">
-								更像作品库，而不是资料站
+								几秒内找到值得带走的 SwiftUI 片段
 							</p>
 						</div>
 					</Link>
@@ -50,7 +56,7 @@ export function PublicLayout() {
 								to={item.to}
 								className={({ isActive }) =>
 									cn(
-										'rounded-full px-4 py-2 text-sm transition',
+										'rounded-full px-4 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f6f0e9]',
 										isActive
 											? 'bg-[var(--app-accent)] text-white'
 											: 'bg-white/60 text-[var(--app-muted)] hover:bg-white'
@@ -98,7 +104,7 @@ export function StudioGuard() {
 			<main className="page-shell">
 				<Card className="surface-panel rounded-[var(--app-radius-xl)]">
 					<Card.Content className="p-8">
-						<p className="eyebrow">Studio unavailable</p>
+						<p className="eyebrow">后台状态</p>
 						<h1 className="display-title mt-3 text-3xl">后台暂时无法连接</h1>
 						<p className="subtle-text mt-3">{error}</p>
 					</Card.Content>
@@ -158,7 +164,7 @@ export function StudioGuard() {
 					</nav>
 
 					<div className="mt-5 rounded-[18px] bg-[var(--app-accent-soft)] p-4">
-						<p className="eyebrow">Current mode</p>
+						<p className="eyebrow">当前状态</p>
 						<p className="mb-0 mt-2 text-sm leading-7 text-[var(--app-muted)]">
 							这套后台现在只服务内容录入、校验和发布，不再夹带旧视觉包袱。
 						</p>

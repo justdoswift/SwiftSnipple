@@ -34,7 +34,7 @@
 - [ ] **UX-03**: 公开站与 `/studio` 的页面默认优先留白、克制密度和较低心智压力，不为了填满画面而堆叠过多信息或控件
 - [ ] **UX-04**: 所有公开站与 `/studio` 的 UI 文案都必须是真实、自然、面向用户的产品语言，不能出现解释性说明、开发备注或组件占位文字
 - [ ] **UX-05**: 公开站与 `/studio` 的标题、正文、按钮高度、输入框高度、圆角和间距必须遵守统一尺寸体系，不能在页面里零散定义导致视觉层级失控
-- [ ] **UX-06**: 已接入的 `shadcn-svelte` 组件必须被作为真实共享设计系统使用；页面层只能做有限品牌化调整，不能大面积覆写成另一套不一致的按钮、表单、卡片和 tabs 视觉
+- [ ] **UX-06**: 已接入的 `HeroUI React + Tailwind` 组件必须被作为真实共享设计系统使用；页面层只能做有限品牌化调整，不能大面积覆写成另一套不一致的按钮、表单、卡片和 tabs 视觉
 
 ## v1.2+ Requirements
 
@@ -85,4 +85,4 @@
 
 ---
 *Requirements defined: 2026-03-25*
-*Last updated: 2026-03-25 after v1.2 backend milestone sync*
+*Last updated: 2026-03-27 after current-stack documentation cleanup*

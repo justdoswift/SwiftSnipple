@@ -11,8 +11,12 @@ export function SnippetCard(props: {
 	const { snippet, to, featured = false } = props;
 
 	return (
-		<Link data-testid={`snippet-card-${snippet.id}`} to={to}>
-			<Card className="surface-panel rounded-[var(--app-radius-xl)] p-2 transition hover:-translate-y-0.5">
+		<Link
+			className="group rounded-[var(--app-radius-xl)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f6f0e9]"
+			data-testid={`snippet-card-${snippet.id}`}
+			to={to}
+		>
+			<Card className="surface-panel rounded-[var(--app-radius-xl)] p-2 transition group-hover:-translate-y-0.5">
 				<Card.Content className={featured ? 'grid gap-5 p-4 lg:grid-cols-[1.4fr_1fr]' : 'grid gap-4 p-4'}>
 					<div
 						className="card-media"
@@ -38,7 +42,9 @@ export function SnippetCard(props: {
 						</div>
 
 						<div>
-							<h2 className="display-title m-0 text-3xl leading-tight">{snippet.title}</h2>
+							<h2 className="display-title m-0 text-3xl leading-tight text-balance">
+								{snippet.title}
+							</h2>
 							<p className="subtle-text mt-3 text-base">{snippet.summary}</p>
 						</div>
 

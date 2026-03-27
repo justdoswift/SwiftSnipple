@@ -49,6 +49,8 @@ duration: retroactive sync
 completed: 2026-03-25
 ---
 
+> Historical note: this summary includes stack wording from the implementation moment. `SvelteKit` references are historical and not current frontend guidance.
+
 # Phase 8 Plan 1: Admin Studio v1 Summary
 
 **内部运营台已经落地，SwiftSnippet 现在可以在 `/studio` 里完成内容录入、编辑、校验与发布基础闭环。**

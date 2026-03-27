@@ -3,7 +3,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SectionHeader } from '../components/layout';
 import { SnippetCard } from '../components/snippet-card';
-import { enrichCardsWithQuickCopy, loadSearch } from '../lib/api/discovery';
+import { loadSearch } from '../lib/api/discovery';
 import type { PublishedSnippetCard, SearchResponse } from '../lib/types/discovery';
 
 type FilterState = {
@@ -57,14 +57,10 @@ export function ExplorePage() {
 				setLoading(true);
 				setError(null);
 				const response = await loadSearch(searchParams);
-				const [enrichedItems, enrichedFallback] = await Promise.all([
-					enrichCardsWithQuickCopy(response.items),
-					enrichCardsWithQuickCopy(response.fallback ?? [])
-				]);
 				if (active) {
 					setResults(response);
-					setItems(enrichedItems);
-					setFallback(enrichedFallback);
+					setItems(response.items);
+					setFallback(response.fallback ?? []);
 				}
 			} catch (fetchError) {
 				if (active) {
@@ -97,10 +93,10 @@ export function ExplorePage() {
 	};
 
 	return (
-		<main className="page-shell page-grid pb-10">
+		<main className="page-shell page-grid pb-10" id="main-content">
 			<SectionHeader
 				description="把浏览和筛选拆开：先用关键词找到大方向，再用分类、难度和平台把范围压到可判断的尺寸。"
-				eyebrow="Explore"
+				eyebrow="探索"
 				title="挑一条，直接开做。"
 			/>
 
@@ -109,9 +105,14 @@ export function ExplorePage() {
 					<Card.Content className="grid gap-4 p-5">
 						<form className="grid gap-4" onSubmit={submitFilters}>
 							<div>
-								<label className="mb-2 block text-sm font-medium">关键词</label>
+								<label className="mb-2 block text-sm font-medium" htmlFor="explore-q">
+									关键词
+								</label>
 								<input
+									autoComplete="off"
 									className="native-field"
+									id="explore-q"
+									name="q"
 									placeholder="例如：hero、card、timeline"
 									value={filters.q}
 									onChange={(event) => setFilters((current) => ({ ...current, q: event.target.value }))}
@@ -119,9 +120,13 @@ export function ExplorePage() {
 							</div>
 
 							<div>
-								<label className="mb-2 block text-sm font-medium">分类</label>
+								<label className="mb-2 block text-sm font-medium" htmlFor="explore-category">
+									分类
+								</label>
 								<select
 									className="native-select"
+									id="explore-category"
+									name="category"
 									value={filters.category}
 									onChange={(event) =>
 										setFilters((current) => ({ ...current, category: event.target.value }))
@@ -137,9 +142,13 @@ export function ExplorePage() {
 							</div>
 
 							<div>
-								<label className="mb-2 block text-sm font-medium">难度</label>
+								<label className="mb-2 block text-sm font-medium" htmlFor="explore-difficulty">
+									难度
+								</label>
 								<select
 									className="native-select"
+									id="explore-difficulty"
+									name="difficulty"
 									value={filters.difficulty}
 									onChange={(event) =>
 										setFilters((current) => ({ ...current, difficulty: event.target.value }))
@@ -153,9 +162,13 @@ export function ExplorePage() {
 							</div>
 
 							<div>
-								<label className="mb-2 block text-sm font-medium">平台</label>
+								<label className="mb-2 block text-sm font-medium" htmlFor="explore-platform">
+									平台
+								</label>
 								<select
 									className="native-select"
+									id="explore-platform"
+									name="platform"
 									value={filters.platform}
 									onChange={(event) =>
 										setFilters((current) => ({ ...current, platform: event.target.value }))
@@ -174,6 +187,7 @@ export function ExplorePage() {
 								<label className="flex items-center gap-2 rounded-[16px] bg-white/70 px-4 py-3 text-sm">
 									<input
 										checked={filters.hasDemo === 'true'}
+										name="hasDemo"
 										type="checkbox"
 										onChange={(event) =>
 											setFilters((current) => ({
@@ -187,6 +201,7 @@ export function ExplorePage() {
 								<label className="flex items-center gap-2 rounded-[16px] bg-white/70 px-4 py-3 text-sm">
 									<input
 										checked={filters.hasPrompt === 'true'}
+										name="hasPrompt"
 										type="checkbox"
 										onChange={(event) =>
 											setFilters((current) => ({
@@ -230,7 +245,7 @@ export function ExplorePage() {
 					<Card className="surface-panel rounded-[var(--app-radius-xl)]">
 						<Card.Content className="flex flex-wrap items-center justify-between gap-4 p-5">
 							<div>
-								<p className="eyebrow">Result set</p>
+								<p className="eyebrow">筛选结果</p>
 								<h2 className="display-title mt-3 text-3xl">
 									{results?.total ?? 0} 条结果，保持可扫可选。
 								</h2>
@@ -266,7 +281,7 @@ export function ExplorePage() {
 						<section className="page-grid">
 							<SectionHeader
 								description="没有精确命中时，退回一组仍值得看的内容，而不是让页面直接变空。"
-								eyebrow="Fallback"
+								eyebrow="继续推荐"
 								title="先从这些相近片段继续看"
 							/>
 							<div className="grid gap-5 lg:grid-cols-2">
@@ -275,6 +290,18 @@ export function ExplorePage() {
 								))}
 							</div>
 						</section>
+					) : null}
+
+					{!loading && !error && items.length === 0 && fallback.length === 0 ? (
+						<Card className="surface-panel rounded-[var(--app-radius-xl)]">
+							<Card.Content className="grid gap-3 p-6">
+								<p className="eyebrow">当前筛选</p>
+								<h2 className="display-title m-0 text-3xl">这一轮没有找到合适的片段</h2>
+								<p className="subtle-text m-0">
+									试试放宽关键词，或者去掉分类与平台限制，让结果先回到一个更容易判断的范围。
+								</p>
+							</Card.Content>
+						</Card>
 					) : null}
 				</div>
 			</div>

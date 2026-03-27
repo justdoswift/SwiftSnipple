@@ -37,6 +37,8 @@ test.describe('discovery surface', () => {
 		await page.goto('/snippets/stacked-hero-card');
 		await expect(page.getByRole('heading', { name: '叠层主视觉卡片' })).toBeVisible();
 		await expect(page.getByRole('tablist', { name: '片段详情标签页' })).toBeVisible();
+		await page.getByRole('button', { name: '复制主代码块' }).click();
+		await expect(page.getByRole('status')).toHaveText('已复制主代码块');
 		await page.screenshot({ path: testInfo.outputPath('detail.png'), fullPage: true });
 
 		await page.goto('/snippets/internal-draft-sample');

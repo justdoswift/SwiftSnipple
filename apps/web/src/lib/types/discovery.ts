@@ -8,11 +8,6 @@ export type MediaInfo = {
 	demoUrl?: string;
 };
 
-export type SnippetQuickCopy = {
-	code?: string;
-	prompt?: string;
-};
-
 export type PublishedSnippetCard = {
 	id: string;
 	title: string;
@@ -26,7 +21,6 @@ export type PublishedSnippetCard = {
 	hasPrompt: boolean;
 	featuredRank: number;
 	publishedAt: string;
-	quickCopy?: SnippetQuickCopy;
 };
 
 export type SearchSnippetCard = PublishedSnippetCard & {

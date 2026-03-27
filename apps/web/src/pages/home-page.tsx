@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SectionHeader } from '../components/layout';
 import { SnippetCard } from '../components/snippet-card';
-import { enrichCardsWithQuickCopy, loadFeed } from '../lib/api/discovery';
+import { loadFeed } from '../lib/api/discovery';
 import type { PublishedSnippetCard } from '../lib/types/discovery';
 
 export function HomePage() {
@@ -20,9 +20,8 @@ export function HomePage() {
 				setLoading(true);
 				setError(null);
 				const response = await loadFeed();
-				const enriched = await enrichCardsWithQuickCopy(response.items);
 				if (active) {
-					setItems(enriched);
+					setItems(response.items);
 				}
 			} catch (fetchError) {
 				if (active) {
@@ -60,12 +59,12 @@ export function HomePage() {
 	};
 
 	return (
-		<main className="page-shell page-grid pb-10">
+		<main className="page-shell page-grid pb-10" id="main-content">
 			<section className="surface-panel surface-panel-strong overflow-hidden rounded-[36px] px-6 py-8 lg:px-8 lg:py-10">
 				<div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
 					<div className="grid gap-6">
-						<p className="eyebrow">HeroUI Rebuild / public discovery</p>
-						<h1 className="display-title max-w-[9ch] text-5xl leading-none lg:text-7xl">
+						<p className="eyebrow">公开发现</p>
+						<h1 className="display-title max-w-[9ch] text-5xl leading-none text-balance lg:text-7xl">
 							把 SwiftUI 片段像作品一样浏览。
 						</h1>
 						<p className="max-w-2xl text-lg leading-8 text-[var(--app-muted)]">
@@ -122,8 +121,20 @@ export function HomePage() {
 			{error ? (
 				<Card className="surface-panel rounded-[var(--app-radius-xl)]">
 					<Card.Content className="p-6">
-						<p className="eyebrow">Load failed</p>
+						<p className="eyebrow">加载失败</p>
 						<p className="mb-0 mt-3 text-base text-[var(--app-danger)]">{error}</p>
+					</Card.Content>
+				</Card>
+			) : null}
+
+			{!loading && !error && ordered.length === 0 ? (
+				<Card className="surface-panel rounded-[var(--app-radius-xl)]">
+					<Card.Content className="grid gap-3 p-6">
+						<p className="eyebrow">当前片段库</p>
+						<h2 className="display-title m-0 text-3xl">还没有可公开浏览的内容</h2>
+						<p className="subtle-text m-0">
+							稍后再回来看看，或者直接进入 Explore 等下一批片段上架。
+						</p>
 					</Card.Content>
 				</Card>
 			) : null}

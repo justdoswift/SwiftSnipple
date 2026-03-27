@@ -1,5 +1,7 @@
 # Project Research Summary
 
+> Historical note: this summary reflects the initial research direction. Any `SvelteKit`-based wording should be read as historical planning context rather than the current stack.
+
 **Project:** SwiftSnippet
 **Domain:** SwiftUI snippet card-feed platform
 **Researched:** 2026-03-24

@@ -1,5 +1,7 @@
 # Phase 08 Verification
 
+> Historical note: this verification report contains references to the earlier `shadcn-svelte` convergence path. Those mentions are preserved for traceability only.
+
 ## Status
 
 PASS (automated) / HUMAN UAT PENDING

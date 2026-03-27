@@ -1,5 +1,7 @@
 # Project Retrospective
 
+> Historical note: stack references in this retrospective reflect the implementation path at the time of each milestone. Where it mentions `SvelteKit` or `shadcn-svelte`, treat that as historical context, not the current frontend stack.
+
 *A living document updated after each milestone. Lessons feed forward into future planning.*
 
 ## Milestone: v1.0 — MVP

@@ -46,6 +46,8 @@ duration: same-session retroactive sync
 completed: 2026-03-26
 ---
 
+> Historical note: this summary preserves the Phase 8 UI migration language from that moment. `shadcn-svelte` references are historical rather than current stack guidance.
+
 # Phase 8 Plan 2: Studio shadcn-svelte Foundation Summary
 
 **Studio 现在已经站到统一组件体系上了，后续后台 UI 不需要再靠一套套手写 panel 往前堆。**

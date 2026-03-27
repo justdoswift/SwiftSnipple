@@ -36,6 +36,8 @@ duration: 10min
 completed: 2026-03-24
 ---
 
+> Historical note: this summary still references the contemporaneous `SvelteKit` frontend path. Read those stack mentions as historical only.
+
 # Phase 2 Plan 2: Discovery API Summary
 
 **Go discovery endpoints for published feed, ranked facet search, and explicit not_public detail handling backed by TTL-cached snapshot reads**

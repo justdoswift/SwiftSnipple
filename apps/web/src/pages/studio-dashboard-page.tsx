@@ -87,7 +87,7 @@ export function StudioDashboardPage() {
 				<Card.Content className="grid gap-4 p-5">
 					<div className="flex items-center justify-between gap-4">
 						<div>
-							<p className="eyebrow">Recent snippets</p>
+							<p className="eyebrow">最近更新</p>
 							<h2 className="display-title mt-3 text-3xl">最近更新的内容</h2>
 						</div>
 						<Link className="text-sm text-[var(--app-accent)]" to="/studio/snippets">
@@ -95,24 +95,30 @@ export function StudioDashboardPage() {
 						</Link>
 					</div>
 					<div className="grid gap-3">
-						{items.slice(0, 6).map((item) => (
-							<Link
-								key={item.id}
-								className="rounded-[20px] bg-white/68 p-4 transition hover:bg-white"
-								to={`/studio/snippets/${item.id}`}
-							>
-								<div className="flex flex-wrap items-center justify-between gap-3">
-									<div>
-										<p className="m-0 font-semibold">{item.title}</p>
-										<p className="m-0 mt-1 text-sm text-[var(--app-muted)]">{item.summary}</p>
+						{items.length > 0 ? (
+							items.slice(0, 6).map((item) => (
+								<Link
+									key={item.id}
+									className="rounded-[20px] bg-white/68 p-4 transition hover:bg-white"
+									to={`/studio/snippets/${item.id}`}
+								>
+									<div className="flex flex-wrap items-center justify-between gap-3">
+										<div>
+											<p className="m-0 font-semibold">{item.title}</p>
+											<p className="m-0 mt-1 text-sm text-[var(--app-muted)]">{item.summary}</p>
+										</div>
+										<div className="text-right text-sm text-[var(--app-muted)]">
+											<p className="m-0">{stateLabel(item.state)}</p>
+											<p className="m-0 mt-1">{item.version}</p>
+										</div>
 									</div>
-									<div className="text-right text-sm text-[var(--app-muted)]">
-										<p className="m-0">{stateLabel(item.state)}</p>
-										<p className="m-0 mt-1">{item.version}</p>
-									</div>
-								</div>
-							</Link>
-						))}
+								</Link>
+							))
+						) : (
+							<div className="rounded-[20px] bg-white/68 p-5 text-sm text-[var(--app-muted)]">
+								当前还没有内容。先去新建第一条 snippet，再回来盯发布节奏。
+							</div>
+						)}
 					</div>
 				</Card.Content>
 			</Card>

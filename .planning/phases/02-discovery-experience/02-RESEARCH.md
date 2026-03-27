@@ -1,5 +1,7 @@
 # Phase 2: Discovery Experience - Research
 
+> Historical note: this research reflects the original frontend direction for Phase 2. `SvelteKit` mentions are historical planning context, not current implementation guidance.
+
 **Researched:** 2026-03-24
 **Domain:** Public discovery UX for published SwiftUI snippets across SvelteKit web, Go read APIs, and a published-only search/cache contract
 **Confidence:** MEDIUM

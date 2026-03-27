@@ -46,6 +46,8 @@ duration: 16min
 completed: 2026-03-24
 ---
 
+> Historical note: this summary documents the Phase 2 frontend path as it existed then. `SvelteKit` references are historical and not the current stack.
+
 # Phase 2 Plan 3: Discovery Web Summary
 
 **SvelteKit public discovery surfaces with portfolio feed cards, live Explore filters, and demo-first snippet details over the published Phase 2 APIs**

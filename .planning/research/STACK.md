@@ -1,5 +1,7 @@
 # Stack Research
 
+> Historical note: this stack recommendation captures an early planning snapshot. `SvelteKit` and `shadcn-svelte` references here are historical and no longer match the current frontend implementation.
+
 **Domain:** SwiftUI snippet card-feed platform
 **Researched:** 2026-03-24
 **Confidence:** MEDIUM

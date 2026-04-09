@@ -64,6 +64,24 @@ func (r *ArticleRepository) GetByID(ctx context.Context, id string) (domain.Arti
 	return article, nil
 }
 
+func (r *ArticleRepository) GetBySlug(ctx context.Context, slug string) (domain.Article, error) {
+	row := r.pool.QueryRow(ctx, `
+		SELECT id, title, slug, excerpt, category, tags, cover_image, content, seo_title, seo_description, status, updated_at, published_at
+		FROM articles
+		WHERE slug = $1
+	`, slug)
+
+	article, err := scanArticle(row)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.Article{}, ErrNotFound
+		}
+		return domain.Article{}, err
+	}
+
+	return article, nil
+}
+
 func (r *ArticleRepository) Create(ctx context.Context, payload domain.ArticlePayload) (domain.Article, error) {
 	payload = payload.Normalize()
 	id := uuid.NewString()
@@ -160,6 +178,41 @@ func (r *ArticleRepository) Publish(ctx context.Context, id string) (domain.Arti
 	}
 
 	return article, nil
+}
+
+func (r *ArticleRepository) Unpublish(ctx context.Context, id string) (domain.Article, error) {
+	row := r.pool.QueryRow(ctx, `
+		UPDATE articles
+		SET
+			status = 'Draft',
+			published_at = NULL,
+			updated_at = NOW()
+		WHERE id = $1
+		RETURNING id, title, slug, excerpt, category, tags, cover_image, content, seo_title, seo_description, status, updated_at, published_at
+	`, id)
+
+	article, err := scanArticle(row)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.Article{}, ErrNotFound
+		}
+		return domain.Article{}, err
+	}
+
+	return article, nil
+}
+
+func (r *ArticleRepository) Delete(ctx context.Context, id string) error {
+	commandTag, err := r.pool.Exec(ctx, `DELETE FROM articles WHERE id = $1`, id)
+	if err != nil {
+		return fmt.Errorf("delete article: %w", err)
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+
+	return nil
 }
 
 func scanArticle(row interface {

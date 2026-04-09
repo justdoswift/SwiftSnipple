@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import EditorSection from "../../components/admin/EditorSection";
 import MarkdownPreview from "../../components/admin/MarkdownPreview";
 import StatusBadge from "../../components/admin/StatusBadge";
-import { createArticle, getArticleById, publishArticle, updateArticle } from "../../services/articles";
+import { createArticle, deleteArticle, getArticleById, publishArticle, unpublishArticle, updateArticle } from "../../services/articles";
 import { Article, ArticleFormState, ArticlePayload, ArticleStatus } from "../../types";
 
 const STATUS_OPTIONS: ArticleStatus[] = ["Draft", "In Review", "Scheduled", "Published"];
@@ -127,7 +127,9 @@ export default function AdminArticleEditor() {
   const [form, setForm] = useState<ArticleFormState>(() => toFormState(createEmptyArticle()));
   const [saveLabel, setSaveLabel] = useState("Save draft");
   const [isLoading, setIsLoading] = useState(!isNew);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [feedback, setFeedback] = useState("");
 
   useEffect(() => {
     if (isNew || !id) {
@@ -146,6 +148,7 @@ export default function AdminArticleEditor() {
         setBaseArticle(article);
         setForm(toFormState(article));
         setError("");
+        setFeedback("");
       })
       .catch((err: Error) => {
         if (!active) return;
@@ -174,7 +177,9 @@ export default function AdminArticleEditor() {
 
   const handleSave = async (statusOverride?: ArticleStatus) => {
     try {
+      setIsSubmitting(true);
       setError("");
+      setFeedback("");
       const nextForm = statusOverride ? { ...form, status: statusOverride } : form;
       const payload = toArticlePayload(fromFormState(baseArticle, nextForm));
 
@@ -185,6 +190,13 @@ export default function AdminArticleEditor() {
       setBaseArticle(finalArticle);
       setForm(toFormState(finalArticle));
       setSaveLabel(statusOverride === "Published" ? "Published" : "Saved");
+      setFeedback(
+        statusOverride === "Published"
+          ? "Article published and now eligible for the public homepage."
+          : finalArticle.status === "Scheduled"
+            ? "Article saved in the schedule. It will stay off the public homepage until published."
+            : "Changes saved successfully.",
+      );
       window.setTimeout(() => setSaveLabel("Save draft"), 1800);
 
       if (isNew) {
@@ -192,6 +204,44 @@ export default function AdminArticleEditor() {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save article");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUnpublish = async () => {
+    if (!baseArticle.id) return;
+
+    try {
+      setIsSubmitting(true);
+      setError("");
+      setFeedback("");
+      const article = await unpublishArticle(baseArticle.id);
+      setBaseArticle(article);
+      setForm(toFormState(article));
+      setSaveLabel("Unpublished");
+      setFeedback("Article moved back to draft and removed from the public archive.");
+      window.setTimeout(() => setSaveLabel("Save draft"), 1800);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to unpublish article");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!baseArticle.id) return;
+    if (!window.confirm("Delete this article permanently?")) return;
+
+    try {
+      setIsSubmitting(true);
+      setError("");
+      await deleteArticle(baseArticle.id);
+      navigate("/admin/articles");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete article");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -209,6 +259,7 @@ export default function AdminArticleEditor() {
             Shape metadata, refine the Markdown body, and keep the preview visible so the final page stays intentional.
           </p>
           {isLoading ? <p className="mt-4 text-sm text-primary/50">Loading article...</p> : null}
+          {feedback ? <p className="mt-4 text-sm text-emerald-700">{feedback}</p> : null}
           {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
         </div>
 
@@ -220,17 +271,37 @@ export default function AdminArticleEditor() {
             Back to list
           </Link>
           <button
+            disabled={isSubmitting}
             onClick={() => handleSave()}
-            className="bg-primary px-5 py-3 font-mono text-[10px] uppercase tracking-[0.2em] text-white"
+            className="bg-primary px-5 py-3 font-mono text-[10px] uppercase tracking-[0.2em] text-white disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {saveLabel}
+            {isSubmitting ? "Saving..." : saveLabel}
           </button>
           <button
+            disabled={isSubmitting}
             onClick={() => handleSave("Published")}
-            className="border border-primary bg-surface-container-lowest px-5 py-3 font-mono text-[10px] uppercase tracking-[0.2em] text-primary"
+            className="border border-primary bg-surface-container-lowest px-5 py-3 font-mono text-[10px] uppercase tracking-[0.2em] text-primary disabled:cursor-not-allowed disabled:opacity-60"
           >
             Publish now
           </button>
+          {!isNew ? (
+            <button
+              disabled={isSubmitting}
+              onClick={handleUnpublish}
+              className="border border-outline-variant/15 bg-surface-container-lowest px-5 py-3 font-mono text-[10px] uppercase tracking-[0.2em] text-primary disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Unpublish
+            </button>
+          ) : null}
+          {!isNew ? (
+            <button
+              disabled={isSubmitting}
+              onClick={handleDelete}
+              className="border border-red-200 bg-surface-container-lowest px-5 py-3 font-mono text-[10px] uppercase tracking-[0.2em] text-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Delete
+            </button>
+          ) : null}
         </div>
       </section>
 
@@ -376,6 +447,10 @@ export default function AdminArticleEditor() {
                 <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/40">Slug Preview</p>
                 <p className="text-sm text-on-surface-variant">/articles/{previewArticle.slug || "untitled-article"}</p>
               </div>
+
+              <p className="text-sm leading-relaxed text-on-surface-variant">
+                Scheduled entries stay inside the editorial workspace. Only articles with <span className="font-semibold text-primary">Published</span> status appear on the public homepage in this phase.
+              </p>
             </div>
           </section>
 

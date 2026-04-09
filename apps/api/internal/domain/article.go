@@ -54,3 +54,12 @@ func (p ArticlePayload) Normalize() ArticlePayload {
 
 	return p
 }
+
+func IsValidStatus(status ArticleStatus) bool {
+	switch status {
+	case StatusDraft, StatusInReview, StatusScheduled, StatusPublished:
+		return true
+	default:
+		return false
+	}
+}

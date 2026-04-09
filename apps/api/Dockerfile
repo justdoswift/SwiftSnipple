@@ -4,16 +4,20 @@ WORKDIR /app
 
 COPY apps/api/go.mod ./apps/api/go.mod
 WORKDIR /app/apps/api
-RUN go mod download
+RUN echo "[api build] downloading Go module dependencies" && \
+    go mod download
 
 COPY apps/api ./ 
-RUN go build -o /out/server ./cmd/server && \
+RUN echo "[api build] compiling API server binary" && \
+    go build -o /out/server ./cmd/server && \
+    echo "[api build] compiling migration binary" && \
     go build -o /out/migrate ./cmd/migrate
 
 FROM alpine:3.21
 
 WORKDIR /app
-RUN apk add --no-cache ca-certificates
+RUN echo "[api build] installing runtime certificates" && \
+    apk add --no-cache ca-certificates
 
 COPY --from=builder /out/server /app/server
 COPY --from=builder /out/migrate /app/migrate

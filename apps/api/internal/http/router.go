@@ -6,11 +6,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"swiftsnipple/api/internal/repo"
 )
 
-func NewRouter(pool *pgxpool.Pool, articles *repo.ArticleRepository) http.Handler {
+func NewRouter(pool dbPinger, articles articleStore) http.Handler {
 	handler := &Handler{
 		db:       pool,
 		articles: articles,
@@ -28,11 +26,14 @@ func NewRouter(pool *pgxpool.Pool, articles *repo.ArticleRepository) http.Handle
 	router.Route("/api", func(r chi.Router) {
 		r.Get("/articles", handler.ListArticles)
 		r.Get("/articles/{id}", handler.GetArticle)
+		r.Get("/articles/slug/{slug}", handler.GetArticleBySlug)
 
 		r.Route("/admin", func(admin chi.Router) {
 			admin.Post("/articles", handler.CreateArticle)
 			admin.Put("/articles/{id}", handler.UpdateArticle)
 			admin.Post("/articles/{id}/publish", handler.PublishArticle)
+			admin.Post("/articles/{id}/unpublish", handler.UnpublishArticle)
+			admin.Delete("/articles/{id}", handler.DeleteArticle)
 		})
 	})
 

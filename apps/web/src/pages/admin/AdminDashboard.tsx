@@ -18,18 +18,25 @@ function formatDate(value: string | null) {
 export default function AdminDashboard() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
+    setIsLoading(true);
 
     getArticles()
       .then((items) => {
         if (!active) return;
         setArticles(items);
+        setError("");
       })
       .catch((err: Error) => {
         if (!active) return;
         setError(err.message);
+      })
+      .finally(() => {
+        if (!active) return;
+        setIsLoading(false);
       });
 
     return () => {
@@ -55,6 +62,7 @@ export default function AdminDashboard() {
             This console keeps article metadata, scheduling, and long-form writing in one place so new entries can move
             from draft to release without losing the tone of the publication.
           </p>
+          {isLoading ? <p className="mt-4 text-sm text-primary/50">Loading editorial metrics...</p> : null}
           {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
         </div>
       </motion.section>
@@ -81,6 +89,14 @@ export default function AdminDashboard() {
             </Link>
           </div>
           <div className="divide-y divide-outline-variant/10">
+            {!isLoading && !recentArticles.length ? (
+              <div className="px-6 py-10 text-center">
+                <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary/35">No activity yet</p>
+                <p className="mt-3 text-sm text-on-surface-variant">
+                  Create the first article to start the editorial timeline.
+                </p>
+              </div>
+            ) : null}
             {recentArticles.map((article) => (
               <Link
                 key={article.id}

@@ -1,9 +1,45 @@
-import { CASE_STUDIES, LATEST_ADDITIONS } from "../constants";
-import CaseStudyCard from "../components/CaseStudyCard";
-import MiniCard from "../components/MiniCard";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
+import ArticleCard from "../components/ArticleCard";
+import ArticleMiniCard from "../components/ArticleMiniCard";
+import { getArticles } from "../services/articles";
+import { Article } from "../types";
 
 export default function Home() {
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    setIsLoading(true);
+    getArticles()
+      .then((items) => {
+        if (!active) return;
+        setArticles(items);
+        setError("");
+      })
+      .catch((err: Error) => {
+        if (!active) return;
+        setError(err.message);
+      })
+      .finally(() => {
+        if (!active) return;
+        setIsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const publishedArticles = useMemo(
+    () => articles.filter((article) => article.status === "Published"),
+    [articles],
+  );
+  const featuredArticles = publishedArticles.slice(0, 4);
+  const latestArticles = publishedArticles.slice(0, 4);
+
   return (
     <div className="pt-32 pb-20 max-w-[1440px] mx-auto px-8">
       {/* Hero Section */}
@@ -30,43 +66,51 @@ export default function Home() {
             transition={{ delay: 0.2 }}
             className="text-lg text-primary/60 leading-relaxed max-w-xl"
           >
-            Discover great design, rebuild it in SwiftUI, study code and prompts. A curated engineering journal for the modern Apple ecosystem.
+            Discover great SwiftUI builds, study implementation notes, and reuse the prompts behind the craft. A curated archive for the modern Apple ecosystem.
           </motion.p>
+          {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
         </div>
       </section>
 
-      {/* Filter Bar */}
+      {/* Archive Intro */}
       <section className="mb-16 border-t border-b border-outline-variant/15 py-8">
         <div className="flex flex-col gap-6">
           <div className="flex flex-wrap items-center gap-3">
-            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/40 mr-4">Categories</span>
-            <button className="bg-primary text-white px-4 py-1.5 font-mono text-xs uppercase tracking-widest">All</button>
-            {["Onboarding", "Cards", "Paywalls", "Dashboards", "Settings", "Charts"].map(cat => (
-              <button key={cat} className="bg-surface-container-low text-primary px-4 py-1.5 font-mono text-xs uppercase tracking-widest hover:bg-surface-dim transition-colors">
-                {cat}
-              </button>
+            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/40 mr-4">Published Entries</span>
+            <span className="bg-primary text-white px-4 py-1.5 font-mono text-xs uppercase tracking-widest">
+              {publishedArticles.length} Live
+            </span>
+            {Array.from(new Set(publishedArticles.map((article) => article.category))).slice(0, 5).map((category) => (
+              <span key={category} className="bg-surface-container-low text-primary px-4 py-1.5 font-mono text-xs uppercase tracking-widest">
+                {category}
+              </span>
             ))}
           </div>
           <div className="flex flex-wrap items-center gap-6">
-            {["Platform", "Animation", "Complexity", "Interaction"].map(filter => (
-              <div key={filter} className="flex items-center gap-2 group cursor-pointer">
-                <span className="font-mono text-[10px] uppercase tracking-widest text-primary/40 group-hover:text-primary transition-colors">{filter}</span>
-                <svg className="w-3 h-3 text-primary/40 group-hover:text-primary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            ))}
+            <span className="font-mono text-[10px] uppercase tracking-widest text-primary/40">
+              Public content is now driven by the same article records managed in the editorial console.
+            </span>
           </div>
         </div>
       </section>
 
-      {/* Case Studies Grid */}
-      <section className="mb-32">
+      {/* Archive Grid */}
+      <section id="archive-index" className="mb-32">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-          {CASE_STUDIES.map(cs => (
-            <CaseStudyCard key={cs.id} caseStudy={cs} />
+          {featuredArticles.map((article) => (
+            <ArticleCard key={article.id} article={article} />
           ))}
         </div>
+        {isLoading ? <p className="mt-8 text-sm text-primary/50">Loading published entries...</p> : null}
+        {!isLoading && !error && !featuredArticles.length ? (
+          <div className="mt-8 border border-dashed border-outline-variant/20 bg-surface-container-lowest px-6 py-12 text-center">
+            <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary/35">No published entries</p>
+            <h2 className="mt-4 text-2xl font-bold tracking-tight">The public archive is still warming up</h2>
+            <p className="mt-3 text-sm text-on-surface-variant">
+              Publish the first article from the editorial console and it will appear here automatically.
+            </p>
+          </div>
+        ) : null}
       </section>
 
       {/* Methodology Section */}
@@ -84,19 +128,22 @@ export default function Home() {
       </section>
 
       {/* Latest Additions */}
-      <section className="mb-32">
+      <section id="latest-additions" className="mb-32">
         <div className="flex justify-between items-end mb-12">
           <div>
             <h2 className="text-3xl font-black tracking-tighter uppercase mb-2">Latest Additions</h2>
             <p className="text-primary/40">Recent entries to the digital technical archive.</p>
           </div>
-          <a href="#" className="font-mono text-xs font-bold uppercase tracking-widest border-b border-primary pb-1">View Archive</a>
+          <a href="/#archive-index" className="font-mono text-xs font-bold uppercase tracking-widest border-b border-primary pb-1">Jump to Archive</a>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {LATEST_ADDITIONS.map(cs => (
-            <MiniCard key={cs.id} caseStudy={cs} />
+          {latestArticles.map((article) => (
+            <ArticleMiniCard key={article.id} article={article} />
           ))}
         </div>
+        {!isLoading && !error && !latestArticles.length ? (
+          <p className="mt-8 text-sm text-on-surface-variant">Freshly published entries will show up here as the archive grows.</p>
+        ) : null}
       </section>
 
       {/* Subscribe Section */}

@@ -111,6 +111,7 @@ bash scripts/build.sh
 bash scripts/start.sh
 make dev
 make stop
+make logs
 ```
 
 Default ports:

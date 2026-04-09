@@ -27,6 +27,10 @@ export function getArticleById(id: string) {
   return request<Article>(`/api/articles/${id}`);
 }
 
+export function getArticleBySlug(slug: string) {
+  return request<Article>(`/api/articles/slug/${slug}`);
+}
+
 export function createArticle(payload: ArticlePayload) {
   return request<Article>("/api/admin/articles", {
     method: "POST",
@@ -45,4 +49,21 @@ export function publishArticle(id: string) {
   return request<Article>(`/api/admin/articles/${id}/publish`, {
     method: "POST",
   });
+}
+
+export function unpublishArticle(id: string) {
+  return request<Article>(`/api/admin/articles/${id}/unpublish`, {
+    method: "POST",
+  });
+}
+
+export async function deleteArticle(id: string) {
+  const response = await fetch(`${API_BASE}/api/admin/articles/${id}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    throw new Error(body?.error ?? `Request failed with status ${response.status}`);
+  }
 }

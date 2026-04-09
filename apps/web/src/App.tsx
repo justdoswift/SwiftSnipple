@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
-import CaseStudyDetail from "./pages/CaseStudyDetail";
+import ArticleDetail from "./pages/ArticleDetail";
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminArticles from "./pages/admin/AdminArticles";
@@ -37,12 +37,12 @@ export default function App() {
           }
         />
         <Route
-          path="/case-study/:id"
+          path="/articles/:slug"
           element={
             <div className="min-h-screen flex flex-col">
               <Navbar />
               <main className="flex-grow">
-                <CaseStudyDetail />
+                <ArticleDetail />
               </main>
               <Footer />
             </div>

@@ -19,6 +19,7 @@ function formatDate(value: string | null) {
 export default function AdminArticles() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const categories = Array.from(new Set(articles.map((article) => article.category)));
   const [statusFilter, setStatusFilter] = useState<ArticleStatus | "All">("All");
   const [categoryFilter, setCategoryFilter] = useState<string>("All");
@@ -26,15 +27,21 @@ export default function AdminArticles() {
 
   useEffect(() => {
     let active = true;
+    setIsLoading(true);
 
     getArticles()
       .then((items) => {
         if (!active) return;
         setArticles(items);
+        setError("");
       })
       .catch((err: Error) => {
         if (!active) return;
         setError(err.message);
+      })
+      .finally(() => {
+        if (!active) return;
+        setIsLoading(false);
       });
 
     return () => {
@@ -65,6 +72,7 @@ export default function AdminArticles() {
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-on-surface-variant">
             Filter by workflow stage, search by title, and jump straight into editing without leaving the archive context.
           </p>
+          {isLoading ? <p className="mt-4 text-sm text-primary/50">Loading article index...</p> : null}
           {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
         </div>
         <Link
@@ -113,6 +121,15 @@ export default function AdminArticles() {
       </section>
 
       <section className="mt-8 grid gap-6">
+        {!isLoading && !error && !articles.length ? (
+          <div className="border border-dashed border-outline-variant/20 bg-surface-container-lowest px-6 py-12 text-center">
+            <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary/35">No articles yet</p>
+            <h2 className="mt-4 text-2xl font-bold tracking-tight">Start the first archive entry</h2>
+            <p className="mt-3 text-sm text-on-surface-variant">
+              The publishing index will populate as soon as the first article is created.
+            </p>
+          </div>
+        ) : null}
         {filteredArticles.map((article) => (
           <Link
             key={article.id}

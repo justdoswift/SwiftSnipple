@@ -13,11 +13,11 @@ export default function Navbar() {
           <Link to="/" className="text-primary border-b border-primary pb-1 transition-colors duration-200">
             Browse
           </Link>
-          <a href="/#archive-index" className="text-primary/60 hover:text-primary transition-colors duration-200">
-            Archive
+          <a href="/#library-index" className="text-primary/60 hover:text-primary transition-colors duration-200">
+            Library
           </a>
           <a href="/#latest-additions" className="text-primary/60 hover:text-primary transition-colors duration-200">
-            Articles
+            Snippets
           </a>
           <a href="/#latest-additions" className="text-primary/60 hover:text-primary transition-colors duration-200">
             Latest
@@ -30,7 +30,7 @@ export default function Navbar() {
         <div className="flex items-center gap-6">
           <div className="hidden md:flex items-center bg-surface-container-low rounded-full px-4 py-1.5 gap-2 cursor-pointer">
             <Search className="w-4 h-4 text-on-surface-variant" />
-            <span className="text-[10px] font-mono uppercase tracking-widest text-on-surface-variant">Search Entries</span>
+            <span className="text-[10px] font-mono uppercase tracking-widest text-on-surface-variant">Search Snippets</span>
           </div>
           <Link
             to="/admin"

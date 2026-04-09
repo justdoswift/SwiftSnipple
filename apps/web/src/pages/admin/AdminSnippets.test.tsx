@@ -1,21 +1,21 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import AdminArticles from "./AdminArticles";
-import { getArticles } from "../../services/articles";
-import { Article } from "../../types";
+import AdminSnippets from "./AdminSnippets";
+import { getSnippets } from "../../services/snippets";
+import { Snippet } from "../../types";
 
-vi.mock("../../services/articles", () => ({
-  getArticles: vi.fn(),
+vi.mock("../../services/snippets", () => ({
+  getSnippets: vi.fn(),
 }));
 
-const mockedGetArticles = vi.mocked(getArticles);
+const mockedGetSnippets = vi.mocked(getSnippets);
 
-const baseArticle: Article = {
-  id: "article-1",
+const baseSnippet: Snippet = {
+  id: "snippet-1",
   title: "Prompt Studio",
   slug: "prompt-studio",
-  excerpt: "An editor-ready article.",
+  excerpt: "An editor-ready snippet.",
   category: "Workflow",
   tags: ["Prompting"],
   coverImage: "https://example.com/cover.jpg",
@@ -27,43 +27,43 @@ const baseArticle: Article = {
   publishedAt: null,
 };
 
-describe("AdminArticles", () => {
+describe("AdminSnippets", () => {
   beforeEach(() => {
-    mockedGetArticles.mockReset();
+    mockedGetSnippets.mockReset();
   });
 
-  it("shows the loading state before articles resolve", () => {
-    mockedGetArticles.mockImplementation(() => new Promise(() => {}));
+  it("shows the loading state before snippets resolve", () => {
+    mockedGetSnippets.mockImplementation(() => new Promise(() => {}));
 
     render(
       <MemoryRouter>
-        <AdminArticles />
+        <AdminSnippets />
       </MemoryRouter>,
     );
 
-    expect(screen.getByText("Loading article index...")).toBeInTheDocument();
+    expect(screen.getByText("Loading snippet library...")).toBeInTheDocument();
   });
 
-  it("shows a friendly empty state when the archive has no articles", async () => {
-    mockedGetArticles.mockResolvedValue([]);
+  it("shows a friendly empty state when the library has no snippets", async () => {
+    mockedGetSnippets.mockResolvedValue([]);
 
     render(
       <MemoryRouter>
-        <AdminArticles />
+        <AdminSnippets />
       </MemoryRouter>,
     );
 
     await waitFor(() => {
-      expect(screen.getByText("No articles yet")).toBeInTheDocument();
+      expect(screen.getByText("No snippets yet")).toBeInTheDocument();
     });
   });
 
   it("shows request errors explicitly", async () => {
-    mockedGetArticles.mockRejectedValue(new Error("backend offline"));
+    mockedGetSnippets.mockRejectedValue(new Error("backend offline"));
 
     render(
       <MemoryRouter>
-        <AdminArticles />
+        <AdminSnippets />
       </MemoryRouter>,
     );
 
@@ -72,12 +72,12 @@ describe("AdminArticles", () => {
     });
   });
 
-  it("renders article rows after loading", async () => {
-    mockedGetArticles.mockResolvedValue([baseArticle]);
+  it("renders snippet rows after loading", async () => {
+    mockedGetSnippets.mockResolvedValue([baseSnippet]);
 
     render(
       <MemoryRouter>
-        <AdminArticles />
+        <AdminSnippets />
       </MemoryRouter>,
     );
 

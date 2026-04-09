@@ -1,14 +1,8 @@
-FROM node:20-alpine AS build
+FROM caddy:2.10-alpine
 
-WORKDIR /app
-COPY apps/web/package.json apps/web/package-lock.json ./
-RUN echo "[web build] installing npm dependencies" && \
-    npm ci
+WORKDIR /srv
 
-COPY apps/web ./
-RUN echo "[web build] creating production bundle" && \
-    npm run build
+COPY apps/web/Caddyfile /etc/caddy/Caddyfile
+COPY apps/web/dist /srv
 
 EXPOSE 3000
-
-CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "3000"]

@@ -4,10 +4,10 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import EditorSection from "../../components/admin/EditorSection";
 import MarkdownPreview from "../../components/admin/MarkdownPreview";
 import StatusBadge from "../../components/admin/StatusBadge";
-import { createArticle, deleteArticle, getArticleById, publishArticle, unpublishArticle, updateArticle } from "../../services/articles";
-import { Article, ArticleFormState, ArticlePayload, ArticleStatus } from "../../types";
+import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, unpublishSnippet, updateSnippet } from "../../services/snippets";
+import { Snippet, SnippetFormState, SnippetPayload, SnippetStatus } from "../../types";
 
-const STATUS_OPTIONS: ArticleStatus[] = ["Draft", "In Review", "Scheduled", "Published"];
+const STATUS_OPTIONS: SnippetStatus[] = ["Draft", "In Review", "Scheduled", "Published"];
 
 function slugify(value: string) {
   return value
@@ -32,7 +32,7 @@ function toDateTimeInputValue(value: string | null) {
   return formatter.format(date).replace(" ", "T");
 }
 
-function createEmptyArticle(): Article {
+function createEmptySnippet(): Snippet {
   return {
     id: "",
     title: "",
@@ -42,15 +42,15 @@ function createEmptyArticle(): Article {
     tags: [],
     coverImage:
       "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=80",
-    content: `# New Article
+    content: `# New Snippet
 
-Write the opening argument here.
+Show the implementation here.
 
-## Key ideas
+## Key points
 
 - add your first point
 - add supporting evidence
-- shape the final takeaway`,
+- explain what makes it useful`,
     seoTitle: "",
     seoDescription: "",
     status: "Draft",
@@ -59,23 +59,23 @@ Write the opening argument here.
   };
 }
 
-function toFormState(article: Article): ArticleFormState {
+function toFormState(snippet: Snippet): SnippetFormState {
   return {
-    title: article.title,
-    slug: article.slug,
-    excerpt: article.excerpt,
-    category: article.category,
-    tags: article.tags.join(", "),
-    coverImage: article.coverImage,
-    content: article.content,
-    seoTitle: article.seoTitle,
-    seoDescription: article.seoDescription,
-    status: article.status,
-    publishedAt: toDateTimeInputValue(article.publishedAt),
+    title: snippet.title,
+    slug: snippet.slug,
+    excerpt: snippet.excerpt,
+    category: snippet.category,
+    tags: snippet.tags.join(", "),
+    coverImage: snippet.coverImage,
+    content: snippet.content,
+    seoTitle: snippet.seoTitle,
+    seoDescription: snippet.seoDescription,
+    status: snippet.status,
+    publishedAt: toDateTimeInputValue(snippet.publishedAt),
   };
 }
 
-function fromFormState(baseArticle: Article, form: ArticleFormState): Article {
+function fromFormState(baseSnippet: Snippet, form: SnippetFormState): Snippet {
   const publishedAt =
     form.status === "Published" || form.status === "Scheduled"
       ? form.publishedAt
@@ -84,9 +84,9 @@ function fromFormState(baseArticle: Article, form: ArticleFormState): Article {
       : null;
 
   return {
-    ...baseArticle,
-    title: form.title.trim() || "Untitled Article",
-    slug: form.slug.trim() || slugify(form.title || "untitled-article"),
+    ...baseSnippet,
+    title: form.title.trim() || "Untitled Snippet",
+    slug: form.slug.trim() || slugify(form.title || "untitled-snippet"),
     excerpt: form.excerpt.trim(),
     category: form.category.trim() || "Workflow",
     tags: form.tags
@@ -103,28 +103,28 @@ function fromFormState(baseArticle: Article, form: ArticleFormState): Article {
   };
 }
 
-function toArticlePayload(article: Article): ArticlePayload {
+function toSnippetPayload(snippet: Snippet): SnippetPayload {
   return {
-    title: article.title,
-    slug: article.slug,
-    excerpt: article.excerpt,
-    category: article.category,
-    tags: article.tags,
-    coverImage: article.coverImage,
-    content: article.content,
-    seoTitle: article.seoTitle,
-    seoDescription: article.seoDescription,
-    status: article.status,
-    publishedAt: article.publishedAt,
+    title: snippet.title,
+    slug: snippet.slug,
+    excerpt: snippet.excerpt,
+    category: snippet.category,
+    tags: snippet.tags,
+    coverImage: snippet.coverImage,
+    content: snippet.content,
+    seoTitle: snippet.seoTitle,
+    seoDescription: snippet.seoDescription,
+    status: snippet.status,
+    publishedAt: snippet.publishedAt,
   };
 }
 
-export default function AdminArticleEditor() {
+export default function AdminSnippetEditor() {
   const { id } = useParams();
   const navigate = useNavigate();
   const isNew = id === undefined;
-  const [baseArticle, setBaseArticle] = useState<Article>(createEmptyArticle());
-  const [form, setForm] = useState<ArticleFormState>(() => toFormState(createEmptyArticle()));
+  const [baseSnippet, setBaseSnippet] = useState<Snippet>(createEmptySnippet());
+  const [form, setForm] = useState<SnippetFormState>(() => toFormState(createEmptySnippet()));
   const [saveLabel, setSaveLabel] = useState("Save draft");
   const [isLoading, setIsLoading] = useState(!isNew);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -133,20 +133,20 @@ export default function AdminArticleEditor() {
 
   useEffect(() => {
     if (isNew || !id) {
-      const emptyArticle = createEmptyArticle();
-      setBaseArticle(emptyArticle);
-      setForm(toFormState(emptyArticle));
+      const emptySnippet = createEmptySnippet();
+      setBaseSnippet(emptySnippet);
+      setForm(toFormState(emptySnippet));
       setIsLoading(false);
       return;
     }
 
     let active = true;
     setIsLoading(true);
-    getArticleById(id)
-      .then((article) => {
+    getSnippetById(id)
+      .then((snippet) => {
         if (!active) return;
-        setBaseArticle(article);
-        setForm(toFormState(article));
+        setBaseSnippet(snippet);
+        setForm(toFormState(snippet));
         setError("");
         setFeedback("");
       })
@@ -164,9 +164,9 @@ export default function AdminArticleEditor() {
     };
   }, [id, isNew]);
 
-  const previewArticle = useMemo(() => fromFormState(baseArticle, form), [baseArticle, form]);
+  const previewSnippet = useMemo(() => fromFormState(baseSnippet, form), [baseSnippet, form]);
 
-  const updateField = <K extends keyof ArticleFormState>(field: K, value: ArticleFormState[K]) => {
+  const updateField = <K extends keyof SnippetFormState>(field: K, value: SnippetFormState[K]) => {
     setForm((current) => {
       if (field === "title" && (!current.slug || current.slug === slugify(current.title))) {
         return { ...current, title: String(value), slug: slugify(String(value)) };
@@ -175,71 +175,71 @@ export default function AdminArticleEditor() {
     });
   };
 
-  const handleSave = async (statusOverride?: ArticleStatus) => {
+  const handleSave = async (statusOverride?: SnippetStatus) => {
     try {
       setIsSubmitting(true);
       setError("");
       setFeedback("");
       const nextForm = statusOverride ? { ...form, status: statusOverride } : form;
-      const payload = toArticlePayload(fromFormState(baseArticle, nextForm));
+      const payload = toSnippetPayload(fromFormState(baseSnippet, nextForm));
 
-      const savedArticle = isNew ? await createArticle(payload) : await updateArticle(baseArticle.id, payload);
-      const finalArticle =
-        statusOverride === "Published" ? await publishArticle(savedArticle.id) : savedArticle;
+      const savedSnippet = isNew ? await createSnippet(payload) : await updateSnippet(baseSnippet.id, payload);
+      const finalSnippet =
+        statusOverride === "Published" ? await publishSnippet(savedSnippet.id) : savedSnippet;
 
-      setBaseArticle(finalArticle);
-      setForm(toFormState(finalArticle));
+      setBaseSnippet(finalSnippet);
+      setForm(toFormState(finalSnippet));
       setSaveLabel(statusOverride === "Published" ? "Published" : "Saved");
       setFeedback(
         statusOverride === "Published"
-          ? "Article published and now eligible for the public homepage."
-          : finalArticle.status === "Scheduled"
-            ? "Article saved in the schedule. It will stay off the public homepage until published."
+          ? "Snippet published and now eligible for the public homepage."
+          : finalSnippet.status === "Scheduled"
+            ? "Snippet saved in the schedule. It will stay off the public homepage until published."
             : "Changes saved successfully.",
       );
       window.setTimeout(() => setSaveLabel("Save draft"), 1800);
 
       if (isNew) {
-        navigate(`/admin/articles/${finalArticle.id}`, { replace: true });
+        navigate(`/admin/snippets/${finalSnippet.id}`, { replace: true });
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save article");
+      setError(err instanceof Error ? err.message : "Failed to save snippet");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleUnpublish = async () => {
-    if (!baseArticle.id) return;
+    if (!baseSnippet.id) return;
 
     try {
       setIsSubmitting(true);
       setError("");
       setFeedback("");
-      const article = await unpublishArticle(baseArticle.id);
-      setBaseArticle(article);
-      setForm(toFormState(article));
+      const snippet = await unpublishSnippet(baseSnippet.id);
+      setBaseSnippet(snippet);
+      setForm(toFormState(snippet));
       setSaveLabel("Unpublished");
-      setFeedback("Article moved back to draft and removed from the public archive.");
+      setFeedback("Snippet moved back to draft and removed from the public library.");
       window.setTimeout(() => setSaveLabel("Save draft"), 1800);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to unpublish article");
+      setError(err instanceof Error ? err.message : "Failed to unpublish snippet");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!baseArticle.id) return;
-    if (!window.confirm("Delete this article permanently?")) return;
+    if (!baseSnippet.id) return;
+    if (!window.confirm("Delete this snippet permanently?")) return;
 
     try {
       setIsSubmitting(true);
       setError("");
-      await deleteArticle(baseArticle.id);
-      navigate("/admin/articles");
+      await deleteSnippet(baseSnippet.id);
+      navigate("/admin/snippets");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete article");
+      setError(err instanceof Error ? err.message : "Failed to delete snippet");
     } finally {
       setIsSubmitting(false);
     }
@@ -250,22 +250,22 @@ export default function AdminArticleEditor() {
       <section className="flex flex-col gap-6 border-b border-outline-variant/10 pb-8 xl:flex-row xl:items-end xl:justify-between">
         <div className="max-w-3xl">
           <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary/40">
-            {isNew ? "New Entry" : "Article Editor"}
+            {isNew ? "New Snippet" : "Snippet Editor"}
           </p>
           <h1 className="mt-4 text-[2.75rem] font-black tracking-tighter leading-[0.94] md:text-[4rem]">
-            {isNew ? "Compose a fresh archive entry." : previewArticle.title}
+            {isNew ? "Compose a fresh showcase entry." : previewSnippet.title}
           </h1>
           <p className="mt-4 text-base leading-relaxed text-on-surface-variant">
-            Shape metadata, refine the Markdown body, and keep the preview visible so the final page stays intentional.
+            Shape the snippet metadata, refine the Markdown notes, and keep the preview visible so the final card stays intentional.
           </p>
-          {isLoading ? <p className="mt-4 text-sm text-primary/50">Loading article...</p> : null}
+          {isLoading ? <p className="mt-4 text-sm text-primary/50">Loading snippet...</p> : null}
           {feedback ? <p className="mt-4 text-sm text-emerald-700">{feedback}</p> : null}
           {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
         </div>
 
         <div className="flex flex-wrap gap-3">
           <Link
-            to="/admin/articles"
+            to="/admin/snippets"
             className="border border-outline-variant/15 bg-surface-container-lowest px-4 py-3 font-mono text-[10px] uppercase tracking-[0.2em] text-primary"
           >
             Back to list
@@ -309,8 +309,8 @@ export default function AdminArticleEditor() {
         <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
           <EditorSection
             eyebrow="Identity"
-            title="Article frame"
-            description="Set the foundational metadata that determines how the piece is indexed and discovered."
+            title="Snippet frame"
+            description="Set the foundational metadata that determines how the snippet is indexed, previewed, and discovered."
           >
             <div className="grid gap-5 md:grid-cols-2">
               <label className="grid gap-2 md:col-span-2">
@@ -368,8 +368,8 @@ export default function AdminArticleEditor() {
 
           <EditorSection
             eyebrow="Body"
-            title="Markdown manuscript"
-            description="Write in plain Markdown and let the preview keep rhythm, hierarchy, and spacing honest."
+            title="Markdown notes"
+            description="Write in plain Markdown and keep the preview honest while you shape the implementation notes."
           >
             <textarea
               value={form.content}
@@ -382,7 +382,7 @@ export default function AdminArticleEditor() {
           <EditorSection
             eyebrow="SEO"
             title="Search surface"
-            description="Shape how the article will read in search results and social previews."
+            description="Shape how the snippet will read in search results and social previews."
           >
             <div className="grid gap-5">
               <label className="grid gap-2">
@@ -415,14 +415,14 @@ export default function AdminArticleEditor() {
             <div className="space-y-5 px-6 py-6">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-on-surface-variant">Current status</span>
-                <StatusBadge status={previewArticle.status} />
+                <StatusBadge status={previewSnippet.status} />
               </div>
 
               <label className="grid gap-2">
                 <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/45">Status</span>
                 <select
                   value={form.status}
-                  onChange={(event) => updateField("status", event.target.value as ArticleStatus)}
+                  onChange={(event) => updateField("status", event.target.value as SnippetStatus)}
                   className="border border-outline-variant/10 bg-surface px-4 py-3 text-sm outline-none"
                 >
                   {STATUS_OPTIONS.map((status) => (
@@ -445,11 +445,11 @@ export default function AdminArticleEditor() {
 
               <div className="grid gap-3 bg-surface p-4">
                 <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/40">Slug Preview</p>
-                <p className="text-sm text-on-surface-variant">/articles/{previewArticle.slug || "untitled-article"}</p>
+                <p className="text-sm text-on-surface-variant">/snippets/{previewSnippet.slug || "untitled-snippet"}</p>
               </div>
 
               <p className="text-sm leading-relaxed text-on-surface-variant">
-                Scheduled entries stay inside the editorial workspace. Only articles with <span className="font-semibold text-primary">Published</span> status appear on the public homepage in this phase.
+                Scheduled entries stay inside the publishing workspace. Only snippets with <span className="font-semibold text-primary">Published</span> status appear on the public homepage in this phase.
               </p>
             </div>
           </section>
@@ -457,31 +457,31 @@ export default function AdminArticleEditor() {
           <section className="border border-outline-variant/15 bg-surface-container-lowest">
             <div className="border-b border-outline-variant/10 px-6 py-5">
               <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary/40">Live Preview</p>
-              <h2 className="mt-3 text-2xl font-bold tracking-tight">Editorial read</h2>
+              <h2 className="mt-3 text-2xl font-bold tracking-tight">Snippet preview</h2>
             </div>
             <div className="space-y-6 px-6 py-6">
               <div className="aspect-[16/10] overflow-hidden bg-surface-container-low">
                 <img
-                  src={previewArticle.coverImage}
-                  alt={previewArticle.title || "Article cover preview"}
+                  src={previewSnippet.coverImage}
+                  alt={previewSnippet.title || "Snippet cover preview"}
                   className="h-full w-full object-cover"
                   referrerPolicy="no-referrer"
                 />
               </div>
 
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary/40">{previewArticle.category}</p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary/40">{previewSnippet.category}</p>
                 <h3 className="mt-3 text-3xl font-black tracking-tighter leading-tight">
-                  {previewArticle.title || "Untitled Article"}
+                  {previewSnippet.title || "Untitled Snippet"}
                 </h3>
                 <p className="mt-4 text-sm leading-7 text-on-surface-variant">
-                  {previewArticle.excerpt || "Your excerpt will appear here once written."}
+                  {previewSnippet.excerpt || "Your excerpt will appear here once written."}
                 </p>
               </div>
 
               <div className="flex flex-wrap gap-2">
-                {previewArticle.tags.length ? (
-                  previewArticle.tags.map((tag) => (
+                {previewSnippet.tags.length ? (
+                  previewSnippet.tags.map((tag) => (
                     <span
                       key={tag}
                       className="bg-surface-container-low px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-primary/60"
@@ -495,7 +495,7 @@ export default function AdminArticleEditor() {
               </div>
 
               <div className="border-t border-outline-variant/10 pt-6">
-                <MarkdownPreview content={previewArticle.content} />
+                <MarkdownPreview content={previewSnippet.content} />
               </div>
             </div>
           </section>

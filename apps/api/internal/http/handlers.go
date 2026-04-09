@@ -16,20 +16,20 @@ type dbPinger interface {
 	Ping(ctx context.Context) error
 }
 
-type articleStore interface {
-	List(ctx context.Context) ([]domain.Article, error)
-	GetByID(ctx context.Context, id string) (domain.Article, error)
-	GetBySlug(ctx context.Context, slug string) (domain.Article, error)
-	Create(ctx context.Context, payload domain.ArticlePayload) (domain.Article, error)
-	Update(ctx context.Context, id string, payload domain.ArticlePayload) (domain.Article, error)
-	Publish(ctx context.Context, id string) (domain.Article, error)
-	Unpublish(ctx context.Context, id string) (domain.Article, error)
+type snippetStore interface {
+	List(ctx context.Context) ([]domain.Snippet, error)
+	GetByID(ctx context.Context, id string) (domain.Snippet, error)
+	GetBySlug(ctx context.Context, slug string) (domain.Snippet, error)
+	Create(ctx context.Context, payload domain.SnippetPayload) (domain.Snippet, error)
+	Update(ctx context.Context, id string, payload domain.SnippetPayload) (domain.Snippet, error)
+	Publish(ctx context.Context, id string) (domain.Snippet, error)
+	Unpublish(ctx context.Context, id string) (domain.Snippet, error)
 	Delete(ctx context.Context, id string) error
 }
 
 type Handler struct {
 	db       dbPinger
-	articles articleStore
+	snippets snippetStore
 }
 
 func (h *Handler) Healthz(w http.ResponseWriter, r *http.Request) {
@@ -41,110 +41,110 @@ func (h *Handler) Healthz(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
-func (h *Handler) ListArticles(w http.ResponseWriter, r *http.Request) {
-	articles, err := h.articles.List(r.Context())
+func (h *Handler) ListSnippets(w http.ResponseWriter, r *http.Request) {
+	snippets, err := h.snippets.List(r.Context())
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to list articles"})
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to list snippets"})
 		return
 	}
 
-	writeJSON(w, http.StatusOK, articles)
+	writeJSON(w, http.StatusOK, snippets)
 }
 
-func (h *Handler) GetArticle(w http.ResponseWriter, r *http.Request) {
-	article, err := h.articles.GetByID(r.Context(), chi.URLParam(r, "id"))
-	if err != nil {
-		if errors.Is(err, repo.ErrNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "article not found"})
-			return
-		}
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to fetch article"})
-		return
-	}
-
-	writeJSON(w, http.StatusOK, article)
-}
-
-func (h *Handler) GetArticleBySlug(w http.ResponseWriter, r *http.Request) {
-	article, err := h.articles.GetBySlug(r.Context(), chi.URLParam(r, "slug"))
+func (h *Handler) GetSnippet(w http.ResponseWriter, r *http.Request) {
+	snippet, err := h.snippets.GetByID(r.Context(), chi.URLParam(r, "id"))
 	if err != nil {
 		if errors.Is(err, repo.ErrNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "article not found"})
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "snippet not found"})
 			return
 		}
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to fetch article"})
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to fetch snippet"})
 		return
 	}
 
-	writeJSON(w, http.StatusOK, article)
+	writeJSON(w, http.StatusOK, snippet)
 }
 
-func (h *Handler) CreateArticle(w http.ResponseWriter, r *http.Request) {
-	payload, ok := decodePayload(w, r)
+func (h *Handler) GetSnippetBySlug(w http.ResponseWriter, r *http.Request) {
+	snippet, err := h.snippets.GetBySlug(r.Context(), chi.URLParam(r, "slug"))
+	if err != nil {
+		if errors.Is(err, repo.ErrNotFound) {
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "snippet not found"})
+			return
+		}
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to fetch snippet"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, snippet)
+}
+
+func (h *Handler) CreateSnippet(w http.ResponseWriter, r *http.Request) {
+	payload, ok := decodeSnippetPayload(w, r)
 	if !ok {
 		return
 	}
 
-	article, err := h.articles.Create(r.Context(), payload)
+	snippet, err := h.snippets.Create(r.Context(), payload)
 	if err != nil {
 		writeRepositoryError(w, err)
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, article)
+	writeJSON(w, http.StatusCreated, snippet)
 }
 
-func (h *Handler) UpdateArticle(w http.ResponseWriter, r *http.Request) {
-	payload, ok := decodePayload(w, r)
+func (h *Handler) UpdateSnippet(w http.ResponseWriter, r *http.Request) {
+	payload, ok := decodeSnippetPayload(w, r)
 	if !ok {
 		return
 	}
 
-	article, err := h.articles.Update(r.Context(), chi.URLParam(r, "id"), payload)
+	snippet, err := h.snippets.Update(r.Context(), chi.URLParam(r, "id"), payload)
 	if err != nil {
 		if errors.Is(err, repo.ErrNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "article not found"})
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "snippet not found"})
 			return
 		}
 		writeRepositoryError(w, err)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, article)
+	writeJSON(w, http.StatusOK, snippet)
 }
 
-func (h *Handler) PublishArticle(w http.ResponseWriter, r *http.Request) {
-	article, err := h.articles.Publish(r.Context(), chi.URLParam(r, "id"))
+func (h *Handler) PublishSnippet(w http.ResponseWriter, r *http.Request) {
+	snippet, err := h.snippets.Publish(r.Context(), chi.URLParam(r, "id"))
 	if err != nil {
 		if errors.Is(err, repo.ErrNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "article not found"})
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "snippet not found"})
 			return
 		}
 		writeRepositoryError(w, err)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, article)
+	writeJSON(w, http.StatusOK, snippet)
 }
 
-func (h *Handler) UnpublishArticle(w http.ResponseWriter, r *http.Request) {
-	article, err := h.articles.Unpublish(r.Context(), chi.URLParam(r, "id"))
+func (h *Handler) UnpublishSnippet(w http.ResponseWriter, r *http.Request) {
+	snippet, err := h.snippets.Unpublish(r.Context(), chi.URLParam(r, "id"))
 	if err != nil {
 		if errors.Is(err, repo.ErrNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "article not found"})
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "snippet not found"})
 			return
 		}
 		writeRepositoryError(w, err)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, article)
+	writeJSON(w, http.StatusOK, snippet)
 }
 
-func (h *Handler) DeleteArticle(w http.ResponseWriter, r *http.Request) {
-	if err := h.articles.Delete(r.Context(), chi.URLParam(r, "id")); err != nil {
+func (h *Handler) DeleteSnippet(w http.ResponseWriter, r *http.Request) {
+	if err := h.snippets.Delete(r.Context(), chi.URLParam(r, "id")); err != nil {
 		if errors.Is(err, repo.ErrNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "article not found"})
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "snippet not found"})
 			return
 		}
 		writeRepositoryError(w, err)
@@ -154,24 +154,24 @@ func (h *Handler) DeleteArticle(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func decodePayload(w http.ResponseWriter, r *http.Request) (domain.ArticlePayload, bool) {
-	var payload domain.ArticlePayload
+func decodeSnippetPayload(w http.ResponseWriter, r *http.Request) (domain.SnippetPayload, bool) {
+	var payload domain.SnippetPayload
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 
 	if err := decoder.Decode(&payload); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": describeDecodeError(err)})
-		return domain.ArticlePayload{}, false
+		return domain.SnippetPayload{}, false
 	}
 
 	payload = payload.Normalize()
 	if strings.TrimSpace(payload.Title) == "" || strings.TrimSpace(payload.Slug) == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "title and slug are required"})
-		return domain.ArticlePayload{}, false
+		return domain.SnippetPayload{}, false
 	}
 	if !domain.IsValidStatus(payload.Status) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid status"})
-		return domain.ArticlePayload{}, false
+		return domain.SnippetPayload{}, false
 	}
 
 	return payload, true

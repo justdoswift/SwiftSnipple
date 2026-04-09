@@ -1,14 +1,13 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate, useParams } from "react-router-dom";
 import { useEffect } from "react";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
-import ArticleDetail from "./pages/ArticleDetail";
+import SnippetDetail from "./pages/SnippetDetail";
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminArticles from "./pages/admin/AdminArticles";
-import AdminArticleEditor from "./pages/admin/AdminArticleEditor";
-
+import AdminSnippets from "./pages/admin/AdminSnippets";
+import AdminSnippetEditor from "./pages/admin/AdminSnippetEditor";
 function ScrollToTop() {
   const { pathname } = useLocation();
 
@@ -17,6 +16,16 @@ function ScrollToTop() {
   }, [pathname]);
 
   return null;
+}
+
+function LegacySnippetRedirect() {
+  const { slug } = useParams();
+  return <Navigate to={slug ? `/snippets/${slug}` : "/"} replace />;
+}
+
+function LegacyAdminSnippetRedirect() {
+  const { id } = useParams();
+  return <Navigate to={id ? `/admin/snippets/${id}` : "/admin/snippets"} replace />;
 }
 
 export default function App() {
@@ -37,22 +46,26 @@ export default function App() {
           }
         />
         <Route
-          path="/articles/:slug"
+          path="/snippets/:slug"
           element={
             <div className="min-h-screen flex flex-col">
               <Navbar />
               <main className="flex-grow">
-                <ArticleDetail />
+                <SnippetDetail />
               </main>
               <Footer />
             </div>
           }
         />
+        <Route path="/articles/:slug" element={<LegacySnippetRedirect />} />
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
-          <Route path="articles" element={<AdminArticles />} />
-          <Route path="articles/new" element={<AdminArticleEditor />} />
-          <Route path="articles/:id" element={<AdminArticleEditor />} />
+          <Route path="articles" element={<Navigate to="/admin/snippets" replace />} />
+          <Route path="articles/new" element={<Navigate to="/admin/snippets/new" replace />} />
+          <Route path="articles/:id" element={<LegacyAdminSnippetRedirect />} />
+          <Route path="snippets" element={<AdminSnippets />} />
+          <Route path="snippets/new" element={<AdminSnippetEditor />} />
+          <Route path="snippets/:id" element={<AdminSnippetEditor />} />
         </Route>
       </Routes>
     </Router>

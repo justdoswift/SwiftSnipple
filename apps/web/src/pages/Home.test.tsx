@@ -2,20 +2,20 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Home from "./Home";
-import { getArticles } from "../services/articles";
-import { Article } from "../types";
+import { getSnippets } from "../services/snippets";
+import { Snippet } from "../types";
 
-vi.mock("../services/articles", () => ({
-  getArticles: vi.fn(),
+vi.mock("../services/snippets", () => ({
+  getSnippets: vi.fn(),
 }));
 
-const mockedGetArticles = vi.mocked(getArticles);
+const mockedGetSnippets = vi.mocked(getSnippets);
 
-const publishedArticle: Article = {
-  id: "article-1",
+const publishedSnippet: Snippet = {
+  id: "snippet-1",
   title: "Glass Navigation",
   slug: "glass-navigation",
-  excerpt: "A published article for the homepage.",
+  excerpt: "A published snippet for the homepage.",
   category: "Navigation",
   tags: ["SwiftUI"],
   coverImage: "https://example.com/cover.jpg",
@@ -29,13 +29,13 @@ const publishedArticle: Article = {
 
 describe("Home", () => {
   beforeEach(() => {
-    mockedGetArticles.mockReset();
+    mockedGetSnippets.mockReset();
   });
 
-  it("renders published articles from the API", async () => {
-    mockedGetArticles.mockResolvedValue([
-      publishedArticle,
-      { ...publishedArticle, id: "article-2", slug: "draft-entry", title: "Draft Entry", status: "Draft" },
+  it("renders published snippets from the API", async () => {
+    mockedGetSnippets.mockResolvedValue([
+      publishedSnippet,
+      { ...publishedSnippet, id: "snippet-2", slug: "draft-entry", title: "Draft Entry", status: "Draft" },
     ]);
 
     render(
@@ -44,7 +44,7 @@ describe("Home", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText("Loading published entries...")).toBeInTheDocument();
+    expect(screen.getByText("Loading published snippets...")).toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getAllByText("Glass Navigation")).toHaveLength(2);

@@ -23,56 +23,56 @@ func (f fakePinger) Ping(context.Context) error {
 	return f.err
 }
 
-type fakeArticleStore struct {
-	articles       map[string]domain.Article
-	articlesBySlug map[string]string
+type fakeSnippetStore struct {
+	snippets       map[string]domain.Snippet
+	snippetsBySlug map[string]string
 	duplicateSlug  string
 }
 
-func newFakeArticleStore(items ...domain.Article) *fakeArticleStore {
-	store := &fakeArticleStore{
-		articles:       map[string]domain.Article{},
-		articlesBySlug: map[string]string{},
+func newFakeSnippetStore(items ...domain.Snippet) *fakeSnippetStore {
+	store := &fakeSnippetStore{
+		snippets:       map[string]domain.Snippet{},
+		snippetsBySlug: map[string]string{},
 	}
 
-	for _, article := range items {
-		store.articles[article.ID] = article
-		store.articlesBySlug[article.Slug] = article.ID
+	for _, snippet := range items {
+		store.snippets[snippet.ID] = snippet
+		store.snippetsBySlug[snippet.Slug] = snippet.ID
 	}
 
 	return store
 }
 
-func (f *fakeArticleStore) List(context.Context) ([]domain.Article, error) {
-	articles := make([]domain.Article, 0, len(f.articles))
-	for _, article := range f.articles {
-		articles = append(articles, article)
+func (f *fakeSnippetStore) List(context.Context) ([]domain.Snippet, error) {
+	snippets := make([]domain.Snippet, 0, len(f.snippets))
+	for _, snippet := range f.snippets {
+		snippets = append(snippets, snippet)
 	}
-	return articles, nil
+	return snippets, nil
 }
 
-func (f *fakeArticleStore) GetByID(_ context.Context, id string) (domain.Article, error) {
-	article, ok := f.articles[id]
+func (f *fakeSnippetStore) GetByID(_ context.Context, id string) (domain.Snippet, error) {
+	snippet, ok := f.snippets[id]
 	if !ok {
-		return domain.Article{}, repo.ErrNotFound
+		return domain.Snippet{}, repo.ErrNotFound
 	}
-	return article, nil
+	return snippet, nil
 }
 
-func (f *fakeArticleStore) GetBySlug(_ context.Context, slug string) (domain.Article, error) {
-	id, ok := f.articlesBySlug[slug]
+func (f *fakeSnippetStore) GetBySlug(_ context.Context, slug string) (domain.Snippet, error) {
+	id, ok := f.snippetsBySlug[slug]
 	if !ok {
-		return domain.Article{}, repo.ErrNotFound
+		return domain.Snippet{}, repo.ErrNotFound
 	}
-	return f.articles[id], nil
+	return f.snippets[id], nil
 }
 
-func (f *fakeArticleStore) Create(_ context.Context, payload domain.ArticlePayload) (domain.Article, error) {
+func (f *fakeSnippetStore) Create(_ context.Context, payload domain.SnippetPayload) (domain.Snippet, error) {
 	if payload.Slug == f.duplicateSlug {
-		return domain.Article{}, errors.New("duplicate key value violates unique constraint")
+		return domain.Snippet{}, errors.New("duplicate key value violates unique constraint")
 	}
 
-	article := domain.Article{
+	snippet := domain.Snippet{
 		ID:             "new-id",
 		Title:          payload.Title,
 		Slug:           payload.Slug,
@@ -88,75 +88,75 @@ func (f *fakeArticleStore) Create(_ context.Context, payload domain.ArticlePaylo
 		PublishedAt:    payload.PublishedAt,
 	}
 
-	f.articles[article.ID] = article
-	f.articlesBySlug[article.Slug] = article.ID
-	return article, nil
+	f.snippets[snippet.ID] = snippet
+	f.snippetsBySlug[snippet.Slug] = snippet.ID
+	return snippet, nil
 }
 
-func (f *fakeArticleStore) Update(_ context.Context, id string, payload domain.ArticlePayload) (domain.Article, error) {
-	article, ok := f.articles[id]
+func (f *fakeSnippetStore) Update(_ context.Context, id string, payload domain.SnippetPayload) (domain.Snippet, error) {
+	snippet, ok := f.snippets[id]
 	if !ok {
-		return domain.Article{}, repo.ErrNotFound
+		return domain.Snippet{}, repo.ErrNotFound
 	}
-	if payload.Slug == f.duplicateSlug && payload.Slug != article.Slug {
-		return domain.Article{}, errors.New("duplicate key value violates unique constraint")
+	if payload.Slug == f.duplicateSlug && payload.Slug != snippet.Slug {
+		return domain.Snippet{}, errors.New("duplicate key value violates unique constraint")
 	}
 
-	article.Title = payload.Title
-	article.Slug = payload.Slug
-	article.Excerpt = payload.Excerpt
-	article.Category = payload.Category
-	article.Tags = payload.Tags
-	article.CoverImage = payload.CoverImage
-	article.Content = payload.Content
-	article.SEOTitle = payload.SEOTitle
-	article.SEODescription = payload.SEODescription
-	article.Status = payload.Status
-	article.PublishedAt = payload.PublishedAt
-	article.UpdatedAt = time.Now().UTC()
-	f.articles[id] = article
-	f.articlesBySlug[article.Slug] = id
+	snippet.Title = payload.Title
+	snippet.Slug = payload.Slug
+	snippet.Excerpt = payload.Excerpt
+	snippet.Category = payload.Category
+	snippet.Tags = payload.Tags
+	snippet.CoverImage = payload.CoverImage
+	snippet.Content = payload.Content
+	snippet.SEOTitle = payload.SEOTitle
+	snippet.SEODescription = payload.SEODescription
+	snippet.Status = payload.Status
+	snippet.PublishedAt = payload.PublishedAt
+	snippet.UpdatedAt = time.Now().UTC()
+	f.snippets[id] = snippet
+	f.snippetsBySlug[snippet.Slug] = id
 
-	return article, nil
+	return snippet, nil
 }
 
-func (f *fakeArticleStore) Publish(_ context.Context, id string) (domain.Article, error) {
-	article, ok := f.articles[id]
+func (f *fakeSnippetStore) Publish(_ context.Context, id string) (domain.Snippet, error) {
+	snippet, ok := f.snippets[id]
 	if !ok {
-		return domain.Article{}, repo.ErrNotFound
+		return domain.Snippet{}, repo.ErrNotFound
 	}
 	now := time.Now().UTC()
-	article.Status = domain.StatusPublished
-	article.PublishedAt = &now
-	f.articles[id] = article
-	return article, nil
+	snippet.Status = domain.StatusPublished
+	snippet.PublishedAt = &now
+	f.snippets[id] = snippet
+	return snippet, nil
 }
 
-func (f *fakeArticleStore) Unpublish(_ context.Context, id string) (domain.Article, error) {
-	article, ok := f.articles[id]
+func (f *fakeSnippetStore) Unpublish(_ context.Context, id string) (domain.Snippet, error) {
+	snippet, ok := f.snippets[id]
 	if !ok {
-		return domain.Article{}, repo.ErrNotFound
+		return domain.Snippet{}, repo.ErrNotFound
 	}
-	article.Status = domain.StatusDraft
-	article.PublishedAt = nil
-	f.articles[id] = article
-	return article, nil
+	snippet.Status = domain.StatusDraft
+	snippet.PublishedAt = nil
+	f.snippets[id] = snippet
+	return snippet, nil
 }
 
-func (f *fakeArticleStore) Delete(_ context.Context, id string) error {
-	article, ok := f.articles[id]
+func (f *fakeSnippetStore) Delete(_ context.Context, id string) error {
+	snippet, ok := f.snippets[id]
 	if !ok {
 		return repo.ErrNotFound
 	}
-	delete(f.articlesBySlug, article.Slug)
-	delete(f.articles, id)
+	delete(f.snippetsBySlug, snippet.Slug)
+	delete(f.snippets, id)
 	return nil
 }
 
-func TestArticleRoutesSuccess(t *testing.T) {
+func TestSnippetRoutesSuccess(t *testing.T) {
 	now := time.Now().UTC()
-	store := newFakeArticleStore(domain.Article{
-		ID:          "article-1",
+	store := newFakeSnippetStore(domain.Snippet{
+		ID:          "snippet-1",
 		Title:       "Glass Drawer Navigation",
 		Slug:        "glass-drawer-navigation",
 		Category:    "Navigation",
@@ -166,7 +166,7 @@ func TestArticleRoutesSuccess(t *testing.T) {
 	})
 	router := NewRouter(fakePinger{}, store)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/articles", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/snippets", nil)
 	rec := httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
 
@@ -174,14 +174,14 @@ func TestArticleRoutesSuccess(t *testing.T) {
 		t.Fatalf("expected list status 200, got %d", rec.Code)
 	}
 
-	req = httptest.NewRequest(http.MethodGet, "/api/articles/article-1", nil)
+	req = httptest.NewRequest(http.MethodGet, "/api/snippets/snippet-1", nil)
 	rec = httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected get-by-id status 200, got %d", rec.Code)
 	}
 
-	req = httptest.NewRequest(http.MethodGet, "/api/articles/slug/glass-drawer-navigation", nil)
+	req = httptest.NewRequest(http.MethodGet, "/api/snippets/slug/glass-drawer-navigation", nil)
 	rec = httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
 	if rec.Code != http.StatusOK {
@@ -190,7 +190,7 @@ func TestArticleRoutesSuccess(t *testing.T) {
 }
 
 func TestCreateValidationAndDuplicateErrors(t *testing.T) {
-	store := newFakeArticleStore()
+	store := newFakeSnippetStore()
 	store.duplicateSlug = "taken-slug"
 	router := NewRouter(fakePinger{}, store)
 
@@ -228,7 +228,7 @@ func TestCreateValidationAndDuplicateErrors(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodPost, "/api/admin/articles", strings.NewReader(tc.body))
+			req := httptest.NewRequest(http.MethodPost, "/api/admin/snippets", strings.NewReader(tc.body))
 			req.Header.Set("Content-Type", "application/json")
 			rec := httptest.NewRecorder()
 			router.ServeHTTP(rec, req)
@@ -245,8 +245,8 @@ func TestCreateValidationAndDuplicateErrors(t *testing.T) {
 
 func TestPublishUnpublishDeleteAndMissingRoutes(t *testing.T) {
 	now := time.Now().UTC()
-	store := newFakeArticleStore(domain.Article{
-		ID:          "article-1",
+	store := newFakeSnippetStore(domain.Snippet{
+		ID:          "snippet-1",
 		Title:       "Prompt Driven Layout",
 		Slug:        "prompt-driven-layout",
 		Status:      domain.StatusScheduled,
@@ -255,35 +255,35 @@ func TestPublishUnpublishDeleteAndMissingRoutes(t *testing.T) {
 	})
 	router := NewRouter(fakePinger{}, store)
 
-	req := httptest.NewRequest(http.MethodPost, "/api/admin/articles/article-1/publish", nil)
+	req := httptest.NewRequest(http.MethodPost, "/api/admin/snippets/snippet-1/publish", nil)
 	rec := httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected publish status 200, got %d", rec.Code)
 	}
 
-	req = httptest.NewRequest(http.MethodPost, "/api/admin/articles/article-1/unpublish", nil)
+	req = httptest.NewRequest(http.MethodPost, "/api/admin/snippets/snippet-1/unpublish", nil)
 	rec = httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected unpublish status 200, got %d", rec.Code)
 	}
 
-	req = httptest.NewRequest(http.MethodDelete, "/api/admin/articles/article-1", nil)
+	req = httptest.NewRequest(http.MethodDelete, "/api/admin/snippets/snippet-1", nil)
 	rec = httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
 	if rec.Code != http.StatusNoContent {
 		t.Fatalf("expected delete status 204, got %d", rec.Code)
 	}
 
-	req = httptest.NewRequest(http.MethodGet, "/api/articles/article-1", nil)
+	req = httptest.NewRequest(http.MethodGet, "/api/snippets/snippet-1", nil)
 	rec = httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
 	if rec.Code != http.StatusNotFound {
 		t.Fatalf("expected missing get status 404, got %d", rec.Code)
 	}
 
-	req = httptest.NewRequest(http.MethodDelete, "/api/admin/articles/missing", nil)
+	req = httptest.NewRequest(http.MethodDelete, "/api/admin/snippets/missing", nil)
 	rec = httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
 	if rec.Code != http.StatusNotFound {
@@ -292,7 +292,7 @@ func TestPublishUnpublishDeleteAndMissingRoutes(t *testing.T) {
 }
 
 func TestHealthz(t *testing.T) {
-	router := NewRouter(fakePinger{}, newFakeArticleStore())
+	router := NewRouter(fakePinger{}, newFakeSnippetStore())
 	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
 	rec := httptest.NewRecorder()
 	router.ServeHTTP(rec, req)

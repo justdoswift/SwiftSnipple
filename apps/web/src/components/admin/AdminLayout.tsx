@@ -27,9 +27,9 @@ export default function AdminLayout() {
         <div className="min-w-0">
           <header className="hidden border-b border-outline-variant/10 px-10 py-6 md:flex md:items-center md:justify-between">
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary/40">Publishing Workspace</p>
+              <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary/40">Snippet Workspace</p>
               <p className="mt-2 text-sm text-on-surface-variant">
-                Draft, review, schedule, and ship archive entries from one editorial surface.
+                Draft, stage, and publish SwiftUI snippets from one lightweight publishing surface.
               </p>
             </div>
             <Link

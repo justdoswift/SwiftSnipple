@@ -8,10 +8,10 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func NewRouter(pool dbPinger, articles articleStore) http.Handler {
+func NewRouter(pool dbPinger, snippets snippetStore) http.Handler {
 	handler := &Handler{
 		db:       pool,
-		articles: articles,
+		snippets: snippets,
 	}
 
 	router := chi.NewRouter()
@@ -24,16 +24,24 @@ func NewRouter(pool dbPinger, articles articleStore) http.Handler {
 	router.Get("/healthz", handler.Healthz)
 
 	router.Route("/api", func(r chi.Router) {
-		r.Get("/articles", handler.ListArticles)
-		r.Get("/articles/{id}", handler.GetArticle)
-		r.Get("/articles/slug/{slug}", handler.GetArticleBySlug)
+		r.Get("/snippets", handler.ListSnippets)
+		r.Get("/snippets/{id}", handler.GetSnippet)
+		r.Get("/snippets/slug/{slug}", handler.GetSnippetBySlug)
+		r.Get("/articles", handler.ListSnippets)
+		r.Get("/articles/{id}", handler.GetSnippet)
+		r.Get("/articles/slug/{slug}", handler.GetSnippetBySlug)
 
 		r.Route("/admin", func(admin chi.Router) {
-			admin.Post("/articles", handler.CreateArticle)
-			admin.Put("/articles/{id}", handler.UpdateArticle)
-			admin.Post("/articles/{id}/publish", handler.PublishArticle)
-			admin.Post("/articles/{id}/unpublish", handler.UnpublishArticle)
-			admin.Delete("/articles/{id}", handler.DeleteArticle)
+			admin.Post("/snippets", handler.CreateSnippet)
+			admin.Put("/snippets/{id}", handler.UpdateSnippet)
+			admin.Post("/snippets/{id}/publish", handler.PublishSnippet)
+			admin.Post("/snippets/{id}/unpublish", handler.UnpublishSnippet)
+			admin.Delete("/snippets/{id}", handler.DeleteSnippet)
+			admin.Post("/articles", handler.CreateSnippet)
+			admin.Put("/articles/{id}", handler.UpdateSnippet)
+			admin.Post("/articles/{id}/publish", handler.PublishSnippet)
+			admin.Post("/articles/{id}/unpublish", handler.UnpublishSnippet)
+			admin.Delete("/articles/{id}", handler.DeleteSnippet)
 		})
 	})
 

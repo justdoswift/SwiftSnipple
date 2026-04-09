@@ -30,7 +30,7 @@ func main() {
 	}
 	defer pool.Close()
 
-	router := httpapi.NewRouter(pool, repo.NewArticleRepository(pool))
+	router := httpapi.NewRouter(pool, repo.NewSnippetRepository(pool))
 	server := &http.Server{
 		Addr:              ":" + cfg.APIPort,
 		Handler:           router,

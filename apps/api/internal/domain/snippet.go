@@ -2,16 +2,16 @@ package domain
 
 import "time"
 
-type ArticleStatus string
+type SnippetStatus string
 
 const (
-	StatusDraft     ArticleStatus = "Draft"
-	StatusInReview  ArticleStatus = "In Review"
-	StatusScheduled ArticleStatus = "Scheduled"
-	StatusPublished ArticleStatus = "Published"
+	StatusDraft     SnippetStatus = "Draft"
+	StatusInReview  SnippetStatus = "In Review"
+	StatusScheduled SnippetStatus = "Scheduled"
+	StatusPublished SnippetStatus = "Published"
 )
 
-type Article struct {
+type Snippet struct {
 	ID             string        `json:"id"`
 	Title          string        `json:"title"`
 	Slug           string        `json:"slug"`
@@ -22,12 +22,12 @@ type Article struct {
 	Content        string        `json:"content"`
 	SEOTitle       string        `json:"seoTitle"`
 	SEODescription string        `json:"seoDescription"`
-	Status         ArticleStatus `json:"status"`
+	Status         SnippetStatus `json:"status"`
 	UpdatedAt      time.Time     `json:"updatedAt"`
 	PublishedAt    *time.Time    `json:"publishedAt"`
 }
 
-type ArticlePayload struct {
+type SnippetPayload struct {
 	Title          string        `json:"title"`
 	Slug           string        `json:"slug"`
 	Excerpt        string        `json:"excerpt"`
@@ -37,11 +37,11 @@ type ArticlePayload struct {
 	Content        string        `json:"content"`
 	SEOTitle       string        `json:"seoTitle"`
 	SEODescription string        `json:"seoDescription"`
-	Status         ArticleStatus `json:"status"`
+	Status         SnippetStatus `json:"status"`
 	PublishedAt    *time.Time    `json:"publishedAt"`
 }
 
-func (p ArticlePayload) Normalize() ArticlePayload {
+func (p SnippetPayload) Normalize() SnippetPayload {
 	if p.Category == "" {
 		p.Category = "Workflow"
 	}
@@ -55,7 +55,7 @@ func (p ArticlePayload) Normalize() ArticlePayload {
 	return p
 }
 
-func IsValidStatus(status ArticleStatus) bool {
+func IsValidStatus(status SnippetStatus) bool {
 	switch status {
 	case StatusDraft, StatusInReview, StatusScheduled, StatusPublished:
 		return true

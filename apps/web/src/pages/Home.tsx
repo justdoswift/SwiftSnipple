@@ -1,22 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
-import ArticleCard from "../components/ArticleCard";
-import ArticleMiniCard from "../components/ArticleMiniCard";
-import { getArticles } from "../services/articles";
-import { Article } from "../types";
+import SnippetCard from "../components/SnippetCard";
+import SnippetMiniCard from "../components/SnippetMiniCard";
+import { getSnippets } from "../services/snippets";
+import { Snippet } from "../types";
 
 export default function Home() {
-  const [articles, setArticles] = useState<Article[]>([]);
+  const [snippets, setSnippets] = useState<Snippet[]>([]);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
     setIsLoading(true);
-    getArticles()
+    getSnippets()
       .then((items) => {
         if (!active) return;
-        setArticles(items);
+        setSnippets(items);
         setError("");
       })
       .catch((err: Error) => {
@@ -33,12 +33,12 @@ export default function Home() {
     };
   }, []);
 
-  const publishedArticles = useMemo(
-    () => articles.filter((article) => article.status === "Published"),
-    [articles],
+  const publishedSnippets = useMemo(
+    () => snippets.filter((snippet) => snippet.status === "Published"),
+    [snippets],
   );
-  const featuredArticles = publishedArticles.slice(0, 4);
-  const latestArticles = publishedArticles.slice(0, 4);
+  const featuredSnippets = publishedSnippets.slice(0, 4);
+  const latestSnippets = publishedSnippets.slice(0, 4);
 
   return (
     <div className="pt-32 pb-20 max-w-[1440px] mx-auto px-8">
@@ -66,21 +66,21 @@ export default function Home() {
             transition={{ delay: 0.2 }}
             className="text-lg text-primary/60 leading-relaxed max-w-xl"
           >
-            Discover great SwiftUI builds, study implementation notes, and reuse the prompts behind the craft. A curated archive for the modern Apple ecosystem.
+            Discover fun and useful SwiftUI builds, grab implementation ideas quickly, and reuse the prompts behind the craft. A curated snippet library for the modern Apple ecosystem.
           </motion.p>
           {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
         </div>
       </section>
 
-      {/* Archive Intro */}
+      {/* Library Intro */}
       <section className="mb-16 border-t border-b border-outline-variant/15 py-8">
         <div className="flex flex-col gap-6">
           <div className="flex flex-wrap items-center gap-3">
-            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/40 mr-4">Published Entries</span>
+            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/40 mr-4">Published Snippets</span>
             <span className="bg-primary text-white px-4 py-1.5 font-mono text-xs uppercase tracking-widest">
-              {publishedArticles.length} Live
+              {publishedSnippets.length} Live
             </span>
-            {Array.from(new Set(publishedArticles.map((article) => article.category))).slice(0, 5).map((category) => (
+            {Array.from(new Set(publishedSnippets.map((snippet) => snippet.category))).slice(0, 5).map((category) => (
               <span key={category} className="bg-surface-container-low text-primary px-4 py-1.5 font-mono text-xs uppercase tracking-widest">
                 {category}
               </span>
@@ -88,26 +88,26 @@ export default function Home() {
           </div>
           <div className="flex flex-wrap items-center gap-6">
             <span className="font-mono text-[10px] uppercase tracking-widest text-primary/40">
-              Public content is now driven by the same article records managed in the editorial console.
+              Public content is driven by the same snippet records managed in the publishing console.
             </span>
           </div>
         </div>
       </section>
 
-      {/* Archive Grid */}
-      <section id="archive-index" className="mb-32">
+      {/* Library Grid */}
+      <section id="library-index" className="mb-32">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-          {featuredArticles.map((article) => (
-            <ArticleCard key={article.id} article={article} />
+          {featuredSnippets.map((snippet) => (
+            <SnippetCard key={snippet.id} snippet={snippet} />
           ))}
         </div>
-        {isLoading ? <p className="mt-8 text-sm text-primary/50">Loading published entries...</p> : null}
-        {!isLoading && !error && !featuredArticles.length ? (
+        {isLoading ? <p className="mt-8 text-sm text-primary/50">Loading published snippets...</p> : null}
+        {!isLoading && !error && !featuredSnippets.length ? (
           <div className="mt-8 border border-dashed border-outline-variant/20 bg-surface-container-lowest px-6 py-12 text-center">
-            <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary/35">No published entries</p>
-            <h2 className="mt-4 text-2xl font-bold tracking-tight">The public archive is still warming up</h2>
+            <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary/35">No published snippets</p>
+            <h2 className="mt-4 text-2xl font-bold tracking-tight">The public library is still warming up</h2>
             <p className="mt-3 text-sm text-on-surface-variant">
-              Publish the first article from the editorial console and it will appear here automatically.
+              Publish the first snippet from the admin console and it will appear here automatically.
             </p>
           </div>
         ) : null}
@@ -122,7 +122,7 @@ export default function Home() {
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-8 leading-tight">The Lab Methodology</h2>
           <div className="space-y-6 text-lg text-on-surface-variant leading-relaxed">
             <p>We don't just copy UI. We deconstruct the physics of high-end design to understand the intent behind every pixel, then translate that intent into performant, native SwiftUI code.</p>
-            <p>Every case study includes the original design reference, a full technical breakdown of the implementation, and the exact prompts used to bridge the gap between creative vision and technical execution.</p>
+            <p>Every featured snippet can include the original design reference, a short technical breakdown, and the prompts used to bridge the gap between creative vision and technical execution.</p>
           </div>
         </div>
       </section>
@@ -132,24 +132,24 @@ export default function Home() {
         <div className="flex justify-between items-end mb-12">
           <div>
             <h2 className="text-3xl font-black tracking-tighter uppercase mb-2">Latest Additions</h2>
-            <p className="text-primary/40">Recent entries to the digital technical archive.</p>
+            <p className="text-primary/40">Recent additions to the SwiftUI snippet library.</p>
           </div>
-          <a href="/#archive-index" className="font-mono text-xs font-bold uppercase tracking-widest border-b border-primary pb-1">Jump to Archive</a>
+          <a href="/#library-index" className="font-mono text-xs font-bold uppercase tracking-widest border-b border-primary pb-1">Jump to Library</a>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {latestArticles.map((article) => (
-            <ArticleMiniCard key={article.id} article={article} />
+          {latestSnippets.map((snippet) => (
+            <SnippetMiniCard key={snippet.id} snippet={snippet} />
           ))}
         </div>
-        {!isLoading && !error && !latestArticles.length ? (
-          <p className="mt-8 text-sm text-on-surface-variant">Freshly published entries will show up here as the archive grows.</p>
+        {!isLoading && !error && !latestSnippets.length ? (
+          <p className="mt-8 text-sm text-on-surface-variant">Freshly published snippets will show up here as the library grows.</p>
         ) : null}
       </section>
 
       {/* Subscribe Section */}
       <section className="bg-primary text-white p-12 md:p-24 flex flex-col items-center text-center">
-        <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-6">Join the Digital Archive</h2>
-        <p className="text-white/60 max-w-lg mb-10 leading-relaxed">Weekly case studies, exclusive prompts, and complete project files delivered to your inbox. No noise, just engineering.</p>
+        <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-6">Follow New Snippets</h2>
+        <p className="text-white/60 max-w-lg mb-10 leading-relaxed">Get fresh SwiftUI snippets, prompt ideas, and implementation notes as the library grows. No noise, just useful builds.</p>
         <div className="w-full max-w-md flex flex-col md:flex-row gap-4">
           <input 
             className="bg-primary-container border-b-2 border-white/20 text-white px-4 py-3 flex-grow focus:outline-none focus:border-white transition-colors" 

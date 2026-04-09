@@ -13,81 +13,81 @@ import (
 	"swiftsnipple/api/internal/domain"
 )
 
-var ErrNotFound = errors.New("article not found")
+var ErrNotFound = errors.New("snippet not found")
 
-type ArticleRepository struct {
+type SnippetRepository struct {
 	pool *pgxpool.Pool
 }
 
-func NewArticleRepository(pool *pgxpool.Pool) *ArticleRepository {
-	return &ArticleRepository{pool: pool}
+func NewSnippetRepository(pool *pgxpool.Pool) *SnippetRepository {
+	return &SnippetRepository{pool: pool}
 }
 
-func (r *ArticleRepository) List(ctx context.Context) ([]domain.Article, error) {
+func (r *SnippetRepository) List(ctx context.Context) ([]domain.Snippet, error) {
 	rows, err := r.pool.Query(ctx, `
 		SELECT id, title, slug, excerpt, category, tags, cover_image, content, seo_title, seo_description, status, updated_at, published_at
-		FROM articles
+		FROM snippets
 		ORDER BY updated_at DESC
 	`)
 	if err != nil {
-		return nil, fmt.Errorf("query articles: %w", err)
+		return nil, fmt.Errorf("query snippets: %w", err)
 	}
 	defer rows.Close()
 
-	var articles []domain.Article
+	var snippets []domain.Snippet
 	for rows.Next() {
-		article, err := scanArticle(rows)
+		snippet, err := scanSnippet(rows)
 		if err != nil {
 			return nil, err
 		}
-		articles = append(articles, article)
+		snippets = append(snippets, snippet)
 	}
 
-	return articles, rows.Err()
+	return snippets, rows.Err()
 }
 
-func (r *ArticleRepository) GetByID(ctx context.Context, id string) (domain.Article, error) {
+func (r *SnippetRepository) GetByID(ctx context.Context, id string) (domain.Snippet, error) {
 	row := r.pool.QueryRow(ctx, `
 		SELECT id, title, slug, excerpt, category, tags, cover_image, content, seo_title, seo_description, status, updated_at, published_at
-		FROM articles
+		FROM snippets
 		WHERE id = $1
 	`, id)
 
-	article, err := scanArticle(row)
+	snippet, err := scanSnippet(row)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.Article{}, ErrNotFound
+			return domain.Snippet{}, ErrNotFound
 		}
-		return domain.Article{}, err
+		return domain.Snippet{}, err
 	}
 
-	return article, nil
+	return snippet, nil
 }
 
-func (r *ArticleRepository) GetBySlug(ctx context.Context, slug string) (domain.Article, error) {
+func (r *SnippetRepository) GetBySlug(ctx context.Context, slug string) (domain.Snippet, error) {
 	row := r.pool.QueryRow(ctx, `
 		SELECT id, title, slug, excerpt, category, tags, cover_image, content, seo_title, seo_description, status, updated_at, published_at
-		FROM articles
+		FROM snippets
 		WHERE slug = $1
 	`, slug)
 
-	article, err := scanArticle(row)
+	snippet, err := scanSnippet(row)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.Article{}, ErrNotFound
+			return domain.Snippet{}, ErrNotFound
 		}
-		return domain.Article{}, err
+		return domain.Snippet{}, err
 	}
 
-	return article, nil
+	return snippet, nil
 }
 
-func (r *ArticleRepository) Create(ctx context.Context, payload domain.ArticlePayload) (domain.Article, error) {
+func (r *SnippetRepository) Create(ctx context.Context, payload domain.SnippetPayload) (domain.Snippet, error) {
 	payload = payload.Normalize()
 	id := uuid.NewString()
 
 	row := r.pool.QueryRow(ctx, `
-		INSERT INTO articles (
+		INSERT INTO snippets (
 			id, title, slug, excerpt, category, tags, cover_image, content, seo_title, seo_description, status, published_at, created_at, updated_at
 		) VALUES (
 			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW()
@@ -108,14 +108,14 @@ func (r *ArticleRepository) Create(ctx context.Context, payload domain.ArticlePa
 		payload.PublishedAt,
 	)
 
-	return scanArticle(row)
+	return scanSnippet(row)
 }
 
-func (r *ArticleRepository) Update(ctx context.Context, id string, payload domain.ArticlePayload) (domain.Article, error) {
+func (r *SnippetRepository) Update(ctx context.Context, id string, payload domain.SnippetPayload) (domain.Snippet, error) {
 	payload = payload.Normalize()
 
 	row := r.pool.QueryRow(ctx, `
-		UPDATE articles
+		UPDATE snippets
 		SET
 			title = $2,
 			slug = $3,
@@ -146,21 +146,21 @@ func (r *ArticleRepository) Update(ctx context.Context, id string, payload domai
 		payload.PublishedAt,
 	)
 
-	article, err := scanArticle(row)
+	snippet, err := scanSnippet(row)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.Article{}, ErrNotFound
+			return domain.Snippet{}, ErrNotFound
 		}
-		return domain.Article{}, err
+		return domain.Snippet{}, err
 	}
 
-	return article, nil
+	return snippet, nil
 }
 
-func (r *ArticleRepository) Publish(ctx context.Context, id string) (domain.Article, error) {
+func (r *SnippetRepository) Publish(ctx context.Context, id string) (domain.Snippet, error) {
 	now := time.Now().UTC()
 	row := r.pool.QueryRow(ctx, `
-		UPDATE articles
+		UPDATE snippets
 		SET
 			status = 'Published',
 			published_at = $2,
@@ -169,20 +169,20 @@ func (r *ArticleRepository) Publish(ctx context.Context, id string) (domain.Arti
 		RETURNING id, title, slug, excerpt, category, tags, cover_image, content, seo_title, seo_description, status, updated_at, published_at
 	`, id, now)
 
-	article, err := scanArticle(row)
+	snippet, err := scanSnippet(row)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.Article{}, ErrNotFound
+			return domain.Snippet{}, ErrNotFound
 		}
-		return domain.Article{}, err
+		return domain.Snippet{}, err
 	}
 
-	return article, nil
+	return snippet, nil
 }
 
-func (r *ArticleRepository) Unpublish(ctx context.Context, id string) (domain.Article, error) {
+func (r *SnippetRepository) Unpublish(ctx context.Context, id string) (domain.Snippet, error) {
 	row := r.pool.QueryRow(ctx, `
-		UPDATE articles
+		UPDATE snippets
 		SET
 			status = 'Draft',
 			published_at = NULL,
@@ -191,21 +191,21 @@ func (r *ArticleRepository) Unpublish(ctx context.Context, id string) (domain.Ar
 		RETURNING id, title, slug, excerpt, category, tags, cover_image, content, seo_title, seo_description, status, updated_at, published_at
 	`, id)
 
-	article, err := scanArticle(row)
+	snippet, err := scanSnippet(row)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.Article{}, ErrNotFound
+			return domain.Snippet{}, ErrNotFound
 		}
-		return domain.Article{}, err
+		return domain.Snippet{}, err
 	}
 
-	return article, nil
+	return snippet, nil
 }
 
-func (r *ArticleRepository) Delete(ctx context.Context, id string) error {
-	commandTag, err := r.pool.Exec(ctx, `DELETE FROM articles WHERE id = $1`, id)
+func (r *SnippetRepository) Delete(ctx context.Context, id string) error {
+	commandTag, err := r.pool.Exec(ctx, `DELETE FROM snippets WHERE id = $1`, id)
 	if err != nil {
-		return fmt.Errorf("delete article: %w", err)
+		return fmt.Errorf("delete snippet: %w", err)
 	}
 
 	if commandTag.RowsAffected() == 0 {
@@ -215,30 +215,30 @@ func (r *ArticleRepository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func scanArticle(row interface {
+func scanSnippet(row interface {
 	Scan(dest ...any) error
-}) (domain.Article, error) {
-	var article domain.Article
+}) (domain.Snippet, error) {
+	var snippet domain.Snippet
 	if err := row.Scan(
-		&article.ID,
-		&article.Title,
-		&article.Slug,
-		&article.Excerpt,
-		&article.Category,
-		&article.Tags,
-		&article.CoverImage,
-		&article.Content,
-		&article.SEOTitle,
-		&article.SEODescription,
-		&article.Status,
-		&article.UpdatedAt,
-		&article.PublishedAt,
+		&snippet.ID,
+		&snippet.Title,
+		&snippet.Slug,
+		&snippet.Excerpt,
+		&snippet.Category,
+		&snippet.Tags,
+		&snippet.CoverImage,
+		&snippet.Content,
+		&snippet.SEOTitle,
+		&snippet.SEODescription,
+		&snippet.Status,
+		&snippet.UpdatedAt,
+		&snippet.PublishedAt,
 	); err != nil {
-		return domain.Article{}, err
+		return domain.Snippet{}, err
 	}
 
-	article.Tags = sanitizeTags(article.Tags)
-	return article, nil
+	snippet.Tags = sanitizeTags(snippet.Tags)
+	return snippet, nil
 }
 
 func sanitizeTags(tags []string) []string {

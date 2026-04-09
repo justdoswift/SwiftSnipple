@@ -1,6 +1,6 @@
-export type ArticleStatus = "Draft" | "In Review" | "Scheduled" | "Published";
+export type SnippetStatus = "Draft" | "In Review" | "Scheduled" | "Published";
 
-export interface Article {
+export interface Snippet {
   id: string;
   title: string;
   slug: string;
@@ -11,12 +11,12 @@ export interface Article {
   content: string;
   seoTitle: string;
   seoDescription: string;
-  status: ArticleStatus;
+  status: SnippetStatus;
   updatedAt: string;
   publishedAt: string | null;
 }
 
-export interface ArticlePayload {
+export interface SnippetPayload {
   title: string;
   slug: string;
   excerpt: string;
@@ -26,11 +26,11 @@ export interface ArticlePayload {
   content: string;
   seoTitle: string;
   seoDescription: string;
-  status: ArticleStatus;
+  status: SnippetStatus;
   publishedAt: string | null;
 }
 
-export interface ArticleFormState {
+export interface SnippetFormState {
   title: string;
   slug: string;
   excerpt: string;
@@ -40,6 +40,11 @@ export interface ArticleFormState {
   content: string;
   seoTitle: string;
   seoDescription: string;
-  status: ArticleStatus;
+  status: SnippetStatus;
   publishedAt: string;
 }
+
+export type ArticleStatus = SnippetStatus;
+export type Article = Snippet;
+export type ArticlePayload = SnippetPayload;
+export type ArticleFormState = SnippetFormState;

@@ -52,6 +52,19 @@ check_builder() {
   docker compose version >/dev/null 2>&1 || fail "docker compose is not available"
 }
 
+build_web_bundle() {
+  log_step "Preparing frontend production bundle"
+
+  if [ ! -d apps/web/node_modules ]; then
+    log_step "Frontend dependencies not found. Installing them locally"
+    run_cmd npm --prefix apps/web install
+  else
+    log_step "Using existing frontend dependencies from apps/web/node_modules"
+  fi
+
+  run_cmd npm --prefix apps/web run build
+}
+
 wait_for_health() {
   log_step "Waiting for Caddy health endpoint"
 
@@ -85,6 +98,7 @@ set +a
 log_step "Using env file: .env"
 log_step "Using compose file: docker-compose.prod.yml"
 check_builder
+build_web_bundle
 log_step "Starting production-style services in detached mode"
 run_cmd docker compose -f docker-compose.prod.yml --env-file .env up -d --build
 

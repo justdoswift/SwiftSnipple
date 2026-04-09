@@ -1,87 +1,75 @@
-<div align="center">
-  <img
-    width="1200"
-    height="475"
-    alt="SwiftSnipple banner"
-    src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6"
-  />
-</div>
-
 # SwiftSnipple
 
-SwiftSnipple is a curated SwiftUI snippets and patterns platform for people who care about interface craft, implementation detail, and AI-assisted building.
+SwiftSnipple is a SwiftUI snippet showcase and implementation library.
 
-The goal is simple: collect delightful, useful, and production-minded SwiftUI ideas, then package them with the context that makes them genuinely reusable. That means not just code, but also implementation notes, AI prompts, and the reasoning behind each build.
+The goal is simple: collect fun, polished, and genuinely useful SwiftUI builds, then make them easy to browse, study, and reuse. Code is the center of the product, with prompts, notes, and implementation context added when they help someone rebuild the idea faster.
 
 ## What SwiftSnipple Is
 
-SwiftSnipple is building an archive of:
+SwiftSnipple is a growing collection of:
 
-- SwiftUI implementations worth studying
-- interaction patterns and polished UI details
-- code snippets and reusable technical ideas
-- prompt workflows used to generate, refine, or explain builds
-- editorial breakdowns that help readers understand why something works
+- SwiftUI snippets worth reusing
+- interaction patterns and UI details worth studying
+- small implementation breakdowns
+- prompt-assisted workflows that helped shape a build
+- practical notes that make a snippet easier to adapt
 
-This project is not meant to be a raw dump of snippets. It is a platform for learning, collecting references, and sharing high-signal SwiftUI work with an audience that enjoys both design and engineering.
+This project is not meant to be a long-form publishing platform. It is a showcase library for people who like collecting strong SwiftUI references and turning them into real product work.
 
 ## Who It Is For
 
 SwiftSnipple is for people who:
 
-- love building with SwiftUI
-- care about motion, layout, polish, and interface feel
-- like learning through real examples instead of abstract tutorials
-- are curious about AI-assisted workflows for design and implementation
-- want a growing archive of practical, inspiring Apple-platform patterns
+- build with SwiftUI regularly
+- care about polish, interaction feel, and visual craft
+- prefer real examples over abstract tutorials
+- want a useful library of patterns they can borrow from
+- are curious about how AI prompts can support implementation work
 
-## What Each Entry Can Include
+## What a Snippet Can Include
 
-Each entry in the archive may include a mix of:
+Each snippet can include a mix of:
 
-- a SwiftUI implementation or recreation
+- the SwiftUI implementation itself
 - screenshots or visual references
-- implementation notes and tradeoffs
-- reusable patterns or snippet-level takeaways
-- AI prompts used during the build process
-- editorial context that explains the intent behind the interface
+- a short explanation of the structure or tradeoffs
+- reusable prompt ideas
+- implementation notes that help someone adapt it
 
-The aim is to make every post useful whether someone wants to copy a small technique, study the overall structure, or understand how prompts and code can work together.
+The core unit is still the snippet or pattern, not the article.
 
 ## Product Direction
 
-SwiftSnipple is evolving into a content platform, not just a code gallery.
+SwiftSnipple is evolving into a curated SwiftUI showcase, not a Substack-style writing product.
 
 Current and planned product layers include:
 
-- a public archive for browsing highlighted SwiftUI work
-- richer article/case-study style entries with prompts and implementation notes
-- an internal admin/editorial workflow for managing new content
-- a future premium membership layer for accessing the full archive
+- a public library for browsing SwiftUI snippets and patterns
+- a lightweight admin workspace for publishing and managing entries
+- richer snippet metadata such as prompts, notes, tags, and references
+- a future premium layer for accessing the full library or deeper companion material
 
 ## Membership Roadmap
 
-In a later phase, SwiftSnipple plans to integrate Stripe and introduce membership access for premium content.
+Stripe and membership access are future roadmap items, not current product behavior.
 
 That future layer may include:
 
-- full access to the complete archive
-- premium case studies or longer technical breakdowns
-- gated prompt libraries
-- downloadable assets or member-only implementation notes
+- access to the full snippet library
+- premium prompt packs
+- deeper implementation notes
+- downloadable companion resources
 
-This is roadmap direction, not a shipped feature. Pricing, packaging, and access rules are intentionally still open.
+Pricing, packaging, and access rules are intentionally still open.
 
 ## Tech Stack
 
-SwiftSnipple now uses a single-repo web + API setup:
+SwiftSnipple uses a single-repo web + API setup:
 
 - `apps/web`: React, TypeScript, Vite, Tailwind CSS, React Router, Motion
 - `apps/api`: Go, chi, pgx, goose
 - PostgreSQL: canonical content store
 - Caddy: production reverse proxy, domain routing, and HTTPS
-
-It currently includes a public-facing archive experience and a lightweight admin workspace for managing article-style content backed by a Go API.
 
 ## Local Development
 
@@ -122,18 +110,18 @@ Default ports:
 
 ## Repository Layout
 
-- `apps/web`: public site and admin workspace
+- `apps/web`: public showcase and admin workspace
 - `apps/api`: Go API and database migrations
 - `infra/caddy`: production Caddy config
 - `scripts`: one-command build/start/stop helpers
 
 ## Project Intent
 
-The long-term value of SwiftSnipple comes from the combination of:
+The long-term value of SwiftSnipple comes from:
 
-- strong visual taste
-- practical SwiftUI implementation details
-- reusable prompt workflows
-- a clean, searchable archive experience
+- strong SwiftUI taste
+- reusable implementation details
+- practical prompt support
+- a clean way to browse and manage snippets
 
-Everything in this repo should move the project closer to that outcome.
+Everything in this repo should move the project closer to being a high-quality SwiftUI snippet library.

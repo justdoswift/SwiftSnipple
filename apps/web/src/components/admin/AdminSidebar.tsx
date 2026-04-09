@@ -3,18 +3,18 @@ import { NavLink } from "react-router-dom";
 
 const NAV_ITEMS = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard, end: true },
-  { to: "/admin/articles", label: "Articles", icon: LibraryBig },
-  { to: "/admin/articles/new", label: "New Entry", icon: Plus },
+  { to: "/admin/snippets", label: "Snippets", icon: LibraryBig },
+  { to: "/admin/snippets/new", label: "New Snippet", icon: Plus },
 ];
 
 export default function AdminSidebar() {
   return (
     <aside className="border-r border-outline-variant/10 bg-surface-container-low/40 px-6 py-8 md:px-8">
       <div className="mb-10">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-primary/40">Archive Console</p>
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-primary/40">Snippet Console</p>
         <h1 className="mt-3 text-3xl font-black tracking-tighter">Rebuilt in SwiftUI</h1>
         <p className="mt-3 max-w-xs text-sm leading-relaxed text-on-surface-variant">
-          Editorial tools for drafting, staging, and publishing long-form technical entries.
+          Publishing tools for drafting, staging, and shipping reusable SwiftUI entries.
         </p>
       </div>
 

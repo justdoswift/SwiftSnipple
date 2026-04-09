@@ -47,6 +47,20 @@ export interface Article {
   publishedAt: string | null;
 }
 
+export interface ArticlePayload {
+  title: string;
+  slug: string;
+  excerpt: string;
+  category: string;
+  tags: string[];
+  coverImage: string;
+  content: string;
+  seoTitle: string;
+  seoDescription: string;
+  status: ArticleStatus;
+  publishedAt: string | null;
+}
+
 export interface ArticleFormState {
   title: string;
   slug: string;

@@ -1,11 +1,11 @@
 import { motion } from "motion/react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import EditorSection from "../../components/admin/EditorSection";
 import MarkdownPreview from "../../components/admin/MarkdownPreview";
 import StatusBadge from "../../components/admin/StatusBadge";
-import { getArticleById, saveArticle } from "../../services/articles";
-import { Article, ArticleFormState, ArticleStatus } from "../../types";
+import { createArticle, getArticleById, publishArticle, updateArticle } from "../../services/articles";
+import { Article, ArticleFormState, ArticlePayload, ArticleStatus } from "../../types";
 
 const STATUS_OPTIONS: ArticleStatus[] = ["Draft", "In Review", "Scheduled", "Published"];
 
@@ -33,9 +33,8 @@ function toDateTimeInputValue(value: string | null) {
 }
 
 function createEmptyArticle(): Article {
-  const now = new Date().toISOString();
   return {
-    id: `article-${Date.now()}`,
+    id: "",
     title: "",
     slug: "",
     excerpt: "",
@@ -55,7 +54,7 @@ Write the opening argument here.
     seoTitle: "",
     seoDescription: "",
     status: "Draft",
-    updatedAt: now,
+    updatedAt: new Date().toISOString(),
     publishedAt: null,
   };
 }
@@ -104,13 +103,63 @@ function fromFormState(baseArticle: Article, form: ArticleFormState): Article {
   };
 }
 
+function toArticlePayload(article: Article): ArticlePayload {
+  return {
+    title: article.title,
+    slug: article.slug,
+    excerpt: article.excerpt,
+    category: article.category,
+    tags: article.tags,
+    coverImage: article.coverImage,
+    content: article.content,
+    seoTitle: article.seoTitle,
+    seoDescription: article.seoDescription,
+    status: article.status,
+    publishedAt: article.publishedAt,
+  };
+}
+
 export default function AdminArticleEditor() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const baseArticle = useMemo(() => (id ? getArticleById(id) ?? createEmptyArticle() : createEmptyArticle()), [id]);
   const isNew = id === undefined;
-  const [form, setForm] = useState<ArticleFormState>(() => toFormState(baseArticle));
+  const [baseArticle, setBaseArticle] = useState<Article>(createEmptyArticle());
+  const [form, setForm] = useState<ArticleFormState>(() => toFormState(createEmptyArticle()));
   const [saveLabel, setSaveLabel] = useState("Save draft");
+  const [isLoading, setIsLoading] = useState(!isNew);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (isNew || !id) {
+      const emptyArticle = createEmptyArticle();
+      setBaseArticle(emptyArticle);
+      setForm(toFormState(emptyArticle));
+      setIsLoading(false);
+      return;
+    }
+
+    let active = true;
+    setIsLoading(true);
+    getArticleById(id)
+      .then((article) => {
+        if (!active) return;
+        setBaseArticle(article);
+        setForm(toFormState(article));
+        setError("");
+      })
+      .catch((err: Error) => {
+        if (!active) return;
+        setError(err.message);
+      })
+      .finally(() => {
+        if (!active) return;
+        setIsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [id, isNew]);
 
   const previewArticle = useMemo(() => fromFormState(baseArticle, form), [baseArticle, form]);
 
@@ -123,15 +172,26 @@ export default function AdminArticleEditor() {
     });
   };
 
-  const handleSave = (statusOverride?: ArticleStatus) => {
-    const nextForm = statusOverride ? { ...form, status: statusOverride } : form;
-    const savedArticle = fromFormState(baseArticle, nextForm);
-    saveArticle(savedArticle);
-    setForm(toFormState(savedArticle));
-    setSaveLabel(statusOverride === "Published" ? "Published" : "Saved");
-    window.setTimeout(() => setSaveLabel("Save draft"), 1800);
-    if (isNew) {
-      navigate(`/admin/articles/${savedArticle.id}`, { replace: true });
+  const handleSave = async (statusOverride?: ArticleStatus) => {
+    try {
+      setError("");
+      const nextForm = statusOverride ? { ...form, status: statusOverride } : form;
+      const payload = toArticlePayload(fromFormState(baseArticle, nextForm));
+
+      const savedArticle = isNew ? await createArticle(payload) : await updateArticle(baseArticle.id, payload);
+      const finalArticle =
+        statusOverride === "Published" ? await publishArticle(savedArticle.id) : savedArticle;
+
+      setBaseArticle(finalArticle);
+      setForm(toFormState(finalArticle));
+      setSaveLabel(statusOverride === "Published" ? "Published" : "Saved");
+      window.setTimeout(() => setSaveLabel("Save draft"), 1800);
+
+      if (isNew) {
+        navigate(`/admin/articles/${finalArticle.id}`, { replace: true });
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save article");
     }
   };
 
@@ -148,6 +208,8 @@ export default function AdminArticleEditor() {
           <p className="mt-4 text-base leading-relaxed text-on-surface-variant">
             Shape metadata, refine the Markdown body, and keep the preview visible so the final page stays intentional.
           </p>
+          {isLoading ? <p className="mt-4 text-sm text-primary/50">Loading article...</p> : null}
+          {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
         </div>
 
         <div className="flex flex-wrap gap-3">

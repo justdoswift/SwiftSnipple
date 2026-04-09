@@ -1,8 +1,10 @@
 import { motion } from "motion/react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import StatCard from "../../components/admin/StatCard";
 import StatusBadge from "../../components/admin/StatusBadge";
 import { getArticles } from "../../services/articles";
+import { Article } from "../../types";
 
 function formatDate(value: string | null) {
   if (!value) return "Not scheduled";
@@ -14,7 +16,27 @@ function formatDate(value: string | null) {
 }
 
 export default function AdminDashboard() {
-  const articles = getArticles();
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+
+    getArticles()
+      .then((items) => {
+        if (!active) return;
+        setArticles(items);
+      })
+      .catch((err: Error) => {
+        if (!active) return;
+        setError(err.message);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const draftCount = articles.filter((article) => article.status === "Draft").length;
   const publishedCount = articles.filter((article) => article.status === "Published").length;
   const reviewCount = articles.filter((article) => article.status === "In Review").length;
@@ -33,6 +55,7 @@ export default function AdminDashboard() {
             This console keeps article metadata, scheduling, and long-form writing in one place so new entries can move
             from draft to release without losing the tone of the publication.
           </p>
+          {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
         </div>
       </motion.section>
 

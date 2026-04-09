@@ -1,0 +1,79 @@
+name: swiftsnipple
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+
+  api:
+    image: swiftsnipple-api
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    env_file: .env
+    environment:
+      API_PORT: ${API_PORT}
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - "8080"
+    restart: unless-stopped
+
+  migrate:
+    image: swiftsnipple-api
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["./migrate", "up"]
+    profiles:
+      - migrate
+
+  web:
+    image: swiftsnipple-web
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    env_file: .env
+    expose:
+      - "3000"
+    restart: unless-stopped
+
+  caddy:
+    image: swiftsnipple-caddy
+    build:
+      context: .
+      dockerfile: infra/caddy/Dockerfile
+    env_file: .env
+    depends_on:
+      - api
+      - web
+    ports:
+      - "${CADDY_HTTP_PORT:-80}:80"
+      - "${CADDY_HTTPS_PORT:-443}:443"
+    restart: unless-stopped
+    volumes:
+      - ./infra/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  postgres_prod_data:
+  caddy_data:
+  caddy_config:

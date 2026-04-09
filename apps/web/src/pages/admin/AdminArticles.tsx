@@ -1,9 +1,9 @@
 import { Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import StatusBadge from "../../components/admin/StatusBadge";
 import { getArticles } from "../../services/articles";
-import { ArticleStatus } from "../../types";
+import { Article, ArticleStatus } from "../../types";
 
 const STATUS_OPTIONS: Array<ArticleStatus | "All"> = ["All", "Draft", "In Review", "Scheduled", "Published"];
 
@@ -17,11 +17,30 @@ function formatDate(value: string | null) {
 }
 
 export default function AdminArticles() {
-  const articles = getArticles();
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [error, setError] = useState("");
   const categories = Array.from(new Set(articles.map((article) => article.category)));
   const [statusFilter, setStatusFilter] = useState<ArticleStatus | "All">("All");
   const [categoryFilter, setCategoryFilter] = useState<string>("All");
   const [query, setQuery] = useState("");
+
+  useEffect(() => {
+    let active = true;
+
+    getArticles()
+      .then((items) => {
+        if (!active) return;
+        setArticles(items);
+      })
+      .catch((err: Error) => {
+        if (!active) return;
+        setError(err.message);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const filteredArticles = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -46,6 +65,7 @@ export default function AdminArticles() {
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-on-surface-variant">
             Filter by workflow stage, search by title, and jump straight into editing without leaving the archive context.
           </p>
+          {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
         </div>
         <Link
           to="/admin/articles/new"

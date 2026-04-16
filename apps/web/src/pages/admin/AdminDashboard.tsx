@@ -1,9 +1,9 @@
-import { motion } from "motion/react";
 import { Button, Card, ProgressBar } from "../../lib/heroui";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import StatCard from "../../components/admin/StatCard";
 import StatusBadge from "../../components/admin/StatusBadge";
+import { useAdminHeader } from "../../components/admin/useAdminHeader";
 import { getSnippets } from "../../services/snippets";
 import { Snippet } from "../../types";
 
@@ -20,6 +20,27 @@ export default function AdminDashboard() {
   const [snippets, setSnippets] = useState<Snippet[]>([]);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const headerConfig = useMemo(
+    () => ({
+      start: (
+        <div className="min-w-0">
+          <p className="type-mono-micro text-white/30">Snippet Workspace</p>
+          <h1 className="mt-2 truncate text-sm font-semibold text-white/90">Overview</h1>
+        </div>
+      ),
+      end: (
+        <Link
+          to="/admin/snippets/new"
+          className="admin-button-primary type-action inline-flex h-10 shrink-0 items-center px-4 text-black"
+        >
+          Start New Snippet
+        </Link>
+      ),
+    }),
+    [],
+  );
+
+  useAdminHeader(headerConfig);
 
   useEffect(() => {
     let active = true;
@@ -53,29 +74,24 @@ export default function AdminDashboard() {
 
   return (
     <div className="px-6 py-10 md:px-10 md:py-12">
-      <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="max-w-4xl">
-          <p className="type-mono-micro text-primary/40">Snippet Overview</p>
-          <h1 className="type-page-title mt-4 text-primary md:text-[4.5rem]">
-            Ship SwiftUI snippets with the same care you use to build them.
-          </h1>
-          <p className="type-body-lg mt-6 max-w-2xl">
-            This console keeps snippet metadata, publishing state, and implementation notes in one place so new entries
-            can move from draft to release without losing clarity.
+      <section className="space-y-3">
+        {isLoading ? <p className="type-body-sm text-primary/50">Loading snippet metrics...</p> : null}
+        {error ? <p className="type-body-sm text-red-600">{error}</p> : null}
+        {!isLoading && !error ? (
+          <p className="type-body-sm text-primary/45">
+            Track recent edits, release pacing, and the current status mix without leaving the admin workspace.
           </p>
-          {isLoading ? <p className="type-body-sm mt-4 text-primary/50">Loading snippet metrics...</p> : null}
-          {error ? <p className="type-body-sm mt-4 text-red-600">{error}</p> : null}
-        </div>
-      </motion.section>
+        ) : null}
+      </section>
 
-      <section className="mt-12 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Entries" value={snippets.length} note="Total snippets currently managed inside the publishing workspace." />
         <StatCard label="Drafts" value={draftCount} note="Snippets still being shaped before they go live." />
         <StatCard label="Published" value={publishedCount} note="Entries that are live and visible in the public library." />
         <StatCard label="Pipeline" value={reviewCount + scheduledCount} note="Snippets queued in review or already staged for release." />
       </section>
 
-      <section className="mt-12 grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_360px]">
+      <section className="mt-10 grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_360px]">
         <Card className="rounded-[28px]">
           <Card.Header className="flex items-end justify-between border-b border-white/55 px-6 py-5 md:px-8">
             <div>

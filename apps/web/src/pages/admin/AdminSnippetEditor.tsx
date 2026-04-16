@@ -1,13 +1,20 @@
 import { motion } from "motion/react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button, Input, Modal, TextArea, useOverlayState } from "../../lib/heroui";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import EditorSection from "../../components/admin/EditorSection";
 import StatusBadge from "../../components/admin/StatusBadge";
+import { useAdminHeader } from "../../components/admin/useAdminHeader";
 import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, unpublishSnippet, updateSnippet } from "../../services/snippets";
 import { Snippet, SnippetFormState, SnippetPayload, SnippetStatus } from "../../types";
+import { ChevronLeft, Columns2, Layout, Settings2, Trash2 } from "lucide-react";
 
 const STATUS_OPTIONS: SnippetStatus[] = ["Draft", "In Review", "Scheduled", "Published"];
+const EDITOR_TABS = [
+  { key: "content", label: "Narrative", icon: Layout },
+  { key: "builder", label: "Builder", icon: Columns2 },
+  { key: "meta", label: "Surface", icon: Settings2 },
+] as const;
 
 function slugify(value: string) {
   return value
@@ -150,7 +157,9 @@ export default function AdminSnippetEditor() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
+  const [activeTab, setActiveTab] = useState("content");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
   const previewState = useOverlayState({
     isOpen: isPreviewOpen,
     onOpenChange: setIsPreviewOpen,
@@ -195,21 +204,6 @@ export default function AdminSnippetEditor() {
   const hasUnsavedChanges =
     JSON.stringify(toSnippetPayload(previewSnippet)) !== JSON.stringify(toSnippetPayload(baseSnippet));
 
-  useEffect(() => {
-    if (!isPreviewOpen) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setIsPreviewOpen(false);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isPreviewOpen]);
-
   const updateField = <K extends keyof SnippetFormState>(field: K, value: SnippetFormState[K]) => {
     setForm((current) => {
       if (field === "title" && (!current.slug || current.slug === slugify(current.title))) {
@@ -219,7 +213,7 @@ export default function AdminSnippetEditor() {
     });
   };
 
-  const handleSave = async (statusOverride?: SnippetStatus) => {
+  const handleSave = useCallback(async (statusOverride?: SnippetStatus) => {
     try {
       setIsSubmitting(true);
       setError("");
@@ -251,7 +245,7 @@ export default function AdminSnippetEditor() {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [baseSnippet, form, isNew, navigate]);
 
   const handleUnpublish = async () => {
     if (!baseSnippet.id) return;
@@ -289,276 +283,389 @@ export default function AdminSnippetEditor() {
     }
   };
 
-  return (
-    <div className="px-6 py-10 md:px-10 md:py-12 xl:px-14 2xl:px-16">
-      <section className="flex flex-col gap-6 border-b border-outline-variant/10 pb-8 xl:flex-row xl:items-end xl:justify-between">
-        <div className="max-w-3xl">
-          <p className="type-mono-micro text-primary/40">
-            {isNew ? "New Snippet" : "Snippet Editor"}
-          </p>
-          <h1 className="type-page-title mt-4">
-            {isNew ? "Compose a fresh showcase entry." : previewSnippet.title}
-          </h1>
-          <p className="type-body mt-4">
-            Shape the snippet metadata, refine the Markdown notes, and keep the preview visible so the final card stays intentional.
-          </p>
-          {isLoading ? <p className="type-body-sm mt-4 text-primary/50">Loading snippet...</p> : null}
-          {feedback ? <p className="type-body-sm mt-4 text-emerald-700">{feedback}</p> : null}
-          {error ? <p className="type-body-sm mt-4 text-red-600">{error}</p> : null}
-        </div>
+  const handlePreview = useCallback(() => {
+    if (!hasSavedPreview || !previewPath) {
+      setError("");
+      setFeedback(`Save this draft first to open the public preview at /snippets/${form.slug || "untitled"}.`);
+      return;
+    }
 
-        <div className="flex flex-wrap gap-3">
-          <Button className="type-action" radius="full" variant="outline" onPress={() => navigate("/admin/snippets")}>
-            Back to list
+    setIsPreviewOpen(true);
+  }, [form.slug, hasSavedPreview, previewPath]);
+
+  const headerConfig = useMemo(
+    () => ({
+      start: (
+        <div className="flex min-w-0 items-center gap-4">
+          <Button
+            isIconOnly
+            aria-label="Back to snippets"
+            variant="outline"
+            className="h-10 w-10 shrink-0 admin-button-secondary border-white/10"
+            onPress={() => navigate("/admin/snippets")}
+          >
+            <ChevronLeft size={20} />
           </Button>
-          <Button className="type-action" radius="full" variant="outline" onPress={() => setIsPreviewOpen(true)}>
+          <div className="h-5 w-[1px] shrink-0 bg-white/10" />
+          <div className="flex min-w-0 flex-col">
+            <p className="type-mono-micro text-white/20 -mb-0.5">
+              {isNew ? "Drafting" : "Editing"}
+            </p>
+            <p className="truncate text-sm font-semibold text-white/90 md:max-w-[220px] lg:max-w-md">
+              {isNew ? "New entry" : form.title}
+            </p>
+          </div>
+        </div>
+      ),
+      center: (
+        <div
+          role="tablist"
+          aria-label="Editor modes"
+          className="flex min-w-0 gap-6 overflow-x-auto px-1 xl:justify-start"
+        >
+          {EDITOR_TABS.map(({ key, label, icon: Icon }) => {
+            const isSelected = activeTab === key;
+
+            return (
+              <button
+                key={key}
+                type="button"
+                role="tab"
+                aria-selected={isSelected}
+                aria-controls={`editor-panel-${key}`}
+                id={`editor-tab-${key}`}
+                className={`relative inline-flex h-12 shrink-0 items-center gap-2.5 whitespace-nowrap border-b-2 px-1 text-sm font-medium transition-all duration-300 ${
+                  isSelected
+                    ? "border-white text-white"
+                    : "border-transparent text-white/20 hover:text-white/50"
+                }`}
+                onClick={() => setActiveTab(key)}
+              >
+                <Icon size={16} className={isSelected ? "text-white" : "text-white/20"} />
+                <span>{label}</span>
+              </button>
+            );
+          })}
+        </div>
+      ),
+      end: (
+        <>
+          {isLoading ? (
+            <div className="flex shrink-0 items-center gap-3 xl:mr-1">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/10 border-t-white" />
+              <span className="type-mono-micro text-white/30">Syncing...</span>
+            </div>
+          ) : (
+            <div className="hidden shrink-0 2xl:block xl:mr-1">
+              <StatusBadge status={previewSnippet.status} />
+            </div>
+          )}
+          {feedback ? (
+            <span className="hidden text-xs font-mono text-emerald-400 animate-in fade-in duration-500 2xl:block">
+              {feedback}
+            </span>
+          ) : null}
+          <Button
+            className="h-9 shrink-0 px-2.5 text-sm admin-button-secondary min-[1500px]:px-3 2xl:px-4"
+            onPress={handlePreview}
+          >
             Preview
           </Button>
           <Button
             isDisabled={isSubmitting}
-            className="type-action"
-            variant="primary"
+            className="h-9 shrink-0 px-2.5 text-sm admin-button-secondary min-[1500px]:px-3 2xl:px-4"
             onPress={() => handleSave()}
           >
-            {isSubmitting ? "Saving..." : saveLabel}
+            {isSubmitting ? "..." : (
+              <>
+                <span className="hidden min-[1500px]:inline">{saveLabel}</span>
+                <span className="min-[1500px]:hidden">{saveLabel === "Save draft" ? "Save" : saveLabel}</span>
+              </>
+            )}
           </Button>
           <Button
             isDisabled={isSubmitting}
-            className="type-action"
-            variant="outline"
+            className="h-9 shrink-0 px-2.5 text-sm admin-button-primary min-[1500px]:px-3 2xl:px-4"
             onPress={() => handleSave("Published")}
           >
-            Publish now
+            Publish
           </Button>
-          {!isNew ? (
-            <Button
-              isDisabled={isSubmitting}
-              className="type-action"
-              variant="outline"
-              onPress={handleUnpublish}
+        </>
+      ),
+    }),
+    [
+      activeTab,
+      feedback,
+      form.title,
+      handlePreview,
+      handleSave,
+      isLoading,
+      isNew,
+      isSubmitting,
+      navigate,
+      previewSnippet.status,
+      saveLabel,
+    ],
+  );
+
+  useAdminHeader(headerConfig);
+
+  return (
+    <div className="admin-page">
+      <main className="mx-auto max-w-[900px] px-6 pb-12 pt-10 md:px-10 md:pb-16 md:pt-10 lg:pb-24 lg:pt-12">
+        <div className="flex flex-col gap-12">
+
+          <div className="space-y-12">
+            <div className="relative flex flex-col gap-2">
+              <textarea
+                aria-label="Snippet Title"
+                placeholder="Snippet Title"
+                value={form.title}
+                onChange={(e) => updateField("title", e.target.value)}
+                className="w-full bg-transparent border-none p-0 focus:ring-0 text-5xl md:text-7xl font-bold tracking-tighter text-white placeholder:text-white/5 resize-none outline-none overflow-hidden transition-all duration-500"
+                rows={1}
+                onInput={(e) => {
+                  const target = e.target as HTMLTextAreaElement;
+                  target.style.height = "auto";
+                  target.style.height = `${target.scrollHeight}px`;
+                }}
+              />
+            </div>
+
+            <motion.div
+              layout
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, ease: [0.19, 1, 0.22, 1] }}
             >
-              Unpublish
-            </Button>
-          ) : null}
-          {!isNew ? (
-            <Button
-              isDisabled={isSubmitting}
-              className="type-action text-red-700"
-              variant="outline"
-              onPress={handleDelete}
-            >
-              Delete
-            </Button>
+              {activeTab === "content" && (
+                <div
+                  id="editor-panel-content"
+                  role="tabpanel"
+                  aria-labelledby="editor-tab-content"
+                  className="space-y-12 py-4"
+                >
+                  <div className="group relative">
+                     <p className="type-mono-micro absolute -top-8 left-0 text-white/30 transition-opacity duration-300 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 pointer-events-none">
+                       Implementation narrative
+                     </p>
+                     <textarea
+                       aria-label="Implementation notes"
+                       placeholder="Shape the narrative around the technique and tradeoffs. You can use Markdown."
+                       value={form.content}
+                       onChange={(event) => updateField("content", event.target.value)}
+                       className="w-full bg-transparent border-0 px-0 shadow-none outline-none focus:ring-0 text-lg leading-relaxed text-white/90 placeholder:text-white/20 min-h-[400px] resize-y"
+                     />
+                  </div>
+
+                  <div className="group relative border-t border-white/5 pt-8">
+                    <p className="type-mono-micro absolute top-2 left-0 text-white/30 transition-opacity duration-300 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 pointer-events-none">
+                      Short excerpt
+                    </p>
+                    <textarea
+                      aria-label="Excerpt"
+                      placeholder="The hook that appears on card previews. Keep it under two sentences."
+                      value={form.excerpt}
+                      onChange={(event) => updateField("excerpt", event.target.value)}
+                      rows={4}
+                      className="w-full bg-transparent border-0 px-0 mt-8 shadow-none outline-none focus:ring-0 text-white/70 placeholder:text-white/20 resize-y"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "builder" && (
+                <div
+                  id="editor-panel-builder"
+                  role="tabpanel"
+                  aria-labelledby="editor-tab-builder"
+                  className="space-y-12 py-4"
+                >
+                  <div className="group relative">
+                    <p className="type-mono-micro absolute -top-8 left-0 text-amber-500/50 transition-opacity duration-300 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 pointer-events-none">
+                      SwiftUI Logic
+                    </p>
+                    <textarea
+                      aria-label="SwiftUI code"
+                      placeholder="import SwiftUI..."
+                      value={form.code}
+                      onChange={(event) => updateField("code", event.target.value)}
+                      className="w-full bg-transparent border-0 px-0 shadow-none outline-none focus:ring-0 font-mono text-sm leading-relaxed text-amber-50/90 placeholder:text-white/20 min-h-[400px] resize-y"
+                      spellCheck={false}
+                    />
+                  </div>
+
+                  <div className="group relative border-t border-white/5 pt-8">
+                    <p className="type-mono-micro absolute top-2 left-0 text-white/30 transition-opacity duration-300 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 pointer-events-none">
+                      AI Prompt fragments
+                    </p>
+                    <textarea
+                      aria-label="Prompt notes"
+                      placeholder="Capture the AI direction notes that helped shape this specific implementation."
+                      value={form.prompts}
+                      onChange={(event) => updateField("prompts", event.target.value)}
+                      rows={8}
+                      className="w-full bg-transparent border-0 px-0 mt-8 shadow-none outline-none focus:ring-0 text-white/70 placeholder:text-white/20 resize-y"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "meta" && (
+                <div
+                  id="editor-panel-meta"
+                  role="tabpanel"
+                  aria-labelledby="editor-tab-meta"
+                  className="space-y-8"
+                >
+                  <EditorSection
+                    eyebrow="Identity"
+                    title="Snippet frame"
+                    description="Core metadata that determines indexing and discovery."
+                  >
+                    <div className="grid gap-6 md:grid-cols-2">
+                      <label className="grid gap-2">
+                        <span className="type-mono-micro text-white/30">Category</span>
+                        <Input
+                          aria-label="Category"
+                          value={form.category}
+                          onChange={(event) => updateField("category", event.target.value)}
+                          className="admin-input w-full"
+                        />
+                      </label>
+                      <label className="grid gap-2">
+                        <span className="type-mono-micro text-white/30">Tags</span>
+                        <Input
+                          aria-label="Tags"
+                          value={form.tags}
+                          onChange={(event) => updateField("tags", event.target.value)}
+                          placeholder="SwiftUI, Motion"
+                          className="admin-input w-full"
+                        />
+                      </label>
+                      <label className="grid gap-2 md:col-span-2">
+                         <span className="type-mono-micro text-white/30">Route Slug</span>
+                         <Input
+                           aria-label="Slug"
+                           value={form.slug}
+                           onChange={(event) => updateField("slug", event.target.value)}
+                           className="admin-input w-full"
+                         />
+                      </label>
+                      <label className="grid gap-2 md:col-span-2">
+                        <span className="type-mono-micro text-white/30">Cover Image URL</span>
+                        <Input
+                          aria-label="Cover Image URL"
+                          value={form.coverImage}
+                          onChange={(event) => updateField("coverImage", event.target.value)}
+                          className="admin-input w-full"
+                        />
+                      </label>
+                    </div>
+                  </EditorSection>
+
+                  <EditorSection
+                    eyebrow="Registry"
+                    title="Release controls"
+                    description="Manage the publishing state and visibility orbit of this entry."
+                  >
+                    <div className="grid gap-6 md:grid-cols-2">
+                       <label className="grid gap-2">
+                         <span className="type-mono-micro text-white/30">Status</span>
+                         <select
+                           value={form.status}
+                           onChange={(event) => updateField("status", event.target.value as SnippetStatus)}
+                           className="admin-select w-full text-sm"
+                         >
+                           {STATUS_OPTIONS.map((status) => (
+                             <option key={status} value={status}>
+                               {status}
+                             </option>
+                           ))}
+                         </select>
+                       </label>
+                       <label className="grid gap-2">
+                         <span className="type-mono-micro text-white/30">Published At</span>
+                         <input
+                           type="datetime-local"
+                           value={form.publishedAt}
+                           onChange={(event) => updateField("publishedAt", event.target.value)}
+                           className="admin-native-input w-full"
+                         />
+                       </label>
+                    </div>
+                  </EditorSection>
+
+                  <EditorSection
+                    eyebrow="Search"
+                    title="Surface optimization"
+                    description="Detailed SEO control for search results and previews."
+                  >
+                    <div className="grid gap-6">
+                      <label className="grid gap-2">
+                        <span className="type-mono-micro text-white/30">SEO Title</span>
+                        <Input
+                          aria-label="SEO Title"
+                          value={form.seoTitle}
+                          onChange={(event) => updateField("seoTitle", event.target.value)}
+                          className="admin-input w-full"
+                        />
+                      </label>
+                      <label className="grid gap-2">
+                        <span className="type-mono-micro text-white/30">SEO Description</span>
+                        <TextArea
+                          aria-label="SEO Description"
+                          value={form.seoDescription}
+                          onChange={(event) => updateField("seoDescription", event.target.value)}
+                          rows={3}
+                          className="admin-textarea w-full"
+                        />
+                      </label>
+                    </div>
+                  </EditorSection>
+
+                  {!isNew && (
+                    <section className="pt-10 border-t border-white/5">
+                      <div className="flex items-center justify-between vibe-glass p-6 rounded-[32px] border-red-900/10">
+                        <div>
+                          <h3 className="text-red-400 font-semibold">Danger Zone</h3>
+                          <p className="text-sm mt-1 text-white/30">Permanently remove this entry from the registry.</p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          radius="full"
+                          className="h-10 border-red-900/20 text-red-700/60 hover:bg-red-900/10 hover:text-red-600 transition-all border-dashed"
+                          onPress={handleDelete}
+                        >
+                          <Trash2 size={16} className="mr-2" />
+                          Delete Snippet
+                        </Button>
+                      </div>
+                    </section>
+                  )}
+                </div>
+              )}
+            </motion.div>
+          </div>
+
+          {error ? (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-[24px] bg-red-500/10 p-5 border border-red-500/20 text-red-400 text-sm leading-relaxed">
+              {error}
+            </motion.div>
           ) : null}
         </div>
-      </section>
-
-      <div className="mt-8 grid gap-8 xl:grid-cols-[minmax(0,1.7fr)_320px] 2xl:grid-cols-[minmax(0,1.95fr)_340px]">
-        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-          <EditorSection
-            eyebrow="Identity"
-            title="Snippet frame"
-            description="Set the foundational metadata that determines how the snippet is indexed, previewed, and discovered."
-          >
-            <div className="grid gap-5 md:grid-cols-2">
-              <label className="grid gap-2 md:col-span-2">
-                <span className="type-mono-micro text-primary/45">Title</span>
-                <Input
-                  aria-label="Title"
-                  value={form.title}
-                  onChange={(event) => updateField("title", event.target.value)}
-                  className="admin-input w-full"
-                />
-              </label>
-              <label className="grid gap-2">
-                <span className="type-mono-micro text-primary/45">Slug</span>
-                <Input
-                  aria-label="Slug"
-                  value={form.slug}
-                  onChange={(event) => updateField("slug", event.target.value)}
-                  className="admin-input w-full"
-                />
-              </label>
-              <label className="grid gap-2">
-                <span className="type-mono-micro text-primary/45">Category</span>
-                <Input
-                  aria-label="Category"
-                  value={form.category}
-                  onChange={(event) => updateField("category", event.target.value)}
-                  className="admin-input w-full"
-                />
-              </label>
-              <label className="grid gap-2 md:col-span-2">
-                <span className="type-mono-micro text-primary/45">Excerpt</span>
-                <TextArea
-                  aria-label="Excerpt"
-                  value={form.excerpt}
-                  onChange={(event) => updateField("excerpt", event.target.value)}
-                  rows={4}
-                  className="admin-textarea w-full"
-                />
-              </label>
-              <label className="grid gap-2 md:col-span-2">
-                <span className="type-mono-micro text-primary/45">Tags</span>
-                <Input
-                  aria-label="Tags"
-                  value={form.tags}
-                  onChange={(event) => updateField("tags", event.target.value)}
-                  placeholder="SwiftUI, Motion, Editorial"
-                  className="admin-input w-full"
-                />
-              </label>
-              <label className="grid gap-2 md:col-span-2">
-                <span className="type-mono-micro text-primary/45">Cover Image URL</span>
-                <Input
-                  aria-label="Cover Image URL"
-                  value={form.coverImage}
-                  onChange={(event) => updateField("coverImage", event.target.value)}
-                  className="admin-input w-full"
-                />
-              </label>
-            </div>
-          </EditorSection>
-
-          <EditorSection
-            eyebrow="Body"
-            title="Implementation notes"
-            description="Write in plain Markdown and keep the preview honest while you shape the implementation notes."
-          >
-            <TextArea
-              aria-label="Implementation notes"
-              value={form.content}
-              onChange={(event) => updateField("content", event.target.value)}
-              rows={20}
-              className="admin-textarea w-full"
-            />
-          </EditorSection>
-
-          <EditorSection
-            eyebrow="Code"
-            title="SwiftUI code"
-            description="Store the actual implementation separately so the public snippet can present code as a first-class asset."
-          >
-            <TextArea
-              aria-label="SwiftUI code"
-              value={form.code}
-              onChange={(event) => updateField("code", event.target.value)}
-              rows={18}
-              className="admin-textarea w-full"
-              spellCheck={false}
-            />
-          </EditorSection>
-
-          <EditorSection
-            eyebrow="Prompts"
-            title="Prompt notes"
-            description="Capture the AI prompts, prompt fragments, or direction notes that helped shape the snippet."
-          >
-            <TextArea
-              aria-label="Prompt notes"
-              value={form.prompts}
-              onChange={(event) => updateField("prompts", event.target.value)}
-              rows={12}
-              className="admin-textarea w-full"
-            />
-          </EditorSection>
-
-          <EditorSection
-            eyebrow="SEO"
-            title="Search surface"
-            description="Shape how the snippet will read in search results and social previews."
-          >
-            <div className="grid gap-5">
-              <label className="grid gap-2">
-                <span className="type-mono-micro text-primary/45">SEO Title</span>
-                <Input
-                  aria-label="SEO Title"
-                  value={form.seoTitle}
-                  onChange={(event) => updateField("seoTitle", event.target.value)}
-                  className="admin-input w-full"
-                />
-              </label>
-              <label className="grid gap-2">
-                <span className="type-mono-micro text-primary/45">SEO Description</span>
-                <TextArea
-                  aria-label="SEO Description"
-                  value={form.seoDescription}
-                  onChange={(event) => updateField("seoDescription", event.target.value)}
-                  rows={4}
-                  className="admin-textarea w-full"
-                />
-              </label>
-            </div>
-          </EditorSection>
-        </motion.div>
-
-        <motion.aside initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 xl:sticky xl:top-6 xl:self-start">
-          <section className="surface-card rounded-[28px]">
-            <div className="border-b border-white/55 px-6 py-5">
-              <p className="type-mono-micro text-primary/40">Publishing State</p>
-              <h2 className="mt-3 text-2xl font-bold tracking-tight">Release controls</h2>
-            </div>
-            <div className="space-y-5 px-6 py-6">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-on-surface-variant">Current status</span>
-                <StatusBadge status={previewSnippet.status} />
-              </div>
-
-              <label className="grid gap-2">
-                <span className="type-mono-micro text-primary/45">Status</span>
-                <select
-                  value={form.status}
-                  onChange={(event) => updateField("status", event.target.value as SnippetStatus)}
-                  className="admin-select text-sm"
-                >
-                  {STATUS_OPTIONS.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="grid gap-2">
-                <span className="type-mono-micro text-primary/45">Publish At</span>
-                <input
-                  type="datetime-local"
-                  value={form.publishedAt}
-                  onChange={(event) => updateField("publishedAt", event.target.value)}
-                  className="admin-native-input"
-                />
-              </label>
-
-              <div className="surface-card-subtle grid gap-3 rounded-[22px] px-5 py-4">
-                <p className="type-mono-micro text-primary/40">Slug Preview</p>
-                <p className="text-sm text-on-surface-variant">/snippets/{previewSnippet.slug || "untitled-snippet"}</p>
-              </div>
-
-              <p className="text-sm leading-relaxed text-on-surface-variant">
-                Preview opens the real public snippet page. Save changes first if you want the iframe to reflect your latest edits.
-              </p>
-            </div>
-          </section>
-        </motion.aside>
-      </div>
+      </main>
 
       <Modal state={previewState}>
-        <Modal.Backdrop className="bg-primary/42 backdrop-blur-xl" />
-        <Modal.Container className="max-w-[min(1500px,96vw)]">
-          <Modal.Dialog className="surface-shell flex h-[92vh] w-full flex-col overflow-hidden rounded-[34px]">
-            <Modal.Header className="flex flex-wrap items-start justify-between gap-4 border-b border-white/55 px-6 py-5 md:px-8">
-              <div className="max-w-3xl">
-                <p className="type-mono-micro text-primary/40">Public Preview</p>
-                <Modal.Heading className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-primary">
-                  {hasSavedPreview ? "Real snippet page" : "Save once to preview"}
+        <Modal.Backdrop className="bg-black/80 backdrop-blur-2xl" />
+        <Modal.Container className="max-w-[min(1600px,96vw)]">
+          <Modal.Dialog className="vibe-glass flex h-[92vh] w-full flex-col overflow-hidden shadow-2xl border-white/10">
+            <Modal.Header className="flex items-center justify-between border-b border-white/5 px-8 py-6">
+              <div>
+                <p className="type-mono-micro text-white/30">Registry Preview</p>
+                <Modal.Heading className="mt-2 text-2xl font-semibold text-white">
+                  {hasSavedPreview ? "Registry Live View" : "Registry entry required"}
                 </Modal.Heading>
-                <p className="mt-3 text-sm leading-relaxed text-on-surface-variant">
-                  {hasSavedPreview
-                    ? hasUnsavedChanges
-                      ? "This iframe shows the last saved public version. Save again to preview your latest edits."
-                      : "This is the actual public snippet page rendered inside the admin workspace."
-                    : "New snippets need one successful save before they can be previewed on their public route."}
-                </p>
               </div>
               <div className="flex items-center gap-3">
                 {hasSavedPreview ? (
@@ -566,31 +673,30 @@ export default function AdminSnippetEditor() {
                     href={previewPath}
                     target="_blank"
                     rel="noreferrer"
-                    className="type-action rounded-full border border-white/55 bg-white/72 px-4 py-3 text-primary shadow-[0_10px_24px_rgba(17,24,39,0.06)] transition-all hover:border-white/75 hover:bg-white/88"
+                    className="admin-button-secondary flex h-10 items-center"
                   >
-                    Open tab
+                    Open in tab
                   </a>
                 ) : null}
-                <Button className="type-action" variant="primary" onPress={() => previewState.close()}>
+                <Button className="admin-button-primary h-10" onPress={() => previewState.close()}>
                   Close
                 </Button>
               </div>
             </Modal.Header>
-            <Modal.Body className="flex-1 bg-surface p-0">
+            <Modal.Body className="flex-1 bg-black/60 p-0">
               {hasSavedPreview ? (
                 <iframe
                   title="Snippet public preview"
                   src={previewPath}
-                  className="h-full w-full border-0 bg-white"
+                  className="h-full w-full border-0"
                 />
               ) : (
                 <div className="flex h-full items-center justify-center px-6">
                   <div className="max-w-xl text-center">
-                    <p className="type-mono-micro text-primary/35">Preview unavailable</p>
-                    <h3 className="mt-4 text-3xl font-bold tracking-tight text-primary">Create the first saved version</h3>
-                    <p className="mt-4 text-sm leading-7 text-on-surface-variant">
-                      Once this snippet has been saved, the modal will load the real public page at{" "}
-                      <span className="font-mono text-primary">/snippets/{previewSnippet.slug || "untitled-snippet"}</span>.
+                    <p className="type-mono-micro text-white/30">Awaiting sync</p>
+                    <h3 className="mt-4 text-3xl font-semibold text-white">Registry entry required</h3>
+                    <p className="mt-4 text-sm leading-relaxed text-white/50">
+                      The live preview route is generated from the registry entry. Save this draft to initialize the preview at <span className="font-mono text-white">/snippets/{form.slug || "untitled"}</span>.
                     </p>
                   </div>
                 </div>

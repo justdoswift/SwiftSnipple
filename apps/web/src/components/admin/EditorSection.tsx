@@ -15,12 +15,12 @@ export default function EditorSection({
   children,
 }: EditorSectionProps) {
   return (
-    <Card className="rounded-[28px]">
-      <Card.Header className="border-b border-white/55 px-6 py-5 md:px-8">
+    <Card className="admin-section-card border overflow-hidden">
+      <Card.Header className="px-6 pt-6 pb-4 md:px-8">
         <div>
-          <p className="type-mono-micro text-primary/40">{eyebrow}</p>
-          <h2 className="type-section-title mt-3 text-[1.75rem] md:text-[2.125rem]">{title}</h2>
-          <p className="type-body-sm mt-2 max-w-2xl">{description}</p>
+          <p className="admin-label text-[#738a94]">{eyebrow}</p>
+          <h2 className="admin-section-title mt-2">{title}</h2>
+          <p className="admin-section-description max-w-2xl">{description}</p>
         </div>
       </Card.Header>
       <Card.Content className="px-6 py-6 md:px-8">{children}</Card.Content>

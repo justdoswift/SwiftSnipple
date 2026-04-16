@@ -177,7 +177,7 @@
   }
 
   .admin-input {
-    @apply appearance-none rounded-[20px] shadow-none transition-all duration-200;
+    @apply appearance-none rounded-lg shadow-none transition-all duration-200;
     appearance: none;
     -webkit-appearance: none;
   }
@@ -185,13 +185,13 @@
   .input.public-input,
   .input.public-input-inverse,
   .input.admin-input {
-    --field-background: rgba(0, 0, 0, 0.58);
-    --field-foreground: rgba(255, 255, 255, 0.96);
-    --field-placeholder: rgba(255, 255, 255, 0.28);
-    --field-border: rgba(255, 255, 255, 0.10);
-    --color-field-focus: rgba(0, 0, 0, 0.72);
-    --color-field-border-hover: rgba(255, 255, 255, 0.12);
-    --color-field-border-focus: rgba(255, 255, 255, 0.16);
+    --field-background: rgba(255, 255, 255, 1);
+    --field-foreground: rgba(21, 23, 26, 1);
+    --field-placeholder: rgba(21, 23, 26, 0.3);
+    --field-border: rgba(229, 231, 235, 1);
+    --color-field-focus: rgba(255, 255, 255, 1);
+    --color-field-border-hover: rgba(209, 213, 219, 1);
+    --color-field-border-focus: rgba(48, 207, 67, 1);
   }
 
   .input.public-input:hover:not(:focus):not(:focus-visible),
@@ -200,8 +200,8 @@
   .input.public-input-inverse[data-hovered="true"]:not([data-focused="true"]):not([data-focus-visible="true"]),
   .input.admin-input:hover:not(:focus):not(:focus-visible),
   .input.admin-input[data-hovered="true"]:not([data-focused="true"]):not([data-focus-visible="true"]) {
-    background-color: rgba(0, 0, 0, 0.64);
-    border-color: rgba(255, 255, 255, 0.12);
+    background-color: rgba(255, 255, 255, 1);
+    border-color: rgba(209, 213, 219, 1);
   }
 
   .input.public-input:focus,
@@ -210,40 +210,40 @@
   .input.public-input-inverse[data-focused="true"],
   .input.admin-input:focus,
   .input.admin-input[data-focused="true"] {
-    @apply ring-4 ring-black/35;
-    background-color: rgba(0, 0, 0, 0.72);
-    border-color: rgba(255, 255, 255, 0.16);
+    @apply ring-2 ring-[#30cf43]/20;
+    background-color: rgba(255, 255, 255, 1);
+    border-color: rgba(48, 207, 67, 1);
   }
 
   .textarea.admin-textarea {
-    --field-background: rgba(0, 0, 0, 0.58);
-    --field-foreground: rgba(255, 255, 255, 0.96);
-    --field-placeholder: rgba(255, 255, 255, 0.28);
-    --field-border: rgba(255, 255, 255, 0.10);
-    --color-field-focus: rgba(0, 0, 0, 0.72);
-    --color-field-border-hover: rgba(255, 255, 255, 0.12);
-    --color-field-border-focus: rgba(255, 255, 255, 0.16);
-    @apply rounded-[20px] appearance-none text-white shadow-none outline-none transition-all duration-200;
+    --field-background: rgba(255, 255, 255, 1);
+    --field-foreground: rgba(21, 23, 26, 1);
+    --field-placeholder: rgba(21, 23, 26, 0.3);
+    --field-border: rgba(229, 231, 235, 1);
+    --color-field-focus: rgba(255, 255, 255, 1);
+    --color-field-border-hover: rgba(209, 213, 219, 1);
+    --color-field-border-focus: rgba(48, 207, 67, 1);
+    @apply rounded-lg appearance-none text-[#15171a] shadow-none outline-none transition-all duration-200;
     appearance: none;
     -webkit-appearance: none;
   }
 
   .textarea.admin-textarea:hover:not(:focus):not(:focus-visible),
   .textarea.admin-textarea[data-hovered="true"]:not([data-focused="true"]):not([data-focus-visible="true"]) {
-    background-color: rgba(0, 0, 0, 0.64);
-    border-color: rgba(255, 255, 255, 0.12);
+    background-color: rgba(255, 255, 255, 1);
+    border-color: rgba(209, 213, 219, 1);
   }
 
   .textarea.admin-textarea:focus,
   .textarea.admin-textarea[data-focused="true"] {
-    @apply ring-4 ring-black/35;
-    background-color: rgba(0, 0, 0, 0.72);
-    border-color: rgba(255, 255, 255, 0.16);
+    @apply ring-2 ring-[#30cf43]/20;
+    background-color: rgba(255, 255, 255, 1);
+    border-color: rgba(48, 207, 67, 1);
   }
 
   .admin-select,
   .admin-native-input {
-    @apply appearance-none rounded-[20px] border border-white/10 bg-black/58 px-4 py-3 text-base text-white shadow-none outline-none transition-all duration-200 hover:border-white/12 hover:bg-black/64 focus:border-white/16 focus:bg-black/72 focus:ring-4 focus:ring-black/35;
+    @apply appearance-none rounded-lg border border-[#e5e7eb] bg-white px-4 py-3 text-base text-[#15171a] shadow-none outline-none transition-all duration-200 hover:border-[#d1d5db] focus:border-[#30cf43] focus:ring-2 focus:ring-[#30cf43]/20;
     appearance: none;
     -webkit-appearance: none;
   }
@@ -264,25 +264,70 @@
   .admin-native-input:-webkit-autofill,
   .admin-native-input:-webkit-autofill:hover,
   .admin-native-input:-webkit-autofill:focus {
-    -webkit-text-fill-color: rgba(255, 255, 255, 0.96);
-    caret-color: rgba(255, 255, 255, 0.96);
-    -webkit-box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.72) inset;
-    box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.72) inset;
+    -webkit-text-fill-color: rgba(21, 23, 26, 1);
+    caret-color: rgba(21, 23, 26, 1);
+    -webkit-box-shadow: 0 0 0 1000px rgba(255, 255, 255, 1) inset;
+    box-shadow: 0 0 0 1000px rgba(255, 255, 255, 1) inset;
     transition: background-color 9999s ease-out 0s;
   }
 
   .admin-textarea:-webkit-autofill,
   .admin-textarea:-webkit-autofill:hover,
   .admin-textarea:-webkit-autofill:focus {
-    -webkit-text-fill-color: rgba(255, 255, 255, 0.96);
-    caret-color: rgba(255, 255, 255, 0.96);
-    -webkit-box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.72) inset;
-    box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.72) inset;
+    -webkit-text-fill-color: rgba(21, 23, 26, 1);
+    caret-color: rgba(21, 23, 26, 1);
+    -webkit-box-shadow: 0 0 0 1000px rgba(255, 255, 255, 1) inset;
+    box-shadow: 0 0 0 1000px rgba(255, 255, 255, 1) inset;
     transition: background-color 9999s ease-out 0s;
   }
 
   .public-copy-button {
     @apply bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] text-white/50 hover:text-white hover:bg-white/10 transition-all;
+  }
+
+  /* Vibe island admin theme - Dark mode minimalist */
+  .admin-page {
+    @apply bg-black text-white;
+  }
+
+  .admin-header {
+    @apply border border-white/10 bg-black/80 backdrop-blur-md shadow-[0_20px_56px_rgba(0,0,0,0.35)];
+  }
+
+  .admin-section-card {
+    @apply bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] rounded-[24px];
+  }
+
+  .admin-button-primary {
+    @apply bg-white text-black rounded-full px-5 py-2 font-semibold hover:bg-white/90 transition-all active:scale-95;
+  }
+
+  .admin-button-secondary {
+    @apply bg-white/5 text-white border border-white/10 rounded-full px-5 py-2 hover:bg-white/10 transition-all active:scale-95;
+  }
+
+  .admin-button-danger {
+    @apply bg-red-500/10 text-red-500 border border-red-500/20 rounded-full px-5 py-2 hover:bg-red-500/20 transition-all;
+  }
+
+  .admin-tab {
+    @apply border-b-2 border-transparent text-white/30 transition-all;
+  }
+
+  .admin-tab-active {
+    @apply border-b-white text-white;
+  }
+
+  .admin-label {
+    @apply font-mono text-[10px] uppercase font-bold tracking-[0.1em] text-white/30;
+  }
+
+  .admin-section-title {
+    @apply text-xl font-semibold text-white tracking-tight;
+  }
+
+  .admin-section-description {
+    @apply text-sm text-[#738a94] mt-1;
   }
 }
 

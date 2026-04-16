@@ -1,8 +1,22 @@
 import { ArrowUpRight, PanelLeftOpen } from "lucide-react";
+import { useMemo, useState } from "react";
 import { Link, Outlet } from "react-router-dom";
 import AdminSidebar from "./AdminSidebar";
+import { type AdminHeaderConfig, type AdminHeaderOutletContext } from "./useAdminHeader";
 
 export default function AdminLayout() {
+  const [headerConfig, setHeaderConfig] = useState<AdminHeaderConfig | null>(null);
+  const outletContext = useMemo<AdminHeaderOutletContext>(() => ({ setHeaderConfig }), []);
+  const activeHeader = headerConfig ?? {
+    start: (
+      <div className="min-w-0">
+        <p className="type-mono-micro text-white/30">Snippet Workspace</p>
+        <h1 className="mt-2 truncate text-sm font-semibold text-white/90">Admin Console</h1>
+      </div>
+    ),
+  };
+  const hasCenter = Boolean(activeHeader.center);
+
   return (
     <div className="min-h-screen bg-surface">
       <div className="glass-header mx-4 mt-4 rounded-[24px] px-6 py-4 md:hidden">
@@ -25,21 +39,48 @@ export default function AdminLayout() {
           <AdminSidebar />
         </div>
         <div className="min-w-0">
-          <header className="mx-6 mt-6 hidden rounded-[28px] px-10 py-6 md:flex md:items-center md:justify-between glass-header">
-            <div>
-              <p className="type-mono-micro text-primary/40">Snippet Workspace</p>
-              <p className="type-body-sm mt-2">
-                Draft, stage, and publish SwiftUI snippets from one lightweight publishing surface.
-              </p>
-            </div>
-            <Link
-              to="/"
-              className="type-action flex items-center gap-2 rounded-full border border-white/55 bg-white/72 px-4 py-3 text-black shadow-[0_10px_24px_rgba(17,24,39,0.06)] transition-all hover:border-white/75 hover:bg-white/88"
-            >
-              View Front Site <ArrowUpRight className="h-3.5 w-3.5" />
-            </Link>
-          </header>
-          <Outlet />
+          <div className="sticky top-4 z-40 mx-6 mt-6 hidden md:block">
+            <header className="admin-header glass-header rounded-[28px] px-6 py-4 xl:px-8">
+              {hasCenter ? (
+                <div className="flex flex-col gap-4 xl:grid xl:grid-cols-[260px_minmax(0,1fr)_max-content] xl:items-center xl:gap-6 2xl:grid-cols-[320px_minmax(0,1fr)_max-content]">
+                  <div className="min-w-0">
+                    {activeHeader.start}
+                  </div>
+                  <div className="min-w-0">
+                    {activeHeader.center}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5 2xl:gap-2 xl:flex-nowrap xl:justify-end">
+                    {activeHeader.end}
+                    <Link
+                      to="/"
+                      className="type-action inline-flex h-10 shrink-0 items-center gap-1 rounded-full border border-white/12 bg-white/6 px-2.5 text-white/72 transition-all hover:border-white/20 hover:bg-white/10 hover:text-white min-[1500px]:gap-1.5 min-[1500px]:px-3 2xl:gap-2 2xl:px-4"
+                    >
+                      <span className="min-[1500px]:hidden">Site</span>
+                      <span className="hidden min-[1500px]:inline min-[1850px]:hidden">Front Site</span>
+                      <span className="hidden min-[1850px]:inline">View Front Site</span>
+                      <ArrowUpRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:gap-6">
+                  <div className="min-w-0 xl:flex-1">
+                    {activeHeader.start}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 xl:ml-auto xl:justify-end">
+                    {activeHeader.end}
+                    <Link
+                      to="/"
+                      className="type-action inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-white/12 bg-white/6 px-4 text-white/72 transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
+                    >
+                      View Front Site <ArrowUpRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </header>
+          </div>
+          <Outlet context={outletContext} />
         </div>
       </div>
     </div>

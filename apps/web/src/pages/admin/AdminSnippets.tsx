@@ -1,8 +1,8 @@
-import { Search } from "lucide-react";
-import { Button, Card, Chip, Input } from "../../lib/heroui";
+import { Card, Chip, Input } from "../../lib/heroui";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import StatusBadge from "../../components/admin/StatusBadge";
+import { useAdminHeader } from "../../components/admin/useAdminHeader";
 import { getSnippets } from "../../services/snippets";
 import { Snippet, SnippetStatus } from "../../types";
 
@@ -25,6 +25,27 @@ export default function AdminSnippets() {
   const [statusFilter, setStatusFilter] = useState<SnippetStatus | "All">("All");
   const [categoryFilter, setCategoryFilter] = useState<string>("All");
   const [query, setQuery] = useState("");
+  const headerConfig = useMemo(
+    () => ({
+      start: (
+        <div className="min-w-0">
+          <p className="type-mono-micro text-white/30">Snippet Workspace</p>
+          <h1 className="mt-2 truncate text-sm font-semibold text-white/90">Snippet Library</h1>
+        </div>
+      ),
+      end: (
+        <Link
+          to="/admin/snippets/new"
+          className="admin-button-primary type-action inline-flex h-10 shrink-0 items-center px-4 text-black"
+        >
+          New Snippet
+        </Link>
+      ),
+    }),
+    [],
+  );
+
+  useAdminHeader(headerConfig);
 
   useEffect(() => {
     let active = true;
@@ -66,25 +87,14 @@ export default function AdminSnippets() {
 
   return (
     <div className="px-6 py-10 md:px-10 md:py-12">
-      <section className="flex flex-col gap-5 border-b border-outline-variant/10 pb-8 xl:flex-row xl:items-end xl:justify-between">
-        <div>
-          <p className="type-mono-micro text-primary/40">Snippets</p>
-          <h1 className="type-page-title mt-4">Snippet library</h1>
-          <p className="type-body mt-4 max-w-2xl">
+      <section className="space-y-3">
+        {isLoading ? <p className="type-body-sm text-primary/50">Loading snippet library...</p> : null}
+        {error ? <p className="type-body-sm text-red-600">{error}</p> : null}
+        {!isLoading && !error ? (
+          <p className="type-body-sm text-primary/45">
             Filter by publishing stage, search by title, and jump straight into editing without leaving the library workflow.
           </p>
-          {isLoading ? <p className="type-body-sm mt-4 text-primary/50">Loading snippet library...</p> : null}
-          {error ? <p className="type-body-sm mt-4 text-red-600">{error}</p> : null}
-        </div>
-        <Link
-          to="/admin/snippets/new"
-          className="hidden"
-        >
-          New snippet
-        </Link>
-        <Button className="type-action" color="primary" radius="full" onPress={() => { window.location.href = "/admin/snippets/new"; }}>
-          New snippet
-        </Button>
+        ) : null}
       </section>
 
       <Card className="mt-8 rounded-[28px]">

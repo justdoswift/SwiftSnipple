@@ -46,7 +46,7 @@ describe("Home", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText("Loading published snippets...")).toBeInTheDocument();
+    expect(screen.getByText("Accessing Data Stores...")).toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getAllByText("Glass Navigation")).toHaveLength(2);

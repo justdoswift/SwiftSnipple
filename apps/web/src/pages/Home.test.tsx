@@ -20,6 +20,8 @@ const publishedSnippet: Snippet = {
   tags: ["SwiftUI"],
   coverImage: "https://example.com/cover.jpg",
   content: "# Title",
+  code: "Text(\"Hello\")",
+  prompts: "Build a polished navigation snippet.",
   seoTitle: "Glass Navigation",
   seoDescription: "SEO copy",
   status: "Published",

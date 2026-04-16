@@ -1,4 +1,4 @@
-.PHONY: dev stop build start logs
+.PHONY: dev stop build start restart logs
 
 dev:
 	bash scripts/dev.sh
@@ -11,6 +11,9 @@ build:
 
 start:
 	bash scripts/start.sh
+
+restart:
+	bash scripts/restart.sh
 
 logs:
 	docker compose logs -f

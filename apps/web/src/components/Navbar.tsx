@@ -1,43 +1,50 @@
 import { Search } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Button, Input } from "../lib/heroui";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Navbar() {
+  const navigate = useNavigate();
+
   return (
-    <nav className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant/15 shadow-[0_20px_40px_rgba(25,28,30,0.04)]">
-      <div className="flex justify-between items-center px-8 py-4 max-w-[1440px] mx-auto">
-        <Link to="/" className="text-xl font-bold tracking-tighter text-primary font-sans">
-          Rebuilt in SwiftUI
+    <nav className="fixed top-0 z-50 w-full px-4 pt-4 md:px-6">
+      <div className="public-nav-shell mx-auto flex max-w-[1380px] items-center justify-between rounded-[22px] px-5 py-3 md:px-8">
+        <Link to="/" className="type-card-title font-sans font-bold tracking-tight text-white">
+          SwiftSnipple
         </Link>
         
-        <div className="hidden md:flex items-center gap-8 font-sans tracking-tight">
-          <Link to="/" className="text-primary border-b border-primary pb-1 transition-colors duration-200">
+        <div className="hidden items-center gap-8 md:flex">
+          <Link to="/" className="type-action text-white transition-all hover:opacity-100">
             Browse
           </Link>
-          <a href="/#library-index" className="text-primary/60 hover:text-primary transition-colors duration-200">
+          <a href="/#library-index" className="type-action text-white/40 transition-all hover:text-white">
             Library
           </a>
-          <a href="/#latest-additions" className="text-primary/60 hover:text-primary transition-colors duration-200">
+          <a href="/#latest-additions" className="type-action text-white/40 transition-all hover:text-white">
             Snippets
           </a>
-          <a href="/#latest-additions" className="text-primary/60 hover:text-primary transition-colors duration-200">
-            Latest
-          </a>
-          <Link to="/admin" className="text-primary/60 hover:text-primary transition-colors duration-200">
-            Admin
+          <Link to="/admin" className="type-action text-white/40 transition-all hover:text-white">
+            Console
           </Link>
         </div>
 
-        <div className="flex items-center gap-6">
-          <div className="hidden md:flex items-center bg-surface-container-low rounded-full px-4 py-1.5 gap-2 cursor-pointer">
-            <Search className="w-4 h-4 text-on-surface-variant" />
-            <span className="text-[10px] font-mono uppercase tracking-widest text-on-surface-variant">Search Snippets</span>
+        <div className="flex items-center gap-3 md:gap-6">
+          <div className="relative hidden md:block">
+            <Input
+              aria-label="Search"
+              isReadOnly
+              placeholder="SEARCH"
+              className="public-input w-[180px]"
+              startContent={<Search size={14} className="text-white/20" />}
+            />
           </div>
-          <Link
-            to="/admin"
-            className="bg-primary text-white px-5 py-2 text-sm font-medium hover:scale-[1.01] transition-transform"
+          <Button
+            className="type-action h-10 border border-white/20 bg-white px-6 text-black hover:bg-white/90"
+            radius="full"
+            variant="solid"
+            onPress={() => navigate("/admin")}
           >
-            Open Console
-          </Link>
+            Launch
+          </Button>
         </div>
       </div>
     </nav>

@@ -81,6 +81,8 @@ func (f *fakeSnippetStore) Create(_ context.Context, payload domain.SnippetPaylo
 		Tags:           payload.Tags,
 		CoverImage:     payload.CoverImage,
 		Content:        payload.Content,
+		Code:           payload.Code,
+		Prompts:        payload.Prompts,
 		SEOTitle:       payload.SEOTitle,
 		SEODescription: payload.SEODescription,
 		Status:         payload.Status,
@@ -109,6 +111,8 @@ func (f *fakeSnippetStore) Update(_ context.Context, id string, payload domain.S
 	snippet.Tags = payload.Tags
 	snippet.CoverImage = payload.CoverImage
 	snippet.Content = payload.Content
+	snippet.Code = payload.Code
+	snippet.Prompts = payload.Prompts
 	snippet.SEOTitle = payload.SEOTitle
 	snippet.SEODescription = payload.SEODescription
 	snippet.Status = payload.Status

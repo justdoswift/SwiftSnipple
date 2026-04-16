@@ -9,11 +9,12 @@ const NAV_ITEMS = [
 
 export default function AdminSidebar() {
   return (
-    <aside className="border-r border-outline-variant/10 bg-surface-container-low/40 px-6 py-8 md:px-8">
+    <aside className="px-6 py-8 md:px-8">
+      <div className="surface-card-subtle min-h-[calc(100vh-4rem)] rounded-[30px] px-6 py-8">
       <div className="mb-10">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-primary/40">Snippet Console</p>
-        <h1 className="mt-3 text-3xl font-black tracking-tighter">Rebuilt in SwiftUI</h1>
-        <p className="mt-3 max-w-xs text-sm leading-relaxed text-on-surface-variant">
+        <p className="type-mono-micro text-primary/40">Snippet Console</p>
+        <h1 className="type-section-title mt-3 text-[2rem]">Rebuilt in SwiftUI</h1>
+        <p className="type-body-sm mt-3 max-w-xs">
           Publishing tools for drafting, staging, and shipping reusable SwiftUI entries.
         </p>
       </div>
@@ -25,14 +26,14 @@ export default function AdminSidebar() {
             end={end}
             to={to}
             className={({ isActive }) =>
-              `flex items-center justify-between border px-4 py-4 transition-colors ${
+              `flex items-center justify-between rounded-[22px] border px-4 py-4 transition-all ${
                 isActive
-                  ? "border-primary bg-primary text-white"
-                  : "border-outline-variant/10 bg-surface-container-lowest text-primary hover:border-primary/25"
+                  ? "border-transparent bg-primary text-white shadow-[0_14px_30px_rgba(22,24,29,0.18)]"
+                  : "border-white/55 bg-white/76 text-primary hover:border-white/75 hover:bg-white/88"
               }`
             }
           >
-            <span className="flex items-center gap-3 text-sm font-semibold tracking-tight">
+            <span className="flex items-center gap-3 text-base font-semibold tracking-tight">
               <Icon className="h-4 w-4" />
               {label}
             </span>
@@ -40,6 +41,7 @@ export default function AdminSidebar() {
           </NavLink>
         ))}
       </nav>
+      </div>
     </aside>
   );
 }

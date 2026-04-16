@@ -1,4 +1,5 @@
 import { motion } from "motion/react";
+import { Button, Card, ProgressBar } from "../../lib/heroui";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import StatCard from "../../components/admin/StatCard";
@@ -54,16 +55,16 @@ export default function AdminDashboard() {
     <div className="px-6 py-10 md:px-10 md:py-12">
       <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
         <div className="max-w-4xl">
-          <p className="font-mono text-[10px] uppercase tracking-[0.26em] text-primary/40">Snippet Overview</p>
-          <h1 className="mt-4 text-[3rem] font-black tracking-tighter leading-[0.92] text-primary md:text-[4.75rem]">
+          <p className="type-mono-micro text-primary/40">Snippet Overview</p>
+          <h1 className="type-page-title mt-4 text-primary md:text-[4.5rem]">
             Ship SwiftUI snippets with the same care you use to build them.
           </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-on-surface-variant">
+          <p className="type-body-lg mt-6 max-w-2xl">
             This console keeps snippet metadata, publishing state, and implementation notes in one place so new entries
             can move from draft to release without losing clarity.
           </p>
-          {isLoading ? <p className="mt-4 text-sm text-primary/50">Loading snippet metrics...</p> : null}
-          {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
+          {isLoading ? <p className="type-body-sm mt-4 text-primary/50">Loading snippet metrics...</p> : null}
+          {error ? <p className="type-body-sm mt-4 text-red-600">{error}</p> : null}
         </div>
       </motion.section>
 
@@ -75,24 +76,24 @@ export default function AdminDashboard() {
       </section>
 
       <section className="mt-12 grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_360px]">
-        <div className="border border-outline-variant/15 bg-surface-container-lowest">
-          <div className="flex items-end justify-between border-b border-outline-variant/10 px-6 py-5 md:px-8">
+        <Card className="rounded-[28px]">
+          <Card.Header className="flex items-end justify-between border-b border-white/55 px-6 py-5 md:px-8">
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary/40">Recent Activity</p>
-              <h2 className="mt-3 text-2xl font-bold tracking-tight">Latest edits and launches</h2>
+              <p className="type-mono-micro text-primary/40">Recent Activity</p>
+              <h2 className="type-section-title mt-3 text-[1.9rem]">Latest edits and launches</h2>
             </div>
             <Link
               to="/admin/snippets"
-              className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/60 transition-colors hover:text-primary"
+              className="type-action text-primary/60 transition-colors hover:text-primary"
             >
               Open list
             </Link>
-          </div>
-          <div className="divide-y divide-outline-variant/10">
+          </Card.Header>
+          <Card.Content className="divide-y divide-outline-variant/10 p-0">
             {!isLoading && !recentSnippets.length ? (
               <div className="px-6 py-10 text-center">
-                <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary/35">No activity yet</p>
-                <p className="mt-3 text-sm text-on-surface-variant">
+                <p className="type-mono-micro text-primary/35">No activity yet</p>
+                <p className="type-body-sm mt-3">
                   Create the first snippet to start the publishing timeline.
                 </p>
               </div>
@@ -101,27 +102,28 @@ export default function AdminDashboard() {
               <Link
                 key={snippet.id}
                 to={`/admin/snippets/${snippet.id}`}
-                className="grid gap-5 px-6 py-6 transition-colors hover:bg-surface-container-low/40 md:grid-cols-[1fr_auto]"
+                className="grid gap-5 px-6 py-6 transition-colors hover:bg-white/38 md:grid-cols-[1fr_auto]"
               >
                 <div>
-                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/35">{snippet.category}</p>
-                  <h3 className="mt-2 text-xl font-bold tracking-tight">{snippet.title}</h3>
-                  <p className="mt-3 max-w-2xl text-sm leading-relaxed text-on-surface-variant">{snippet.excerpt}</p>
+                  <p className="type-mono-micro text-primary/35">{snippet.category}</p>
+                  <h3 className="type-card-title mt-2 text-[1.35rem]">{snippet.title}</h3>
+                  <p className="type-body-sm mt-3 max-w-2xl">{snippet.excerpt}</p>
                 </div>
                 <div className="flex flex-col items-start gap-4 md:items-end">
                   <StatusBadge status={snippet.status} />
-                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/40">
+                  <span className="type-mono-micro text-primary/40">
                     Updated {formatDate(snippet.updatedAt)}
                   </span>
                 </div>
               </Link>
             ))}
-          </div>
-        </div>
+          </Card.Content>
+        </Card>
 
         <div className="space-y-6">
-          <div className="border border-outline-variant/15 bg-surface-container-lowest p-6">
-            <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary/40">Status Mix</p>
+          <Card className="rounded-[26px]">
+            <Card.Content className="p-6">
+            <p className="type-mono-micro text-primary/40">Status Mix</p>
             <div className="mt-6 space-y-4">
               {[
                 ["Draft", draftCount],
@@ -130,44 +132,51 @@ export default function AdminDashboard() {
                 ["Published", publishedCount],
               ].map(([label, count]) => (
                 <div key={label} className="grid grid-cols-[110px_1fr_auto] items-center gap-4">
-                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/50">{label}</span>
-                  <div className="h-2 overflow-hidden bg-surface-container-low">
-                    <div
-                      className="h-full bg-primary"
-                      style={{ width: `${snippets.length ? (Number(count) / snippets.length) * 100 : 0}%` }}
-                    />
-                  </div>
+                  <span className="type-mono-micro text-primary/50">{label}</span>
+                  <ProgressBar
+                    aria-label={`${label} ratio`}
+                    className="w-full"
+                    value={snippets.length ? (Number(count) / snippets.length) * 100 : 0}
+                  />
                   <span className="text-sm font-semibold">{count}</span>
                 </div>
               ))}
             </div>
-          </div>
+            </Card.Content>
+          </Card>
 
-          <div className="border border-outline-variant/15 bg-primary p-6 text-white">
-            <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-white/50">Next Up</p>
-            <h2 className="mt-3 text-2xl font-bold tracking-tight">Ship the next entry faster</h2>
-            <p className="mt-3 text-sm leading-relaxed text-white/70">
+          <Card className="rounded-[28px] bg-primary-container text-white">
+            <Card.Content className="p-6">
+            <p className="type-mono-micro text-white/50">Next Up</p>
+            <h2 className="type-section-title mt-3 text-[1.9rem] text-white">Ship the next entry faster</h2>
+            <p className="type-body-sm mt-3 text-white/70">
               Shape the snippet metadata first, then refine the notes and preview until the public card feels right.
             </p>
-            <Link
-              to="/admin/snippets/new"
-              className="mt-6 inline-flex bg-white px-5 py-3 font-mono text-[10px] uppercase tracking-[0.2em] text-primary"
+            <Button
+              className="type-action mt-6 bg-white text-black hover:bg-white/90"
+              radius="full"
+              onPress={() => {
+                window.location.href = "/admin/snippets/new";
+              }}
             >
               Start new snippet
-            </Link>
-          </div>
+            </Button>
+            </Card.Content>
+          </Card>
 
-          <div className="border border-outline-variant/15 bg-surface-container-lowest p-6">
-            <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary/40">Scheduled Release</p>
-            <h2 className="mt-3 text-xl font-bold tracking-tight">
+          <Card className="rounded-[26px]">
+            <Card.Content className="p-6">
+            <p className="type-mono-micro text-primary/40">Scheduled Release</p>
+            <h2 className="type-card-title mt-3 text-[1.35rem]">
               {snippets.find((snippet) => snippet.status === "Scheduled")?.title ?? "No scheduled snippet"}
             </h2>
-            <p className="mt-3 text-sm leading-relaxed text-on-surface-variant">
+            <p className="type-body-sm mt-3">
               {snippets.find((snippet) => snippet.status === "Scheduled")?.publishedAt
                 ? `Queued for ${formatDate(snippets.find((snippet) => snippet.status === "Scheduled")?.publishedAt ?? null)}`
                 : "Nothing is queued for release right now."}
             </p>
-          </div>
+            </Card.Content>
+          </Card>
         </div>
       </section>
     </div>

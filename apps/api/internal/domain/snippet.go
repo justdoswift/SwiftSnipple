@@ -20,6 +20,8 @@ type Snippet struct {
 	Tags           []string      `json:"tags"`
 	CoverImage     string        `json:"coverImage"`
 	Content        string        `json:"content"`
+	Code           string        `json:"code"`
+	Prompts        string        `json:"prompts"`
 	SEOTitle       string        `json:"seoTitle"`
 	SEODescription string        `json:"seoDescription"`
 	Status         SnippetStatus `json:"status"`
@@ -35,6 +37,8 @@ type SnippetPayload struct {
 	Tags           []string      `json:"tags"`
 	CoverImage     string        `json:"coverImage"`
 	Content        string        `json:"content"`
+	Code           string        `json:"code"`
+	Prompts        string        `json:"prompts"`
 	SEOTitle       string        `json:"seoTitle"`
 	SEODescription string        `json:"seoDescription"`
 	Status         SnippetStatus `json:"status"`

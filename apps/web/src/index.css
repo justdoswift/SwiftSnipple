@@ -1,23 +1,183 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+@layer theme, base, components, utilities;
+
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "@heroui/styles/base" layer(base);
+@import "@heroui/styles/themes/default" layer(theme);
+@import "@heroui/styles/components/button.css" layer(components);
+@import "@heroui/styles/components/card.css" layer(components);
+@import "@heroui/styles/components/chip.css" layer(components);
+@import "@heroui/styles/components/input.css" layer(components);
+@import "@heroui/styles/components/textarea.css" layer(components);
+@import "@heroui/styles/components/modal.css" layer(components);
+@import "@heroui/styles/components/progress-bar.css" layer(components);
+@import "@heroui/styles/components/spinner.css" layer(components);
+@import "@heroui/styles/utilities";
+@import "@heroui/styles/variants";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Space Grotesk", ui-monospace, SFMono-Regular, monospace;
+  --font-sans: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Helvetica Neue", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "SF Mono", SFMono-Regular, ui-monospace, Menlo, Monaco, monospace;
   
-  --color-surface: #f7f9fb;
-  --color-surface-container-low: #f2f4f6;
-  --color-surface-container-lowest: #ffffff;
-  --color-surface-dim: #d8dadc;
-  --color-outline-variant: #c6c6cd;
-  --color-on-surface-variant: #45464d;
-  --color-primary: #000000;
-  --color-primary-container: #131b2e;
+  --color-surface: #000000;
+  --color-surface-container-low: #0a0a0a;
+  --color-surface-container-lowest: #050505;
+  --color-surface-dim: #111111;
+  --color-outline-variant: rgba(255, 255, 255, 0.1);
+  --color-on-surface-variant: rgba(255, 255, 255, 0.6);
+  --color-primary: #ffffff;
+  --color-primary-container: #111111;
+
+  --ease-vibe: cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @layer base {
+  :root {
+    --background: #000000;
+    --foreground: #ffffff;
+    --surface: #0a0a0a;
+    --surface-foreground: var(--foreground);
+    --overlay: rgba(0, 0, 0, 0.8);
+    --overlay-foreground: var(--foreground);
+    --default: #111111;
+    --default-foreground: var(--foreground);
+    --accent: #ffffff;
+    --accent-foreground: #000000;
+    --muted: rgba(255, 255, 255, 0.4);
+    --border: rgba(255, 255, 255, 0.08);
+    --separator: rgba(255, 255, 255, 0.08);
+    --focus: #ffffff;
+    --radius: 12px;
+    --field-radius: 10px;
+    --surface-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+    --overlay-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    --field-shadow: none;
+  }
+
+  html {
+    @apply scroll-smooth selection:bg-white selection:text-black;
+  }
+
   body {
-    @apply bg-surface text-primary font-sans antialiased;
+    @apply bg-black text-white font-sans antialiased overflow-x-hidden;
+  }
+}
+
+@layer components {
+  /* Typography System */
+  .type-display {
+    @apply text-[3rem] font-bold leading-[1.05] tracking-[-0.04em] md:text-[5rem];
+  }
+
+  .type-page-title {
+    @apply text-[2rem] font-semibold leading-[1.1] tracking-[-0.03em] md:text-[3.5rem];
+  }
+
+  .type-section-title {
+    @apply text-[1.5rem] font-semibold leading-[1.2] tracking-[-0.02em] md:text-[2.2rem];
+  }
+
+  .type-card-title {
+    @apply text-[1.1rem] font-semibold leading-tight tracking-[-0.01em] md:text-[1.3rem];
+  }
+
+  .type-body-lg {
+    @apply text-[1.1rem] leading-[1.6] text-white/70;
+  }
+
+  .type-body {
+    @apply text-[1rem] leading-[1.6] text-white/60;
+  }
+
+  .type-body-sm {
+    @apply text-[0.875rem] leading-[1.5] text-white/50;
+  }
+
+  .type-mono-label {
+    @apply font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-white/40;
+  }
+
+  .type-mono-micro {
+    @apply font-mono text-[10px] font-medium uppercase tracking-[0.16em];
+  }
+
+  .type-action {
+    @apply font-mono text-[11px] font-semibold uppercase tracking-[0.1em];
+  }
+
+  .type-code-block {
+    @apply font-mono text-[0.875rem] leading-7;
+  }
+
+  .type-code-inline {
+    @apply font-mono text-[0.9em] rounded bg-white/5 px-1.5 py-0.5;
+  }
+
+  /* Vibe UI Components */
+  .vibe-glass {
+    @apply bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)];
+  }
+
+  .vibe-glass-hover {
+    @apply transition-all duration-300 hover:bg-white/[0.06] hover:border-white/20;
+  }
+
+  .vibe-grain {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  }
+
+  /* Legend Public Classes Overrides */
+  .public-theme {
+    @apply bg-black text-white;
+  }
+
+  .public-nav-shell {
+    @apply bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] shadow-none;
+  }
+
+  .public-surface {
+    @apply bg-white/[0.03] backdrop-blur-xl border rounded-[24px] border-white/5 shadow-[0_8px_32px_rgba(0,0,0,0.4)];
+  }
+
+  .public-surface-subtle {
+    @apply bg-white/[0.02] border border-white/[0.04] rounded-[20px];
+  }
+
+  .public-surface-strong {
+    @apply bg-white/[0.05] border border-white/10 rounded-[28px] shadow-2xl;
+  }
+
+  .public-chip {
+    @apply font-mono border border-white/10 bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-colors;
+  }
+
+  .public-chip-strong {
+    @apply font-mono bg-white text-black font-bold;
+  }
+
+  .public-input [data-slot="input-wrapper"] {
+    @apply h-11 rounded-[12px] border border-white/10 bg-white/[0.02] shadow-none transition-all focus-within:border-white/30 focus-within:bg-white/[0.05];
+  }
+
+  .public-input [data-slot="input"] {
+    @apply font-mono text-[0.9rem] text-white placeholder:text-white/20;
+  }
+
+  .public-input-inverse [data-slot="input-wrapper"] {
+    @apply h-12 rounded-[14px] border border-white/10 bg-white/[0.04] shadow-none transition-all focus-within:border-white/40;
+  }
+
+  .public-copy-button {
+    @apply bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] text-white/50 hover:text-white hover:bg-white/10 transition-all;
   }
 }
 

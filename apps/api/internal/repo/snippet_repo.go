@@ -25,7 +25,7 @@ func NewSnippetRepository(pool *pgxpool.Pool) *SnippetRepository {
 
 func (r *SnippetRepository) List(ctx context.Context) ([]domain.Snippet, error) {
 	rows, err := r.pool.Query(ctx, `
-		SELECT id, title, slug, excerpt, category, tags, cover_image, content, seo_title, seo_description, status, updated_at, published_at
+		SELECT id, title, slug, excerpt, category, tags, cover_image, content, code, prompts, seo_title, seo_description, status, updated_at, published_at
 		FROM snippets
 		ORDER BY updated_at DESC
 	`)
@@ -48,7 +48,7 @@ func (r *SnippetRepository) List(ctx context.Context) ([]domain.Snippet, error) 
 
 func (r *SnippetRepository) GetByID(ctx context.Context, id string) (domain.Snippet, error) {
 	row := r.pool.QueryRow(ctx, `
-		SELECT id, title, slug, excerpt, category, tags, cover_image, content, seo_title, seo_description, status, updated_at, published_at
+		SELECT id, title, slug, excerpt, category, tags, cover_image, content, code, prompts, seo_title, seo_description, status, updated_at, published_at
 		FROM snippets
 		WHERE id = $1
 	`, id)
@@ -66,7 +66,7 @@ func (r *SnippetRepository) GetByID(ctx context.Context, id string) (domain.Snip
 
 func (r *SnippetRepository) GetBySlug(ctx context.Context, slug string) (domain.Snippet, error) {
 	row := r.pool.QueryRow(ctx, `
-		SELECT id, title, slug, excerpt, category, tags, cover_image, content, seo_title, seo_description, status, updated_at, published_at
+		SELECT id, title, slug, excerpt, category, tags, cover_image, content, code, prompts, seo_title, seo_description, status, updated_at, published_at
 		FROM snippets
 		WHERE slug = $1
 	`, slug)
@@ -88,11 +88,11 @@ func (r *SnippetRepository) Create(ctx context.Context, payload domain.SnippetPa
 
 	row := r.pool.QueryRow(ctx, `
 		INSERT INTO snippets (
-			id, title, slug, excerpt, category, tags, cover_image, content, seo_title, seo_description, status, published_at, created_at, updated_at
+			id, title, slug, excerpt, category, tags, cover_image, content, code, prompts, seo_title, seo_description, status, published_at, created_at, updated_at
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW()
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW(), NOW()
 		)
-		RETURNING id, title, slug, excerpt, category, tags, cover_image, content, seo_title, seo_description, status, updated_at, published_at
+		RETURNING id, title, slug, excerpt, category, tags, cover_image, content, code, prompts, seo_title, seo_description, status, updated_at, published_at
 	`,
 		id,
 		payload.Title,
@@ -102,6 +102,8 @@ func (r *SnippetRepository) Create(ctx context.Context, payload domain.SnippetPa
 		payload.Tags,
 		payload.CoverImage,
 		payload.Content,
+		payload.Code,
+		payload.Prompts,
 		payload.SEOTitle,
 		payload.SEODescription,
 		payload.Status,
@@ -124,13 +126,15 @@ func (r *SnippetRepository) Update(ctx context.Context, id string, payload domai
 			tags = $6,
 			cover_image = $7,
 			content = $8,
-			seo_title = $9,
-			seo_description = $10,
-			status = $11,
-			published_at = $12,
+			code = $9,
+			prompts = $10,
+			seo_title = $11,
+			seo_description = $12,
+			status = $13,
+			published_at = $14,
 			updated_at = NOW()
 		WHERE id = $1
-		RETURNING id, title, slug, excerpt, category, tags, cover_image, content, seo_title, seo_description, status, updated_at, published_at
+		RETURNING id, title, slug, excerpt, category, tags, cover_image, content, code, prompts, seo_title, seo_description, status, updated_at, published_at
 	`,
 		id,
 		payload.Title,
@@ -140,6 +144,8 @@ func (r *SnippetRepository) Update(ctx context.Context, id string, payload domai
 		payload.Tags,
 		payload.CoverImage,
 		payload.Content,
+		payload.Code,
+		payload.Prompts,
 		payload.SEOTitle,
 		payload.SEODescription,
 		payload.Status,
@@ -166,7 +172,7 @@ func (r *SnippetRepository) Publish(ctx context.Context, id string) (domain.Snip
 			published_at = $2,
 			updated_at = NOW()
 		WHERE id = $1
-		RETURNING id, title, slug, excerpt, category, tags, cover_image, content, seo_title, seo_description, status, updated_at, published_at
+		RETURNING id, title, slug, excerpt, category, tags, cover_image, content, code, prompts, seo_title, seo_description, status, updated_at, published_at
 	`, id, now)
 
 	snippet, err := scanSnippet(row)
@@ -188,7 +194,7 @@ func (r *SnippetRepository) Unpublish(ctx context.Context, id string) (domain.Sn
 			published_at = NULL,
 			updated_at = NOW()
 		WHERE id = $1
-		RETURNING id, title, slug, excerpt, category, tags, cover_image, content, seo_title, seo_description, status, updated_at, published_at
+		RETURNING id, title, slug, excerpt, category, tags, cover_image, content, code, prompts, seo_title, seo_description, status, updated_at, published_at
 	`, id)
 
 	snippet, err := scanSnippet(row)
@@ -228,6 +234,8 @@ func scanSnippet(row interface {
 		&snippet.Tags,
 		&snippet.CoverImage,
 		&snippet.Content,
+		&snippet.Code,
+		&snippet.Prompts,
 		&snippet.SEOTitle,
 		&snippet.SEODescription,
 		&snippet.Status,

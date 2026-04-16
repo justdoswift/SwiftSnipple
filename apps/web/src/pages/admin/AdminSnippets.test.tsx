@@ -20,6 +20,8 @@ const baseSnippet: Snippet = {
   tags: ["Prompting"],
   coverImage: "https://example.com/cover.jpg",
   content: "# Prompt Studio",
+  code: "Text(\"Prompt Studio\")",
+  prompts: "Create an editor-ready snippet.",
   seoTitle: "Prompt Studio",
   seoDescription: "SEO copy",
   status: "Draft",

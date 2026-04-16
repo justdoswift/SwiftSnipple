@@ -1,4 +1,5 @@
 import { motion } from "motion/react";
+import { Card, Chip } from "../lib/heroui";
 import { Link } from "react-router-dom";
 import { Snippet } from "../types";
 
@@ -10,19 +11,27 @@ interface SnippetMiniCardProps {
 export default function SnippetMiniCard({ snippet }: SnippetMiniCardProps) {
   return (
     <Link to={`/snippets/${snippet.slug}`} className="group block cursor-pointer">
-      <motion.div
-        whileHover={{ scale: 1.05 }}
-        className="aspect-square bg-surface-container-low overflow-hidden mb-4 border border-outline-variant/10"
+      <motion.div 
+        whileHover={{ scale: 1.02, y: -2 }}
+        transition={{ type: "spring", stiffness: 400, damping: 22 }}
       >
-        <img
-          src={snippet.coverImage}
-          alt={snippet.title}
-          className="w-full h-full object-cover transition-transform duration-500"
-          referrerPolicy="no-referrer"
-        />
+        <Card className="vibe-glass overflow-hidden rounded-[20px] border-white/5 transition-colors group-hover:border-white/20">
+          <div className="aspect-square overflow-hidden bg-white/[0.02]">
+            <img
+              src={snippet.coverImage}
+              alt={snippet.title}
+              className="h-full w-full object-cover opacity-80 transition-all duration-500 group-hover:scale-[1.05] group-hover:opacity-100 group-hover:brightness-110"
+              referrerPolicy="no-referrer"
+            />
+          </div>
+          <Card.Content className="space-y-3 px-4 py-5">
+            <Chip size="sm" radius="full" variant="flat" className="public-chip type-action w-fit border-white/10">
+              {snippet.category}
+            </Chip>
+            <h4 className="type-card-title text-[0.95rem] font-bold text-white/90 group-hover:text-white">{snippet.title}</h4>
+          </Card.Content>
+        </Card>
       </motion.div>
-      <span className="font-mono text-[9px] uppercase tracking-widest text-primary/60">{snippet.category}</span>
-      <h4 className="font-bold mt-1 text-sm">{snippet.title}</h4>
     </Link>
   );
 }

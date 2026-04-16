@@ -1,8 +1,8 @@
 import { motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
+import { Button, Input, Modal, TextArea, useOverlayState } from "../../lib/heroui";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import EditorSection from "../../components/admin/EditorSection";
-import MarkdownPreview from "../../components/admin/MarkdownPreview";
 import StatusBadge from "../../components/admin/StatusBadge";
 import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, unpublishSnippet, updateSnippet } from "../../services/snippets";
 import { Snippet, SnippetFormState, SnippetPayload, SnippetStatus } from "../../types";
@@ -51,6 +51,20 @@ Show the implementation here.
 - add your first point
 - add supporting evidence
 - explain what makes it useful`,
+    code: `import SwiftUI
+
+struct ExampleSnippetView: View {
+  var body: some View {
+    Text("Build something delightful")
+      .padding()
+  }
+}`,
+    prompts: `Build a polished SwiftUI snippet with:
+- clear visual hierarchy
+- native-feeling motion
+- reusable layout structure
+
+Explain the tradeoffs briefly after the code.`,
     seoTitle: "",
     seoDescription: "",
     status: "Draft",
@@ -68,6 +82,8 @@ function toFormState(snippet: Snippet): SnippetFormState {
     tags: snippet.tags.join(", "),
     coverImage: snippet.coverImage,
     content: snippet.content,
+    code: snippet.code,
+    prompts: snippet.prompts,
     seoTitle: snippet.seoTitle,
     seoDescription: snippet.seoDescription,
     status: snippet.status,
@@ -95,6 +111,8 @@ function fromFormState(baseSnippet: Snippet, form: SnippetFormState): Snippet {
       .filter(Boolean),
     coverImage: form.coverImage.trim(),
     content: form.content,
+    code: form.code,
+    prompts: form.prompts,
     seoTitle: form.seoTitle.trim(),
     seoDescription: form.seoDescription.trim(),
     status: form.status,
@@ -112,6 +130,8 @@ function toSnippetPayload(snippet: Snippet): SnippetPayload {
     tags: snippet.tags,
     coverImage: snippet.coverImage,
     content: snippet.content,
+    code: snippet.code,
+    prompts: snippet.prompts,
     seoTitle: snippet.seoTitle,
     seoDescription: snippet.seoDescription,
     status: snippet.status,
@@ -130,6 +150,11 @@ export default function AdminSnippetEditor() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const previewState = useOverlayState({
+    isOpen: isPreviewOpen,
+    onOpenChange: setIsPreviewOpen,
+  });
 
   useEffect(() => {
     if (isNew || !id) {
@@ -165,6 +190,25 @@ export default function AdminSnippetEditor() {
   }, [id, isNew]);
 
   const previewSnippet = useMemo(() => fromFormState(baseSnippet, form), [baseSnippet, form]);
+  const previewPath = baseSnippet.slug ? `/snippets/${baseSnippet.slug}` : "";
+  const hasSavedPreview = Boolean(baseSnippet.id && baseSnippet.slug);
+  const hasUnsavedChanges =
+    JSON.stringify(toSnippetPayload(previewSnippet)) !== JSON.stringify(toSnippetPayload(baseSnippet));
+
+  useEffect(() => {
+    if (!isPreviewOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsPreviewOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isPreviewOpen]);
 
   const updateField = <K extends keyof SnippetFormState>(field: K, value: SnippetFormState[K]) => {
     setForm((current) => {
@@ -246,66 +290,70 @@ export default function AdminSnippetEditor() {
   };
 
   return (
-    <div className="px-6 py-10 md:px-10 md:py-12">
+    <div className="px-6 py-10 md:px-10 md:py-12 xl:px-14 2xl:px-16">
       <section className="flex flex-col gap-6 border-b border-outline-variant/10 pb-8 xl:flex-row xl:items-end xl:justify-between">
         <div className="max-w-3xl">
-          <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary/40">
+          <p className="type-mono-micro text-primary/40">
             {isNew ? "New Snippet" : "Snippet Editor"}
           </p>
-          <h1 className="mt-4 text-[2.75rem] font-black tracking-tighter leading-[0.94] md:text-[4rem]">
+          <h1 className="type-page-title mt-4">
             {isNew ? "Compose a fresh showcase entry." : previewSnippet.title}
           </h1>
-          <p className="mt-4 text-base leading-relaxed text-on-surface-variant">
+          <p className="type-body mt-4">
             Shape the snippet metadata, refine the Markdown notes, and keep the preview visible so the final card stays intentional.
           </p>
-          {isLoading ? <p className="mt-4 text-sm text-primary/50">Loading snippet...</p> : null}
-          {feedback ? <p className="mt-4 text-sm text-emerald-700">{feedback}</p> : null}
-          {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
+          {isLoading ? <p className="type-body-sm mt-4 text-primary/50">Loading snippet...</p> : null}
+          {feedback ? <p className="type-body-sm mt-4 text-emerald-700">{feedback}</p> : null}
+          {error ? <p className="type-body-sm mt-4 text-red-600">{error}</p> : null}
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <Link
-            to="/admin/snippets"
-            className="border border-outline-variant/15 bg-surface-container-lowest px-4 py-3 font-mono text-[10px] uppercase tracking-[0.2em] text-primary"
-          >
+          <Button className="type-action" radius="full" variant="outline" onPress={() => navigate("/admin/snippets")}>
             Back to list
-          </Link>
-          <button
-            disabled={isSubmitting}
-            onClick={() => handleSave()}
-            className="bg-primary px-5 py-3 font-mono text-[10px] uppercase tracking-[0.2em] text-white disabled:cursor-not-allowed disabled:opacity-60"
+          </Button>
+          <Button className="type-action" radius="full" variant="outline" onPress={() => setIsPreviewOpen(true)}>
+            Preview
+          </Button>
+          <Button
+            isDisabled={isSubmitting}
+            className="type-action"
+            variant="primary"
+            onPress={() => handleSave()}
           >
             {isSubmitting ? "Saving..." : saveLabel}
-          </button>
-          <button
-            disabled={isSubmitting}
-            onClick={() => handleSave("Published")}
-            className="border border-primary bg-surface-container-lowest px-5 py-3 font-mono text-[10px] uppercase tracking-[0.2em] text-primary disabled:cursor-not-allowed disabled:opacity-60"
+          </Button>
+          <Button
+            isDisabled={isSubmitting}
+            className="type-action"
+            variant="outline"
+            onPress={() => handleSave("Published")}
           >
             Publish now
-          </button>
+          </Button>
           {!isNew ? (
-            <button
-              disabled={isSubmitting}
-              onClick={handleUnpublish}
-              className="border border-outline-variant/15 bg-surface-container-lowest px-5 py-3 font-mono text-[10px] uppercase tracking-[0.2em] text-primary disabled:cursor-not-allowed disabled:opacity-60"
+            <Button
+              isDisabled={isSubmitting}
+              className="type-action"
+              variant="outline"
+              onPress={handleUnpublish}
             >
               Unpublish
-            </button>
+            </Button>
           ) : null}
           {!isNew ? (
-            <button
-              disabled={isSubmitting}
-              onClick={handleDelete}
-              className="border border-red-200 bg-surface-container-lowest px-5 py-3 font-mono text-[10px] uppercase tracking-[0.2em] text-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+            <Button
+              isDisabled={isSubmitting}
+              className="type-action text-red-700"
+              variant="outline"
+              onPress={handleDelete}
             >
               Delete
-            </button>
+            </Button>
           ) : null}
         </div>
       </section>
 
-      <div className="mt-8 grid gap-8 xl:grid-cols-[minmax(0,1.2fr)_420px]">
+      <div className="mt-8 grid gap-8 xl:grid-cols-[minmax(0,1.7fr)_320px] 2xl:grid-cols-[minmax(0,1.95fr)_340px]">
         <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
           <EditorSection
             eyebrow="Identity"
@@ -314,53 +362,59 @@ export default function AdminSnippetEditor() {
           >
             <div className="grid gap-5 md:grid-cols-2">
               <label className="grid gap-2 md:col-span-2">
-                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/45">Title</span>
-                <input
+                <span className="type-mono-micro text-primary/45">Title</span>
+                <Input
+                  aria-label="Title"
                   value={form.title}
                   onChange={(event) => updateField("title", event.target.value)}
-                  className="border border-outline-variant/10 bg-surface px-4 py-3 text-sm outline-none"
+                  className="w-full"
                 />
               </label>
               <label className="grid gap-2">
-                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/45">Slug</span>
-                <input
+                <span className="type-mono-micro text-primary/45">Slug</span>
+                <Input
+                  aria-label="Slug"
                   value={form.slug}
                   onChange={(event) => updateField("slug", event.target.value)}
-                  className="border border-outline-variant/10 bg-surface px-4 py-3 text-sm outline-none"
+                  className="w-full"
                 />
               </label>
               <label className="grid gap-2">
-                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/45">Category</span>
-                <input
+                <span className="type-mono-micro text-primary/45">Category</span>
+                <Input
+                  aria-label="Category"
                   value={form.category}
                   onChange={(event) => updateField("category", event.target.value)}
-                  className="border border-outline-variant/10 bg-surface px-4 py-3 text-sm outline-none"
+                  className="w-full"
                 />
               </label>
               <label className="grid gap-2 md:col-span-2">
-                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/45">Excerpt</span>
-                <textarea
+                <span className="type-mono-micro text-primary/45">Excerpt</span>
+                <TextArea
+                  aria-label="Excerpt"
                   value={form.excerpt}
                   onChange={(event) => updateField("excerpt", event.target.value)}
                   rows={4}
-                  className="border border-outline-variant/10 bg-surface px-4 py-3 text-sm leading-7 outline-none"
+                  className="w-full"
                 />
               </label>
               <label className="grid gap-2 md:col-span-2">
-                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/45">Tags</span>
-                <input
+                <span className="type-mono-micro text-primary/45">Tags</span>
+                <Input
+                  aria-label="Tags"
                   value={form.tags}
                   onChange={(event) => updateField("tags", event.target.value)}
                   placeholder="SwiftUI, Motion, Editorial"
-                  className="border border-outline-variant/10 bg-surface px-4 py-3 text-sm outline-none"
+                  className="w-full"
                 />
               </label>
               <label className="grid gap-2 md:col-span-2">
-                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/45">Cover Image URL</span>
-                <input
+                <span className="type-mono-micro text-primary/45">Cover Image URL</span>
+                <Input
+                  aria-label="Cover Image URL"
                   value={form.coverImage}
                   onChange={(event) => updateField("coverImage", event.target.value)}
-                  className="border border-outline-variant/10 bg-surface px-4 py-3 text-sm outline-none"
+                  className="w-full"
                 />
               </label>
             </div>
@@ -368,14 +422,44 @@ export default function AdminSnippetEditor() {
 
           <EditorSection
             eyebrow="Body"
-            title="Markdown notes"
+            title="Implementation notes"
             description="Write in plain Markdown and keep the preview honest while you shape the implementation notes."
           >
-            <textarea
+            <TextArea
+              aria-label="Implementation notes"
               value={form.content}
               onChange={(event) => updateField("content", event.target.value)}
               rows={20}
-              className="min-h-[520px] w-full border border-outline-variant/10 bg-surface px-4 py-4 font-mono text-sm leading-7 outline-none"
+              className="w-full"
+            />
+          </EditorSection>
+
+          <EditorSection
+            eyebrow="Code"
+            title="SwiftUI code"
+            description="Store the actual implementation separately so the public snippet can present code as a first-class asset."
+          >
+            <TextArea
+              aria-label="SwiftUI code"
+              value={form.code}
+              onChange={(event) => updateField("code", event.target.value)}
+              rows={18}
+              className="w-full"
+              spellCheck={false}
+            />
+          </EditorSection>
+
+          <EditorSection
+            eyebrow="Prompts"
+            title="Prompt notes"
+            description="Capture the AI prompts, prompt fragments, or direction notes that helped shape the snippet."
+          >
+            <TextArea
+              aria-label="Prompt notes"
+              value={form.prompts}
+              onChange={(event) => updateField("prompts", event.target.value)}
+              rows={12}
+              className="w-full"
             />
           </EditorSection>
 
@@ -386,20 +470,22 @@ export default function AdminSnippetEditor() {
           >
             <div className="grid gap-5">
               <label className="grid gap-2">
-                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/45">SEO Title</span>
-                <input
+                <span className="type-mono-micro text-primary/45">SEO Title</span>
+                <Input
+                  aria-label="SEO Title"
                   value={form.seoTitle}
                   onChange={(event) => updateField("seoTitle", event.target.value)}
-                  className="border border-outline-variant/10 bg-surface px-4 py-3 text-sm outline-none"
+                  className="w-full"
                 />
               </label>
               <label className="grid gap-2">
-                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/45">SEO Description</span>
-                <textarea
+                <span className="type-mono-micro text-primary/45">SEO Description</span>
+                <TextArea
+                  aria-label="SEO Description"
                   value={form.seoDescription}
                   onChange={(event) => updateField("seoDescription", event.target.value)}
                   rows={4}
-                  className="border border-outline-variant/10 bg-surface px-4 py-3 text-sm leading-7 outline-none"
+                  className="w-full"
                 />
               </label>
             </div>
@@ -407,9 +493,9 @@ export default function AdminSnippetEditor() {
         </motion.div>
 
         <motion.aside initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 xl:sticky xl:top-6 xl:self-start">
-          <section className="border border-outline-variant/15 bg-surface-container-lowest">
-            <div className="border-b border-outline-variant/10 px-6 py-5">
-              <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary/40">Publishing State</p>
+          <section className="surface-card rounded-[28px]">
+            <div className="border-b border-white/55 px-6 py-5">
+              <p className="type-mono-micro text-primary/40">Publishing State</p>
               <h2 className="mt-3 text-2xl font-bold tracking-tight">Release controls</h2>
             </div>
             <div className="space-y-5 px-6 py-6">
@@ -419,11 +505,11 @@ export default function AdminSnippetEditor() {
               </div>
 
               <label className="grid gap-2">
-                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/45">Status</span>
+                <span className="type-mono-micro text-primary/45">Status</span>
                 <select
                   value={form.status}
                   onChange={(event) => updateField("status", event.target.value as SnippetStatus)}
-                  className="border border-outline-variant/10 bg-surface px-4 py-3 text-sm outline-none"
+                  className="input-soft text-sm"
                 >
                   {STATUS_OPTIONS.map((status) => (
                     <option key={status} value={status}>
@@ -434,73 +520,85 @@ export default function AdminSnippetEditor() {
               </label>
 
               <label className="grid gap-2">
-                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/45">Publish At</span>
+                <span className="type-mono-micro text-primary/45">Publish At</span>
                 <input
                   type="datetime-local"
                   value={form.publishedAt}
                   onChange={(event) => updateField("publishedAt", event.target.value)}
-                  className="border border-outline-variant/10 bg-surface px-4 py-3 text-sm outline-none"
+                  className="rounded-[20px] border border-white/50 bg-white/82 px-4 py-3 text-sm text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] outline-none transition-all duration-200 focus:border-primary/18 focus:bg-white focus:ring-4 focus:ring-white/55"
                 />
               </label>
 
-              <div className="grid gap-3 bg-surface p-4">
-                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/40">Slug Preview</p>
+              <div className="surface-card-subtle grid gap-3 rounded-[22px] px-5 py-4">
+                <p className="type-mono-micro text-primary/40">Slug Preview</p>
                 <p className="text-sm text-on-surface-variant">/snippets/{previewSnippet.slug || "untitled-snippet"}</p>
               </div>
 
               <p className="text-sm leading-relaxed text-on-surface-variant">
-                Scheduled entries stay inside the publishing workspace. Only snippets with <span className="font-semibold text-primary">Published</span> status appear on the public homepage in this phase.
+                Preview opens the real public snippet page. Save changes first if you want the iframe to reflect your latest edits.
               </p>
-            </div>
-          </section>
-
-          <section className="border border-outline-variant/15 bg-surface-container-lowest">
-            <div className="border-b border-outline-variant/10 px-6 py-5">
-              <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary/40">Live Preview</p>
-              <h2 className="mt-3 text-2xl font-bold tracking-tight">Snippet preview</h2>
-            </div>
-            <div className="space-y-6 px-6 py-6">
-              <div className="aspect-[16/10] overflow-hidden bg-surface-container-low">
-                <img
-                  src={previewSnippet.coverImage}
-                  alt={previewSnippet.title || "Snippet cover preview"}
-                  className="h-full w-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-
-              <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary/40">{previewSnippet.category}</p>
-                <h3 className="mt-3 text-3xl font-black tracking-tighter leading-tight">
-                  {previewSnippet.title || "Untitled Snippet"}
-                </h3>
-                <p className="mt-4 text-sm leading-7 text-on-surface-variant">
-                  {previewSnippet.excerpt || "Your excerpt will appear here once written."}
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {previewSnippet.tags.length ? (
-                  previewSnippet.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="bg-surface-container-low px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-primary/60"
-                    >
-                      {tag}
-                    </span>
-                  ))
-                ) : (
-                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/35">No tags yet</span>
-                )}
-              </div>
-
-              <div className="border-t border-outline-variant/10 pt-6">
-                <MarkdownPreview content={previewSnippet.content} />
-              </div>
             </div>
           </section>
         </motion.aside>
       </div>
+
+      <Modal state={previewState}>
+        <Modal.Backdrop className="bg-primary/42 backdrop-blur-xl" />
+        <Modal.Container className="max-w-[min(1500px,96vw)]">
+          <Modal.Dialog className="surface-shell flex h-[92vh] w-full flex-col overflow-hidden rounded-[34px]">
+            <Modal.Header className="flex flex-wrap items-start justify-between gap-4 border-b border-white/55 px-6 py-5 md:px-8">
+              <div className="max-w-3xl">
+                <p className="type-mono-micro text-primary/40">Public Preview</p>
+                <Modal.Heading className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-primary">
+                  {hasSavedPreview ? "Real snippet page" : "Save once to preview"}
+                </Modal.Heading>
+                <p className="mt-3 text-sm leading-relaxed text-on-surface-variant">
+                  {hasSavedPreview
+                    ? hasUnsavedChanges
+                      ? "This iframe shows the last saved public version. Save again to preview your latest edits."
+                      : "This is the actual public snippet page rendered inside the admin workspace."
+                    : "New snippets need one successful save before they can be previewed on their public route."}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                {hasSavedPreview ? (
+                  <a
+                    href={previewPath}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="type-action rounded-full border border-white/55 bg-white/72 px-4 py-3 text-primary shadow-[0_10px_24px_rgba(17,24,39,0.06)] transition-all hover:border-white/75 hover:bg-white/88"
+                  >
+                    Open tab
+                  </a>
+                ) : null}
+                <Button className="type-action" variant="primary" onPress={() => previewState.close()}>
+                  Close
+                </Button>
+              </div>
+            </Modal.Header>
+            <Modal.Body className="flex-1 bg-surface p-0">
+              {hasSavedPreview ? (
+                <iframe
+                  title="Snippet public preview"
+                  src={previewPath}
+                  className="h-full w-full border-0 bg-white"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center px-6">
+                  <div className="max-w-xl text-center">
+                    <p className="type-mono-micro text-primary/35">Preview unavailable</p>
+                    <h3 className="mt-4 text-3xl font-bold tracking-tight text-primary">Create the first saved version</h3>
+                    <p className="mt-4 text-sm leading-7 text-on-surface-variant">
+                      Once this snippet has been saved, the modal will load the real public page at{" "}
+                      <span className="font-mono text-primary">/snippets/{previewSnippet.slug || "untitled-snippet"}</span>.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </Modal.Body>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal>
     </div>
   );
 }

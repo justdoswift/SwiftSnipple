@@ -12,7 +12,7 @@ function renderInline(text: string) {
       return (
         <code
           key={`${part}-${index}`}
-          className="bg-surface-container-low px-1.5 py-0.5 font-mono text-[0.9em] text-primary"
+          className="type-code-inline rounded-[8px] bg-white/6 px-1.5 py-0.5 text-white"
         >
           {part.slice(1, -1)}
         </code>
@@ -33,7 +33,7 @@ export default function MarkdownPreview({ content }: { content: string }) {
   const flushList = () => {
     if (!listItems.length) return;
     nodes.push(
-      <ul key={`list-${nodes.length}`} className="list-disc space-y-2 pl-5 text-on-surface-variant">
+      <ul key={`list-${nodes.length}`} className="list-disc space-y-2 pl-5 text-white/62">
         {listItems.map((item, index) => (
           <li key={`${item}-${index}`}>{renderInline(item)}</li>
         ))}
@@ -47,7 +47,7 @@ export default function MarkdownPreview({ content }: { content: string }) {
     nodes.push(
       <pre
         key={`code-${nodes.length}`}
-        className="overflow-x-auto bg-primary p-5 font-mono text-xs leading-6 text-white"
+        className="type-code-block overflow-x-auto rounded-[16px] border border-white/8 bg-white/4 p-5 text-white/88"
       >
         <code>{codeLines.join("\n")}</code>
       </pre>,
@@ -86,7 +86,7 @@ export default function MarkdownPreview({ content }: { content: string }) {
 
     if (line.startsWith("# ")) {
       nodes.push(
-        <h1 key={`h1-${nodes.length}`} className="text-4xl font-black tracking-tighter text-primary">
+        <h1 key={`h1-${nodes.length}`} className="text-4xl font-semibold tracking-[-0.04em] text-white">
           {renderInline(line.slice(2))}
         </h1>,
       );
@@ -95,7 +95,7 @@ export default function MarkdownPreview({ content }: { content: string }) {
 
     if (line.startsWith("## ")) {
       nodes.push(
-        <h2 key={`h2-${nodes.length}`} className="pt-4 text-2xl font-bold tracking-tight text-primary">
+        <h2 key={`h2-${nodes.length}`} className="pt-4 text-2xl font-semibold tracking-[-0.03em] text-white">
           {renderInline(line.slice(3))}
         </h2>,
       );
@@ -103,7 +103,7 @@ export default function MarkdownPreview({ content }: { content: string }) {
     }
 
     nodes.push(
-      <p key={`p-${nodes.length}`} className="leading-8 text-on-surface-variant">
+      <p key={`p-${nodes.length}`} className="leading-8 text-white/62">
         {renderInline(line)}
       </p>,
     );

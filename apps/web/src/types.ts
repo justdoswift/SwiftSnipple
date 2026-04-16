@@ -9,6 +9,8 @@ export interface Snippet {
   tags: string[];
   coverImage: string;
   content: string;
+  code: string;
+  prompts: string;
   seoTitle: string;
   seoDescription: string;
   status: SnippetStatus;
@@ -24,6 +26,8 @@ export interface SnippetPayload {
   tags: string[];
   coverImage: string;
   content: string;
+  code: string;
+  prompts: string;
   seoTitle: string;
   seoDescription: string;
   status: SnippetStatus;
@@ -38,6 +42,8 @@ export interface SnippetFormState {
   tags: string;
   coverImage: string;
   content: string;
+  code: string;
+  prompts: string;
   seoTitle: string;
   seoDescription: string;
   status: SnippetStatus;

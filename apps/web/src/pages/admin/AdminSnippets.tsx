@@ -94,12 +94,13 @@ export default function AdminSnippets() {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search title or slug"
+          className="admin-input"
         />
 
         <select
           value={statusFilter}
           onChange={(event) => setStatusFilter(event.target.value as SnippetStatus | "All")}
-          className="rounded-[20px] border border-white/50 bg-white/82 px-4 py-3 text-base text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] outline-none transition-all duration-200 focus:border-primary/18 focus:bg-white focus:ring-4 focus:ring-white/55"
+          className="admin-select"
         >
           {STATUS_OPTIONS.map((status) => (
             <option key={status} value={status}>
@@ -111,7 +112,7 @@ export default function AdminSnippets() {
         <select
           value={categoryFilter}
           onChange={(event) => setCategoryFilter(event.target.value)}
-          className="rounded-[20px] border border-white/50 bg-white/82 px-4 py-3 text-base text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] outline-none transition-all duration-200 focus:border-primary/18 focus:bg-white focus:ring-4 focus:ring-white/55"
+          className="admin-select"
         >
           <option value="All">Category: All</option>
           {categories.map((category) => (

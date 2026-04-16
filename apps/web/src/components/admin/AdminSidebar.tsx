@@ -28,8 +28,8 @@ export default function AdminSidebar() {
             className={({ isActive }) =>
               `flex items-center justify-between rounded-[22px] border px-4 py-4 transition-all ${
                 isActive
-                  ? "border-transparent bg-primary text-white shadow-[0_14px_30px_rgba(22,24,29,0.18)]"
-                  : "border-white/55 bg-white/76 text-primary hover:border-white/75 hover:bg-white/88"
+                  ? "border-white/85 bg-white text-black shadow-[0_14px_30px_rgba(22,24,29,0.18)]"
+                  : "border-white/55 bg-white/76 text-black/80 hover:border-white/75 hover:bg-white/88 hover:text-black"
               }`
             }
           >

@@ -164,16 +164,121 @@
     @apply font-mono bg-white text-black font-bold;
   }
 
-  .public-input [data-slot="input-wrapper"] {
-    @apply h-11 rounded-[12px] border border-white/10 bg-white/[0.02] shadow-none transition-all focus-within:border-white/30 focus-within:bg-white/[0.05];
+  .public-input {
+    @apply h-11 appearance-none rounded-[12px] font-mono text-[0.9rem] shadow-none transition-all;
+    appearance: none;
+    -webkit-appearance: none;
   }
 
-  .public-input [data-slot="input"] {
-    @apply font-mono text-[0.9rem] text-white placeholder:text-white/20;
+  .public-input-inverse {
+    @apply h-12 appearance-none rounded-[14px] font-mono text-[0.9rem] shadow-none transition-all;
+    appearance: none;
+    -webkit-appearance: none;
   }
 
-  .public-input-inverse [data-slot="input-wrapper"] {
-    @apply h-12 rounded-[14px] border border-white/10 bg-white/[0.04] shadow-none transition-all focus-within:border-white/40;
+  .admin-input {
+    @apply appearance-none rounded-[20px] shadow-none transition-all duration-200;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .input.public-input,
+  .input.public-input-inverse,
+  .input.admin-input {
+    --field-background: rgba(0, 0, 0, 0.58);
+    --field-foreground: rgba(255, 255, 255, 0.96);
+    --field-placeholder: rgba(255, 255, 255, 0.28);
+    --field-border: rgba(255, 255, 255, 0.10);
+    --color-field-focus: rgba(0, 0, 0, 0.72);
+    --color-field-border-hover: rgba(255, 255, 255, 0.12);
+    --color-field-border-focus: rgba(255, 255, 255, 0.16);
+  }
+
+  .input.public-input:hover:not(:focus):not(:focus-visible),
+  .input.public-input[data-hovered="true"]:not([data-focused="true"]):not([data-focus-visible="true"]),
+  .input.public-input-inverse:hover:not(:focus):not(:focus-visible),
+  .input.public-input-inverse[data-hovered="true"]:not([data-focused="true"]):not([data-focus-visible="true"]),
+  .input.admin-input:hover:not(:focus):not(:focus-visible),
+  .input.admin-input[data-hovered="true"]:not([data-focused="true"]):not([data-focus-visible="true"]) {
+    background-color: rgba(0, 0, 0, 0.64);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .input.public-input:focus,
+  .input.public-input[data-focused="true"],
+  .input.public-input-inverse:focus,
+  .input.public-input-inverse[data-focused="true"],
+  .input.admin-input:focus,
+  .input.admin-input[data-focused="true"] {
+    @apply ring-4 ring-black/35;
+    background-color: rgba(0, 0, 0, 0.72);
+    border-color: rgba(255, 255, 255, 0.16);
+  }
+
+  .textarea.admin-textarea {
+    --field-background: rgba(0, 0, 0, 0.58);
+    --field-foreground: rgba(255, 255, 255, 0.96);
+    --field-placeholder: rgba(255, 255, 255, 0.28);
+    --field-border: rgba(255, 255, 255, 0.10);
+    --color-field-focus: rgba(0, 0, 0, 0.72);
+    --color-field-border-hover: rgba(255, 255, 255, 0.12);
+    --color-field-border-focus: rgba(255, 255, 255, 0.16);
+    @apply rounded-[20px] appearance-none text-white shadow-none outline-none transition-all duration-200;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .textarea.admin-textarea:hover:not(:focus):not(:focus-visible),
+  .textarea.admin-textarea[data-hovered="true"]:not([data-focused="true"]):not([data-focus-visible="true"]) {
+    background-color: rgba(0, 0, 0, 0.64);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .textarea.admin-textarea:focus,
+  .textarea.admin-textarea[data-focused="true"] {
+    @apply ring-4 ring-black/35;
+    background-color: rgba(0, 0, 0, 0.72);
+    border-color: rgba(255, 255, 255, 0.16);
+  }
+
+  .admin-select,
+  .admin-native-input {
+    @apply appearance-none rounded-[20px] border border-white/10 bg-black/58 px-4 py-3 text-base text-white shadow-none outline-none transition-all duration-200 hover:border-white/12 hover:bg-black/64 focus:border-white/16 focus:bg-black/72 focus:ring-4 focus:ring-black/35;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .admin-native-input {
+    @apply text-sm;
+  }
+
+  .public-input:-webkit-autofill,
+  .public-input:-webkit-autofill:hover,
+  .public-input:-webkit-autofill:focus,
+  .public-input-inverse:-webkit-autofill,
+  .public-input-inverse:-webkit-autofill:hover,
+  .public-input-inverse:-webkit-autofill:focus,
+  .admin-input:-webkit-autofill,
+  .admin-input:-webkit-autofill:hover,
+  .admin-input:-webkit-autofill:focus,
+  .admin-native-input:-webkit-autofill,
+  .admin-native-input:-webkit-autofill:hover,
+  .admin-native-input:-webkit-autofill:focus {
+    -webkit-text-fill-color: rgba(255, 255, 255, 0.96);
+    caret-color: rgba(255, 255, 255, 0.96);
+    -webkit-box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.72) inset;
+    box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.72) inset;
+    transition: background-color 9999s ease-out 0s;
+  }
+
+  .admin-textarea:-webkit-autofill,
+  .admin-textarea:-webkit-autofill:hover,
+  .admin-textarea:-webkit-autofill:focus {
+    -webkit-text-fill-color: rgba(255, 255, 255, 0.96);
+    caret-color: rgba(255, 255, 255, 0.96);
+    -webkit-box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.72) inset;
+    box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.72) inset;
+    transition: background-color 9999s ease-out 0s;
   }
 
   .public-copy-button {

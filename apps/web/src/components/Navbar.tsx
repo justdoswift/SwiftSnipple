@@ -34,7 +34,7 @@ export default function Navbar() {
               isReadOnly
               placeholder="SEARCH"
               className="public-input w-[180px]"
-              startContent={<Search size={14} className="text-white/20" />}
+              startContent={<Search size={14} className="text-white/28" />}
             />
           </div>
           <Button

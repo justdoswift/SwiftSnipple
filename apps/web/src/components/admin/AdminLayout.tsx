@@ -34,7 +34,7 @@ export default function AdminLayout() {
             </div>
             <Link
               to="/"
-              className="type-action flex items-center gap-2 rounded-full border border-white/55 bg-white/72 px-4 py-3 text-primary shadow-[0_10px_24px_rgba(17,24,39,0.06)] transition-all hover:border-white/75 hover:bg-white/88"
+              className="type-action flex items-center gap-2 rounded-full border border-white/55 bg-white/72 px-4 py-3 text-black shadow-[0_10px_24px_rgba(17,24,39,0.06)] transition-all hover:border-white/75 hover:bg-white/88"
             >
               View Front Site <ArrowUpRight className="h-3.5 w-3.5" />
             </Link>

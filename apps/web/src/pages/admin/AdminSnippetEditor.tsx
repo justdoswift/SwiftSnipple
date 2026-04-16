@@ -367,7 +367,7 @@ export default function AdminSnippetEditor() {
                   aria-label="Title"
                   value={form.title}
                   onChange={(event) => updateField("title", event.target.value)}
-                  className="w-full"
+                  className="admin-input w-full"
                 />
               </label>
               <label className="grid gap-2">
@@ -376,7 +376,7 @@ export default function AdminSnippetEditor() {
                   aria-label="Slug"
                   value={form.slug}
                   onChange={(event) => updateField("slug", event.target.value)}
-                  className="w-full"
+                  className="admin-input w-full"
                 />
               </label>
               <label className="grid gap-2">
@@ -385,7 +385,7 @@ export default function AdminSnippetEditor() {
                   aria-label="Category"
                   value={form.category}
                   onChange={(event) => updateField("category", event.target.value)}
-                  className="w-full"
+                  className="admin-input w-full"
                 />
               </label>
               <label className="grid gap-2 md:col-span-2">
@@ -395,7 +395,7 @@ export default function AdminSnippetEditor() {
                   value={form.excerpt}
                   onChange={(event) => updateField("excerpt", event.target.value)}
                   rows={4}
-                  className="w-full"
+                  className="admin-textarea w-full"
                 />
               </label>
               <label className="grid gap-2 md:col-span-2">
@@ -405,7 +405,7 @@ export default function AdminSnippetEditor() {
                   value={form.tags}
                   onChange={(event) => updateField("tags", event.target.value)}
                   placeholder="SwiftUI, Motion, Editorial"
-                  className="w-full"
+                  className="admin-input w-full"
                 />
               </label>
               <label className="grid gap-2 md:col-span-2">
@@ -414,7 +414,7 @@ export default function AdminSnippetEditor() {
                   aria-label="Cover Image URL"
                   value={form.coverImage}
                   onChange={(event) => updateField("coverImage", event.target.value)}
-                  className="w-full"
+                  className="admin-input w-full"
                 />
               </label>
             </div>
@@ -430,7 +430,7 @@ export default function AdminSnippetEditor() {
               value={form.content}
               onChange={(event) => updateField("content", event.target.value)}
               rows={20}
-              className="w-full"
+              className="admin-textarea w-full"
             />
           </EditorSection>
 
@@ -444,7 +444,7 @@ export default function AdminSnippetEditor() {
               value={form.code}
               onChange={(event) => updateField("code", event.target.value)}
               rows={18}
-              className="w-full"
+              className="admin-textarea w-full"
               spellCheck={false}
             />
           </EditorSection>
@@ -459,7 +459,7 @@ export default function AdminSnippetEditor() {
               value={form.prompts}
               onChange={(event) => updateField("prompts", event.target.value)}
               rows={12}
-              className="w-full"
+              className="admin-textarea w-full"
             />
           </EditorSection>
 
@@ -475,7 +475,7 @@ export default function AdminSnippetEditor() {
                   aria-label="SEO Title"
                   value={form.seoTitle}
                   onChange={(event) => updateField("seoTitle", event.target.value)}
-                  className="w-full"
+                  className="admin-input w-full"
                 />
               </label>
               <label className="grid gap-2">
@@ -485,7 +485,7 @@ export default function AdminSnippetEditor() {
                   value={form.seoDescription}
                   onChange={(event) => updateField("seoDescription", event.target.value)}
                   rows={4}
-                  className="w-full"
+                  className="admin-textarea w-full"
                 />
               </label>
             </div>
@@ -509,7 +509,7 @@ export default function AdminSnippetEditor() {
                 <select
                   value={form.status}
                   onChange={(event) => updateField("status", event.target.value as SnippetStatus)}
-                  className="input-soft text-sm"
+                  className="admin-select text-sm"
                 >
                   {STATUS_OPTIONS.map((status) => (
                     <option key={status} value={status}>
@@ -525,7 +525,7 @@ export default function AdminSnippetEditor() {
                   type="datetime-local"
                   value={form.publishedAt}
                   onChange={(event) => updateField("publishedAt", event.target.value)}
-                  className="rounded-[20px] border border-white/50 bg-white/82 px-4 py-3 text-sm text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] outline-none transition-all duration-200 focus:border-primary/18 focus:bg-white focus:ring-4 focus:ring-white/55"
+                  className="admin-native-input"
                 />
               </label>
 

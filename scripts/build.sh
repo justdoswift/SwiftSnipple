@@ -13,6 +13,30 @@ run_cmd() {
   "$@"
 }
 
+fail() {
+  printf '[build] ERROR: %s\n' "$1" >&2
+  exit 1
+}
+
+sync_repo() {
+  log_step "Syncing repository to the latest origin commit"
+
+  command -v git >/dev/null 2>&1 || fail "git is not available"
+  git rev-parse --is-inside-work-tree >/dev/null 2>&1 || fail "current directory is not a git work tree"
+
+  if ! git diff --quiet --ignore-submodules -- || ! git diff --cached --quiet --ignore-submodules --; then
+    fail "repository has local tracked changes; commit or stash them before running build"
+  fi
+
+  local current_branch
+  current_branch="$(git branch --show-current)"
+  [ -n "$current_branch" ] || fail "repository is in detached HEAD state; switch to a branch before running build"
+
+  run_cmd git pull --ff-only origin "$current_branch"
+}
+
+sync_repo
+
 if [ ! -f .env ]; then
   log_step "No .env found. Creating one from .env.example"
   cp .env.example .env

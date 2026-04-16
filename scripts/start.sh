@@ -19,6 +19,23 @@ fail() {
   exit 1
 }
 
+sync_repo() {
+  log_step "Syncing repository to the latest origin commit"
+
+  command -v git >/dev/null 2>&1 || fail "git is not available"
+  git rev-parse --is-inside-work-tree >/dev/null 2>&1 || fail "current directory is not a git work tree"
+
+  if ! git diff --quiet --ignore-submodules -- || ! git diff --cached --quiet --ignore-submodules --; then
+    fail "repository has local tracked changes; commit or stash them before running start"
+  fi
+
+  local current_branch
+  current_branch="$(git branch --show-current)"
+  [ -n "$current_branch" ] || fail "repository is in detached HEAD state; switch to a branch before running start"
+
+  run_cmd git pull --ff-only origin "$current_branch"
+}
+
 print_urls() {
   local api_port caddy_domain caddy_http_port caddy_https_port
   api_port="${API_PORT:-8080}"
@@ -71,6 +88,8 @@ wait_for_health() {
 
   fail "health check did not pass via $primary_url or $fallback_url"
 }
+
+sync_repo
 
 if [ ! -f .env ]; then
   log_step "No .env found. Creating one from .env.example"

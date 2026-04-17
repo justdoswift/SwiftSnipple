@@ -6,7 +6,7 @@ export default function Footer() {
       <div className="vibe-glass mx-auto max-w-[1380px] rounded-[24px] px-8 py-10 md:py-12">
         <div className="flex flex-col justify-between gap-10 md:flex-row md:items-start">
           <div className="flex flex-col gap-4">
-            <span className="type-card-title font-bold text-white">SwiftSnipple</span>
+            <span className="type-card-title font-bold text-white">Just Do Swift</span>
             <p className="type-body-sm max-w-xs text-white/40">
               A curated collection of exceptional SwiftUI builds, deconstructed and ready for reuse.
             </p>
@@ -32,7 +32,7 @@ export default function Footer() {
         </div>
         
         <div className="mt-12 border-t border-white/5 pt-8">
-          <p className="type-mono-micro text-white/20">© 2026 SwiftSnipple Lab. Built for the modern ecosystem.</p>
+          <p className="type-mono-micro text-white/20">© 2026 Just Do Swift. Built for the modern ecosystem.</p>
         </div>
       </div>
     </footer>

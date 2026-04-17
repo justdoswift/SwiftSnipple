@@ -77,7 +77,7 @@ export default function Home() {
         <div className="mx-auto max-w-[900px] text-center">
           <motion.div variants={itemVariants} className="flex flex-col items-center gap-6">
             <span className="type-mono-label px-3 py-1 border border-white/10 rounded-full bg-white/5">
-              SwiftSnipple Lab v1.0
+              Just Do Swift v1.0
             </span>
             <h1 className="type-display max-w-[14ch] text-white">
               Exceptional Builds. Native SwiftUI.
@@ -146,7 +146,7 @@ export default function Home() {
               Deconstructing Design <br/>Into Native Code.
             </h2>
             <div className="type-body space-y-8 text-white/40">
-              <p>We don't believe in abstractions. SwiftSnipple focuses on the raw, native SwiftUI primitives that drive modern interactive experiences. Every pixel has a purpose, and every component has a prompt.</p>
+              <p>We don't believe in abstractions. Just Do Swift focuses on the raw, native SwiftUI primitives that drive modern interactive experiences. Every pixel has a purpose, and every component has a prompt.</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
                 <div className="flex flex-col gap-2">
                   <span className="type-mono-micro text-white/60">01. ANALYSIS</span>

@@ -42,7 +42,7 @@ function PublicRouteFallback() {
           <p className="type-mono-micro text-white/42">Loading</p>
           <h2 className="type-card-title text-white">Preparing the next view</h2>
           <p className="type-body-sm max-w-md text-white/58">
-            SwiftSnipple is loading the route shell and snippet content without blocking the rest of the app.
+            Just Do Swift is loading the route shell and snippet content without blocking the rest of the app.
           </p>
         </Card.Content>
       </Card>

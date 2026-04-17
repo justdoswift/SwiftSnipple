@@ -303,7 +303,7 @@
     color: var(--public-body-sm);
   }
 
-  .public-theme .type-action {
+  .public-theme :where(.type-action) {
     color: var(--public-body-sm);
   }
 
@@ -595,18 +595,6 @@
     background-color: var(--public-secondary-button-hover-bg);
     color: var(--public-secondary-button-hover-text);
     transform: translateY(-1px);
-  }
-
-  .public-primary-button.type-action,
-  .public-primary-button .type-action,
-  .public-secondary-button.type-action,
-  .public-secondary-button .type-action {
-    color: inherit;
-  }
-
-  .public-chip.type-action,
-  .public-chip-strong.type-action {
-    color: inherit;
   }
 
   .public-inline-link {

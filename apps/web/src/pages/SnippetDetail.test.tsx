@@ -198,7 +198,8 @@ describe("SnippetDetail", () => {
       expect(screen.getByRole("heading", { name: "Implementation Notes" })).toBeInTheDocument();
     });
 
-    triggerReadingZone(screen.getByTestId("desktop-reading-start"), true);
+    const readingStart = await screen.findByTestId("desktop-reading-start");
+    triggerReadingZone(readingStart, true);
     fireEvent.click(screen.getByRole("button", { name: "02 SwiftUI Source" }));
 
     expect(screen.getByRole("heading", { name: "SwiftUI Source" })).toBeInTheDocument();
@@ -246,7 +247,8 @@ describe("SnippetDetail", () => {
       expect(screen.getByRole("heading", { name: "Implementation Notes" })).toBeInTheDocument();
     });
 
-    triggerReadingZone(screen.getByTestId("desktop-reading-start"), true);
+    const readingStart = await screen.findByTestId("desktop-reading-start");
+    triggerReadingZone(readingStart, true);
     expect(screen.getByRole("button", { name: "01 Implementation Notes" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "02 SwiftUI Source" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "03 Prompt Logic" })).not.toBeInTheDocument();
@@ -264,7 +266,8 @@ describe("SnippetDetail", () => {
       expect(screen.getByRole("heading", { name: "Implementation Notes" })).toBeInTheDocument();
     });
 
-    triggerReadingZone(screen.getByTestId("desktop-reading-start"), true);
+    const readingStart = await screen.findByTestId("desktop-reading-start");
+    triggerReadingZone(readingStart, true);
     expect(screen.getByRole("button", { name: "01 Implementation Notes" })).toBeInTheDocument();
     expect(screen.queryByText("Contents")).not.toBeInTheDocument();
   });
@@ -276,7 +279,8 @@ describe("SnippetDetail", () => {
       expect(screen.getByRole("heading", { name: "Implementation Notes" })).toBeInTheDocument();
     });
 
-    triggerReadingZone(screen.getByTestId("desktop-reading-start"), true);
+    const readingStart = await screen.findByTestId("desktop-reading-start");
+    triggerReadingZone(readingStart, true);
     fireEvent.mouseEnter(screen.getByRole("button", { name: "01 Implementation Notes" }));
 
     const targetHeading = screen.getByRole("heading", { name: "Use geometry to do all of the hard work" });
@@ -295,13 +299,15 @@ describe("SnippetDetail", () => {
       expect(screen.getByRole("heading", { name: "Implementation Notes" })).toBeInTheDocument();
     });
 
-    triggerReadingZone(screen.getByTestId("desktop-reading-start"), true);
+    const readingStart = await screen.findByTestId("desktop-reading-start");
+    triggerReadingZone(readingStart, true);
     const notesButton = await screen.findByRole("button", { name: "01 Implementation Notes" });
 
     fireEvent.mouseEnter(notesButton);
     expect(screen.getByText("Contents")).toBeInTheDocument();
 
-    triggerReadingZone(screen.getByTestId("desktop-reading-end"), true);
+    const readingEnd = await screen.findByTestId("desktop-reading-end");
+    triggerReadingZone(readingEnd, true);
 
     await waitFor(() => {
       expect(screen.queryByRole("button", { name: "01 Implementation Notes" })).not.toBeInTheDocument();

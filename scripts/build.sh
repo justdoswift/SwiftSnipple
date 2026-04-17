@@ -18,19 +18,46 @@ fail() {
   exit 1
 }
 
+warn() {
+  printf '[build] WARN: %s\n' "$1" >&2
+}
+
 sync_repo() {
+  local sync_mode
+  sync_mode="${GIT_SYNC_MODE:-auto}"
+
+  if [ "$sync_mode" = "off" ]; then
+    log_step "Skipping repository sync (GIT_SYNC_MODE=off)"
+    return
+  fi
+
   log_step "Syncing repository to the latest origin commit"
 
-  command -v git >/dev/null 2>&1 || fail "git is not available"
-  git rev-parse --is-inside-work-tree >/dev/null 2>&1 || fail "current directory is not a git work tree"
+  if ! command -v git >/dev/null 2>&1; then
+    [ "$sync_mode" = "strict" ] && fail "git is not available"
+    warn "git is not available; continuing without pulling latest changes"
+    return
+  fi
+
+  if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    [ "$sync_mode" = "strict" ] && fail "current directory is not a git work tree"
+    warn "current directory is not a git work tree; continuing without pulling latest changes"
+    return
+  fi
 
   if ! git diff --quiet --ignore-submodules -- || ! git diff --cached --quiet --ignore-submodules --; then
-    fail "repository has local tracked changes; commit or stash them before running build"
+    [ "$sync_mode" = "strict" ] && fail "repository has local tracked changes; commit or stash them before running build"
+    warn "repository has local tracked changes; skipping git pull and continuing with current checkout"
+    return
   fi
 
   local current_branch
   current_branch="$(git branch --show-current)"
-  [ -n "$current_branch" ] || fail "repository is in detached HEAD state; switch to a branch before running build"
+  if [ -z "$current_branch" ]; then
+    [ "$sync_mode" = "strict" ] && fail "repository is in detached HEAD state; switch to a branch before running build"
+    warn "repository is in detached HEAD state; skipping git pull and continuing with current checkout"
+    return
+  fi
 
   run_cmd git pull --ff-only origin "$current_branch"
 }

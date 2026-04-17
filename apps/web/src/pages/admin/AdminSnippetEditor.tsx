@@ -1,8 +1,9 @@
 import { motion } from "motion/react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { Button, Input, Modal, TextArea, useOverlayState } from "../../lib/heroui";
 import { useNavigate, useParams } from "react-router-dom";
 import EditorSection from "../../components/admin/EditorSection";
+import MarkdownRenderer from "../../components/MarkdownRenderer";
 import StatusBadge from "../../components/admin/StatusBadge";
 import { useAdminHeader } from "../../components/admin/useAdminHeader";
 import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, unpublishSnippet, updateSnippet } from "../../services/snippets";
@@ -203,6 +204,7 @@ export default function AdminSnippetEditor() {
   const hasSavedPreview = Boolean(baseSnippet.id && baseSnippet.slug);
   const hasUnsavedChanges =
     JSON.stringify(toSnippetPayload(previewSnippet)) !== JSON.stringify(toSnippetPayload(baseSnippet));
+  const deferredContent = useDeferredValue(form.content);
 
   const updateField = <K extends keyof SnippetFormState>(field: K, value: SnippetFormState[K]) => {
     setForm((current) => {
@@ -445,17 +447,41 @@ export default function AdminSnippetEditor() {
                   aria-labelledby="editor-tab-content"
                   className="space-y-12 py-4"
                 >
-                  <div className="group relative">
-                     <p className="type-mono-micro absolute -top-8 left-0 text-white/30 transition-opacity duration-300 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 pointer-events-none">
-                       Implementation narrative
-                     </p>
-                     <textarea
-                       aria-label="Implementation notes"
-                       placeholder="Shape the narrative around the technique and tradeoffs. You can use Markdown."
-                       value={form.content}
-                       onChange={(event) => updateField("content", event.target.value)}
-                       className="w-full bg-transparent border-0 px-0 shadow-none outline-none focus:ring-0 text-lg leading-relaxed text-white/90 placeholder:text-white/20 min-h-[400px] resize-y"
-                     />
+                  <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.92fr)]">
+                    <div className="group relative rounded-[28px] border border-white/8 bg-white/[0.02] px-6 py-6">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="type-mono-micro text-white/30">Implementation narrative</p>
+                        <span className="type-mono-micro text-white/15">Markdown source</span>
+                      </div>
+                      <textarea
+                        aria-label="Implementation notes"
+                        placeholder="Shape the narrative around the technique and tradeoffs. You can use Markdown."
+                        value={form.content}
+                        onChange={(event) => updateField("content", event.target.value)}
+                        className="mt-5 min-h-[420px] w-full resize-y border-0 bg-transparent px-0 text-lg leading-relaxed text-white/90 shadow-none outline-none focus:ring-0 placeholder:text-white/20"
+                      />
+                      <p className="mt-4 text-sm leading-relaxed text-white/35">
+                        Supports headings, lists, tables, quotes, inline code, and fenced code blocks like <span className="font-mono text-white/55">```swift</span> or <span className="font-mono text-white/55">```ts</span>.
+                      </p>
+                    </div>
+
+                    <div className="rounded-[28px] border border-white/8 bg-white/[0.02] p-6">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="type-mono-micro text-white/30">Live preview</p>
+                        <span className="type-mono-micro text-white/15">Shared with public view</span>
+                      </div>
+                      <div className="mt-5 min-h-[420px] rounded-[22px] border border-white/8 bg-black/40 p-5 md:p-6">
+                        {deferredContent.trim() ? (
+                          <MarkdownRenderer content={deferredContent} />
+                        ) : (
+                          <div className="flex min-h-[360px] items-center justify-center text-center">
+                            <p className="max-w-sm text-sm leading-relaxed text-white/35">
+                              Start writing in Markdown on the left to preview the final tutorial layout and highlighted code blocks here.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   <div className="group relative border-t border-white/5 pt-8">

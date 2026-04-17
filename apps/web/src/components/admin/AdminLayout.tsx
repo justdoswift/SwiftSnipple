@@ -7,7 +7,7 @@ import { type AdminHeaderConfig, type AdminHeaderOutletContext } from "./useAdmi
 export default function AdminLayout() {
   const [headerConfig, setHeaderConfig] = useState<AdminHeaderConfig | null>(null);
   const outletContext = useMemo<AdminHeaderOutletContext>(() => ({ setHeaderConfig }), []);
-  const activeHeader = headerConfig ?? {
+  const activeHeader: AdminHeaderConfig = headerConfig ?? {
     start: (
       <div className="min-w-0">
         <p className="type-mono-micro text-white/30">Snippet Workspace</p>

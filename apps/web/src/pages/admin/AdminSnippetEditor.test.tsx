@@ -35,5 +35,7 @@ describe("AdminSnippetEditor", () => {
     expect(screen.getByRole("button", { name: "Publish" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /view front site/i })).toBeInTheDocument();
     expect(screen.getByLabelText("Implementation notes")).toBeInTheDocument();
+    expect(screen.getByText("Live preview")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "New Snippet" })).toBeInTheDocument();
   });
 });

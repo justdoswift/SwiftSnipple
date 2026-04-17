@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { motion } from "motion/react";
+import { motion, type Variants } from "motion/react";
 import { Button, Card, Chip, Input } from "../lib/heroui";
 import SnippetCard from "../components/SnippetCard";
 import SnippetMiniCard from "../components/SnippetMiniCard";
 import { getSnippets } from "../services/snippets";
 import { Snippet } from "../types";
 
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -17,13 +17,13 @@ const containerVariants = {
   },
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 30 },
   visible: { 
     opacity: 1, 
     y: 0,
     transition: { 
-      type: "spring", 
+      type: "spring",
       stiffness: 100, 
       damping: 20 
     }

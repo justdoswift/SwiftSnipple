@@ -3,38 +3,10 @@ import { Button, Card, Chip } from "../lib/heroui";
 import { Check, Copy, CopyCheck } from "lucide-react";
 import { type CSSProperties, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import MarkdownPreview from "../components/admin/MarkdownPreview";
+import HighlightedCodeBlock from "../components/HighlightedCodeBlock";
+import MarkdownRenderer from "../components/MarkdownRenderer";
 import { getSnippetBySlug } from "../services/snippets";
 import { Snippet } from "../types";
-
-let swiftHighlighterPromise:
-  | Promise<{
-      codeToHtml: (code: string, options: { lang: "swift"; theme: "github-dark" }) => string;
-    }>
-  | null = null;
-
-async function getSwiftHighlighter() {
-  if (!swiftHighlighterPromise) {
-    swiftHighlighterPromise = Promise.all([
-      import("shiki/core"),
-      import("shiki/dist/langs/swift.mjs"),
-      import("shiki/dist/themes/github-dark.mjs"),
-      import("shiki/engine/javascript"),
-    ]).then(([core, swift, githubDark, engine]) =>
-      core.createHighlighterCore({
-        langs: [swift.default],
-        themes: [githubDark.default],
-        engine: engine.createJavaScriptRegexEngine(),
-      }),
-    );
-  }
-
-  return swiftHighlighterPromise;
-}
-
-function stripShikiBackground(html: string) {
-  return html.replace(/background-color:[^;"']+;?/g, "").replace(/style=";?"/g, "");
-}
 
 function formatDate(value: string | null) {
   if (!value) return "Draft";
@@ -54,7 +26,6 @@ export default function SnippetDetail() {
     code: "idle",
     prompts: "idle",
   });
-  const [highlightedCode, setHighlightedCode] = useState<string | null>(null);
   const resetTimers = useRef<{ code?: number; prompts?: number }>({});
 
   useEffect(() => {
@@ -92,38 +63,6 @@ export default function SnippetDetail() {
       active = false;
     };
   }, [slug]);
-
-  useEffect(() => {
-    if (!snippet?.code.trim()) {
-      setHighlightedCode(null);
-      return;
-    }
-
-    let active = true;
-    setHighlightedCode(null);
-
-    getSwiftHighlighter()
-      .then((highlighter) =>
-        stripShikiBackground(
-          highlighter.codeToHtml(snippet.code, {
-            lang: "swift",
-            theme: "github-dark",
-          }),
-        ),
-      )
-      .then((html) => {
-        if (!active) return;
-        setHighlightedCode(html);
-      })
-      .catch(() => {
-        if (!active) return;
-        setHighlightedCode(null);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [snippet?.code]);
 
   if (isLoading) {
     return <div className="mx-auto max-w-[1380px] px-8 pb-20 pt-32 text-white/58">Loading snippet...</div>;
@@ -251,8 +190,8 @@ export default function SnippetDetail() {
               <span className="type-mono-label text-white/20">01</span>
               <h3 className="type-section-title text-white">Implementation Notes</h3>
             </div>
-            <div className="prose prose-invert max-w-none text-white/60 prose-headings:text-white prose-strong:text-white prose-code:text-white/90 prose-pre:bg-white/[0.02] prose-pre:border prose-pre:border-white/10">
-              <MarkdownPreview content={snippet.content} />
+            <div className="rounded-[32px] border border-white/8 bg-white/[0.02] px-6 py-7 md:px-8 md:py-9">
+              <MarkdownRenderer content={snippet.content} />
             </div>
           </section>
 
@@ -267,16 +206,12 @@ export default function SnippetDetail() {
               </div>
               <div className="vibe-glass rounded-[32px] border-white/5 overflow-hidden">
                 <div className="p-6 md:p-10">
-                  {highlightedCode ? (
-                    <div
-                      className="snippet-highlight type-code-block overflow-x-auto selection:bg-white/20"
-                      dangerouslySetInnerHTML={{ __html: highlightedCode }}
-                    />
-                  ) : (
-                    <pre className="type-code-block overflow-x-auto text-white/80">
-                      <code>{snippet.code}</code>
-                    </pre>
-                  )}
+                  <HighlightedCodeBlock
+                    code={snippet.code}
+                    language="swift"
+                    className="snippet-highlight type-code-block overflow-x-auto selection:bg-white/20"
+                    fallbackClassName="type-code-block overflow-x-auto text-white/80"
+                  />
                 </div>
               </div>
             </section>

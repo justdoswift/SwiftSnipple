@@ -329,6 +329,113 @@
   .admin-section-description {
     @apply text-sm text-[#738a94] mt-1;
   }
+
+  .markdown-renderer {
+    @apply space-y-5 text-[1rem] leading-8 text-white/68;
+  }
+
+  .markdown-renderer > :first-child {
+    @apply mt-0;
+  }
+
+  .markdown-renderer > :last-child {
+    @apply mb-0;
+  }
+
+  .markdown-renderer h1 {
+    @apply mt-2 text-[2.25rem] font-semibold leading-[1.08] tracking-[-0.04em] text-white md:text-[3rem];
+  }
+
+  .markdown-renderer h2 {
+    @apply pt-4 text-[1.7rem] font-semibold leading-[1.15] tracking-[-0.03em] text-white md:text-[2.15rem];
+  }
+
+  .markdown-renderer h3,
+  .markdown-renderer h4 {
+    @apply pt-2 text-[1.2rem] font-semibold leading-tight tracking-[-0.02em] text-white md:text-[1.35rem];
+  }
+
+  .markdown-renderer p {
+    @apply leading-8 text-white/68;
+  }
+
+  .markdown-renderer strong {
+    @apply font-semibold text-white;
+  }
+
+  .markdown-renderer em {
+    @apply italic text-white/78;
+  }
+
+  .markdown-renderer a {
+    @apply text-white underline decoration-white/25 underline-offset-4 transition-colors hover:decoration-white/60;
+  }
+
+  .markdown-renderer ul,
+  .markdown-renderer ol {
+    @apply space-y-2 pl-5 text-white/68;
+  }
+
+  .markdown-renderer ul {
+    @apply list-disc;
+  }
+
+  .markdown-renderer ol {
+    @apply list-decimal;
+  }
+
+  .markdown-renderer li::marker {
+    color: rgba(255, 255, 255, 0.35);
+  }
+
+  .markdown-renderer blockquote {
+    @apply border-l border-white/12 pl-5 text-white/52 italic;
+  }
+
+  .markdown-renderer hr {
+    @apply my-8 border-white/8;
+  }
+
+  .markdown-table-wrap {
+    @apply overflow-x-auto rounded-[20px] border border-white/8 bg-white/[0.02];
+  }
+
+  .markdown-renderer table {
+    @apply min-w-full border-collapse text-left text-sm;
+  }
+
+  .markdown-renderer thead {
+    @apply bg-white/[0.03];
+  }
+
+  .markdown-renderer th,
+  .markdown-renderer td {
+    @apply border-b border-white/8 px-4 py-3 align-top;
+  }
+
+  .markdown-renderer th {
+    @apply font-mono text-[11px] uppercase tracking-[0.12em] text-white/42;
+  }
+
+  .markdown-code-block {
+    @apply overflow-x-auto rounded-[20px] border border-white/8 bg-white/[0.03] p-5 md:p-6;
+  }
+
+  .markdown-code-block code {
+    @apply text-white/80;
+  }
+
+  .markdown-renderer .shiki,
+  .snippet-highlight .shiki,
+  .markdown-renderer .shiki code,
+  .snippet-highlight .shiki code {
+    background: transparent !important;
+  }
+
+  .markdown-renderer .shiki,
+  .snippet-highlight .shiki {
+    @apply m-0 min-w-full;
+  }
 }
 
 .no-scrollbar::-webkit-scrollbar {

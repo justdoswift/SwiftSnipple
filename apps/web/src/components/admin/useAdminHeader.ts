@@ -2,7 +2,7 @@ import { type ReactNode, useLayoutEffect } from "react";
 import { useOutletContext } from "react-router-dom";
 
 export type AdminHeaderConfig = {
-  start: ReactNode;
+  start?: ReactNode;
   center?: ReactNode;
   end?: ReactNode;
 };

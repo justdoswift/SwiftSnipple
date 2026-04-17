@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import AdminSnippets from "./AdminSnippets";
@@ -86,5 +86,36 @@ describe("AdminSnippets", () => {
     await waitFor(() => {
       expect(screen.getByText("Prompt Studio")).toBeInTheDocument();
     });
+  });
+
+  it("filters snippet rows by search query", async () => {
+    mockedGetSnippets.mockResolvedValue([
+      baseSnippet,
+      {
+        ...baseSnippet,
+        id: "snippet-2",
+        title: "Surface Lab",
+        slug: "surface-lab",
+        category: "Animation",
+      },
+    ]);
+
+    render(
+      <MemoryRouter>
+        <AdminSnippets />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Prompt Studio")).toBeInTheDocument();
+      expect(screen.getByText("Surface Lab")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText("Search title or slug"), {
+      target: { value: "surface" },
+    });
+
+    expect(screen.queryByText("Prompt Studio")).not.toBeInTheDocument();
+    expect(screen.getByText("Surface Lab")).toBeInTheDocument();
   });
 });

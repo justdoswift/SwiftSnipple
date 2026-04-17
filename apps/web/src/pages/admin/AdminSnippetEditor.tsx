@@ -7,7 +7,7 @@ import StatusBadge from "../../components/admin/StatusBadge";
 import { useAdminHeader } from "../../components/admin/useAdminHeader";
 import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, unpublishSnippet, updateSnippet } from "../../services/snippets";
 import { Snippet, SnippetFormState, SnippetPayload, SnippetStatus } from "../../types";
-import { ChevronLeft, Columns2, Layout, Monitor, Smartphone, Settings2, Trash2, X } from "lucide-react";
+import { Columns2, Layout, Monitor, Smartphone, Settings2, Trash2, X } from "lucide-react";
 
 const STATUS_OPTIONS: SnippetStatus[] = ["Draft", "In Review", "Scheduled", "Published"];
 const EDITOR_TABS = [
@@ -316,28 +316,6 @@ export default function AdminSnippetEditor() {
 
   const headerConfig = useMemo(
     () => ({
-      start: (
-        <div className="flex min-w-0 items-center gap-4">
-          <Button
-            isIconOnly
-            aria-label="Back to snippets"
-            variant="outline"
-            className="h-11 w-11 shrink-0 admin-button-secondary"
-            onPress={() => navigate("/admin/snippets")}
-          >
-            <ChevronLeft size={20} />
-          </Button>
-          <div className="admin-divider-vertical h-5 w-[1px] shrink-0" />
-          <div className="admin-nav-inline-context min-w-0">
-            <span className="admin-copy-faint type-mono-micro">
-              {isNew ? "Drafting" : "Editing"}
-            </span>
-            <p className="admin-header-title truncate text-sm font-semibold md:max-w-[220px] lg:max-w-md">
-              {isNew ? "New entry" : form.title}
-            </p>
-          </div>
-        </div>
-      ),
       end: (
         <>
           {isLoading ? (
@@ -385,13 +363,10 @@ export default function AdminSnippetEditor() {
     }),
     [
       feedback,
-      form.title,
       handlePreview,
       handleSave,
       isLoading,
-      isNew,
       isSubmitting,
-      navigate,
       previewSnippet.status,
       saveLabel,
     ],

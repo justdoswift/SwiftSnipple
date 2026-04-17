@@ -30,8 +30,8 @@ describe("AdminSnippetEditor", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText("New entry")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Back to snippets" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Snippet Title")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Back to snippets" })).not.toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Narrative" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Builder" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Surface" })).toBeInTheDocument();
@@ -57,8 +57,8 @@ describe("AdminSnippetEditor", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText("New entry")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Back to snippets" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Snippet Title")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Back to snippets" })).not.toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Narrative" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Builder" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Surface" })).toBeInTheDocument();
@@ -105,6 +105,9 @@ describe("AdminSnippetEditor", () => {
     await waitFor(() => {
       expect(screen.getByLabelText("Snippet Title")).toHaveValue("Smooth Feedback Loops");
     });
+
+    expect(screen.getByLabelText("Snippet Title")).toHaveValue("Smooth Feedback Loops");
+    expect(screen.queryByRole("button", { name: "Back to snippets" })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Preview" }));
 

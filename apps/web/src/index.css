@@ -1142,6 +1142,11 @@
     background-color: var(--admin-primary-hover);
   }
 
+  .admin-create-icon {
+    color: var(--admin-primary-text);
+    filter: drop-shadow(0 0 0.01px currentColor);
+  }
+
   .admin-button-secondary {
     @apply rounded-full border px-5 py-2 transition-all active:scale-95;
     background-color: var(--admin-secondary-bg);

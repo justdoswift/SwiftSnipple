@@ -1,6 +1,7 @@
-import { Card, Chip, Input } from "../../lib/heroui";
+import { Card, Input } from "../../lib/heroui";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { Plus } from "lucide-react";
 import StatusBadge from "../../components/admin/StatusBadge";
 import { useAdminHeader } from "../../components/admin/useAdminHeader";
 import { getSnippets } from "../../services/snippets";
@@ -28,17 +29,19 @@ export default function AdminSnippets() {
   const headerConfig = useMemo(
     () => ({
       start: (
-        <div className="min-w-0">
-          <p className="admin-eyebrow type-mono-micro">Snippet Workspace</p>
-          <h1 className="admin-header-title mt-2 truncate text-sm font-semibold">Snippet Library</h1>
+        <div className="admin-nav-inline-context min-w-0">
+          <span className="admin-eyebrow type-mono-micro">Workspace</span>
+          <h1 className="admin-header-title truncate text-sm font-semibold">Snippet Library</h1>
         </div>
       ),
       end: (
         <Link
           to="/admin/snippets/new"
-          className="admin-button-primary type-action inline-flex h-10 shrink-0 items-center px-4"
+          aria-label="Create new snippet"
+          title="Create new snippet"
+          className="admin-button-primary inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
         >
-          New Snippet
+          <Plus size={18} />
         </Link>
       ),
     }),
@@ -86,10 +89,10 @@ export default function AdminSnippets() {
   }, [snippets, categoryFilter, query, statusFilter]);
 
   return (
-    <div className="px-6 py-10 md:px-10 md:py-12">
+    <div className="px-6 py-10 md:px-8 md:py-12 xl:px-10">
       <section className="space-y-3">
         {isLoading ? <p className="admin-copy-muted type-body-sm">Loading snippet library...</p> : null}
-        {error ? <p className="type-body-sm text-red-600">{error}</p> : null}
+        {error ? <p className="admin-inline-alert rounded-[20px] px-4 py-3 text-sm leading-relaxed">{error}</p> : null}
         {!isLoading && !error ? (
           <p className="admin-copy-muted type-body-sm">
             Filter by publishing stage, search by title, and jump straight into editing without leaving the library workflow.
@@ -97,7 +100,7 @@ export default function AdminSnippets() {
         ) : null}
       </section>
 
-      <Card className="mt-8 rounded-[28px]">
+      <Card className="admin-section-card mt-8 rounded-[28px]">
         <Card.Content className="grid gap-4 p-5 md:grid-cols-[minmax(0,1fr)_220px_220px]">
         <Input
           aria-label="Search title or slug"
@@ -136,9 +139,9 @@ export default function AdminSnippets() {
 
       <section className="mt-8 grid gap-6">
         {!isLoading && !error && !snippets.length ? (
-          <Card className="rounded-[28px] border border-dashed border-outline-variant/20">
+          <Card className="admin-section-card admin-list-divider rounded-[28px] border border-dashed">
             <Card.Content className="px-6 py-12 text-center">
-              <p className="type-mono-micro text-primary/35">No snippets yet</p>
+              <p className="admin-empty-kicker type-mono-micro">No snippets yet</p>
               <h2 className="type-section-title mt-4 text-[2rem]">Start the first showcase entry</h2>
               <p className="type-body-sm mt-3">
                 The library will populate as soon as the first snippet is created.
@@ -152,9 +155,9 @@ export default function AdminSnippets() {
             to={`/admin/snippets/${snippet.id}`}
             className="admin-list-link block"
           >
-            <Card className="rounded-[28px] transition-all hover:-translate-y-0.5">
+            <Card className="admin-section-card rounded-[28px] transition-all hover:-translate-y-0.5">
               <Card.Content className="grid gap-6 p-5 md:grid-cols-[220px_minmax(0,1fr)] md:p-6">
-                <div className="aspect-[4/3] overflow-hidden rounded-[22px] bg-surface-container-low">
+                <div className="admin-image-stage aspect-[4/3] overflow-hidden rounded-[22px]">
                   <img
                     src={snippet.coverImage}
                     alt={snippet.title}
@@ -169,15 +172,12 @@ export default function AdminSnippets() {
                     <p className="type-body-sm mt-3 max-w-3xl">{snippet.excerpt}</p>
                     <div className="mt-5 flex flex-wrap gap-2">
                       {snippet.tags.map((tag) => (
-                        <Chip
+                        <span
                           key={tag}
-                          size="sm"
-                          radius="full"
-                          variant="flat"
-                          className="type-mono-micro"
+                          className="admin-tag-chip type-mono-micro inline-flex items-center rounded-full px-3 py-1.5"
                         >
                           {tag}
-                        </Chip>
+                        </span>
                       ))}
                     </div>
                   </div>
@@ -195,9 +195,9 @@ export default function AdminSnippets() {
         ))}
 
         {!filteredSnippets.length && (
-          <Card className="rounded-[28px] border border-dashed border-outline-variant/20">
+          <Card className="admin-section-card admin-list-divider rounded-[28px] border border-dashed">
             <Card.Content className="px-6 py-12 text-center">
-              <p className="type-mono-micro text-primary/35">No matches</p>
+              <p className="admin-empty-kicker type-mono-micro">No matches</p>
               <h2 className="type-section-title mt-4 text-[2rem]">Try another filter set</h2>
               <p className="type-body-sm mt-3">
                 No snippet matches the current query, status, and category combination.

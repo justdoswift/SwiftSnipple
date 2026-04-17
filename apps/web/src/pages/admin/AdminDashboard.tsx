@@ -1,6 +1,7 @@
-import { Button, Card, ProgressBar } from "../../lib/heroui";
+import { Button, Card } from "../../lib/heroui";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { Plus } from "lucide-react";
 import StatCard from "../../components/admin/StatCard";
 import StatusBadge from "../../components/admin/StatusBadge";
 import { useAdminHeader } from "../../components/admin/useAdminHeader";
@@ -23,17 +24,19 @@ export default function AdminDashboard() {
   const headerConfig = useMemo(
     () => ({
       start: (
-        <div className="min-w-0">
-          <p className="admin-eyebrow type-mono-micro">Snippet Workspace</p>
-          <h1 className="admin-header-title mt-2 truncate text-sm font-semibold">Overview</h1>
+        <div className="admin-nav-inline-context min-w-0">
+          <span className="admin-eyebrow type-mono-micro">Workspace</span>
+          <h1 className="admin-header-title truncate text-sm font-semibold">Overview</h1>
         </div>
       ),
       end: (
         <Link
           to="/admin/snippets/new"
-          className="admin-button-primary type-action inline-flex h-10 shrink-0 items-center px-4"
+          aria-label="Create new snippet"
+          title="Create new snippet"
+          className="admin-button-primary inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
         >
-          Start New Snippet
+          <Plus size={18} />
         </Link>
       ),
     }),
@@ -73,18 +76,11 @@ export default function AdminDashboard() {
   const recentSnippets = snippets.slice(0, 3);
 
   return (
-    <div className="px-6 py-10 md:px-10 md:py-12">
-      <section className="space-y-3">
-        {isLoading ? <p className="admin-copy-muted type-body-sm">Loading snippet metrics...</p> : null}
-        {error ? <p className="type-body-sm text-red-600">{error}</p> : null}
-        {!isLoading && !error ? (
-          <p className="admin-copy-muted type-body-sm">
-            Track recent edits, release pacing, and the current status mix without leaving the admin workspace.
-          </p>
-        ) : null}
-      </section>
+    <div className="px-6 py-10 md:px-8 md:py-12 xl:px-10">
+      {isLoading ? <p className="admin-copy-muted type-body-sm">Loading snippet metrics...</p> : null}
+      {error ? <p className="admin-inline-alert rounded-[20px] px-4 py-3 text-sm leading-relaxed">{error}</p> : null}
 
-      <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className={`${!isLoading && !error ? "" : "mt-8"} grid gap-4 md:grid-cols-2 xl:grid-cols-4`}>
         <StatCard label="Entries" value={snippets.length} note="Total snippets currently managed inside the publishing workspace." />
         <StatCard label="Drafts" value={draftCount} note="Snippets still being shaped before they go live." />
         <StatCard label="Published" value={publishedCount} note="Entries that are live and visible in the public library." />
@@ -92,7 +88,7 @@ export default function AdminDashboard() {
       </section>
 
       <section className="mt-10 grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_360px]">
-        <Card className="rounded-[28px]">
+        <Card className="admin-section-card rounded-[28px]">
           <Card.Header className="admin-card-header flex items-end justify-between px-6 py-5 md:px-8">
             <div>
               <p className="admin-eyebrow type-mono-micro">Recent Activity</p>
@@ -105,10 +101,10 @@ export default function AdminDashboard() {
               Open list
             </Link>
           </Card.Header>
-          <Card.Content className="divide-y divide-outline-variant/10 p-0">
+          <Card.Content className="admin-list-divider divide-y p-0">
             {!isLoading && !recentSnippets.length ? (
               <div className="px-6 py-10 text-center">
-                <p className="type-mono-micro text-primary/35">No activity yet</p>
+                <p className="admin-empty-kicker type-mono-micro">No activity yet</p>
                 <p className="type-body-sm mt-3">
                   Create the first snippet to start the publishing timeline.
                 </p>
@@ -137,7 +133,7 @@ export default function AdminDashboard() {
         </Card>
 
         <div className="space-y-6">
-          <Card className="rounded-[26px]">
+          <Card className="admin-section-card rounded-[26px]">
             <Card.Content className="p-6">
             <p className="admin-eyebrow type-mono-micro">Status Mix</p>
             <div className="mt-6 space-y-4">
@@ -149,11 +145,19 @@ export default function AdminDashboard() {
               ].map(([label, count]) => (
                 <div key={label} className="grid grid-cols-[110px_1fr_auto] items-center gap-4">
                   <span className="admin-copy-muted type-mono-micro">{label}</span>
-                  <ProgressBar
+                  <div
                     aria-label={`${label} ratio`}
-                    className="w-full"
-                    value={snippets.length ? (Number(count) / snippets.length) * 100 : 0}
-                  />
+                    role="progressbar"
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={snippets.length ? Math.round((Number(count) / snippets.length) * 100) : 0}
+                    className="admin-progress-track w-full"
+                  >
+                    <span
+                      className="admin-progress-indicator"
+                      style={{ width: `${snippets.length ? (Number(count) / snippets.length) * 100 : 0}%` }}
+                    />
+                  </div>
                   <span className="text-sm font-semibold">{count}</span>
                 </div>
               ))}
@@ -161,7 +165,7 @@ export default function AdminDashboard() {
             </Card.Content>
           </Card>
 
-          <Card className="admin-callout-card rounded-[28px]">
+          <Card className="admin-section-card admin-callout-card rounded-[28px]">
             <Card.Content className="p-6">
             <p className="admin-eyebrow type-mono-micro">Next Up</p>
             <h2 className="admin-callout-title type-section-title mt-3 text-[1.9rem]">Ship the next entry faster</h2>
@@ -180,7 +184,7 @@ export default function AdminDashboard() {
             </Card.Content>
           </Card>
 
-          <Card className="rounded-[26px]">
+          <Card className="admin-section-card rounded-[26px]">
             <Card.Content className="p-6">
             <p className="admin-eyebrow type-mono-micro">Scheduled Release</p>
             <h2 className="type-card-title mt-3 text-[1.35rem]">

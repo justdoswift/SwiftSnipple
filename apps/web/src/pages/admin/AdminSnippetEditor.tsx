@@ -322,49 +322,20 @@ export default function AdminSnippetEditor() {
             isIconOnly
             aria-label="Back to snippets"
             variant="outline"
-            className="h-10 w-10 shrink-0 admin-button-secondary"
+            className="h-11 w-11 shrink-0 admin-button-secondary"
             onPress={() => navigate("/admin/snippets")}
           >
             <ChevronLeft size={20} />
           </Button>
           <div className="admin-divider-vertical h-5 w-[1px] shrink-0" />
-          <div className="flex min-w-0 flex-col">
-            <p className="admin-copy-faint type-mono-micro -mb-0.5">
+          <div className="admin-nav-inline-context min-w-0">
+            <span className="admin-copy-faint type-mono-micro">
               {isNew ? "Drafting" : "Editing"}
-            </p>
+            </span>
             <p className="admin-header-title truncate text-sm font-semibold md:max-w-[220px] lg:max-w-md">
               {isNew ? "New entry" : form.title}
             </p>
           </div>
-        </div>
-      ),
-      center: (
-        <div
-          role="tablist"
-          aria-label="Editor modes"
-          className="flex min-w-0 gap-6 overflow-x-auto px-1 xl:justify-start"
-        >
-          {EDITOR_TABS.map(({ key, label, icon: Icon }) => {
-            const isSelected = activeTab === key;
-
-            return (
-              <button
-                key={key}
-                type="button"
-                role="tab"
-                aria-selected={isSelected}
-                aria-controls={`editor-panel-${key}`}
-                id={`editor-tab-${key}`}
-                className={`relative inline-flex h-12 shrink-0 items-center gap-2.5 whitespace-nowrap border-b-2 px-1 text-sm font-medium transition-all duration-300 ${
-                  isSelected ? "admin-tab-active" : "admin-tab"
-                }`}
-                onClick={() => setActiveTab(key)}
-              >
-                <Icon size={16} className={isSelected ? "admin-icon-strong" : "admin-icon-muted"} />
-                <span>{label}</span>
-              </button>
-            );
-          })}
         </div>
       ),
       end: (
@@ -380,19 +351,19 @@ export default function AdminSnippetEditor() {
             </div>
           )}
           {feedback ? (
-            <span className="hidden text-xs font-mono text-emerald-400 animate-in fade-in duration-500 2xl:block">
+            <span className="admin-feedback-success hidden text-xs font-mono animate-in fade-in duration-500 2xl:block">
               {feedback}
             </span>
           ) : null}
           <Button
-            className="h-9 shrink-0 px-2.5 text-sm admin-button-secondary min-[1500px]:px-3 2xl:px-4"
+            className="h-11 shrink-0 px-2.5 text-sm admin-button-secondary min-[1500px]:px-3 2xl:px-4"
             onPress={handlePreview}
           >
             Preview
           </Button>
           <Button
             isDisabled={isSubmitting}
-            className="h-9 shrink-0 px-2.5 text-sm admin-button-secondary min-[1500px]:px-3 2xl:px-4"
+            className="h-11 shrink-0 px-2.5 text-sm admin-button-secondary min-[1500px]:px-3 2xl:px-4"
             onPress={() => handleSave()}
           >
             {isSubmitting ? "..." : (
@@ -404,7 +375,7 @@ export default function AdminSnippetEditor() {
           </Button>
           <Button
             isDisabled={isSubmitting}
-            className="h-9 shrink-0 px-2.5 text-sm admin-button-primary min-[1500px]:px-3 2xl:px-4"
+            className="h-11 shrink-0 px-2.5 text-sm admin-button-primary min-[1500px]:px-3 2xl:px-4"
             onPress={() => handleSave("Published")}
           >
             Publish
@@ -413,8 +384,6 @@ export default function AdminSnippetEditor() {
       ),
     }),
     [
-      activeTab,
-      closePreview,
       feedback,
       form.title,
       handlePreview,
@@ -432,7 +401,7 @@ export default function AdminSnippetEditor() {
 
   return (
     <div className="admin-page">
-      <main className="mx-auto max-w-[900px] px-6 pb-12 pt-10 md:px-10 md:pb-16 md:pt-10 lg:pb-24 lg:pt-12">
+      <main className="px-6 pb-12 pt-10 md:px-8 md:pb-16 md:pt-10 lg:pb-24 lg:pt-12 xl:px-10">
         <div className="flex flex-col gap-12">
 
           <div className="space-y-12">
@@ -450,6 +419,36 @@ export default function AdminSnippetEditor() {
                   target.style.height = `${target.scrollHeight}px`;
                 }}
               />
+            </div>
+
+            <div className="admin-editor-local-tabs sticky top-[4.9rem] z-20 -mx-1 overflow-x-auto">
+              <div
+                role="tablist"
+                aria-label="Editor modes"
+                className="admin-editor-local-tabs-shell inline-flex min-w-full items-center gap-2 rounded-[18px] border p-1 sm:min-w-0"
+              >
+                {EDITOR_TABS.map(({ key, label, icon: Icon }) => {
+                  const isSelected = activeTab === key;
+
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      role="tab"
+                      aria-selected={isSelected}
+                      aria-controls={`editor-panel-${key}`}
+                      id={`editor-tab-${key}`}
+                      className={`admin-editor-local-tab inline-flex h-11 shrink-0 items-center gap-2 rounded-[14px] px-4 text-sm font-medium transition-all ${
+                        isSelected ? "admin-preview-device-button-active" : "admin-preview-device-button-inactive"
+                      }`}
+                      onClick={() => setActiveTab(key)}
+                    >
+                      <Icon size={16} className={isSelected ? "admin-icon-strong" : "admin-icon-muted"} />
+                      <span>{label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <motion.div
@@ -658,7 +657,7 @@ export default function AdminSnippetEditor() {
                         <Button
                           variant="outline"
                           radius="full"
-                          className="h-10 border-red-900/20 text-red-700/60 hover:bg-red-900/10 hover:text-red-600 transition-all border-dashed"
+                          className="admin-danger-button h-10 border-dashed transition-all"
                           onPress={handleDelete}
                         >
                           <Trash2 size={16} className="mr-2" />
@@ -673,7 +672,11 @@ export default function AdminSnippetEditor() {
           </div>
 
           {error ? (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-[24px] bg-red-500/10 p-5 border border-red-500/20 text-red-400 text-sm leading-relaxed">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="admin-inline-alert rounded-[24px] p-5 text-sm leading-relaxed"
+            >
               {error}
             </motion.div>
           ) : null}

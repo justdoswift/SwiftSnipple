@@ -65,12 +65,17 @@ describe("AdminLayout", () => {
       expect(screen.getByRole("heading", { name: "Overview" })).toBeInTheDocument();
     });
 
-    const header = screen.getByRole("heading", { name: "Overview" }).closest("header");
+    const header = screen.getByTestId("admin-navbar-shell").closest("header");
 
-    expect(screen.getByText("Snippet Workspace")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Just Do Swift admin" })).toBeInTheDocument();
+    expect(screen.getByText("Workspace")).toBeInTheDocument();
     expect(header).not.toBeNull();
-    expect(within(header!).getByRole("link", { name: "Start New Snippet" })).toBeInTheDocument();
+    expect(within(header!).getByRole("link", { name: /create new snippet/i })).toBeInTheDocument();
     expect(within(header!).getByRole("link", { name: /View Front Site/i })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Admin sections" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /overview/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /snippets/i })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /^new snippet$/i })).not.toBeInTheDocument();
     expect(screen.queryByText("Ship SwiftUI snippets with the same care you use to build them.")).not.toBeInTheDocument();
   });
 
@@ -81,10 +86,10 @@ describe("AdminLayout", () => {
       expect(screen.getByRole("heading", { name: "Snippet Library" })).toBeInTheDocument();
     });
 
-    const header = screen.getByRole("heading", { name: "Snippet Library" }).closest("header");
+    const header = screen.getByTestId("admin-navbar-shell").closest("header");
 
     expect(header).not.toBeNull();
-    expect(within(header!).getByRole("link", { name: "New Snippet" })).toBeInTheDocument();
+    expect(within(header!).getByRole("link", { name: /create new snippet/i })).toBeInTheDocument();
     expect(within(header!).getByRole("link", { name: /View Front Site/i })).toBeInTheDocument();
     expect(screen.getByLabelText("Search title or slug")).toBeInTheDocument();
   });
@@ -96,9 +101,10 @@ describe("AdminLayout", () => {
       expect(screen.getByRole("button", { name: "Back to snippets" })).toBeInTheDocument();
     });
 
-    const header = screen.getByRole("button", { name: "Back to snippets" }).closest("header");
+    const header = screen.getByTestId("admin-navbar-shell").closest("header");
 
     expect(header).not.toBeNull();
+    expect(within(header!).getByRole("link", { name: "Just Do Swift admin" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Narrative" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Builder" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Surface" })).toBeInTheDocument();

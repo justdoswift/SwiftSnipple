@@ -1,10 +1,19 @@
 import { motion } from "motion/react";
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import HighlightedCodeBlock from "../components/HighlightedCodeBlock";
 import MarkdownRenderer from "../components/MarkdownRenderer";
 import { getSnippetBySlug } from "../services/snippets";
 import { Snippet } from "../types";
+
+type SnippetSectionId = "notes" | "code" | "prompts";
+
+type SnippetSection = {
+  id: SnippetSectionId;
+  number: string;
+  label: string;
+  content: ReactNode;
+};
 
 function formatDate(value: string | null) {
   if (!value) return "Draft";
@@ -15,11 +24,32 @@ function formatDate(value: string | null) {
   }).format(new Date(value));
 }
 
+function getInitialDesktopState() {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return false;
+  }
+
+  return window.matchMedia("(min-width: 768px)").matches;
+}
+
+function normalizeSectionHash(hash: string): SnippetSectionId | null {
+  const value = hash.replace(/^#/, "");
+  if (value === "notes" || value === "code" || value === "prompts") {
+    return value;
+  }
+
+  return null;
+}
+
 export default function SnippetDetail() {
   const { slug } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [snippet, setSnippet] = useState<Snippet | null>(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isDesktop, setIsDesktop] = useState(getInitialDesktopState);
+  const [activeSectionId, setActiveSectionId] = useState<SnippetSectionId>("notes");
 
   useEffect(() => {
     if (!slug) return;
@@ -46,6 +76,94 @@ export default function SnippetDetail() {
     };
   }, [slug]);
 
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia("(min-width: 768px)");
+    const handleChange = (event: MediaQueryListEvent) => {
+      setIsDesktop(event.matches);
+    };
+
+    setIsDesktop(mediaQuery.matches);
+    mediaQuery.addEventListener("change", handleChange);
+
+    return () => {
+      mediaQuery.removeEventListener("change", handleChange);
+    };
+  }, []);
+
+  const hasCode = snippet?.code.trim().length ? true : false;
+  const hasPrompts = snippet?.prompts.trim().length ? true : false;
+  const sections = useMemo<SnippetSection[]>(() => {
+    if (!snippet) {
+      return [];
+    }
+
+    const availableSections: SnippetSection[] = [
+      {
+        id: "notes",
+        number: "01",
+        label: "Implementation Notes",
+        content: (
+          <div className="rounded-[32px] border border-white/8 bg-white/[0.02] px-6 py-7 md:px-8 md:py-9">
+            <MarkdownRenderer content={snippet.content} />
+          </div>
+        ),
+      },
+    ];
+
+    if (hasCode) {
+      availableSections.push({
+        id: "code",
+        number: "02",
+        label: "SwiftUI Source",
+        content: (
+          <HighlightedCodeBlock
+            code={snippet.code}
+            language="swift"
+            copyable
+            copyLabel="Swift code"
+            className="markdown-code-block snippet-highlight type-code-block overflow-x-auto selection:bg-white/20"
+            fallbackClassName="markdown-code-block type-code-block overflow-x-auto text-white/80"
+          />
+        ),
+      });
+    }
+
+    if (hasPrompts) {
+      availableSections.push({
+        id: "prompts",
+        number: "03",
+        label: "Prompt Logic",
+        content: (
+          <HighlightedCodeBlock
+            code={snippet.prompts}
+            copyable
+            copyLabel="prompt logic"
+            fallbackClassName="markdown-code-block type-code-block whitespace-pre-wrap text-white/50 selection:bg-white/20"
+          />
+        ),
+      });
+    }
+
+    return availableSections;
+  }, [hasCode, hasPrompts, snippet?.code, snippet?.content, snippet?.prompts]);
+
+  useEffect(() => {
+    if (!sections.length) return;
+
+    const requestedSection = normalizeSectionHash(location.hash);
+    const hasRequestedSection = requestedSection
+      ? sections.some((section) => section.id === requestedSection)
+      : false;
+
+    setActiveSectionId(hasRequestedSection && requestedSection ? requestedSection : sections[0].id);
+  }, [location.hash, sections]);
+
+  const activeSection = sections.find((section) => section.id === activeSectionId) ?? sections[0];
+
   if (isLoading) {
     return <div className="mx-auto max-w-[1380px] px-8 pb-20 pt-32 text-white/58">Loading snippet...</div>;
   }
@@ -59,9 +177,6 @@ export default function SnippetDetail() {
       </div>
     );
   }
-
-  const hasCode = snippet.code.trim().length > 0;
-  const hasPrompts = snippet.prompts.trim().length > 0;
 
   return (
     <div className="mx-auto max-w-[1380px] px-6 pb-24 pt-44 md:px-10 md:pt-56">
@@ -120,51 +235,86 @@ export default function SnippetDetail() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-[900px]">
-        <article className="space-y-16">
-          <section className="space-y-8">
-            <div className="flex items-center gap-4">
-              <span className="type-mono-label text-white/20">01</span>
-              <h3 className="type-section-title text-white">Implementation Notes</h3>
-            </div>
-            <div className="rounded-[32px] border border-white/8 bg-white/[0.02] px-6 py-7 md:px-8 md:py-9">
-              <MarkdownRenderer content={snippet.content} />
-            </div>
-          </section>
+      {isDesktop ? (
+        <div className="relative">
+          <nav
+            aria-label="Snippet sections"
+            className="fixed left-5 top-1/2 z-30 flex -translate-y-1/2 flex-col gap-5 md:left-8 xl:left-12"
+          >
+            {sections.map((section) => {
+              const isActive = section.id === activeSection.id;
 
-          {hasCode ? (
-            <section className="space-y-8">
-              <div className="flex items-center gap-4">
-                <span className="type-mono-label text-white/20">02</span>
-                <h3 className="type-section-title text-white">SwiftUI Source</h3>
-              </div>
-              <HighlightedCodeBlock
-                code={snippet.code}
-                language="swift"
-                copyable
-                copyLabel="Swift code"
-                className="markdown-code-block snippet-highlight type-code-block overflow-x-auto selection:bg-white/20"
-                fallbackClassName="markdown-code-block type-code-block overflow-x-auto text-white/80"
-              />
-            </section>
-          ) : null}
+              return (
+                <button
+                  key={section.id}
+                  type="button"
+                  className="group flex items-center gap-4 text-left"
+                  aria-label={`${section.number} ${section.label}`}
+                  aria-pressed={isActive}
+                  onClick={() => {
+                    setActiveSectionId(section.id);
+                    navigate(
+                      {
+                        pathname: location.pathname,
+                        hash: `#${section.id}`,
+                      },
+                      { replace: true },
+                    );
+                  }}
+                  >
+                    <span
+                      className={`block h-14 w-[3px] rounded-full transition-colors ${
+                        isActive ? "bg-white" : "bg-white/16 group-hover:bg-white/35"
+                      }`}
+                      aria-hidden="true"
+                    />
+                    <span
+                      className={`font-mono text-[11px] font-medium tracking-[0.22em] transition-colors ${
+                        isActive ? "text-white" : "text-white/34 group-hover:text-white/62"
+                      }`}
+                    >
+                      {section.number}
+                    </span>
+                </button>
+              );
+            })}
+          </nav>
 
-          {hasPrompts ? (
-            <section className="space-y-8 pb-12 text-white">
+          <div className="mx-auto max-w-[920px] px-4 md:px-0">
+            <motion.section
+              key={activeSection.id}
+              id={activeSection.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-8 pb-12 text-white"
+            >
               <div className="flex items-center gap-4">
-                <span className="type-mono-label text-white/20">03</span>
-                <h3 className="type-section-title text-white">Prompt Logic</h3>
+                <span className="type-mono-label text-white/20">{activeSection.number}</span>
+                <h3 className="type-section-title text-white">{activeSection.label}</h3>
               </div>
-              <HighlightedCodeBlock
-                code={snippet.prompts}
-                copyable
-                copyLabel="prompt logic"
-                fallbackClassName="markdown-code-block type-code-block whitespace-pre-wrap text-white/50 selection:bg-white/20"
-              />
-            </section>
-          ) : null}
-        </article>
-      </div>
+              {activeSection.content}
+            </motion.section>
+          </div>
+        </div>
+      ) : (
+        <div className="mx-auto max-w-[900px]">
+          <article className="space-y-16">
+            {sections.map((section, index) => (
+              <section
+                key={section.id}
+                id={section.id}
+                className={`space-y-8 text-white ${index === sections.length - 1 ? "pb-12" : ""}`}
+              >
+                <div className="flex items-center gap-4">
+                  <span className="type-mono-label text-white/20">{section.number}</span>
+                  <h3 className="type-section-title text-white">{section.label}</h3>
+                </div>
+                {section.content}
+              </section>
+            ))}
+          </article>
+        </div>
+      )}
     </div>
   );
 }

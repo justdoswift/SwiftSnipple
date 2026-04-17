@@ -57,5 +57,9 @@ describe("SnippetDetail", () => {
     expect(screen.getByRole("button", { name: "Copy prompt logic" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Copy code block" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Copy" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copy Swift code" }).closest(".code-copy-shell")?.querySelector(".markdown-code-block")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copy prompt logic" }).closest(".code-copy-shell")?.querySelector(".markdown-code-block")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copy Swift code" }).closest(".public-code-surface")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copy prompt logic" }).closest(".public-code-surface")).not.toBeInTheDocument();
   });
 });

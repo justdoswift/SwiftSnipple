@@ -138,18 +138,14 @@ export default function SnippetDetail() {
                 <span className="type-mono-label text-white/20">02</span>
                 <h3 className="type-section-title text-white">SwiftUI Source</h3>
               </div>
-              <div className="vibe-glass rounded-[32px] border-white/5 overflow-hidden">
-                <div className="p-6 md:p-10">
-                  <HighlightedCodeBlock
-                    code={snippet.code}
-                    language="swift"
-                    copyable
-                    copyLabel="Swift code"
-                    className="snippet-highlight type-code-block overflow-x-auto selection:bg-white/20"
-                    fallbackClassName="type-code-block overflow-x-auto text-white/80"
-                  />
-                </div>
-              </div>
+              <HighlightedCodeBlock
+                code={snippet.code}
+                language="swift"
+                copyable
+                copyLabel="Swift code"
+                className="markdown-code-block snippet-highlight type-code-block overflow-x-auto selection:bg-white/20"
+                fallbackClassName="markdown-code-block type-code-block overflow-x-auto text-white/80"
+              />
             </section>
           ) : null}
 
@@ -159,16 +155,12 @@ export default function SnippetDetail() {
                 <span className="type-mono-label text-white/20">03</span>
                 <h3 className="type-section-title text-white">Prompt Logic</h3>
               </div>
-              <div className="vibe-glass rounded-[32px] border-white/5 overflow-hidden">
-                <div className="px-8 py-10 md:px-12 md:py-14">
-                  <HighlightedCodeBlock
-                    code={snippet.prompts}
-                    copyable
-                    copyLabel="prompt logic"
-                    fallbackClassName="type-code-block whitespace-pre-wrap text-white/50 selection:bg-white/20"
-                  />
-                </div>
-              </div>
+              <HighlightedCodeBlock
+                code={snippet.prompts}
+                copyable
+                copyLabel="prompt logic"
+                fallbackClassName="markdown-code-block type-code-block whitespace-pre-wrap text-white/50 selection:bg-white/20"
+              />
             </section>
           ) : null}
         </article>

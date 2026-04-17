@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button, Input, TextArea } from "../../lib/heroui";
 import { useNavigate, useParams } from "react-router-dom";
 import EditorSection from "../../components/admin/EditorSection";
+import HighlightedCodeEditor from "../../components/admin/HighlightedCodeEditor";
 import StatusBadge from "../../components/admin/StatusBadge";
 import { useAdminHeader } from "../../components/admin/useAdminHeader";
 import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, unpublishSnippet, updateSnippet } from "../../services/snippets";
@@ -488,13 +489,11 @@ export default function AdminSnippetEditor() {
                     <p className="admin-builder-label type-mono-micro absolute -top-8 left-0 transition-opacity duration-300 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 pointer-events-none">
                       SwiftUI Logic
                     </p>
-                    <textarea
-                      aria-label="SwiftUI code"
+                    <HighlightedCodeEditor
+                      ariaLabel="SwiftUI code"
                       placeholder="import SwiftUI..."
                       value={form.code}
-                      onChange={(event) => updateField("code", event.target.value)}
-                      className="admin-editor-code w-full bg-transparent border-0 px-0 shadow-none outline-none focus:ring-0 font-mono text-sm leading-relaxed min-h-[400px] resize-y"
-                      spellCheck={false}
+                      onChange={(value) => updateField("code", value)}
                     />
                   </div>
                 </div>

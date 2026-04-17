@@ -19,5 +19,6 @@ Text("Hello")
     expect(screen.getByRole("heading", { name: "Example" })).toBeInTheDocument();
     expect(screen.getByText("formatted")).toBeInTheDocument();
     expect(await screen.findByText('Text("Hello")')).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copy code block" })).toBeInTheDocument();
   });
 });

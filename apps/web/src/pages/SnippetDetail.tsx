@@ -1,7 +1,5 @@
 import { motion } from "motion/react";
-import { Button, Card, Chip } from "../lib/heroui";
-import { Check, Copy, CopyCheck } from "lucide-react";
-import { type CSSProperties, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import HighlightedCodeBlock from "../components/HighlightedCodeBlock";
 import MarkdownRenderer from "../components/MarkdownRenderer";
@@ -22,22 +20,6 @@ export default function SnippetDetail() {
   const [snippet, setSnippet] = useState<Snippet | null>(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [copyState, setCopyState] = useState<{ code: "idle" | "copied" | "failed"; prompts: "idle" | "copied" | "failed" }>({
-    code: "idle",
-    prompts: "idle",
-  });
-  const resetTimers = useRef<{ code?: number; prompts?: number }>({});
-
-  useEffect(() => {
-    return () => {
-      (["code", "prompts"] as const).forEach((key) => {
-        const timer = resetTimers.current[key];
-        if (timer) {
-          window.clearTimeout(timer);
-        }
-      });
-    };
-  }, []);
 
   useEffect(() => {
     if (!slug) return;
@@ -80,51 +62,6 @@ export default function SnippetDetail() {
 
   const hasCode = snippet.code.trim().length > 0;
   const hasPrompts = snippet.prompts.trim().length > 0;
-
-  async function handleCopy(target: "code" | "prompts", value: string) {
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopyState((current) => ({ ...current, [target]: "copied" }));
-    } catch {
-      setCopyState((current) => ({ ...current, [target]: "failed" }));
-    }
-
-    if (resetTimers.current[target]) {
-      window.clearTimeout(resetTimers.current[target]);
-    }
-
-    resetTimers.current[target] = window.setTimeout(() => {
-      setCopyState((current) => ({ ...current, [target]: "idle" }));
-    }, 1800);
-  }
-
-  function renderCopyButton(target: "code" | "prompts", value: string) {
-    const state = copyState[target];
-    const isCopied = state === "copied";
-    const isFailed = state === "failed";
-    const label = isCopied ? "Copied" : isFailed ? "Failed" : "Copy";
-    const Icon = isCopied ? Check : isFailed ? CopyCheck : Copy;
-
-    return (
-      <Button
-        size="sm"
-        radius="full"
-        className="public-copy-button min-w-0 px-3 !text-white/70 hover:!text-white"
-        style={
-          {
-            "--button-bg": "rgba(255, 255, 255, 0.03)",
-            "--button-bg-hover": "rgba(255, 255, 255, 0.10)",
-            "--button-bg-pressed": "rgba(255, 255, 255, 0.10)",
-            "--button-fg": isCopied ? "#ffffff" : isFailed ? "rgba(255, 255, 255, 0.92)" : "rgba(255, 255, 255, 0.7)",
-          } as CSSProperties
-        }
-        onPress={() => void handleCopy(target, value)}
-      >
-        <Icon size={14} />
-        <span className="type-action">{label}</span>
-      </Button>
-    );
-  }
 
   return (
     <div className="mx-auto max-w-[1380px] px-6 pb-24 pt-44 md:px-10 md:pt-56">
@@ -197,18 +134,17 @@ export default function SnippetDetail() {
 
           {hasCode ? (
             <section className="space-y-8">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <span className="type-mono-label text-white/20">02</span>
-                  <h3 className="type-section-title text-white">SwiftUI Source</h3>
-                </div>
-                {renderCopyButton("code", snippet.code)}
+              <div className="flex items-center gap-4">
+                <span className="type-mono-label text-white/20">02</span>
+                <h3 className="type-section-title text-white">SwiftUI Source</h3>
               </div>
               <div className="vibe-glass rounded-[32px] border-white/5 overflow-hidden">
                 <div className="p-6 md:p-10">
                   <HighlightedCodeBlock
                     code={snippet.code}
                     language="swift"
+                    copyable
+                    copyLabel="Swift code"
                     className="snippet-highlight type-code-block overflow-x-auto selection:bg-white/20"
                     fallbackClassName="type-code-block overflow-x-auto text-white/80"
                   />
@@ -219,20 +155,20 @@ export default function SnippetDetail() {
 
           {hasPrompts ? (
             <section className="space-y-8 pb-12 text-white">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <span className="type-mono-label text-white/20">03</span>
-                  <h3 className="type-section-title text-white">Prompt Logic</h3>
-                </div>
-                {renderCopyButton("prompts", snippet.prompts)}
+              <div className="flex items-center gap-4">
+                <span className="type-mono-label text-white/20">03</span>
+                <h3 className="type-section-title text-white">Prompt Logic</h3>
               </div>
-              <Card className="vibe-glass rounded-[32px] border-white/5">
-                <Card.Content className="px-8 py-10 md:px-12 md:py-14">
-                  <pre className="type-code-block whitespace-pre-wrap text-white/50 selection:bg-white/20">
-                    <code>{snippet.prompts}</code>
-                  </pre>
-                </Card.Content>
-              </Card>
+              <div className="vibe-glass rounded-[32px] border-white/5 overflow-hidden">
+                <div className="px-8 py-10 md:px-12 md:py-14">
+                  <HighlightedCodeBlock
+                    code={snippet.prompts}
+                    copyable
+                    copyLabel="prompt logic"
+                    fallbackClassName="type-code-block whitespace-pre-wrap text-white/50 selection:bg-white/20"
+                  />
+                </div>
+              </div>
             </section>
           ) : null}
         </article>

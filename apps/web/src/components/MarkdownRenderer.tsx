@@ -47,6 +47,8 @@ const markdownComponents: Components = {
       <HighlightedCodeBlock
         code={rawCode}
         language={languageMatch[1]}
+        copyable
+        copyLabel="code block"
         className="markdown-code-block type-code-block overflow-x-auto selection:bg-white/20"
         fallbackClassName="markdown-code-block type-code-block overflow-x-auto text-white/80"
       />

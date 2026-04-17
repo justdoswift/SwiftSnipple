@@ -1032,8 +1032,17 @@
     --admin-rail-inactive: rgba(255, 255, 255, 0.14);
     --admin-rail-label-bg: rgba(10, 10, 10, 0.78);
     --admin-rail-label-border: rgba(255, 255, 255, 0.08);
+    --admin-editor-rail-active: rgba(255, 255, 255, 0.94);
+    --admin-editor-rail-inactive: rgba(255, 255, 255, 0.24);
+    --admin-editor-rail-icon: rgba(255, 255, 255, 0.52);
+    --admin-editor-rail-label-bg: rgba(10, 10, 10, 0.82);
+    --admin-editor-rail-label-border: rgba(255, 255, 255, 0.08);
+    --admin-editor-scrollbar-track: rgba(255, 255, 255, 0.03);
+    --admin-editor-scrollbar-thumb: rgba(255, 255, 255, 0.32);
+    --admin-editor-scrollbar-thumb-hover: rgba(255, 255, 255, 0.46);
     --admin-preview-iframe-bg: #050505;
     --admin-shell-max: 1060px;
+    --admin-editor-shell-max: 800px;
     --admin-shell-padding-x: 1.5rem;
     --admin-status-success: #6ee7b7;
     --admin-status-error: #f87171;
@@ -1105,8 +1114,17 @@
     --admin-rail-inactive: rgba(0, 0, 0, 0.12);
     --admin-rail-label-bg: rgba(255, 255, 255, 0.88);
     --admin-rail-label-border: rgba(0, 0, 0, 0.08);
+    --admin-editor-rail-active: rgba(0, 0, 0, 0.9);
+    --admin-editor-rail-inactive: rgba(0, 0, 0, 0.22);
+    --admin-editor-rail-icon: rgba(0, 0, 0, 0.46);
+    --admin-editor-rail-label-bg: rgba(255, 255, 255, 0.94);
+    --admin-editor-rail-label-border: rgba(0, 0, 0, 0.1);
+    --admin-editor-scrollbar-track: rgba(0, 0, 0, 0.02);
+    --admin-editor-scrollbar-thumb: rgba(0, 0, 0, 0.28);
+    --admin-editor-scrollbar-thumb-hover: rgba(0, 0, 0, 0.42);
     --admin-preview-iframe-bg: #ffffff;
     --admin-shell-max: 1060px;
+    --admin-editor-shell-max: 800px;
     --admin-shell-padding-x: 1.5rem;
     --admin-status-success: #047857;
     --admin-status-error: #b91c1c;
@@ -1147,6 +1165,10 @@
 
   .admin-shell-width {
     width: min(calc(100vw - (var(--admin-shell-padding-x) * 2)), var(--admin-shell-max));
+  }
+
+  .admin-editor-shell-width {
+    width: min(calc(100vw - (var(--admin-shell-padding-x) * 2)), var(--admin-editor-shell-max));
   }
 
   .admin-nav-brand {
@@ -1390,9 +1412,23 @@
     transition: color 180ms ease;
   }
 
+  .admin-editor-rail-line {
+    display: block;
+    height: 52px;
+    width: 3px;
+    border-radius: 999px;
+    background-color: var(--admin-editor-rail-inactive);
+    transition: background-color 180ms ease;
+  }
+
+  .admin-editor-rail-icon {
+    color: var(--admin-editor-rail-icon);
+    transition: color 180ms ease;
+  }
+
   .admin-editor-section-label {
-    border: 1px solid var(--admin-rail-label-border);
-    background-color: var(--admin-rail-label-bg);
+    border: 1px solid var(--admin-editor-rail-label-border);
+    background-color: var(--admin-editor-rail-label-bg);
     color: var(--admin-title);
     padding: 0.48rem 0.68rem;
     border-radius: 999px;
@@ -1403,13 +1439,13 @@
     backdrop-filter: blur(14px);
   }
 
-  .admin-editor-section-link-active .admin-rail-line,
-  .admin-editor-section-link:hover .admin-rail-line {
-    background-color: var(--admin-rail-active);
+  .admin-editor-section-link-active .admin-editor-rail-line,
+  .admin-editor-section-link:hover .admin-editor-rail-line {
+    background-color: var(--admin-editor-rail-active);
   }
 
-  .admin-editor-section-link-active .admin-rail-icon,
-  .admin-editor-section-link:hover .admin-rail-icon {
+  .admin-editor-section-link-active .admin-editor-rail-icon,
+  .admin-editor-section-link:hover .admin-editor-rail-icon {
     color: var(--admin-title);
   }
 
@@ -1518,6 +1554,34 @@
     height: 100%;
     min-height: calc(720px - 3rem);
     overflow: auto;
+  }
+
+  .admin-editor-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--admin-editor-scrollbar-thumb) var(--admin-editor-scrollbar-track);
+    scrollbar-gutter: stable;
+  }
+
+  .admin-editor-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .admin-editor-scrollbar::-webkit-scrollbar-track {
+    background: var(--admin-editor-scrollbar-track);
+    border-radius: 999px;
+  }
+
+  .admin-editor-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--admin-editor-scrollbar-thumb);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .admin-editor-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--admin-editor-scrollbar-thumb-hover);
+    background-clip: padding-box;
   }
 
   .admin-editor-textarea,

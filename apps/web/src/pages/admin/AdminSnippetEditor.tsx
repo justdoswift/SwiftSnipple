@@ -46,8 +46,8 @@ function EditorSectionRail({
               }`}
               onClick={() => onSelect(key)}
             >
-              <span className="admin-rail-line" data-active={isSelected} aria-hidden="true" />
-              <span className="admin-rail-icon" data-active={isSelected} aria-hidden="true">
+              <span className="admin-editor-rail-line" data-active={isSelected} aria-hidden="true" />
+              <span className="admin-editor-rail-icon" data-active={isSelected} aria-hidden="true">
                 <Icon className="h-4 w-4" />
               </span>
               <span className="admin-editor-section-label type-mono-micro">{label}</span>
@@ -454,7 +454,7 @@ export default function AdminSnippetEditor() {
                       placeholder="Shape the narrative around the technique and tradeoffs. You can use Markdown."
                       value={form.content}
                       onChange={(event) => updateField("content", event.target.value)}
-                      className="admin-editor-textarea admin-editor-panel-body w-full resize-none border-0 bg-transparent px-0 text-lg leading-relaxed shadow-none outline-none focus:ring-0"
+                      className="admin-editor-textarea admin-editor-panel-body admin-editor-scrollbar w-full resize-none border-0 bg-transparent px-0 text-lg leading-relaxed shadow-none outline-none focus:ring-0"
                     />
                   </div>
                 </div>
@@ -492,7 +492,7 @@ export default function AdminSnippetEditor() {
                       placeholder="Capture the AI direction notes that helped shape this specific implementation."
                       value={form.prompts}
                       onChange={(event) => updateField("prompts", event.target.value)}
-                      className="admin-editor-textarea admin-editor-panel-body w-full resize-none border-0 bg-transparent px-0 shadow-none outline-none focus:ring-0"
+                      className="admin-editor-textarea admin-editor-panel-body admin-editor-scrollbar w-full resize-none border-0 bg-transparent px-0 shadow-none outline-none focus:ring-0"
                     />
                   </div>
                 </div>

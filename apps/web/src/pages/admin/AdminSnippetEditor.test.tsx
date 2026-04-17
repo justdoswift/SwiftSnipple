@@ -40,11 +40,11 @@ describe("AdminSnippetEditor", () => {
     expect(screen.getByRole("button", { name: "Draft" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Publish" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /view front site/i })).toBeInTheDocument();
-    expect(screen.getByLabelText("Implementation notes")).toBeInTheDocument();
+    expect(screen.getByLabelText("Implementation notes")).toHaveClass("admin-editor-scrollbar");
     fireEvent.click(screen.getByRole("tab", { name: "Code" }));
-    expect(screen.getByLabelText("SwiftUI code")).toBeInTheDocument();
+    expect(screen.getByLabelText("SwiftUI code")).toHaveClass("admin-editor-scrollbar");
     fireEvent.click(screen.getByRole("tab", { name: "Prompt" }));
-    expect(screen.getByLabelText("Prompt notes")).toBeInTheDocument();
+    expect(screen.getByLabelText("Prompt notes")).toHaveClass("admin-editor-scrollbar");
     expect(screen.queryByText("Prompt logic")).not.toBeInTheDocument();
     expect(screen.queryByText("Prompt notes", { selector: "span, p" })).not.toBeInTheDocument();
     expect(screen.queryByText("Live preview")).not.toBeInTheDocument();

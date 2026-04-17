@@ -54,10 +54,19 @@ export default function AdminLayout() {
       {!isOverviewRoute && !isEditorRoute ? <AdminSidebar /> : null}
 
       <div
-        className={`min-w-0 ${isOverviewRoute ? "" : "md:pl-24 xl:pl-28"}`}
+        className={`min-w-0 ${
+          isOverviewRoute
+            ? ""
+            : isEditorRoute
+              ? "md:px-24 xl:px-28"
+              : "md:pl-24 xl:pl-28"
+        }`}
         data-testid="admin-content-shell"
       >
-        <div className="admin-shell-width mx-auto">
+        <div
+          className={`admin-shell-width mx-auto ${isEditorRoute ? "admin-editor-shell-width" : ""}`}
+          data-testid="admin-page-width-shell"
+        >
           <Outlet context={outletContext} />
         </div>
       </div>

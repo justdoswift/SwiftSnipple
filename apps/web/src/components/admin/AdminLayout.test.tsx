@@ -83,6 +83,7 @@ describe("AdminLayout", () => {
     expect(screen.queryByText("Scheduled Release")).not.toBeInTheDocument();
     expect(screen.getByTestId("admin-content-shell")).not.toHaveClass("md:pl-24");
     expect(screen.getByTestId("admin-content-shell")).not.toHaveClass("xl:pl-28");
+    expect(screen.getByTestId("admin-page-width-shell")).not.toHaveClass("admin-editor-shell-width");
   });
 
   it("shows the unified snippets command bar", async () => {
@@ -102,6 +103,7 @@ describe("AdminLayout", () => {
     expect(screen.getByRole("link", { name: /snippets/i })).toBeInTheDocument();
     expect(screen.getByTestId("admin-content-shell")).toHaveClass("md:pl-24");
     expect(screen.getByTestId("admin-content-shell")).toHaveClass("xl:pl-28");
+    expect(screen.getByTestId("admin-page-width-shell")).not.toHaveClass("admin-editor-shell-width");
     expect(screen.getByLabelText("Search title or slug")).toBeInTheDocument();
   });
 
@@ -117,8 +119,11 @@ describe("AdminLayout", () => {
     expect(header).not.toBeNull();
     expect(within(header!).getByRole("link", { name: "Just Do Swift admin" })).toBeInTheDocument();
     expect(screen.queryByRole("navigation", { name: "Admin sections" })).not.toBeInTheDocument();
-    expect(screen.getByTestId("admin-content-shell")).toHaveClass("md:pl-24");
-    expect(screen.getByTestId("admin-content-shell")).toHaveClass("xl:pl-28");
+    expect(screen.getByTestId("admin-content-shell")).toHaveClass("md:px-24");
+    expect(screen.getByTestId("admin-content-shell")).toHaveClass("xl:px-28");
+    expect(screen.getByTestId("admin-content-shell")).not.toHaveClass("md:pl-24");
+    expect(screen.getByTestId("admin-content-shell")).not.toHaveClass("xl:pl-28");
+    expect(screen.getByTestId("admin-page-width-shell")).toHaveClass("admin-editor-shell-width");
     expect(within(header!).queryByRole("button", { name: "Back to snippets" })).not.toBeInTheDocument();
     expect(within(header!).queryByText("New entry")).not.toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Narrative" })).toBeInTheDocument();

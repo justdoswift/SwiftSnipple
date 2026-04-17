@@ -89,7 +89,7 @@ export default function HighlightedCodeEditor({
         onScroll={syncScroll}
         spellCheck={false}
         data-highlighted={hasHighlight ? "true" : "false"}
-        className="admin-editor-code admin-code-editor-input"
+        className="admin-editor-code admin-code-editor-input admin-editor-scrollbar"
       />
     </div>
   );

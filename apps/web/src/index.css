@@ -756,6 +756,30 @@
     -webkit-appearance: none;
   }
 
+  .admin-theme {
+    --admin-field-background: rgba(255, 255, 255, 0.04);
+    --admin-field-foreground: rgba(255, 255, 255, 0.92);
+    --admin-field-placeholder: rgba(255, 255, 255, 0.26);
+    --admin-field-border: rgba(255, 255, 255, 0.1);
+    --admin-field-hover-background: rgba(255, 255, 255, 0.06);
+    --admin-field-hover-border: rgba(255, 255, 255, 0.16);
+    --admin-field-focus-background: rgba(255, 255, 255, 0.07);
+    --admin-field-focus-border: rgba(255, 255, 255, 0.22);
+    --admin-field-focus-ring: rgba(255, 255, 255, 0.08);
+  }
+
+  .admin-theme[data-theme="light"] {
+    --admin-field-background: rgba(255, 255, 255, 0.94);
+    --admin-field-foreground: rgba(0, 0, 0, 0.88);
+    --admin-field-placeholder: rgba(0, 0, 0, 0.3);
+    --admin-field-border: rgba(0, 0, 0, 0.1);
+    --admin-field-hover-background: rgba(255, 255, 255, 1);
+    --admin-field-hover-border: rgba(0, 0, 0, 0.16);
+    --admin-field-focus-background: rgba(255, 255, 255, 1);
+    --admin-field-focus-border: rgba(0, 0, 0, 0.18);
+    --admin-field-focus-ring: rgba(0, 0, 0, 0.08);
+  }
+
   .input.public-input,
   .input.public-input-inverse,
   .input.admin-input {
@@ -817,41 +841,87 @@
     border-color: rgba(0, 0, 0, 0.16);
   }
 
+  .admin-theme .input.admin-input {
+    --field-background: var(--admin-field-background);
+    --field-foreground: var(--admin-field-foreground);
+    --field-placeholder: var(--admin-field-placeholder);
+    --field-border: var(--admin-field-border);
+    --color-field-focus: var(--admin-field-focus-background);
+    --color-field-border-hover: var(--admin-field-hover-border);
+    --color-field-border-focus: var(--admin-field-focus-border);
+  }
+
+  .admin-theme .input.admin-input:hover:not(:focus):not(:focus-visible),
+  .admin-theme .input.admin-input[data-hovered="true"]:not([data-focused="true"]):not([data-focus-visible="true"]) {
+    background-color: var(--admin-field-hover-background);
+    border-color: var(--admin-field-hover-border);
+  }
+
+  .admin-theme .input.admin-input:focus,
+  .admin-theme .input.admin-input[data-focused="true"] {
+    background-color: var(--admin-field-focus-background);
+    border-color: var(--admin-field-focus-border);
+    --tw-ring-color: var(--admin-field-focus-ring);
+  }
+
   .textarea.admin-textarea {
-    --field-background: rgba(255, 255, 255, 1);
-    --field-foreground: rgba(21, 23, 26, 1);
-    --field-placeholder: rgba(21, 23, 26, 0.3);
-    --field-border: rgba(229, 231, 235, 1);
-    --color-field-focus: rgba(255, 255, 255, 1);
-    --color-field-border-hover: rgba(209, 213, 219, 1);
-    --color-field-border-focus: rgba(48, 207, 67, 1);
-    @apply rounded-lg appearance-none text-[#15171a] shadow-none outline-none transition-all duration-200;
+    --field-background: var(--admin-field-background);
+    --field-foreground: var(--admin-field-foreground);
+    --field-placeholder: var(--admin-field-placeholder);
+    --field-border: var(--admin-field-border);
+    --color-field-focus: var(--admin-field-focus-background);
+    --color-field-border-hover: var(--admin-field-hover-border);
+    --color-field-border-focus: var(--admin-field-focus-border);
+    @apply rounded-lg appearance-none shadow-none outline-none transition-all duration-200;
+    color: var(--admin-field-foreground);
     appearance: none;
     -webkit-appearance: none;
   }
 
   .textarea.admin-textarea:hover:not(:focus):not(:focus-visible),
   .textarea.admin-textarea[data-hovered="true"]:not([data-focused="true"]):not([data-focus-visible="true"]) {
-    background-color: rgba(255, 255, 255, 1);
-    border-color: rgba(209, 213, 219, 1);
+    background-color: var(--admin-field-hover-background);
+    border-color: var(--admin-field-hover-border);
   }
 
   .textarea.admin-textarea:focus,
   .textarea.admin-textarea[data-focused="true"] {
-    @apply ring-2 ring-[#30cf43]/20;
-    background-color: rgba(255, 255, 255, 1);
-    border-color: rgba(48, 207, 67, 1);
+    @apply ring-2;
+    background-color: var(--admin-field-focus-background);
+    border-color: var(--admin-field-focus-border);
+    --tw-ring-color: var(--admin-field-focus-ring);
   }
 
   .admin-select,
   .admin-native-input {
-    @apply appearance-none rounded-lg border border-[#e5e7eb] bg-white px-4 py-3 text-base text-[#15171a] shadow-none outline-none transition-all duration-200 hover:border-[#d1d5db] focus:border-[#30cf43] focus:ring-2 focus:ring-[#30cf43]/20;
+    @apply appearance-none rounded-lg border px-4 py-3 text-base shadow-none outline-none transition-all duration-200 focus:ring-2;
+    border-color: var(--admin-field-border);
+    background-color: var(--admin-field-background);
+    color: var(--admin-field-foreground);
     appearance: none;
     -webkit-appearance: none;
   }
 
   .admin-native-input {
     @apply text-sm;
+  }
+
+  .admin-select:hover,
+  .admin-native-input:hover {
+    background-color: var(--admin-field-hover-background);
+    border-color: var(--admin-field-hover-border);
+  }
+
+  .admin-select:focus,
+  .admin-native-input:focus {
+    background-color: var(--admin-field-focus-background);
+    border-color: var(--admin-field-focus-border);
+    --tw-ring-color: var(--admin-field-focus-ring);
+  }
+
+  .admin-select option {
+    background-color: var(--admin-background);
+    color: var(--admin-field-foreground);
   }
 
   .public-input:-webkit-autofill,
@@ -881,6 +951,21 @@
     -webkit-box-shadow: 0 0 0 1000px rgba(255, 255, 255, 1) inset;
     box-shadow: 0 0 0 1000px rgba(255, 255, 255, 1) inset;
     transition: background-color 9999s ease-out 0s;
+  }
+
+  .admin-theme .admin-input:-webkit-autofill,
+  .admin-theme .admin-input:-webkit-autofill:hover,
+  .admin-theme .admin-input:-webkit-autofill:focus,
+  .admin-theme .admin-native-input:-webkit-autofill,
+  .admin-theme .admin-native-input:-webkit-autofill:hover,
+  .admin-theme .admin-native-input:-webkit-autofill:focus,
+  .admin-theme .admin-textarea:-webkit-autofill,
+  .admin-theme .admin-textarea:-webkit-autofill:hover,
+  .admin-theme .admin-textarea:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--admin-field-foreground);
+    caret-color: var(--admin-field-foreground);
+    -webkit-box-shadow: 0 0 0 1000px var(--admin-field-background) inset;
+    box-shadow: 0 0 0 1000px var(--admin-field-background) inset;
   }
 
   .public-copy-button {
@@ -1444,7 +1529,7 @@
   .admin-code-editor-input {
     width: 100%;
     min-height: inherit;
-    margin-top: 1.25rem;
+    margin-top: 0;
     padding: 0;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     font-size: 0.875rem;

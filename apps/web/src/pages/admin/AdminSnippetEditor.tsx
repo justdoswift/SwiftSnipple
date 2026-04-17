@@ -449,30 +449,12 @@ export default function AdminSnippetEditor() {
                   className="space-y-12 py-4"
                 >
                   <div className="admin-editor-panel group relative rounded-[28px] border px-6 py-6">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="admin-eyebrow type-mono-micro">Implementation narrative</p>
-                      <span className="admin-copy-faint type-mono-micro">Markdown source</span>
-                    </div>
                     <textarea
                       aria-label="Implementation notes"
                       placeholder="Shape the narrative around the technique and tradeoffs. You can use Markdown."
                       value={form.content}
                       onChange={(event) => updateField("content", event.target.value)}
                       className="admin-editor-textarea mt-5 min-h-[520px] w-full resize-y border-0 bg-transparent px-0 text-lg leading-relaxed shadow-none outline-none focus:ring-0"
-                    />
-                  </div>
-
-                  <div className="admin-divider-soft group relative border-t pt-8">
-                    <p className="admin-eyebrow absolute top-2 left-0 type-mono-micro transition-opacity duration-300 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 pointer-events-none">
-                      Short excerpt
-                    </p>
-                    <textarea
-                      aria-label="Excerpt"
-                      placeholder="The hook that appears on card previews. Keep it under two sentences."
-                      value={form.excerpt}
-                      onChange={(event) => updateField("excerpt", event.target.value)}
-                      rows={4}
-                      className="admin-editor-textarea w-full bg-transparent border-0 px-0 mt-8 shadow-none outline-none focus:ring-0 resize-y"
                     />
                   </div>
                 </div>
@@ -485,10 +467,7 @@ export default function AdminSnippetEditor() {
                   aria-labelledby="editor-tab-code"
                   className="space-y-8 py-4"
                 >
-                  <div className="group relative">
-                    <p className="admin-builder-label type-mono-micro absolute -top-8 left-0 transition-opacity duration-300 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 pointer-events-none">
-                      SwiftUI Logic
-                    </p>
+                  <div className="admin-editor-panel group relative rounded-[28px] border px-6 py-6">
                     <HighlightedCodeEditor
                       ariaLabel="SwiftUI code"
                       placeholder="import SwiftUI..."

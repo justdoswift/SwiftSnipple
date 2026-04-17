@@ -7,7 +7,7 @@ interface HighlightedCodeEditorProps {
   onChange: (value: string) => void;
   placeholder?: string;
   ariaLabel: string;
-  minHeightClassName?: string;
+  shellClassName?: string;
 }
 
 export default function HighlightedCodeEditor({
@@ -15,7 +15,7 @@ export default function HighlightedCodeEditor({
   onChange,
   placeholder,
   ariaLabel,
-  minHeightClassName = "min-h-[400px]",
+  shellClassName = "h-full",
 }: HighlightedCodeEditorProps) {
   const theme = usePublicTheme();
   const [highlightedHtml, setHighlightedHtml] = useState<string | null>(null);
@@ -24,8 +24,8 @@ export default function HighlightedCodeEditor({
   const hasContent = value.length > 0;
   const hasHighlight = hasContent && Boolean(highlightedHtml);
   const editorClassName = useMemo(
-    () => `admin-code-editor-shell ${minHeightClassName}`.trim(),
-    [minHeightClassName],
+    () => `admin-code-editor-shell ${shellClassName}`.trim(),
+    [shellClassName],
   );
 
   useEffect(() => {

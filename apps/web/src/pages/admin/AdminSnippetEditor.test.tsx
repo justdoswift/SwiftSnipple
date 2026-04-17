@@ -45,6 +45,8 @@ describe("AdminSnippetEditor", () => {
     expect(screen.getByLabelText("SwiftUI code")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("tab", { name: "Prompt" }));
     expect(screen.getByLabelText("Prompt notes")).toBeInTheDocument();
+    expect(screen.queryByText("Prompt logic")).not.toBeInTheDocument();
+    expect(screen.queryByText("Prompt notes", { selector: "span, p" })).not.toBeInTheDocument();
     expect(screen.queryByText("Live preview")).not.toBeInTheDocument();
     expect(screen.queryByText("Shared with public view")).not.toBeInTheDocument();
   });

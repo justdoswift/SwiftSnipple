@@ -446,15 +446,15 @@ export default function AdminSnippetEditor() {
                   id="editor-panel-content"
                   role="tabpanel"
                   aria-labelledby="editor-tab-content"
-                  className="space-y-12 py-4"
+                  className="py-4"
                 >
-                  <div className="admin-editor-panel group relative rounded-[28px] border px-6 py-6">
+                  <div className="admin-editor-panel admin-editor-panel-frame group relative rounded-[28px] border px-6 py-6">
                     <textarea
                       aria-label="Implementation notes"
                       placeholder="Shape the narrative around the technique and tradeoffs. You can use Markdown."
                       value={form.content}
                       onChange={(event) => updateField("content", event.target.value)}
-                      className="admin-editor-textarea mt-5 min-h-[520px] w-full resize-y border-0 bg-transparent px-0 text-lg leading-relaxed shadow-none outline-none focus:ring-0"
+                      className="admin-editor-textarea admin-editor-panel-body w-full resize-none border-0 bg-transparent px-0 text-lg leading-relaxed shadow-none outline-none focus:ring-0"
                     />
                   </div>
                 </div>
@@ -465,14 +465,15 @@ export default function AdminSnippetEditor() {
                   id="editor-panel-code"
                   role="tabpanel"
                   aria-labelledby="editor-tab-code"
-                  className="space-y-8 py-4"
+                  className="py-4"
                 >
-                  <div className="admin-editor-panel group relative rounded-[28px] border px-6 py-6">
+                  <div className="admin-editor-panel admin-editor-panel-frame group relative rounded-[28px] border px-6 py-6">
                     <HighlightedCodeEditor
                       ariaLabel="SwiftUI code"
                       placeholder="import SwiftUI..."
                       value={form.code}
                       onChange={(value) => updateField("code", value)}
+                      shellClassName="admin-editor-panel-body"
                     />
                   </div>
                 </div>
@@ -483,20 +484,15 @@ export default function AdminSnippetEditor() {
                   id="editor-panel-prompt"
                   role="tabpanel"
                   aria-labelledby="editor-tab-prompt"
-                  className="space-y-8 py-4"
+                  className="py-4"
                 >
-                  <div className="group relative rounded-[28px] border px-6 py-6 admin-editor-panel">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="admin-eyebrow type-mono-micro">Prompt logic</p>
-                      <span className="admin-copy-faint type-mono-micro">Prompt notes</span>
-                    </div>
+                  <div className="group relative rounded-[28px] border px-6 py-6 admin-editor-panel admin-editor-panel-frame">
                     <textarea
                       aria-label="Prompt notes"
                       placeholder="Capture the AI direction notes that helped shape this specific implementation."
                       value={form.prompts}
                       onChange={(event) => updateField("prompts", event.target.value)}
-                      rows={12}
-                      className="admin-editor-textarea mt-5 w-full resize-y border-0 bg-transparent px-0 shadow-none outline-none focus:ring-0"
+                      className="admin-editor-textarea admin-editor-panel-body w-full resize-none border-0 bg-transparent px-0 shadow-none outline-none focus:ring-0"
                     />
                   </div>
                 </div>

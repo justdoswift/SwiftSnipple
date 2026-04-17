@@ -7,6 +7,8 @@ import { Card, Spinner } from "./lib/heroui";
 
 const Home = lazy(() => import("./pages/Home"));
 const SnippetDetail = lazy(() => import("./pages/SnippetDetail"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminSnippets = lazy(() => import("./pages/admin/AdminSnippets"));
 const AdminSnippetEditor = lazy(() => import("./pages/admin/AdminSnippetEditor"));
@@ -96,6 +98,22 @@ export default function App() {
           element={
             <PublicShell>
               <SnippetDetail />
+            </PublicShell>
+          }
+        />
+        <Route
+          path="/privacy-policy"
+          element={
+            <PublicShell>
+              <PrivacyPolicy />
+            </PublicShell>
+          }
+        />
+        <Route
+          path="/terms-of-service"
+          element={
+            <PublicShell>
+              <TermsOfService />
             </PublicShell>
           }
         />

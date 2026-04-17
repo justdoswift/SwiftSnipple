@@ -1,4 +1,4 @@
-import { Card } from "../lib/heroui";
+import { Link } from "react-router-dom";
 
 export default function Footer() {
   return (
@@ -20,8 +20,8 @@ export default function Footer() {
             </div>
             <div className="flex flex-col gap-4">
               <span className="type-mono-micro text-white/20">Resources</span>
-              <a href="#" className="type-action text-white/50 transition-colors hover:text-white">Privacy</a>
-              <a href="#" className="type-action text-white/50 transition-colors hover:text-white">Terms</a>
+              <Link to="/privacy-policy" className="type-action text-white/50 transition-colors hover:text-white">Privacy</Link>
+              <Link to="/terms-of-service" className="type-action text-white/50 transition-colors hover:text-white">Terms</Link>
             </div>
             <div className="flex flex-col gap-4">
               <span className="type-mono-micro text-white/20">Connect</span>

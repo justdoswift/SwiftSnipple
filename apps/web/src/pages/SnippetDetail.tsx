@@ -280,28 +280,6 @@ export default function SnippetDetail() {
               {snippet.excerpt}
             </p>
           </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
-            className="mt-12 flex flex-wrap justify-center gap-4 border-t border-white/5 pt-10"
-          >
-            <div className="flex flex-col items-center gap-1 min-w-[120px]">
-              <span className="type-mono-micro text-white/20">Status</span>
-              <span className="type-action text-white">{snippet.status}</span>
-            </div>
-            <div className="flex flex-col items-center gap-1 min-w-[120px]">
-              <span className="type-mono-micro text-white/20">Object ID</span>
-              <span className="type-action text-white">#0{snippet.id.toString().padStart(3, '0')}</span>
-            </div>
-            {snippet.tags.map((tag) => (
-              <div key={tag} className="flex flex-col items-center gap-1 min-w-[120px]">
-                <span className="type-mono-micro text-white/20">Tag</span>
-                <span className="type-action text-white">{tag.toUpperCase()}</span>
-              </div>
-            ))}
-          </motion.div>
         </div>
       </header>
 

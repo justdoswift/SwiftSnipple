@@ -17,12 +17,12 @@ export default function AdminSnippets() {
         </div>
       ),
       end: (
-        <Link
-          to="/admin/snippets/new"
+        <a
+          href="/admin/snippets/new"
           className="admin-button-primary type-action inline-flex h-11 shrink-0 items-center px-4"
         >
           New Snippet
-        </Link>
+        </a>
       ),
     }),
     [],

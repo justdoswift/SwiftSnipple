@@ -1301,6 +1301,47 @@
     transform: translateX(0);
   }
 
+  .admin-editor-section-link {
+    transition: color 180ms ease;
+  }
+
+  .admin-editor-section-label {
+    border: 1px solid var(--admin-rail-label-border);
+    background-color: var(--admin-rail-label-bg);
+    color: var(--admin-title);
+    padding: 0.48rem 0.68rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    opacity: 1;
+    transform: translateX(0);
+    transition: opacity 160ms ease, transform 160ms ease;
+    backdrop-filter: blur(14px);
+  }
+
+  .admin-editor-section-link-active .admin-rail-line,
+  .admin-editor-section-link:hover .admin-rail-line {
+    background-color: var(--admin-rail-active);
+  }
+
+  .admin-editor-section-link-active .admin-rail-icon,
+  .admin-editor-section-link:hover .admin-rail-icon {
+    color: var(--admin-title);
+  }
+
+  @media (min-width: 768px) {
+    .admin-editor-section-label {
+      opacity: 0;
+      transform: translateX(-4px);
+      pointer-events: none;
+    }
+
+    .admin-editor-section-link-active .admin-editor-section-label,
+    .admin-editor-section-link:hover .admin-editor-section-label {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
   .admin-card-row:hover {
     background-color: color-mix(in srgb, var(--admin-surface-hover) 70%, transparent);
   }

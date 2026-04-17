@@ -62,27 +62,27 @@ describe("AdminLayout", () => {
     renderAdminRoute("/admin");
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Overview" })).toBeInTheDocument();
+      expect(screen.getByLabelText("Search title or slug")).toBeInTheDocument();
     });
 
     const header = screen.getByTestId("admin-navbar-shell").closest("header");
 
     expect(screen.getByRole("link", { name: "Just Do Swift admin" })).toBeInTheDocument();
     expect(header).not.toBeNull();
-    expect(within(header!).getByRole("link", { name: "New Snippet" })).toBeInTheDocument();
+    expect(within(header!).getByRole("link", { name: "New Snippet" })).toHaveAttribute("href", "/admin/snippets/new");
     expect(within(header!).getByRole("link", { name: /View Front Site/i })).toBeInTheDocument();
-    expect(screen.getByRole("navigation", { name: "Admin sections" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /overview/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /snippets/i })).toBeInTheDocument();
-    expect(screen.getByRole("navigation", { name: "Admin sections" }).querySelectorAll("a")).toHaveLength(2);
+    expect(screen.queryByRole("navigation", { name: "Admin sections" })).not.toBeInTheDocument();
     expect(screen.queryByText("Ship SwiftUI snippets with the same care you use to build them.")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Search title or slug")).toBeInTheDocument();
     expect(screen.getByText("Prompt Studio")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Overview" })).not.toBeInTheDocument();
     expect(screen.queryByText("Recent Activity")).not.toBeInTheDocument();
     expect(screen.queryByText("Latest edits and launches")).not.toBeInTheDocument();
     expect(screen.queryByText("Status Mix")).not.toBeInTheDocument();
     expect(screen.queryByText("Next Up")).not.toBeInTheDocument();
     expect(screen.queryByText("Scheduled Release")).not.toBeInTheDocument();
+    expect(screen.getByTestId("admin-content-shell")).not.toHaveClass("md:pl-24");
+    expect(screen.getByTestId("admin-content-shell")).not.toHaveClass("xl:pl-28");
   });
 
   it("shows the unified snippets command bar", async () => {
@@ -95,8 +95,13 @@ describe("AdminLayout", () => {
     const header = screen.getByTestId("admin-navbar-shell").closest("header");
 
     expect(header).not.toBeNull();
-    expect(within(header!).getByRole("link", { name: "New Snippet" })).toBeInTheDocument();
+    expect(within(header!).getByRole("link", { name: "New Snippet" })).toHaveAttribute("href", "/admin/snippets/new");
     expect(within(header!).getByRole("link", { name: /View Front Site/i })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Admin sections" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /overview/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /snippets/i })).toBeInTheDocument();
+    expect(screen.getByTestId("admin-content-shell")).toHaveClass("md:pl-24");
+    expect(screen.getByTestId("admin-content-shell")).toHaveClass("xl:pl-28");
     expect(screen.getByLabelText("Search title or slug")).toBeInTheDocument();
   });
 
@@ -111,13 +116,17 @@ describe("AdminLayout", () => {
 
     expect(header).not.toBeNull();
     expect(within(header!).getByRole("link", { name: "Just Do Swift admin" })).toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "Admin sections" })).not.toBeInTheDocument();
+    expect(screen.getByTestId("admin-content-shell")).toHaveClass("md:pl-24");
+    expect(screen.getByTestId("admin-content-shell")).toHaveClass("xl:pl-28");
     expect(within(header!).queryByRole("button", { name: "Back to snippets" })).not.toBeInTheDocument();
     expect(within(header!).queryByText("New entry")).not.toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Narrative" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Builder" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Code" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Prompt" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Surface" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Preview" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /save draft/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Draft" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Publish" })).toBeInTheDocument();
     expect(within(header!).getByRole("link", { name: /View Front Site/i })).toBeInTheDocument();
   });

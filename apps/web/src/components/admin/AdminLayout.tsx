@@ -1,21 +1,20 @@
 import { ArrowUpRight } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { usePublicTheme } from "../../lib/public-theme";
 import AdminSidebar from "./AdminSidebar";
 import { type AdminHeaderConfig, type AdminHeaderOutletContext } from "./useAdminHeader";
 
 export default function AdminLayout() {
   const theme = usePublicTheme();
+  const location = useLocation();
   const [headerConfig, setHeaderConfig] = useState<AdminHeaderConfig | null>(null);
   const outletContext = useMemo<AdminHeaderOutletContext>(() => ({ setHeaderConfig }), []);
-  const activeHeader: AdminHeaderConfig = headerConfig ?? {
-    center: (
-      <div className="admin-nav-inline-context min-w-0">
-        <h1 className="admin-header-title truncate text-sm font-semibold">Admin Console</h1>
-      </div>
-    ),
-  };
+  const isOverviewRoute = location.pathname === "/admin";
+  const isEditorRoute =
+    location.pathname === "/admin/snippets/new" ||
+    (location.pathname.startsWith("/admin/snippets/") && location.pathname !== "/admin/snippets");
+  const activeHeader: AdminHeaderConfig = headerConfig ?? {};
 
   return (
     <div className="admin-theme admin-page min-h-screen" data-theme={theme} data-testid="admin-theme-root">
@@ -42,20 +41,22 @@ export default function AdminLayout() {
               {activeHeader.end}
               <Link
                 to="/"
-                className="admin-site-link type-action inline-flex h-11 shrink-0 items-center gap-2 rounded-xl px-3 md:px-4"
+                aria-label="View Front Site"
+                className="admin-button-secondary inline-flex h-11 w-11 shrink-0 items-center justify-center px-0"
               >
-                <span className="hidden md:inline">View Front Site</span>
-                <span className="md:hidden">Site</span>
-                <ArrowUpRight className="h-3.5 w-3.5" />
+                <ArrowUpRight className="h-4 w-4" />
               </Link>
             </div>
           </div>
         </div>
       </header>
 
-      <AdminSidebar />
+      {!isOverviewRoute && !isEditorRoute ? <AdminSidebar /> : null}
 
-      <div className="min-w-0 md:pl-24 xl:pl-28">
+      <div
+        className={`min-w-0 ${isOverviewRoute ? "" : "md:pl-24 xl:pl-28"}`}
+        data-testid="admin-content-shell"
+      >
         <div className="admin-shell-width mx-auto">
           <Outlet context={outletContext} />
         </div>

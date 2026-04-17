@@ -7,15 +7,56 @@ import StatusBadge from "../../components/admin/StatusBadge";
 import { useAdminHeader } from "../../components/admin/useAdminHeader";
 import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, unpublishSnippet, updateSnippet } from "../../services/snippets";
 import { Snippet, SnippetFormState, SnippetPayload, SnippetStatus } from "../../types";
-import { Columns2, Layout, Monitor, Smartphone, Settings2, Trash2, X } from "lucide-react";
+import { Code2, Layout, Monitor, MessageSquareQuote, Smartphone, Settings2, Trash2, X } from "lucide-react";
 
 const STATUS_OPTIONS: SnippetStatus[] = ["Draft", "In Review", "Scheduled", "Published"];
 const EDITOR_TABS = [
   { key: "content", label: "Narrative", icon: Layout },
-  { key: "builder", label: "Builder", icon: Columns2 },
+  { key: "code", label: "Code", icon: Code2 },
+  { key: "prompt", label: "Prompt", icon: MessageSquareQuote },
   { key: "meta", label: "Surface", icon: Settings2 },
 ] as const;
+type EditorTabKey = (typeof EDITOR_TABS)[number]["key"];
 type PreviewDevice = "desktop" | "mobile";
+
+function EditorSectionRail({
+  activeTab,
+  onSelect,
+}: {
+  activeTab: EditorTabKey;
+  onSelect: (tab: EditorTabKey) => void;
+}) {
+  return (
+    <div className="relative z-20 -mx-1 overflow-x-auto md:fixed md:left-5 md:top-1/2 md:z-30 md:mx-0 md:overflow-visible md:-translate-y-1/2 xl:left-8">
+      <div role="tablist" aria-label="Editor modes" className="flex min-w-full flex-col gap-3 px-1 py-1 md:min-w-0 md:gap-5 md:px-0 md:py-0">
+        {EDITOR_TABS.map(({ key, label, icon: Icon }) => {
+          const isSelected = activeTab === key;
+
+          return (
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              aria-selected={isSelected}
+              aria-controls={`editor-panel-${key}`}
+              id={`editor-tab-${key}`}
+              className={`admin-editor-section-link group flex items-center gap-3 text-left ${
+                isSelected ? "admin-editor-section-link-active" : "admin-editor-section-link-inactive"
+              }`}
+              onClick={() => onSelect(key)}
+            >
+              <span className="admin-rail-line" data-active={isSelected} aria-hidden="true" />
+              <span className="admin-rail-icon" data-active={isSelected} aria-hidden="true">
+                <Icon className="h-4 w-4" />
+              </span>
+              <span className="admin-editor-section-label type-mono-micro">{label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 function slugify(value: string) {
   return value
@@ -153,12 +194,12 @@ export default function AdminSnippetEditor() {
   const isNew = id === undefined;
   const [baseSnippet, setBaseSnippet] = useState<Snippet>(createEmptySnippet());
   const [form, setForm] = useState<SnippetFormState>(() => toFormState(createEmptySnippet()));
-  const [saveLabel, setSaveLabel] = useState("Save draft");
+  const [saveLabel, setSaveLabel] = useState("Draft");
   const [isLoading, setIsLoading] = useState(!isNew);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
-  const [activeTab, setActiveTab] = useState("content");
+  const [activeTab, setActiveTab] = useState<EditorTabKey>("content");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<PreviewDevice>("desktop");
 
@@ -251,7 +292,7 @@ export default function AdminSnippetEditor() {
             ? "Snippet saved in the schedule. It will stay off the public homepage until published."
             : "Changes saved successfully.",
       );
-      window.setTimeout(() => setSaveLabel("Save draft"), 1800);
+      window.setTimeout(() => setSaveLabel("Draft"), 1800);
 
       if (isNew) {
         navigate(`/admin/snippets/${finalSnippet.id}`, { replace: true });
@@ -275,7 +316,7 @@ export default function AdminSnippetEditor() {
       setForm(toFormState(snippet));
       setSaveLabel("Unpublished");
       setFeedback("Snippet moved back to draft and removed from the public library.");
-      window.setTimeout(() => setSaveLabel("Save draft"), 1800);
+      window.setTimeout(() => setSaveLabel("Draft"), 1800);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to unpublish snippet");
     } finally {
@@ -334,22 +375,18 @@ export default function AdminSnippetEditor() {
             </span>
           ) : null}
           <Button
-            className="h-11 shrink-0 px-2.5 text-sm admin-button-secondary min-[1500px]:px-3 2xl:px-4"
+            aria-label="Preview"
+            className="h-11 w-11 shrink-0 justify-center px-0 text-sm admin-button-secondary"
             onPress={handlePreview}
           >
-            Preview
+            <Monitor size={16} />
           </Button>
           <Button
             isDisabled={isSubmitting}
             className="h-11 shrink-0 px-2.5 text-sm admin-button-secondary min-[1500px]:px-3 2xl:px-4"
             onPress={() => handleSave()}
           >
-            {isSubmitting ? "..." : (
-              <>
-                <span className="hidden min-[1500px]:inline">{saveLabel}</span>
-                <span className="min-[1500px]:hidden">{saveLabel === "Save draft" ? "Save" : saveLabel}</span>
-              </>
-            )}
+            {isSubmitting ? "..." : saveLabel}
           </Button>
           <Button
             isDisabled={isSubmitting}
@@ -378,6 +415,7 @@ export default function AdminSnippetEditor() {
     <div className="admin-page">
       <main className="px-6 pb-12 pt-10 md:px-8 md:pb-16 md:pt-10 lg:pb-24 lg:pt-12 xl:px-10">
         <div className="flex flex-col gap-12">
+          <EditorSectionRail activeTab={activeTab} onSelect={setActiveTab} />
 
           <div className="space-y-12">
             <div className="relative flex flex-col gap-2">
@@ -394,36 +432,6 @@ export default function AdminSnippetEditor() {
                   target.style.height = `${target.scrollHeight}px`;
                 }}
               />
-            </div>
-
-            <div className="admin-editor-local-tabs sticky top-[4.9rem] z-20 -mx-1 overflow-x-auto">
-              <div
-                role="tablist"
-                aria-label="Editor modes"
-                className="admin-editor-local-tabs-shell inline-flex min-w-full items-center gap-2 rounded-[18px] border p-1 sm:min-w-0"
-              >
-                {EDITOR_TABS.map(({ key, label, icon: Icon }) => {
-                  const isSelected = activeTab === key;
-
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      role="tab"
-                      aria-selected={isSelected}
-                      aria-controls={`editor-panel-${key}`}
-                      id={`editor-tab-${key}`}
-                      className={`admin-editor-local-tab inline-flex h-11 shrink-0 items-center gap-2 rounded-[14px] px-4 text-sm font-medium transition-all ${
-                        isSelected ? "admin-preview-device-button-active" : "admin-preview-device-button-inactive"
-                      }`}
-                      onClick={() => setActiveTab(key)}
-                    >
-                      <Icon size={16} className={isSelected ? "admin-icon-strong" : "admin-icon-muted"} />
-                      <span>{label}</span>
-                    </button>
-                  );
-                })}
-              </div>
             </div>
 
             <motion.div
@@ -451,9 +459,6 @@ export default function AdminSnippetEditor() {
                       onChange={(event) => updateField("content", event.target.value)}
                       className="admin-editor-textarea mt-5 min-h-[520px] w-full resize-y border-0 bg-transparent px-0 text-lg leading-relaxed shadow-none outline-none focus:ring-0"
                     />
-                    <p className="admin-copy-subtle mt-4 text-sm leading-relaxed">
-                      Supports headings, lists, tables, quotes, inline code, and fenced code blocks like <span className="admin-inline-code font-mono">```swift</span> or <span className="admin-inline-code font-mono">```ts</span>. Use the preview button in the top bar to inspect the public reading view.
-                    </p>
                   </div>
 
                   <div className="admin-divider-soft group relative border-t pt-8">
@@ -472,12 +477,12 @@ export default function AdminSnippetEditor() {
                 </div>
               )}
 
-              {activeTab === "builder" && (
+              {activeTab === "code" && (
                 <div
-                  id="editor-panel-builder"
+                  id="editor-panel-code"
                   role="tabpanel"
-                  aria-labelledby="editor-tab-builder"
-                  className="space-y-12 py-4"
+                  aria-labelledby="editor-tab-code"
+                  className="space-y-8 py-4"
                 >
                   <div className="group relative">
                     <p className="admin-builder-label type-mono-micro absolute -top-8 left-0 transition-opacity duration-300 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 pointer-events-none">
@@ -492,18 +497,28 @@ export default function AdminSnippetEditor() {
                       spellCheck={false}
                     />
                   </div>
+                </div>
+              )}
 
-                  <div className="admin-divider-soft group relative border-t pt-8">
-                    <p className="admin-eyebrow absolute top-2 left-0 type-mono-micro transition-opacity duration-300 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 pointer-events-none">
-                      AI Prompt fragments
-                    </p>
+              {activeTab === "prompt" && (
+                <div
+                  id="editor-panel-prompt"
+                  role="tabpanel"
+                  aria-labelledby="editor-tab-prompt"
+                  className="space-y-8 py-4"
+                >
+                  <div className="group relative rounded-[28px] border px-6 py-6 admin-editor-panel">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="admin-eyebrow type-mono-micro">Prompt logic</p>
+                      <span className="admin-copy-faint type-mono-micro">Prompt notes</span>
+                    </div>
                     <textarea
                       aria-label="Prompt notes"
                       placeholder="Capture the AI direction notes that helped shape this specific implementation."
                       value={form.prompts}
                       onChange={(event) => updateField("prompts", event.target.value)}
-                      rows={8}
-                      className="admin-editor-textarea w-full bg-transparent border-0 px-0 mt-8 shadow-none outline-none focus:ring-0 resize-y"
+                      rows={12}
+                      className="admin-editor-textarea mt-5 w-full resize-y border-0 bg-transparent px-0 shadow-none outline-none focus:ring-0"
                     />
                   </div>
                 </div>

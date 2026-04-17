@@ -92,7 +92,7 @@ describe("App public theme", () => {
     renderAppAt("/admin");
 
     await waitFor(() => {
-      expect(screen.getByText("Overview")).toBeInTheDocument();
+      expect(screen.getByText("Entries")).toBeInTheDocument();
     });
 
     expect(screen.getByTestId("admin-theme-root")).toHaveAttribute("data-theme", "dark");

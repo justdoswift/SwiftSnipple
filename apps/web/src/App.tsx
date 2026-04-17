@@ -59,17 +59,8 @@ function PublicRouteFallback() {
 
 function AdminRouteFallback() {
   return (
-    <div className="px-6 py-10 md:px-10 md:py-12">
-      <Card className="rounded-[28px]">
-        <Card.Content className="flex min-h-[260px] flex-col items-center justify-center gap-4 px-8 py-12 text-center">
-          <Spinner size="lg" />
-          <p className="type-mono-micro text-primary/40">Loading Workspace</p>
-          <h2 className="type-card-title">Bringing the publishing surface online</h2>
-          <p className="type-body-sm max-w-md">
-            The admin shell is ready. Route content is streaming in as a separate chunk to keep the first load lighter.
-          </p>
-        </Card.Content>
-      </Card>
+    <div className="flex min-h-[260px] items-center justify-center px-6 py-10 md:px-10 md:py-12">
+      <Spinner size="lg" />
     </div>
   );
 }

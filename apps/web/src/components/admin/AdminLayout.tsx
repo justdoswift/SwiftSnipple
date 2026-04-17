@@ -1,33 +1,35 @@
 import { ArrowUpRight, PanelLeftOpen } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link, Outlet } from "react-router-dom";
+import { usePublicTheme } from "../../lib/public-theme";
 import AdminSidebar from "./AdminSidebar";
 import { type AdminHeaderConfig, type AdminHeaderOutletContext } from "./useAdminHeader";
 
 export default function AdminLayout() {
+  const theme = usePublicTheme();
   const [headerConfig, setHeaderConfig] = useState<AdminHeaderConfig | null>(null);
   const outletContext = useMemo<AdminHeaderOutletContext>(() => ({ setHeaderConfig }), []);
   const activeHeader: AdminHeaderConfig = headerConfig ?? {
     start: (
       <div className="min-w-0">
-        <p className="type-mono-micro text-white/30">Snippet Workspace</p>
-        <h1 className="mt-2 truncate text-sm font-semibold text-white/90">Admin Console</h1>
+        <p className="admin-eyebrow type-mono-micro">Snippet Workspace</p>
+        <h1 className="admin-header-title mt-2 truncate text-sm font-semibold">Admin Console</h1>
       </div>
     ),
   };
   const hasCenter = Boolean(activeHeader.center);
 
   return (
-    <div className="min-h-screen bg-surface">
-      <div className="glass-header mx-4 mt-4 rounded-[24px] px-6 py-4 md:hidden">
+    <div className="admin-theme admin-page min-h-screen" data-theme={theme} data-testid="admin-theme-root">
+      <div className="admin-mobile-header mx-4 mt-4 rounded-[24px] px-6 py-4 md:hidden">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <PanelLeftOpen className="h-4 w-4" />
-            <span className="type-mono-micro text-primary/50">Admin Console</span>
+            <PanelLeftOpen className="admin-icon-muted h-4 w-4" />
+            <span className="admin-eyebrow type-mono-micro">Admin Console</span>
           </div>
           <Link
             to="/"
-            className="type-action flex items-center gap-2 text-primary/60"
+            className="admin-site-link type-action flex items-center gap-2"
           >
             Front Site <ArrowUpRight className="h-3 w-3" />
           </Link>
@@ -53,7 +55,7 @@ export default function AdminLayout() {
                     {activeHeader.end}
                     <Link
                       to="/"
-                      className="type-action inline-flex h-10 shrink-0 items-center gap-1 rounded-full border border-white/12 bg-white/6 px-2.5 text-white/72 transition-all hover:border-white/20 hover:bg-white/10 hover:text-white min-[1500px]:gap-1.5 min-[1500px]:px-3 2xl:gap-2 2xl:px-4"
+                      className="admin-site-link type-action inline-flex h-10 shrink-0 items-center gap-1 rounded-full px-2.5 min-[1500px]:gap-1.5 min-[1500px]:px-3 2xl:gap-2 2xl:px-4"
                     >
                       <span className="min-[1500px]:hidden">Site</span>
                       <span className="hidden min-[1500px]:inline min-[1850px]:hidden">Front Site</span>
@@ -71,7 +73,7 @@ export default function AdminLayout() {
                     {activeHeader.end}
                     <Link
                       to="/"
-                      className="type-action inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-white/12 bg-white/6 px-4 text-white/72 transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
+                      className="admin-site-link type-action inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-4"
                     >
                       View Front Site <ArrowUpRight className="h-3.5 w-3.5" />
                     </Link>

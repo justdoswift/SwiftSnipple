@@ -29,14 +29,14 @@ export default function AdminSnippets() {
     () => ({
       start: (
         <div className="min-w-0">
-          <p className="type-mono-micro text-white/30">Snippet Workspace</p>
-          <h1 className="mt-2 truncate text-sm font-semibold text-white/90">Snippet Library</h1>
+          <p className="admin-eyebrow type-mono-micro">Snippet Workspace</p>
+          <h1 className="admin-header-title mt-2 truncate text-sm font-semibold">Snippet Library</h1>
         </div>
       ),
       end: (
         <Link
           to="/admin/snippets/new"
-          className="admin-button-primary type-action inline-flex h-10 shrink-0 items-center px-4 text-black"
+          className="admin-button-primary type-action inline-flex h-10 shrink-0 items-center px-4"
         >
           New Snippet
         </Link>
@@ -88,10 +88,10 @@ export default function AdminSnippets() {
   return (
     <div className="px-6 py-10 md:px-10 md:py-12">
       <section className="space-y-3">
-        {isLoading ? <p className="type-body-sm text-primary/50">Loading snippet library...</p> : null}
+        {isLoading ? <p className="admin-copy-muted type-body-sm">Loading snippet library...</p> : null}
         {error ? <p className="type-body-sm text-red-600">{error}</p> : null}
         {!isLoading && !error ? (
-          <p className="type-body-sm text-primary/45">
+          <p className="admin-copy-muted type-body-sm">
             Filter by publishing stage, search by title, and jump straight into editing without leaving the library workflow.
           </p>
         ) : null}
@@ -150,7 +150,7 @@ export default function AdminSnippets() {
           <Link
             key={snippet.id}
             to={`/admin/snippets/${snippet.id}`}
-            className="block"
+            className="admin-list-link block"
           >
             <Card className="rounded-[28px] transition-all hover:-translate-y-0.5">
               <Card.Content className="grid gap-6 p-5 md:grid-cols-[220px_minmax(0,1fr)] md:p-6">
@@ -164,7 +164,7 @@ export default function AdminSnippets() {
                 </div>
                 <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_180px]">
                   <div>
-                    <p className="type-mono-micro text-primary/40">{snippet.category}</p>
+                    <p className="admin-copy-faint type-mono-micro">{snippet.category}</p>
                     <h2 className="type-card-title mt-3">{snippet.title}</h2>
                     <p className="type-body-sm mt-3 max-w-3xl">{snippet.excerpt}</p>
                     <div className="mt-5 flex flex-wrap gap-2">
@@ -183,7 +183,7 @@ export default function AdminSnippets() {
                   </div>
                   <div className="flex flex-col justify-between gap-5 xl:items-end">
                     <StatusBadge status={snippet.status} />
-                    <div className="space-y-2 type-body-sm xl:text-right">
+                    <div className="admin-copy-muted space-y-2 type-body-sm xl:text-right">
                       <p>Updated {formatDate(snippet.updatedAt)}</p>
                       <p>{snippet.status === "Published" ? `Live ${formatDate(snippet.publishedAt)}` : snippet.slug}</p>
                     </div>

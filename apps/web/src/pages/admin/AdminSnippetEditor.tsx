@@ -322,17 +322,17 @@ export default function AdminSnippetEditor() {
             isIconOnly
             aria-label="Back to snippets"
             variant="outline"
-            className="h-10 w-10 shrink-0 admin-button-secondary border-white/10"
+            className="h-10 w-10 shrink-0 admin-button-secondary"
             onPress={() => navigate("/admin/snippets")}
           >
             <ChevronLeft size={20} />
           </Button>
-          <div className="h-5 w-[1px] shrink-0 bg-white/10" />
+          <div className="admin-divider-vertical h-5 w-[1px] shrink-0" />
           <div className="flex min-w-0 flex-col">
-            <p className="type-mono-micro text-white/20 -mb-0.5">
+            <p className="admin-copy-faint type-mono-micro -mb-0.5">
               {isNew ? "Drafting" : "Editing"}
             </p>
-            <p className="truncate text-sm font-semibold text-white/90 md:max-w-[220px] lg:max-w-md">
+            <p className="admin-header-title truncate text-sm font-semibold md:max-w-[220px] lg:max-w-md">
               {isNew ? "New entry" : form.title}
             </p>
           </div>
@@ -356,13 +356,11 @@ export default function AdminSnippetEditor() {
                 aria-controls={`editor-panel-${key}`}
                 id={`editor-tab-${key}`}
                 className={`relative inline-flex h-12 shrink-0 items-center gap-2.5 whitespace-nowrap border-b-2 px-1 text-sm font-medium transition-all duration-300 ${
-                  isSelected
-                    ? "border-white text-white"
-                    : "border-transparent text-white/20 hover:text-white/50"
+                  isSelected ? "admin-tab-active" : "admin-tab"
                 }`}
                 onClick={() => setActiveTab(key)}
               >
-                <Icon size={16} className={isSelected ? "text-white" : "text-white/20"} />
+                <Icon size={16} className={isSelected ? "admin-icon-strong" : "admin-icon-muted"} />
                 <span>{label}</span>
               </button>
             );
@@ -373,8 +371,8 @@ export default function AdminSnippetEditor() {
         <>
           {isLoading ? (
             <div className="flex shrink-0 items-center gap-3 xl:mr-1">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/10 border-t-white" />
-              <span className="type-mono-micro text-white/30">Syncing...</span>
+              <div className="admin-spinner h-4 w-4 animate-spin rounded-full border-2" />
+              <span className="admin-copy-muted type-mono-micro">Syncing...</span>
             </div>
           ) : (
             <div className="hidden shrink-0 2xl:block xl:mr-1">
@@ -444,7 +442,7 @@ export default function AdminSnippetEditor() {
                 placeholder="Snippet Title"
                 value={form.title}
                 onChange={(e) => updateField("title", e.target.value)}
-                className="w-full bg-transparent border-none p-0 focus:ring-0 text-5xl md:text-7xl font-bold tracking-tighter text-white placeholder:text-white/5 resize-none outline-none overflow-hidden transition-all duration-500"
+                className="admin-editor-title-input w-full border-none bg-transparent p-0 text-5xl font-bold tracking-tighter transition-all duration-500 resize-none outline-none overflow-hidden focus:ring-0 md:text-7xl"
                 rows={1}
                 onInput={(e) => {
                   const target = e.target as HTMLTextAreaElement;
@@ -467,25 +465,25 @@ export default function AdminSnippetEditor() {
                   aria-labelledby="editor-tab-content"
                   className="space-y-12 py-4"
                 >
-                  <div className="group relative rounded-[28px] border border-white/8 bg-white/[0.02] px-6 py-6">
+                  <div className="admin-editor-panel group relative rounded-[28px] border px-6 py-6">
                     <div className="flex items-center justify-between gap-3">
-                      <p className="type-mono-micro text-white/30">Implementation narrative</p>
-                      <span className="type-mono-micro text-white/15">Markdown source</span>
+                      <p className="admin-eyebrow type-mono-micro">Implementation narrative</p>
+                      <span className="admin-copy-faint type-mono-micro">Markdown source</span>
                     </div>
                     <textarea
                       aria-label="Implementation notes"
                       placeholder="Shape the narrative around the technique and tradeoffs. You can use Markdown."
                       value={form.content}
                       onChange={(event) => updateField("content", event.target.value)}
-                      className="mt-5 min-h-[520px] w-full resize-y border-0 bg-transparent px-0 text-lg leading-relaxed text-white/90 shadow-none outline-none focus:ring-0 placeholder:text-white/20"
+                      className="admin-editor-textarea mt-5 min-h-[520px] w-full resize-y border-0 bg-transparent px-0 text-lg leading-relaxed shadow-none outline-none focus:ring-0"
                     />
-                    <p className="mt-4 text-sm leading-relaxed text-white/35">
-                      Supports headings, lists, tables, quotes, inline code, and fenced code blocks like <span className="font-mono text-white/55">```swift</span> or <span className="font-mono text-white/55">```ts</span>. Use the preview button in the top bar to inspect the public reading view.
+                    <p className="admin-copy-subtle mt-4 text-sm leading-relaxed">
+                      Supports headings, lists, tables, quotes, inline code, and fenced code blocks like <span className="admin-inline-code font-mono">```swift</span> or <span className="admin-inline-code font-mono">```ts</span>. Use the preview button in the top bar to inspect the public reading view.
                     </p>
                   </div>
 
-                  <div className="group relative border-t border-white/5 pt-8">
-                    <p className="type-mono-micro absolute top-2 left-0 text-white/30 transition-opacity duration-300 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 pointer-events-none">
+                  <div className="admin-divider-soft group relative border-t pt-8">
+                    <p className="admin-eyebrow absolute top-2 left-0 type-mono-micro transition-opacity duration-300 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 pointer-events-none">
                       Short excerpt
                     </p>
                     <textarea
@@ -494,7 +492,7 @@ export default function AdminSnippetEditor() {
                       value={form.excerpt}
                       onChange={(event) => updateField("excerpt", event.target.value)}
                       rows={4}
-                      className="w-full bg-transparent border-0 px-0 mt-8 shadow-none outline-none focus:ring-0 text-white/70 placeholder:text-white/20 resize-y"
+                      className="admin-editor-textarea w-full bg-transparent border-0 px-0 mt-8 shadow-none outline-none focus:ring-0 resize-y"
                     />
                   </div>
                 </div>
@@ -508,7 +506,7 @@ export default function AdminSnippetEditor() {
                   className="space-y-12 py-4"
                 >
                   <div className="group relative">
-                    <p className="type-mono-micro absolute -top-8 left-0 text-amber-500/50 transition-opacity duration-300 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 pointer-events-none">
+                    <p className="admin-builder-label type-mono-micro absolute -top-8 left-0 transition-opacity duration-300 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 pointer-events-none">
                       SwiftUI Logic
                     </p>
                     <textarea
@@ -516,13 +514,13 @@ export default function AdminSnippetEditor() {
                       placeholder="import SwiftUI..."
                       value={form.code}
                       onChange={(event) => updateField("code", event.target.value)}
-                      className="w-full bg-transparent border-0 px-0 shadow-none outline-none focus:ring-0 font-mono text-sm leading-relaxed text-amber-50/90 placeholder:text-white/20 min-h-[400px] resize-y"
+                      className="admin-editor-code w-full bg-transparent border-0 px-0 shadow-none outline-none focus:ring-0 font-mono text-sm leading-relaxed min-h-[400px] resize-y"
                       spellCheck={false}
                     />
                   </div>
 
-                  <div className="group relative border-t border-white/5 pt-8">
-                    <p className="type-mono-micro absolute top-2 left-0 text-white/30 transition-opacity duration-300 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 pointer-events-none">
+                  <div className="admin-divider-soft group relative border-t pt-8">
+                    <p className="admin-eyebrow absolute top-2 left-0 type-mono-micro transition-opacity duration-300 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 pointer-events-none">
                       AI Prompt fragments
                     </p>
                     <textarea
@@ -531,7 +529,7 @@ export default function AdminSnippetEditor() {
                       value={form.prompts}
                       onChange={(event) => updateField("prompts", event.target.value)}
                       rows={8}
-                      className="w-full bg-transparent border-0 px-0 mt-8 shadow-none outline-none focus:ring-0 text-white/70 placeholder:text-white/20 resize-y"
+                      className="admin-editor-textarea w-full bg-transparent border-0 px-0 mt-8 shadow-none outline-none focus:ring-0 resize-y"
                     />
                   </div>
                 </div>
@@ -551,7 +549,7 @@ export default function AdminSnippetEditor() {
                   >
                     <div className="grid gap-6 md:grid-cols-2">
                       <label className="grid gap-2">
-                        <span className="type-mono-micro text-white/30">Category</span>
+                        <span className="admin-eyebrow type-mono-micro">Category</span>
                         <Input
                           aria-label="Category"
                           value={form.category}
@@ -560,7 +558,7 @@ export default function AdminSnippetEditor() {
                         />
                       </label>
                       <label className="grid gap-2">
-                        <span className="type-mono-micro text-white/30">Tags</span>
+                        <span className="admin-eyebrow type-mono-micro">Tags</span>
                         <Input
                           aria-label="Tags"
                           value={form.tags}
@@ -570,7 +568,7 @@ export default function AdminSnippetEditor() {
                         />
                       </label>
                       <label className="grid gap-2 md:col-span-2">
-                         <span className="type-mono-micro text-white/30">Route Slug</span>
+                         <span className="admin-eyebrow type-mono-micro">Route Slug</span>
                          <Input
                            aria-label="Slug"
                            value={form.slug}
@@ -579,7 +577,7 @@ export default function AdminSnippetEditor() {
                          />
                       </label>
                       <label className="grid gap-2 md:col-span-2">
-                        <span className="type-mono-micro text-white/30">Cover Image URL</span>
+                        <span className="admin-eyebrow type-mono-micro">Cover Image URL</span>
                         <Input
                           aria-label="Cover Image URL"
                           value={form.coverImage}
@@ -597,7 +595,7 @@ export default function AdminSnippetEditor() {
                   >
                     <div className="grid gap-6 md:grid-cols-2">
                        <label className="grid gap-2">
-                         <span className="type-mono-micro text-white/30">Status</span>
+                         <span className="admin-eyebrow type-mono-micro">Status</span>
                          <select
                            value={form.status}
                            onChange={(event) => updateField("status", event.target.value as SnippetStatus)}
@@ -611,7 +609,7 @@ export default function AdminSnippetEditor() {
                          </select>
                        </label>
                        <label className="grid gap-2">
-                         <span className="type-mono-micro text-white/30">Published At</span>
+                         <span className="admin-eyebrow type-mono-micro">Published At</span>
                          <input
                            type="datetime-local"
                            value={form.publishedAt}
@@ -629,7 +627,7 @@ export default function AdminSnippetEditor() {
                   >
                     <div className="grid gap-6">
                       <label className="grid gap-2">
-                        <span className="type-mono-micro text-white/30">SEO Title</span>
+                        <span className="admin-eyebrow type-mono-micro">SEO Title</span>
                         <Input
                           aria-label="SEO Title"
                           value={form.seoTitle}
@@ -638,7 +636,7 @@ export default function AdminSnippetEditor() {
                         />
                       </label>
                       <label className="grid gap-2">
-                        <span className="type-mono-micro text-white/30">SEO Description</span>
+                        <span className="admin-eyebrow type-mono-micro">SEO Description</span>
                         <TextArea
                           aria-label="SEO Description"
                           value={form.seoDescription}
@@ -651,11 +649,11 @@ export default function AdminSnippetEditor() {
                   </EditorSection>
 
                   {!isNew && (
-                    <section className="pt-10 border-t border-white/5">
-                      <div className="flex items-center justify-between vibe-glass p-6 rounded-[32px] border-red-900/10">
+                    <section className="admin-divider-soft pt-10 border-t">
+                      <div className="admin-danger-shell flex items-center justify-between p-6 rounded-[32px]">
                         <div>
-                          <h3 className="text-red-400 font-semibold">Danger Zone</h3>
-                          <p className="text-sm mt-1 text-white/30">Permanently remove this entry from the registry.</p>
+                          <h3 className="admin-danger-title font-semibold">Danger Zone</h3>
+                          <p className="admin-copy-muted text-sm mt-1">Permanently remove this entry from the registry.</p>
                         </div>
                         <Button
                           variant="outline"
@@ -687,25 +685,25 @@ export default function AdminSnippetEditor() {
           <button
             type="button"
             aria-label="Dismiss preview backdrop"
-            className="absolute inset-0 bg-black/88 backdrop-blur-xl"
+            className="admin-preview-backdrop absolute inset-0"
             onClick={closePreview}
           />
           <div className="relative z-10 flex h-full w-full flex-col p-4 md:p-6">
-            <div className="admin-header flex h-full w-full flex-col overflow-hidden rounded-[28px] border border-white/10 shadow-[0_32px_120px_rgba(0,0,0,0.55)]">
-              <div className="flex flex-col gap-4 border-b border-white/6 px-5 py-4 md:px-8 md:py-5">
+            <div className="admin-header admin-preview-shell flex h-full w-full flex-col overflow-hidden rounded-[28px]">
+              <div className="admin-preview-toolbar flex flex-col gap-4 px-5 py-4 md:px-8 md:py-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <Button
                     isIconOnly
                     aria-label="Close preview"
-                    className="admin-button-secondary h-10 w-10 border-white/10"
+                    className="admin-button-secondary h-10 w-10"
                     onPress={closePreview}
                   >
                     <X size={16} />
                   </Button>
                   <div>
-                    <p className="type-mono-micro text-white/28">Preview Mode</p>
-                    <h2 className="mt-1 text-lg font-semibold text-white md:text-xl">
+                    <p className="admin-copy-faint type-mono-micro">Preview Mode</p>
+                    <h2 className="admin-header-title mt-1 text-lg font-semibold md:text-xl">
                       {form.title || "Untitled Snippet"}
                     </h2>
                   </div>
@@ -727,7 +725,7 @@ export default function AdminSnippetEditor() {
 
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div
-                  className="inline-flex items-center rounded-[18px] border border-white/8 bg-white/[0.03] p-1"
+                  className="admin-preview-device-tabs inline-flex items-center rounded-[18px] border p-1"
                   role="tablist"
                   aria-label="Preview devices"
                 >
@@ -735,10 +733,8 @@ export default function AdminSnippetEditor() {
                     type="button"
                     role="tab"
                     aria-selected={previewDevice === "mobile"}
-                    className={`inline-flex h-10 items-center gap-2 rounded-[14px] px-4 text-sm transition-colors ${
-                      previewDevice === "mobile"
-                        ? "bg-white text-black"
-                        : "text-white/48 hover:text-white/72"
+                    className={`admin-preview-device-button inline-flex h-10 items-center gap-2 rounded-[14px] px-4 text-sm transition-colors ${
+                      previewDevice === "mobile" ? "admin-preview-device-button-active" : "admin-preview-device-button-inactive"
                     }`}
                     onClick={() => setPreviewDevice("mobile")}
                   >
@@ -749,10 +745,8 @@ export default function AdminSnippetEditor() {
                     type="button"
                     role="tab"
                     aria-selected={previewDevice === "desktop"}
-                    className={`inline-flex h-10 items-center gap-2 rounded-[14px] px-4 text-sm transition-colors ${
-                      previewDevice === "desktop"
-                        ? "bg-white text-black"
-                        : "text-white/48 hover:text-white/72"
+                    className={`admin-preview-device-button inline-flex h-10 items-center gap-2 rounded-[14px] px-4 text-sm transition-colors ${
+                      previewDevice === "desktop" ? "admin-preview-device-button-active" : "admin-preview-device-button-inactive"
                     }`}
                     onClick={() => setPreviewDevice("desktop")}
                   >
@@ -761,40 +755,40 @@ export default function AdminSnippetEditor() {
                   </button>
                 </div>
                 <div className="hidden items-center gap-3 md:flex">
-                  <span className="type-mono-micro text-white/22">Public route</span>
-                  <span className="rounded-full border border-white/8 bg-white/[0.03] px-3 py-1.5 font-mono text-xs text-white/45">
+                  <span className="admin-copy-faint type-mono-micro">Public route</span>
+                  <span className="admin-preview-route-chip rounded-full border px-3 py-1.5 font-mono text-xs">
                     {previewPath}
                   </span>
                 </div>
               </div>
               </div>
-              <div className="flex flex-1 min-h-0 bg-[#050505] px-3 py-3 md:px-6 md:py-6">
-                <div className="flex h-full min-h-0 w-full items-center justify-center overflow-auto rounded-[24px] border border-white/6 bg-[#0b0b0b] p-4 md:p-7">
+              <div className="admin-preview-canvas flex flex-1 min-h-0 px-3 py-3 md:px-6 md:py-6">
+                <div className="admin-preview-stage flex h-full min-h-0 w-full items-center justify-center overflow-auto rounded-[24px] border p-4 md:p-7">
                 <div
-                  className={`w-full rounded-[24px] border border-white/8 bg-[#0e0e0e] shadow-[0_20px_60px_rgba(0,0,0,0.38)] transition-all duration-300 ${
+                  className={`admin-preview-frame w-full rounded-[24px] border transition-all duration-300 ${
                     previewDevice === "desktop"
                       ? "max-w-[min(1440px,92vw)]"
                       : "max-w-[430px]"
                   }`}
                   data-preview-device={previewDevice}
                 >
-                  <div className="flex items-center gap-2 border-b border-white/6 px-4 py-4 md:px-6">
+                  <div className="admin-preview-browser-chrome flex items-center gap-2 px-4 py-4 md:px-6">
                     <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
                     <span className="h-3 w-3 rounded-full bg-[#ffbd2e]" />
                     <span className="h-3 w-3 rounded-full bg-[#28c840]" />
-                    <div className="ml-4 flex-1 rounded-full border border-white/7 bg-white/[0.04] px-4 py-2 text-center font-mono text-xs text-white/35">
+                    <div className="admin-preview-address ml-4 flex-1 rounded-full border px-4 py-2 text-center font-mono text-xs">
                       {previewPath}
                     </div>
                   </div>
                   <div
-                    className={`overflow-hidden rounded-b-[24px] bg-black ${
+                    className={`admin-preview-iframe-shell overflow-hidden rounded-b-[24px] ${
                       previewDevice === "mobile" ? "mx-auto aspect-[390/844]" : "aspect-[16/10]"
                     }`}
                   >
                     <iframe
                       title="Snippet public preview"
                       src={previewPath}
-                      className="h-full w-full border-0 bg-black"
+                      className="admin-preview-iframe h-full w-full border-0"
                     />
                   </div>
                 </div>

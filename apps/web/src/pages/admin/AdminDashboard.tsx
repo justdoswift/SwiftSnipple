@@ -24,14 +24,14 @@ export default function AdminDashboard() {
     () => ({
       start: (
         <div className="min-w-0">
-          <p className="type-mono-micro text-white/30">Snippet Workspace</p>
-          <h1 className="mt-2 truncate text-sm font-semibold text-white/90">Overview</h1>
+          <p className="admin-eyebrow type-mono-micro">Snippet Workspace</p>
+          <h1 className="admin-header-title mt-2 truncate text-sm font-semibold">Overview</h1>
         </div>
       ),
       end: (
         <Link
           to="/admin/snippets/new"
-          className="admin-button-primary type-action inline-flex h-10 shrink-0 items-center px-4 text-black"
+          className="admin-button-primary type-action inline-flex h-10 shrink-0 items-center px-4"
         >
           Start New Snippet
         </Link>
@@ -75,10 +75,10 @@ export default function AdminDashboard() {
   return (
     <div className="px-6 py-10 md:px-10 md:py-12">
       <section className="space-y-3">
-        {isLoading ? <p className="type-body-sm text-primary/50">Loading snippet metrics...</p> : null}
+        {isLoading ? <p className="admin-copy-muted type-body-sm">Loading snippet metrics...</p> : null}
         {error ? <p className="type-body-sm text-red-600">{error}</p> : null}
         {!isLoading && !error ? (
-          <p className="type-body-sm text-primary/45">
+          <p className="admin-copy-muted type-body-sm">
             Track recent edits, release pacing, and the current status mix without leaving the admin workspace.
           </p>
         ) : null}
@@ -93,14 +93,14 @@ export default function AdminDashboard() {
 
       <section className="mt-10 grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_360px]">
         <Card className="rounded-[28px]">
-          <Card.Header className="flex items-end justify-between border-b border-white/55 px-6 py-5 md:px-8">
+          <Card.Header className="admin-card-header flex items-end justify-between px-6 py-5 md:px-8">
             <div>
-              <p className="type-mono-micro text-primary/40">Recent Activity</p>
+              <p className="admin-eyebrow type-mono-micro">Recent Activity</p>
               <h2 className="type-section-title mt-3 text-[1.9rem]">Latest edits and launches</h2>
             </div>
             <Link
               to="/admin/snippets"
-              className="type-action text-primary/60 transition-colors hover:text-primary"
+              className="admin-link-inline type-action transition-colors"
             >
               Open list
             </Link>
@@ -118,16 +118,16 @@ export default function AdminDashboard() {
               <Link
                 key={snippet.id}
                 to={`/admin/snippets/${snippet.id}`}
-                className="grid gap-5 px-6 py-6 transition-colors hover:bg-white/38 md:grid-cols-[1fr_auto]"
+                className="admin-card-row grid gap-5 px-6 py-6 transition-colors md:grid-cols-[1fr_auto]"
               >
                 <div>
-                  <p className="type-mono-micro text-primary/35">{snippet.category}</p>
+                  <p className="admin-copy-faint type-mono-micro">{snippet.category}</p>
                   <h3 className="type-card-title mt-2 text-[1.35rem]">{snippet.title}</h3>
                   <p className="type-body-sm mt-3 max-w-2xl">{snippet.excerpt}</p>
                 </div>
                 <div className="flex flex-col items-start gap-4 md:items-end">
                   <StatusBadge status={snippet.status} />
-                  <span className="type-mono-micro text-primary/40">
+                  <span className="admin-copy-faint type-mono-micro">
                     Updated {formatDate(snippet.updatedAt)}
                   </span>
                 </div>
@@ -139,7 +139,7 @@ export default function AdminDashboard() {
         <div className="space-y-6">
           <Card className="rounded-[26px]">
             <Card.Content className="p-6">
-            <p className="type-mono-micro text-primary/40">Status Mix</p>
+            <p className="admin-eyebrow type-mono-micro">Status Mix</p>
             <div className="mt-6 space-y-4">
               {[
                 ["Draft", draftCount],
@@ -148,7 +148,7 @@ export default function AdminDashboard() {
                 ["Published", publishedCount],
               ].map(([label, count]) => (
                 <div key={label} className="grid grid-cols-[110px_1fr_auto] items-center gap-4">
-                  <span className="type-mono-micro text-primary/50">{label}</span>
+                  <span className="admin-copy-muted type-mono-micro">{label}</span>
                   <ProgressBar
                     aria-label={`${label} ratio`}
                     className="w-full"
@@ -161,15 +161,15 @@ export default function AdminDashboard() {
             </Card.Content>
           </Card>
 
-          <Card className="rounded-[28px] bg-primary-container text-white">
+          <Card className="admin-callout-card rounded-[28px]">
             <Card.Content className="p-6">
-            <p className="type-mono-micro text-white/50">Next Up</p>
-            <h2 className="type-section-title mt-3 text-[1.9rem] text-white">Ship the next entry faster</h2>
-            <p className="type-body-sm mt-3 text-white/70">
+            <p className="admin-eyebrow type-mono-micro">Next Up</p>
+            <h2 className="admin-callout-title type-section-title mt-3 text-[1.9rem]">Ship the next entry faster</h2>
+            <p className="admin-callout-copy type-body-sm mt-3">
               Shape the snippet metadata first, then refine the notes and preview until the public card feels right.
             </p>
             <Button
-              className="type-action mt-6 bg-white text-black hover:bg-white/90"
+              className="admin-button-primary type-action mt-6"
               radius="full"
               onPress={() => {
                 window.location.href = "/admin/snippets/new";
@@ -182,7 +182,7 @@ export default function AdminDashboard() {
 
           <Card className="rounded-[26px]">
             <Card.Content className="p-6">
-            <p className="type-mono-micro text-primary/40">Scheduled Release</p>
+            <p className="admin-eyebrow type-mono-micro">Scheduled Release</p>
             <h2 className="type-card-title mt-3 text-[1.35rem]">
               {snippets.find((snippet) => snippet.status === "Scheduled")?.title ?? "No scheduled snippet"}
             </h2>

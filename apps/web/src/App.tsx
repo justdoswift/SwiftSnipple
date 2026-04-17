@@ -74,7 +74,32 @@ function AdminRouteFallback() {
   );
 }
 
-function PublicShell({ children }: { children: ReactNode }) {
+function PublicShell({
+  children,
+  theme,
+  onToggleTheme,
+}: {
+  children: ReactNode;
+  theme: PublicTheme;
+  onToggleTheme: () => void;
+}) {
+  return (
+    <div
+      className="public-theme min-h-screen flex flex-col relative"
+      data-theme={theme}
+      data-testid="public-theme-root"
+    >
+      <div className="vibe-grain" />
+      <Navbar theme={theme} onToggleTheme={onToggleTheme} />
+      <main className="flex-grow z-10">
+        <Suspense fallback={<PublicRouteFallback />}>{children}</Suspense>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+export default function App() {
   const [theme, setTheme] = useState<PublicTheme>(readStoredPublicTheme);
 
   useEffect(() => {
@@ -83,98 +108,81 @@ function PublicShell({ children }: { children: ReactNode }) {
 
   return (
     <PublicThemeContext.Provider value={theme}>
-      <div
-        className="public-theme min-h-screen flex flex-col relative"
-        data-theme={theme}
-        data-testid="public-theme-root"
-      >
-        <div className="vibe-grain" />
-        <Navbar theme={theme} onToggleTheme={() => setTheme((currentTheme) => getNextPublicTheme(currentTheme))} />
-        <main className="flex-grow z-10">
-          <Suspense fallback={<PublicRouteFallback />}>{children}</Suspense>
-        </main>
-        <Footer />
-      </div>
+      <Router>
+        <ScrollToTop />
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <PublicShell theme={theme} onToggleTheme={() => setTheme((currentTheme) => getNextPublicTheme(currentTheme))}>
+                <Home />
+              </PublicShell>
+            }
+          />
+          <Route
+            path="/snippets/:slug"
+            element={
+              <PublicShell theme={theme} onToggleTheme={() => setTheme((currentTheme) => getNextPublicTheme(currentTheme))}>
+                <SnippetDetail />
+              </PublicShell>
+            }
+          />
+          <Route
+            path="/privacy-policy"
+            element={
+              <PublicShell theme={theme} onToggleTheme={() => setTheme((currentTheme) => getNextPublicTheme(currentTheme))}>
+                <PrivacyPolicy />
+              </PublicShell>
+            }
+          />
+          <Route
+            path="/terms-of-service"
+            element={
+              <PublicShell theme={theme} onToggleTheme={() => setTheme((currentTheme) => getNextPublicTheme(currentTheme))}>
+                <TermsOfService />
+              </PublicShell>
+            }
+          />
+          <Route path="/articles/:slug" element={<LegacySnippetRedirect />} />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route
+              index
+              element={
+                <Suspense fallback={<AdminRouteFallback />}>
+                  <AdminDashboard />
+                </Suspense>
+              }
+            />
+            <Route path="articles" element={<Navigate to="/admin/snippets" replace />} />
+            <Route path="articles/new" element={<Navigate to="/admin/snippets/new" replace />} />
+            <Route path="articles/:id" element={<LegacyAdminSnippetRedirect />} />
+            <Route
+              path="snippets"
+              element={
+                <Suspense fallback={<AdminRouteFallback />}>
+                  <AdminSnippets />
+                </Suspense>
+              }
+            />
+            <Route
+              path="snippets/new"
+              element={
+                <Suspense fallback={<AdminRouteFallback />}>
+                  <AdminSnippetEditor />
+                </Suspense>
+              }
+            />
+            <Route
+              path="snippets/:id"
+              element={
+                <Suspense fallback={<AdminRouteFallback />}>
+                  <AdminSnippetEditor />
+                </Suspense>
+              }
+            />
+          </Route>
+        </Routes>
+      </Router>
     </PublicThemeContext.Provider>
-  );
-}
-
-export default function App() {
-  return (
-    <Router>
-      <ScrollToTop />
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <PublicShell>
-              <Home />
-            </PublicShell>
-          }
-        />
-        <Route
-          path="/snippets/:slug"
-          element={
-            <PublicShell>
-              <SnippetDetail />
-            </PublicShell>
-          }
-        />
-        <Route
-          path="/privacy-policy"
-          element={
-            <PublicShell>
-              <PrivacyPolicy />
-            </PublicShell>
-          }
-        />
-        <Route
-          path="/terms-of-service"
-          element={
-            <PublicShell>
-              <TermsOfService />
-            </PublicShell>
-          }
-        />
-        <Route path="/articles/:slug" element={<LegacySnippetRedirect />} />
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route
-            index
-            element={
-              <Suspense fallback={<AdminRouteFallback />}>
-                <AdminDashboard />
-              </Suspense>
-            }
-          />
-          <Route path="articles" element={<Navigate to="/admin/snippets" replace />} />
-          <Route path="articles/new" element={<Navigate to="/admin/snippets/new" replace />} />
-          <Route path="articles/:id" element={<LegacyAdminSnippetRedirect />} />
-          <Route
-            path="snippets"
-            element={
-              <Suspense fallback={<AdminRouteFallback />}>
-                <AdminSnippets />
-              </Suspense>
-            }
-          />
-          <Route
-            path="snippets/new"
-            element={
-              <Suspense fallback={<AdminRouteFallback />}>
-                <AdminSnippetEditor />
-              </Suspense>
-            }
-          />
-          <Route
-            path="snippets/:id"
-            element={
-              <Suspense fallback={<AdminRouteFallback />}>
-                <AdminSnippetEditor />
-              </Suspense>
-            }
-          />
-        </Route>
-      </Routes>
-    </Router>
   );
 }

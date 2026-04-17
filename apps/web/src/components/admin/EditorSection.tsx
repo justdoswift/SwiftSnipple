@@ -18,7 +18,7 @@ export default function EditorSection({
     <Card className="admin-section-card border overflow-hidden">
       <Card.Header className="px-6 pt-6 pb-4 md:px-8">
         <div>
-          <p className="admin-label text-[#738a94]">{eyebrow}</p>
+          <p className="admin-label">{eyebrow}</p>
           <h2 className="admin-section-title mt-2">{title}</h2>
           <p className="admin-section-description max-w-2xl">{description}</p>
         </div>

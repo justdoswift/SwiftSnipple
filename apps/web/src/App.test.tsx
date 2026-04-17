@@ -87,4 +87,29 @@ describe("App public theme", () => {
     expect(screen.getByTestId("public-theme-root")).toHaveAttribute("data-theme", "light");
     expect(screen.getByRole("button", { name: "Switch to dark site mode" })).toBeInTheDocument();
   });
+
+  it("defaults the admin workspace to dark mode", async () => {
+    renderAppAt("/admin");
+
+    await waitFor(() => {
+      expect(screen.getByText("Overview")).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId("admin-theme-root")).toHaveAttribute("data-theme", "dark");
+  });
+
+  it("keeps the admin workspace in sync with the selected public theme", async () => {
+    renderAppAt("/");
+
+    await waitFor(() => {
+      expect(screen.getByText("Exceptional Builds. Native SwiftUI.")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Switch to light site mode" }));
+    fireEvent.click(screen.getByRole("link", { name: "Log in" }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("admin-theme-root")).toHaveAttribute("data-theme", "light");
+    });
+  });
 });

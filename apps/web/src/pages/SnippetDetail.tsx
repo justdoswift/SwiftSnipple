@@ -1,8 +1,9 @@
-import { motion } from "motion/react";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import HighlightedCodeBlock from "../components/HighlightedCodeBlock";
 import MarkdownRenderer from "../components/MarkdownRenderer";
+import { extractMarkdownOutline, type MarkdownOutlineItem } from "../lib/markdown-outline";
 import { getSnippetBySlug } from "../services/snippets";
 import { Snippet } from "../types";
 
@@ -50,6 +51,12 @@ export default function SnippetDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDesktop, setIsDesktop] = useState(getInitialDesktopState);
   const [activeSectionId, setActiveSectionId] = useState<SnippetSectionId>("notes");
+  const [activeOutlineId, setActiveOutlineId] = useState<string | null>(null);
+  const [isNotesContentsHovered, setIsNotesContentsHovered] = useState(false);
+  const [hasEnteredDesktopReadingZone, setHasEnteredDesktopReadingZone] = useState(false);
+  const [hasReachedDesktopReadingZoneEnd, setHasReachedDesktopReadingZoneEnd] = useState(false);
+  const desktopReadingStartRef = useRef<HTMLDivElement | null>(null);
+  const desktopReadingEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!slug) return;
@@ -96,6 +103,10 @@ export default function SnippetDetail() {
 
   const hasCode = snippet?.code.trim().length ? true : false;
   const hasPrompts = snippet?.prompts.trim().length ? true : false;
+  const notesOutline = useMemo<MarkdownOutlineItem[]>(
+    () => (snippet ? extractMarkdownOutline(snippet.content) : []),
+    [snippet],
+  );
   const sections = useMemo<SnippetSection[]>(() => {
     if (!snippet) {
       return [];
@@ -162,7 +173,79 @@ export default function SnippetDetail() {
     setActiveSectionId(hasRequestedSection && requestedSection ? requestedSection : sections[0].id);
   }, [location.hash, sections]);
 
+  useEffect(() => {
+    setActiveOutlineId(notesOutline[0]?.id ?? null);
+  }, [notesOutline, activeSectionId]);
+
+  useEffect(() => {
+    if (activeSectionId !== "notes" || !notesOutline.length) {
+      setIsNotesContentsHovered(false);
+    }
+  }, [activeSectionId, notesOutline]);
+
+  useEffect(() => {
+    if (!isDesktop) {
+      setHasEnteredDesktopReadingZone(false);
+      setHasReachedDesktopReadingZoneEnd(false);
+      return;
+    }
+
+    const startTarget = desktopReadingStartRef.current;
+    const endTarget = desktopReadingEndRef.current;
+    if (!startTarget || !endTarget) {
+      return;
+    }
+
+    if (typeof IntersectionObserver !== "function") {
+      setHasEnteredDesktopReadingZone(true);
+      setHasReachedDesktopReadingZoneEnd(false);
+      return;
+    }
+
+    const startObserver = new IntersectionObserver(
+      ([entry]) => {
+        const hasEntered = Boolean(entry && (entry.isIntersecting || entry.boundingClientRect.top < 0));
+        setHasEnteredDesktopReadingZone(hasEntered);
+      },
+      {
+        threshold: 0,
+        rootMargin: "0px 0px -70% 0px",
+      },
+    );
+
+    const endObserver = new IntersectionObserver(
+      ([entry]) => {
+        const hasReachedEnd = Boolean(entry && (entry.isIntersecting || entry.boundingClientRect.top < 0));
+        setHasReachedDesktopReadingZoneEnd(hasReachedEnd);
+      },
+      {
+        threshold: 0,
+        rootMargin: "0px 0px -70% 0px",
+      },
+    );
+
+    startObserver.observe(startTarget);
+    endObserver.observe(endTarget);
+
+    return () => {
+      startObserver.disconnect();
+      endObserver.disconnect();
+    };
+  }, [activeSectionId, isDesktop, isLoading]);
+
+  useEffect(() => {
+    const isDesktopRailVisible = isDesktop && hasEnteredDesktopReadingZone && !hasReachedDesktopReadingZoneEnd;
+    if (!isDesktopRailVisible) {
+      setIsNotesContentsHovered(false);
+    }
+  }, [hasEnteredDesktopReadingZone, hasReachedDesktopReadingZoneEnd, isDesktop]);
+
   const activeSection = sections.find((section) => section.id === activeSectionId) ?? sections[0];
+  const isDesktopRailVisible = isDesktop && hasEnteredDesktopReadingZone && !hasReachedDesktopReadingZoneEnd;
+  const canShowContentsPanel =
+    isDesktop && isDesktopRailVisible && activeSection?.id === "notes" && notesOutline.length > 0;
+  const showContentsPanel = canShowContentsPanel && isNotesContentsHovered;
+  const desktopContentWrapperClass = activeSection?.id === "notes" ? "mx-auto max-w-[800px]" : "mx-auto max-w-[800px]";
 
   if (isLoading) {
     return <div className="mx-auto max-w-[1380px] px-8 pb-20 pt-32 text-white/58">Loading snippet...</div>;
@@ -237,50 +320,112 @@ export default function SnippetDetail() {
 
       {isDesktop ? (
         <div className="relative">
-          <nav
-            aria-label="Snippet sections"
-            className="fixed left-5 top-1/2 z-30 flex -translate-y-1/2 flex-col gap-5 md:left-8 xl:left-12"
-          >
-            {sections.map((section) => {
-              const isActive = section.id === activeSection.id;
+          <AnimatePresence>
+            {isDesktopRailVisible ? (
+              <motion.div
+                key="desktop-section-rail"
+                initial={{ opacity: 0, x: -12, y: "-50%" }}
+                animate={{ opacity: 1, x: 0, y: "-50%" }}
+                exit={{ opacity: 0, x: -12, y: "-50%" }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="fixed left-5 top-1/2 z-30 flex items-center gap-[10px] md:left-8 xl:left-12"
+                onMouseLeave={() => setIsNotesContentsHovered(false)}
+              >
+                <nav aria-label="Snippet sections" className="flex flex-col gap-5">
+                  {sections.map((section) => {
+                    const isActive = section.id === activeSection.id;
 
-              return (
-                <button
-                  key={section.id}
-                  type="button"
-                  className="group flex items-center gap-4 text-left"
-                  aria-label={`${section.number} ${section.label}`}
-                  aria-pressed={isActive}
-                  onClick={() => {
-                    setActiveSectionId(section.id);
-                    navigate(
-                      {
-                        pathname: location.pathname,
-                        hash: `#${section.id}`,
-                      },
-                      { replace: true },
+                    return (
+                      <button
+                        key={section.id}
+                        type="button"
+                        className="group flex items-center gap-4 text-left"
+                        aria-label={`${section.number} ${section.label}`}
+                        aria-pressed={isActive}
+                        onMouseEnter={() => {
+                          if (section.id === "notes" && canShowContentsPanel) {
+                            setIsNotesContentsHovered(true);
+                          }
+                        }}
+                        onFocus={() => {
+                          if (section.id === "notes" && canShowContentsPanel) {
+                            setIsNotesContentsHovered(true);
+                          }
+                        }}
+                        onClick={() => {
+                          setActiveSectionId(section.id);
+                          navigate(
+                            {
+                              pathname: location.pathname,
+                              hash: `#${section.id}`,
+                            },
+                            { replace: true },
+                          );
+                        }}
+                      >
+                        <span
+                          className={`block h-14 w-[3px] rounded-full transition-colors ${
+                            isActive ? "bg-white" : "bg-white/16 group-hover:bg-white/35"
+                          }`}
+                          aria-hidden="true"
+                        />
+                        <span
+                          className={`font-mono text-[11px] font-medium tracking-[0.22em] transition-colors ${
+                            isActive ? "text-white" : "text-white/34 group-hover:text-white/62"
+                          }`}
+                        >
+                          {section.number}
+                        </span>
+                      </button>
                     );
-                  }}
-                  >
-                    <span
-                      className={`block h-14 w-[3px] rounded-full transition-colors ${
-                        isActive ? "bg-white" : "bg-white/16 group-hover:bg-white/35"
-                      }`}
-                      aria-hidden="true"
-                    />
-                    <span
-                      className={`font-mono text-[11px] font-medium tracking-[0.22em] transition-colors ${
-                        isActive ? "text-white" : "text-white/34 group-hover:text-white/62"
-                      }`}
-                    >
-                      {section.number}
-                    </span>
-                </button>
-              );
-            })}
-          </nav>
+                  })}
+                </nav>
 
-          <div className="mx-auto max-w-[920px] px-4 md:px-0">
+                <AnimatePresence>
+                  {showContentsPanel ? (
+                    <motion.aside
+                      key="notes-contents-panel"
+                      initial={{ opacity: 0, x: -8, scale: 0.98 }}
+                      animate={{ opacity: 1, x: 0, scale: 1 }}
+                      exit={{ opacity: 0, x: -8, scale: 0.98 }}
+                      transition={{ duration: 0.18, ease: "easeOut" }}
+                      className="hidden w-[250px] rounded-[24px] border border-white/8 bg-[#111111] px-5 py-6 shadow-[0_24px_80px_rgba(0,0,0,0.45)] md:block"
+                    >
+                      <p className="type-mono-label mb-6 text-white/78">Contents</p>
+                      <div className="space-y-3">
+                        {notesOutline.map((item) => {
+                          const isActive = item.id === activeOutlineId;
+
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              className={`block w-full truncate text-left text-[0.95rem] leading-tight transition-colors ${
+                                item.level === 3 ? "pl-4" : ""
+                              } ${isActive ? "text-white" : "text-white/54 hover:text-white/74"}`}
+                              aria-current={isActive ? "true" : undefined}
+                              onClick={() => {
+                                setActiveOutlineId(item.id);
+                                document.getElementById(item.id)?.scrollIntoView({
+                                  behavior: "smooth",
+                                  block: "start",
+                                });
+                              }}
+                            >
+                              {item.text}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </motion.aside>
+                  ) : null}
+                </AnimatePresence>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+
+          <div className={`${desktopContentWrapperClass} px-4 md:px-0`}>
+            <div ref={desktopReadingStartRef} data-testid="desktop-reading-start" aria-hidden="true" className="h-px w-full" />
             <motion.section
               key={activeSection.id}
               id={activeSection.id}
@@ -294,6 +439,7 @@ export default function SnippetDetail() {
               </div>
               {activeSection.content}
             </motion.section>
+            <div ref={desktopReadingEndRef} data-testid="desktop-reading-end" aria-hidden="true" className="h-px w-full" />
           </div>
         </div>
       ) : (

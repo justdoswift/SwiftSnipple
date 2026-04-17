@@ -75,8 +75,8 @@ export default function MarkdownRenderer({ content, className = "" }: MarkdownRe
             language={languageMatch[1]}
             copyable
             copyLabel="code block"
-            className="markdown-code-block type-code-block overflow-x-auto selection:bg-white/20"
-            fallbackClassName="markdown-code-block type-code-block overflow-x-auto text-white/80"
+            className="markdown-code-block public-code-block type-code-block overflow-x-auto"
+            fallbackClassName="markdown-code-block public-code-block type-code-block overflow-x-auto"
           />
         );
       },

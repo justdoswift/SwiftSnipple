@@ -10,13 +10,13 @@ interface SnippetMiniCardProps {
 
 export default function SnippetMiniCard({ snippet }: SnippetMiniCardProps) {
   return (
-    <Link to={`/snippets/${snippet.slug}`} className="group block cursor-pointer">
+    <Link to={`/snippets/${snippet.slug}`} className="public-snippet-mini-card group block cursor-pointer">
       <motion.div 
         whileHover={{ scale: 1.02, y: -2 }}
         transition={{ type: "spring", stiffness: 400, damping: 22 }}
       >
-        <Card className="vibe-glass overflow-hidden rounded-[20px] border-white/5 transition-colors group-hover:border-white/20">
-          <div className="aspect-square overflow-hidden bg-white/[0.02]">
+        <Card className="public-snippet-mini-card-shell vibe-glass overflow-hidden rounded-[20px] transition-colors">
+          <div className="public-snippet-mini-card-media aspect-square overflow-hidden">
             <img
               src={snippet.coverImage}
               alt={snippet.title}
@@ -25,10 +25,10 @@ export default function SnippetMiniCard({ snippet }: SnippetMiniCardProps) {
             />
           </div>
           <Card.Content className="space-y-3 px-4 py-5">
-            <Chip size="sm" radius="full" variant="flat" className="public-chip type-action w-fit border-white/10">
+            <Chip size="sm" radius="full" variant="flat" className="public-chip type-action w-fit">
               {snippet.category}
             </Chip>
-            <h4 className="type-card-title text-[0.95rem] font-bold text-white/90 group-hover:text-white">{snippet.title}</h4>
+            <h4 className="public-snippet-mini-card-title type-card-title text-[0.95rem] font-bold">{snippet.title}</h4>
           </Card.Content>
         </Card>
       </motion.div>

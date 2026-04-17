@@ -1,6 +1,8 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import HighlightedCodeBlock from "./HighlightedCodeBlock";
+import { PublicThemeContext } from "../lib/public-theme";
+import { highlightMarkdownCode } from "../lib/markdown-highlighter";
 
 vi.mock("../lib/markdown-highlighter", () => ({
   highlightMarkdownCode: vi.fn(async (code: string) => `<pre class="shiki"><code>${code}</code></pre>`),
@@ -67,6 +69,25 @@ describe("HighlightedCodeBlock", () => {
     await waitFor(() => {
       expect(writeText).toHaveBeenCalledWith(`Text("Hello")`);
       expect(button).toHaveAttribute("data-copy-state", "failed");
+    });
+  });
+
+  it("uses the active public theme for highlighting", async () => {
+    render(
+      <PublicThemeContext.Provider value="light">
+        <HighlightedCodeBlock
+          code={`Text("Hello")`}
+          language="swift"
+          copyable
+          copyLabel="Swift code"
+          className="snippet-highlight"
+          fallbackClassName="type-code-block"
+        />
+      </PublicThemeContext.Provider>,
+    );
+
+    await waitFor(() => {
+      expect(highlightMarkdownCode).toHaveBeenCalledWith(`Text("Hello")`, "swift", "light");
     });
   });
 });

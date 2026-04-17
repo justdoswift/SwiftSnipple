@@ -1,52 +1,45 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import Navbar from "./Navbar";
+import type { PublicTheme } from "../lib/public-theme";
 
-function renderNavbar() {
+function renderNavbar(theme: PublicTheme = "dark", onToggleTheme = vi.fn()) {
   return render(
     <MemoryRouter>
-      <Navbar />
+      <Navbar theme={theme} onToggleTheme={onToggleTheme} />
     </MemoryRouter>,
   );
 }
 
 describe("Navbar", () => {
-  afterEach(() => {
-    window.localStorage.clear();
-  });
-
   it("renders the hero-style brand and actions", () => {
     renderNavbar();
 
     expect(screen.getByRole("link", { name: "Just Do Swift homepage" })).toBeInTheDocument();
     expect(screen.getByText("Just Do Swift")).toBeInTheDocument();
     expect(screen.getByRole("searchbox", { name: "Search snippets" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Switch to light header mode" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Switch to light site mode" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute("href", "/admin");
   });
 
-  it("toggles the header theme and persists it", () => {
-    renderNavbar();
+  it("calls the parent toggle handler and reflects the provided theme", () => {
+    const onToggleTheme = vi.fn();
+    renderNavbar("dark", onToggleTheme);
 
     const shell = screen.getByTestId("public-navbar-shell").closest("nav");
-    const toggle = screen.getByRole("button", { name: "Switch to light header mode" });
+    const toggle = screen.getByRole("button", { name: "Switch to light site mode" });
 
     expect(shell).toHaveAttribute("data-theme", "dark");
 
     fireEvent.click(toggle);
 
-    expect(shell).toHaveAttribute("data-theme", "light");
-    expect(window.localStorage.getItem("just-do-swift-header-theme")).toBe("light");
-    expect(screen.getByRole("button", { name: "Switch to dark header mode" })).toBeInTheDocument();
+    expect(onToggleTheme).toHaveBeenCalledTimes(1);
   });
 
-  it("restores the persisted theme on rerender", () => {
-    window.localStorage.setItem("just-do-swift-header-theme", "light");
-
-    renderNavbar();
-
+  it("renders the current light theme state", () => {
+    renderNavbar("light");
     expect(screen.getByTestId("public-navbar-shell").closest("nav")).toHaveAttribute("data-theme", "light");
-    expect(screen.getByRole("button", { name: "Switch to dark header mode" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Switch to dark site mode" })).toBeInTheDocument();
   });
 });

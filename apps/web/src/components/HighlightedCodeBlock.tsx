@@ -1,6 +1,7 @@
 import { AlertCircle, Check, Copy } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { highlightMarkdownCode, resolveMarkdownLanguage } from "../lib/markdown-highlighter";
+import { usePublicTheme } from "../lib/public-theme";
 
 interface HighlightedCodeBlockProps {
   code: string;
@@ -21,6 +22,7 @@ export default function HighlightedCodeBlock({
   copyValue,
   copyLabel = "code block",
 }: HighlightedCodeBlockProps) {
+  const theme = usePublicTheme();
   const [highlightedHtml, setHighlightedHtml] = useState<string | null>(null);
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const resolvedLanguage = useMemo(() => resolveMarkdownLanguage(language), [language]);
@@ -44,7 +46,7 @@ export default function HighlightedCodeBlock({
       };
     }
 
-    highlightMarkdownCode(code, resolvedLanguage)
+    highlightMarkdownCode(code, resolvedLanguage, theme)
       .then((html) => {
         if (!active) return;
         setHighlightedHtml(html);
@@ -57,7 +59,7 @@ export default function HighlightedCodeBlock({
     return () => {
       active = false;
     };
-  }, [code, resolvedLanguage]);
+  }, [code, resolvedLanguage, theme]);
 
   async function handleCopy() {
     if (!copyable) return;
@@ -93,6 +95,7 @@ export default function HighlightedCodeBlock({
       return (
         <div
           className={blockClassName}
+          data-theme={theme}
           data-language={resolvedLanguage ?? language ?? ""}
           dangerouslySetInnerHTML={{ __html: highlightedHtml }}
         />
@@ -112,6 +115,7 @@ export default function HighlightedCodeBlock({
         </button>
         <div
           className={blockClassName}
+          data-theme={theme}
           data-language={resolvedLanguage ?? language ?? ""}
           dangerouslySetInnerHTML={{ __html: highlightedHtml }}
         />
@@ -121,7 +125,7 @@ export default function HighlightedCodeBlock({
 
   if (!copyable) {
     return (
-      <pre className={fallbackBlockClassName} data-language={resolvedLanguage ?? language ?? ""}>
+      <pre className={fallbackBlockClassName} data-theme={theme} data-language={resolvedLanguage ?? language ?? ""}>
         <code>{code}</code>
       </pre>
     );
@@ -138,7 +142,7 @@ export default function HighlightedCodeBlock({
       >
         <CopyIcon size={14} />
       </button>
-      <pre className={fallbackBlockClassName} data-language={resolvedLanguage ?? language ?? ""}>
+      <pre className={fallbackBlockClassName} data-theme={theme} data-language={resolvedLanguage ?? language ?? ""}>
         <code>{code}</code>
       </pre>
     </div>

@@ -1,28 +1,14 @@
 import { Monitor, Moon, Search, Sun } from "lucide-react";
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { getNextPublicTheme, type PublicTheme } from "../lib/public-theme";
 
-type HeaderTheme = "dark" | "light";
-
-const STORAGE_KEY = "just-do-swift-header-theme";
-
-function readStoredTheme(): HeaderTheme {
-  if (typeof window === "undefined") {
-    return "dark";
-  }
-
-  const value = window.localStorage.getItem(STORAGE_KEY);
-  return value === "light" ? "light" : "dark";
+interface NavbarProps {
+  theme: PublicTheme;
+  onToggleTheme: () => void;
 }
 
-export default function Navbar() {
-  const [theme, setTheme] = useState<HeaderTheme>(readStoredTheme);
-
-  useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, theme);
-  }, [theme]);
-
-  const nextTheme = theme === "dark" ? "light" : "dark";
+export default function Navbar({ theme, onToggleTheme }: NavbarProps) {
+  const nextTheme = getNextPublicTheme(theme);
 
   return (
     <nav
@@ -62,9 +48,9 @@ export default function Navbar() {
           <button
             type="button"
             className="public-nav-icon-button"
-            aria-label={`Switch to ${nextTheme} header mode`}
+            aria-label={`Switch to ${nextTheme} site mode`}
             aria-pressed={theme === "light"}
-            onClick={() => setTheme(nextTheme)}
+            onClick={onToggleTheme}
           >
             {theme === "dark" ? <Sun size={16} strokeWidth={2} /> : <Moon size={16} strokeWidth={2} />}
           </button>

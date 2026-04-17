@@ -10,7 +10,7 @@ interface SnippetCardProps {
 
 export default function SnippetCard({ snippet }: SnippetCardProps) {
   return (
-    <Link to={`/snippets/${snippet.slug}`} className="group block">
+    <Link to={`/snippets/${snippet.slug}`} className="public-snippet-card group block">
       <motion.div 
         whileHover={{ scale: 1.01, y: -4 }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
@@ -23,7 +23,7 @@ export default function SnippetCard({ snippet }: SnippetCardProps) {
               className="h-full w-full object-cover transition-all duration-700 group-hover:scale-[1.05] group-hover:brightness-110"
               referrerPolicy="no-referrer"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60" />
+            <div className="public-snippet-card-overlay absolute inset-0 opacity-60" />
             <div className="absolute top-4 right-4 flex gap-2">
               <Chip
                 size="sm"
@@ -38,13 +38,13 @@ export default function SnippetCard({ snippet }: SnippetCardProps) {
           </div>
           <Card.Content className="space-y-4 px-6 py-7">
             <div className="flex flex-wrap items-center gap-2">
-              <Chip size="sm" radius="full" variant="flat" className="public-chip type-action border-white/10">
+              <Chip size="sm" radius="full" variant="flat" className="public-chip type-action">
                 {snippet.category}
               </Chip>
             </div>
             <div className="space-y-2">
-              <h3 className="type-card-title font-bold text-white group-hover:text-white/90">{snippet.title}</h3>
-              <p className="type-body-sm line-clamp-2 text-white/40 group-hover:text-white/50">{snippet.excerpt}</p>
+              <h3 className="public-snippet-card-title type-card-title font-bold">{snippet.title}</h3>
+              <p className="public-snippet-card-copy type-body-sm line-clamp-2">{snippet.excerpt}</p>
             </div>
           </Card.Content>
         </Card>

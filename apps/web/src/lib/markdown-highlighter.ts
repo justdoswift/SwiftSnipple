@@ -1,4 +1,9 @@
-const THEME = "github-dark" as const;
+import type { PublicTheme } from "./public-theme";
+
+const THEMES = {
+  dark: "github-dark",
+  light: "github-light",
+} as const;
 
 const LANGUAGE_ALIASES: Record<string, string> = {
   bash: "bash",
@@ -21,7 +26,7 @@ const LANGUAGE_ALIASES: Record<string, string> = {
 };
 
 let highlighterPromise: Promise<{
-  codeToHtml: (code: string, options: { lang: string; theme: typeof THEME }) => string;
+  codeToHtml: (code: string, options: { lang: string; theme: (typeof THEMES)[PublicTheme] }) => string;
 }> | null = null;
 
 function stripShikiBackground(html: string) {
@@ -47,6 +52,7 @@ async function getMarkdownHighlighter() {
       import("shiki/dist/langs/tsx.mjs"),
       import("shiki/dist/langs/yaml.mjs"),
       import("shiki/dist/themes/github-dark.mjs"),
+      import("shiki/dist/themes/github-light.mjs"),
       import("shiki/engine/javascript"),
     ]).then(
       ([
@@ -61,6 +67,7 @@ async function getMarkdownHighlighter() {
         tsx,
         yaml,
         githubDark,
+        githubLight,
         engine,
       ]) =>
         core.createHighlighterCore({
@@ -75,7 +82,7 @@ async function getMarkdownHighlighter() {
             tsx.default,
             yaml.default,
           ],
-          themes: [githubDark.default],
+          themes: [githubDark.default, githubLight.default],
           engine: engine.createJavaScriptRegexEngine(),
         }),
     );
@@ -84,7 +91,7 @@ async function getMarkdownHighlighter() {
   return highlighterPromise;
 }
 
-export async function highlightMarkdownCode(code: string, language?: string | null) {
+export async function highlightMarkdownCode(code: string, language?: string | null, theme: PublicTheme = "dark") {
   const resolvedLanguage = resolveMarkdownLanguage(language);
   if (!resolvedLanguage) return null;
 
@@ -92,7 +99,7 @@ export async function highlightMarkdownCode(code: string, language?: string | nu
   return stripShikiBackground(
     highlighter.codeToHtml(code, {
       lang: resolvedLanguage,
-      theme: THEME,
+      theme: THEMES[theme],
     }),
   );
 }

@@ -137,7 +137,192 @@
 
   /* Legend Public Classes Overrides */
   .public-theme {
-    @apply bg-black text-white;
+    --public-background: #000000;
+    --public-foreground: #ffffff;
+    --public-heading: #ffffff;
+    --public-body-lg: rgba(255, 255, 255, 0.7);
+    --public-body: rgba(255, 255, 255, 0.6);
+    --public-body-sm: rgba(255, 255, 255, 0.5);
+    --public-micro: rgba(255, 255, 255, 0.4);
+    --public-border: rgba(255, 255, 255, 0.1);
+    --public-border-soft: rgba(255, 255, 255, 0.08);
+    --public-border-faint: rgba(255, 255, 255, 0.05);
+    --public-surface-bg: rgba(255, 255, 255, 0.03);
+    --public-surface-subtle-bg: rgba(255, 255, 255, 0.02);
+    --public-surface-strong-bg: rgba(255, 255, 255, 0.05);
+    --public-panel-bg: rgba(255, 255, 255, 0.02);
+    --public-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    --public-strong-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+    --public-chip-bg: rgba(255, 255, 255, 0.05);
+    --public-chip-border: rgba(255, 255, 255, 0.1);
+    --public-chip-text: rgba(255, 255, 255, 0.6);
+    --public-chip-hover-bg: rgba(255, 255, 255, 0.1);
+    --public-chip-hover-text: #ffffff;
+    --public-chip-strong-bg: #ffffff;
+    --public-chip-strong-text: #000000;
+    --public-pill-bg: rgba(255, 255, 255, 0.05);
+    --public-pill-border: rgba(255, 255, 255, 0.1);
+    --public-pill-text: rgba(255, 255, 255, 0.72);
+    --public-link: #ffffff;
+    --public-link-decoration: rgba(255, 255, 255, 0.25);
+    --public-inline-code-bg: rgba(255, 255, 255, 0.05);
+    --public-inline-code-color: rgba(255, 255, 255, 0.88);
+    --public-code-bg: rgba(255, 255, 255, 0.03);
+    --public-code-border: rgba(255, 255, 255, 0.08);
+    --public-code-text: rgba(255, 255, 255, 0.8);
+    --public-code-copy-bg: rgba(0, 0, 0, 0.55);
+    --public-code-copy-border: rgba(255, 255, 255, 0.1);
+    --public-code-copy-text: rgba(255, 255, 255, 0.45);
+    --public-code-copy-hover-bg: rgba(255, 255, 255, 0.1);
+    --public-code-copy-hover-border: rgba(255, 255, 255, 0.2);
+    --public-primary-button-bg: #ffffff;
+    --public-primary-button-text: #000000;
+    --public-primary-button-hover: #f1f1f1;
+    --public-secondary-button-bg: rgba(255, 255, 255, 0.05);
+    --public-secondary-button-border: rgba(255, 255, 255, 0.1);
+    --public-secondary-button-text: rgba(255, 255, 255, 0.72);
+    --public-secondary-button-hover-bg: rgba(255, 255, 255, 0.1);
+    --public-secondary-button-hover-text: #ffffff;
+    --public-rail-active: #ffffff;
+    --public-rail-inactive: rgba(255, 255, 255, 0.16);
+    --public-rail-inactive-hover: rgba(255, 255, 255, 0.35);
+    --public-rail-number-active: #ffffff;
+    --public-rail-number-inactive: rgba(255, 255, 255, 0.34);
+    --public-rail-number-hover: rgba(255, 255, 255, 0.62);
+    --public-contents-bg: #111111;
+    --public-contents-link: rgba(255, 255, 255, 0.54);
+    --public-contents-link-hover: rgba(255, 255, 255, 0.74);
+    --public-contents-link-active: #ffffff;
+    --public-preview-bg: rgba(255, 255, 255, 0.05);
+    --public-preview-hover-bg: rgba(255, 255, 255, 0.1);
+    --public-preview-label: rgba(255, 255, 255, 0.2);
+    --public-preview-label-hover: rgba(255, 255, 255, 0.4);
+    --public-card-overlay: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
+    --public-grain-opacity: 0.04;
+    @apply min-h-screen overflow-x-hidden;
+    background-color: var(--public-background);
+    color: var(--public-foreground);
+  }
+
+  .public-theme[data-theme="light"] {
+    --public-background: #ffffff;
+    --public-foreground: #000000;
+    --public-heading: #000000;
+    --public-body-lg: rgba(0, 0, 0, 0.72);
+    --public-body: rgba(0, 0, 0, 0.6);
+    --public-body-sm: rgba(0, 0, 0, 0.5);
+    --public-micro: rgba(0, 0, 0, 0.4);
+    --public-border: rgba(0, 0, 0, 0.1);
+    --public-border-soft: rgba(0, 0, 0, 0.08);
+    --public-border-faint: rgba(0, 0, 0, 0.05);
+    --public-surface-bg: rgba(0, 0, 0, 0.03);
+    --public-surface-subtle-bg: rgba(0, 0, 0, 0.02);
+    --public-surface-strong-bg: rgba(0, 0, 0, 0.05);
+    --public-panel-bg: rgba(0, 0, 0, 0.02);
+    --public-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --public-strong-shadow: 0 24px 80px rgba(0, 0, 0, 0.12);
+    --public-chip-bg: rgba(0, 0, 0, 0.05);
+    --public-chip-border: rgba(0, 0, 0, 0.1);
+    --public-chip-text: rgba(0, 0, 0, 0.6);
+    --public-chip-hover-bg: rgba(0, 0, 0, 0.1);
+    --public-chip-hover-text: #000000;
+    --public-chip-strong-bg: #000000;
+    --public-chip-strong-text: #ffffff;
+    --public-pill-bg: rgba(0, 0, 0, 0.05);
+    --public-pill-border: rgba(0, 0, 0, 0.1);
+    --public-pill-text: rgba(0, 0, 0, 0.72);
+    --public-link: #000000;
+    --public-link-decoration: rgba(0, 0, 0, 0.25);
+    --public-inline-code-bg: rgba(0, 0, 0, 0.05);
+    --public-inline-code-color: rgba(0, 0, 0, 0.88);
+    --public-code-bg: rgba(0, 0, 0, 0.03);
+    --public-code-border: rgba(0, 0, 0, 0.08);
+    --public-code-text: rgba(0, 0, 0, 0.8);
+    --public-code-copy-bg: rgba(255, 255, 255, 0.92);
+    --public-code-copy-border: rgba(0, 0, 0, 0.1);
+    --public-code-copy-text: rgba(0, 0, 0, 0.45);
+    --public-code-copy-hover-bg: rgba(0, 0, 0, 0.06);
+    --public-code-copy-hover-border: rgba(0, 0, 0, 0.2);
+    --public-primary-button-bg: #000000;
+    --public-primary-button-text: #ffffff;
+    --public-primary-button-hover: #121212;
+    --public-secondary-button-bg: rgba(0, 0, 0, 0.05);
+    --public-secondary-button-border: rgba(0, 0, 0, 0.1);
+    --public-secondary-button-text: rgba(0, 0, 0, 0.72);
+    --public-secondary-button-hover-bg: rgba(0, 0, 0, 0.1);
+    --public-secondary-button-hover-text: #000000;
+    --public-rail-active: #000000;
+    --public-rail-inactive: rgba(0, 0, 0, 0.16);
+    --public-rail-inactive-hover: rgba(0, 0, 0, 0.35);
+    --public-rail-number-active: #000000;
+    --public-rail-number-inactive: rgba(0, 0, 0, 0.34);
+    --public-rail-number-hover: rgba(0, 0, 0, 0.62);
+    --public-contents-bg: #ffffff;
+    --public-contents-link: rgba(0, 0, 0, 0.54);
+    --public-contents-link-hover: rgba(0, 0, 0, 0.74);
+    --public-contents-link-active: #000000;
+    --public-preview-bg: rgba(0, 0, 0, 0.05);
+    --public-preview-hover-bg: rgba(0, 0, 0, 0.1);
+    --public-preview-label: rgba(0, 0, 0, 0.24);
+    --public-preview-label-hover: rgba(0, 0, 0, 0.46);
+    --public-card-overlay: linear-gradient(to top, rgba(255, 255, 255, 0.78), transparent);
+    --public-grain-opacity: 0.02;
+  }
+
+  .public-theme .vibe-grain {
+    opacity: var(--public-grain-opacity);
+  }
+
+  .public-theme .vibe-glass {
+    background-color: var(--public-surface-bg);
+    border-color: var(--public-border);
+    box-shadow: var(--public-shadow);
+  }
+
+  .public-theme .vibe-glass-hover:hover {
+    background-color: var(--public-surface-strong-bg);
+    border-color: var(--public-border);
+  }
+
+  .public-theme .type-display,
+  .public-theme .type-page-title,
+  .public-theme .type-section-title,
+  .public-theme .type-card-title {
+    color: var(--public-heading);
+  }
+
+  .public-theme .type-body-lg {
+    color: var(--public-body-lg);
+  }
+
+  .public-theme .type-body {
+    color: var(--public-body);
+  }
+
+  .public-theme .type-body-sm {
+    color: var(--public-body-sm);
+  }
+
+  .public-theme .type-action {
+    color: var(--public-body-sm);
+  }
+
+  .public-theme .text-red-500 {
+    color: rgb(239 68 68 / 1);
+  }
+
+  .public-theme .text-red-600 {
+    color: rgb(220 38 38 / 1);
+  }
+
+  .public-theme .type-mono-label,
+  .public-theme .type-mono-micro {
+    color: var(--public-micro);
+  }
+
+  .public-theme .type-code-inline {
+    background-color: var(--public-inline-code-bg);
+    color: var(--public-inline-code-color);
   }
 
   .public-nav-root {
@@ -150,8 +335,8 @@
   }
 
   .public-nav-root[data-theme="light"] {
-    background-color: rgba(247, 247, 245, 0.9);
-    color: #111111;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #000000;
   }
 
   .public-nav-shell {
@@ -174,8 +359,8 @@
   }
 
   .public-nav-root[data-theme="light"] .public-nav-logo {
-    background-color: rgba(17, 17, 17, 0.04);
-    border-color: rgba(17, 17, 17, 0.1);
+    background-color: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.1);
   }
 
   .public-nav-logo-bar {
@@ -200,7 +385,7 @@
   }
 
   .public-nav-root[data-theme="light"] .public-nav-logo-bar {
-    background-color: #111111;
+    background-color: #000000;
   }
 
   .public-nav-search {
@@ -273,38 +458,38 @@
 
   .public-nav-root[data-theme="light"] .public-nav-search,
   .public-nav-root[data-theme="light"] .public-nav-search-shortcut {
-    background-color: rgba(17, 17, 17, 0.04);
-    border-color: rgba(17, 17, 17, 0.08);
-    color: #111111;
+    background-color: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.08);
+    color: #000000;
   }
 
   .public-nav-root[data-theme="light"] .public-nav-icon-button,
   .public-nav-root[data-theme="light"] .public-nav-login-button {
-    color: rgba(17, 17, 17, 0.72);
+    color: rgba(0, 0, 0, 0.72);
   }
 
   .public-nav-root[data-theme="light"] .public-nav-search input::placeholder {
-    color: rgba(17, 17, 17, 0.38);
+    color: rgba(0, 0, 0, 0.38);
   }
 
   .public-nav-root[data-theme="light"] .public-nav-search svg {
-    color: rgba(17, 17, 17, 0.45);
+    color: rgba(0, 0, 0, 0.45);
   }
 
   .public-nav-root[data-theme="light"] .public-nav-icon-button:hover,
   .public-nav-root[data-theme="light"] .public-nav-login-button:hover {
-    background-color: rgba(17, 17, 17, 0.06);
-    color: #111111;
+    background-color: rgba(0, 0, 0, 0.06);
+    color: #000000;
   }
 
   .public-nav-root[data-theme="light"] .public-nav-search:hover {
-    background-color: rgba(17, 17, 17, 0.07);
-    border-color: rgba(17, 17, 17, 0.14);
+    background-color: rgba(0, 0, 0, 0.06);
+    border-color: rgba(0, 0, 0, 0.14);
   }
 
   .public-nav-root[data-theme="light"] .public-nav-search:focus-within {
-    border-color: rgba(17, 17, 17, 0.16);
-    box-shadow: 0 0 0 4px rgba(17, 17, 17, 0.06);
+    border-color: rgba(0, 0, 0, 0.16);
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.06);
   }
 
   .public-nav-brand:focus-visible,
@@ -342,23 +527,227 @@
   }
 
   .public-surface {
-    @apply bg-white/[0.03] backdrop-blur-xl border rounded-[24px] border-white/5 shadow-[0_8px_32px_rgba(0,0,0,0.4)];
+    @apply backdrop-blur-xl border rounded-[24px];
+    background-color: var(--public-surface-bg);
+    border-color: var(--public-border-faint);
+    box-shadow: var(--public-shadow);
   }
 
   .public-surface-subtle {
-    @apply bg-white/[0.02] border border-white/[0.04] rounded-[20px];
+    @apply border rounded-[20px];
+    background-color: var(--public-surface-subtle-bg);
+    border-color: var(--public-border-faint);
   }
 
   .public-surface-strong {
-    @apply bg-white/[0.05] border border-white/10 rounded-[28px] shadow-2xl;
+    @apply border rounded-[28px];
+    background-color: var(--public-surface-strong-bg);
+    border-color: var(--public-border);
+    box-shadow: var(--public-strong-shadow);
   }
 
   .public-chip {
-    @apply font-mono border border-white/10 bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-colors;
+    @apply font-mono border transition-colors;
+    background-color: var(--public-chip-bg);
+    border-color: var(--public-chip-border);
+    color: var(--public-chip-text);
   }
 
   .public-chip-strong {
-    @apply font-mono bg-white text-black font-bold;
+    @apply font-mono font-bold;
+    background-color: var(--public-chip-strong-bg);
+    color: var(--public-chip-strong-text);
+  }
+
+  .public-chip:hover {
+    background-color: var(--public-chip-hover-bg);
+    color: var(--public-chip-hover-text);
+  }
+
+  .public-pill {
+    border: 1px solid var(--public-pill-border);
+    background-color: var(--public-pill-bg);
+    color: var(--public-pill-text);
+  }
+
+  .public-primary-button {
+    border: 1px solid transparent;
+    background-color: var(--public-primary-button-bg);
+    color: var(--public-primary-button-text);
+    box-shadow: var(--public-shadow);
+    transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+  }
+
+  .public-primary-button:hover {
+    background-color: var(--public-primary-button-hover);
+    transform: translateY(-1px);
+  }
+
+  .public-secondary-button {
+    border: 1px solid var(--public-secondary-button-border);
+    background-color: var(--public-secondary-button-bg);
+    color: var(--public-secondary-button-text);
+    box-shadow: var(--public-shadow);
+    transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+  }
+
+  .public-secondary-button:hover {
+    background-color: var(--public-secondary-button-hover-bg);
+    color: var(--public-secondary-button-hover-text);
+    transform: translateY(-1px);
+  }
+
+  .public-primary-button.type-action,
+  .public-primary-button .type-action,
+  .public-secondary-button.type-action,
+  .public-secondary-button .type-action {
+    color: inherit;
+  }
+
+  .public-chip.type-action,
+  .public-chip-strong.type-action {
+    color: inherit;
+  }
+
+  .public-inline-link {
+    color: var(--public-link);
+    text-decoration: underline;
+    text-decoration-color: var(--public-link-decoration);
+    text-underline-offset: 4px;
+    transition: text-decoration-color 200ms ease;
+  }
+
+  .public-inline-link:hover {
+    text-decoration-color: currentColor;
+  }
+
+  .public-loading-label,
+  .public-status-copy {
+    color: var(--public-body-sm);
+  }
+
+  .public-content-panel {
+    border: 1px solid var(--public-border-soft);
+    background-color: var(--public-panel-bg);
+  }
+
+  .public-divider-top {
+    border-top: 1px solid var(--public-border-faint);
+  }
+
+  .public-meta-strong {
+    color: var(--public-body-sm);
+  }
+
+  .public-content-frame {
+    border-color: var(--public-border);
+  }
+
+  .public-media-shell {
+    background-color: var(--public-surface-subtle-bg);
+  }
+
+  .public-section-rail-line[data-active="true"] {
+    background-color: var(--public-rail-active);
+  }
+
+  .public-section-rail-line[data-active="false"] {
+    background-color: var(--public-rail-inactive);
+  }
+
+  .public-section-rail-button:hover .public-section-rail-line[data-active="false"] {
+    background-color: var(--public-rail-inactive-hover);
+  }
+
+  .public-section-rail-number[data-active="true"] {
+    color: var(--public-rail-number-active);
+  }
+
+  .public-section-rail-number[data-active="false"] {
+    color: var(--public-rail-number-inactive);
+  }
+
+  .public-section-rail-button:hover .public-section-rail-number[data-active="false"] {
+    color: var(--public-rail-number-hover);
+  }
+
+  .public-contents-panel {
+    border: 1px solid var(--public-border-soft);
+    background-color: var(--public-contents-bg);
+    box-shadow: var(--public-strong-shadow);
+  }
+
+  .public-contents-link {
+    color: var(--public-contents-link);
+  }
+
+  .public-contents-link[data-active="true"] {
+    color: var(--public-contents-link-active);
+  }
+
+  .public-contents-link:hover {
+    color: var(--public-contents-link-hover);
+  }
+
+  .public-preview-placeholder {
+    background-color: var(--public-preview-bg);
+  }
+
+  .group:hover .public-preview-placeholder {
+    background-color: var(--public-preview-hover-bg);
+  }
+
+  .public-preview-label {
+    color: var(--public-preview-label);
+  }
+
+  .group:hover .public-preview-label {
+    color: var(--public-preview-label-hover);
+  }
+
+  .public-snippet-card-overlay {
+    background: var(--public-card-overlay);
+  }
+
+  .public-snippet-card-title,
+  .public-snippet-mini-card-title {
+    color: var(--public-heading);
+    transition: color 200ms ease;
+  }
+
+  .public-snippet-card-copy {
+    color: var(--public-body-sm);
+    transition: color 200ms ease;
+  }
+
+  .public-snippet-card:hover .public-snippet-card-title,
+  .public-snippet-mini-card:hover .public-snippet-mini-card-title {
+    color: var(--public-heading);
+  }
+
+  .public-snippet-card:hover .public-snippet-card-copy {
+    color: var(--public-body);
+  }
+
+  .public-snippet-mini-card-shell {
+    box-shadow: var(--public-shadow);
+    border-color: var(--public-border-faint);
+  }
+
+  .public-snippet-mini-card:hover .public-snippet-mini-card-shell {
+    border-color: var(--public-border);
+  }
+
+  .public-snippet-mini-card-media {
+    background-color: var(--public-surface-subtle-bg);
+  }
+
+  .public-footer a {
+    color: var(--public-body-sm);
+  }
+
+  .public-footer a:hover {
+    color: var(--public-heading);
   }
 
   .public-input {
@@ -391,6 +780,17 @@
     --color-field-border-focus: rgba(48, 207, 67, 1);
   }
 
+  .public-theme[data-theme="light"] .input.public-input,
+  .public-theme[data-theme="light"] .input.public-input-inverse {
+    --field-background: rgba(0, 0, 0, 0.03);
+    --field-foreground: rgba(0, 0, 0, 0.86);
+    --field-placeholder: rgba(0, 0, 0, 0.28);
+    --field-border: rgba(0, 0, 0, 0.08);
+    --color-field-focus: rgba(255, 255, 255, 1);
+    --color-field-border-hover: rgba(0, 0, 0, 0.14);
+    --color-field-border-focus: rgba(0, 0, 0, 0.18);
+  }
+
   .input.public-input:hover:not(:focus):not(:focus-visible),
   .input.public-input[data-hovered="true"]:not([data-focused="true"]):not([data-focus-visible="true"]),
   .input.public-input-inverse:hover:not(:focus):not(:focus-visible),
@@ -399,6 +799,14 @@
   .input.admin-input[data-hovered="true"]:not([data-focused="true"]):not([data-focus-visible="true"]) {
     background-color: rgba(255, 255, 255, 1);
     border-color: rgba(209, 213, 219, 1);
+  }
+
+  .public-theme[data-theme="light"] .input.public-input:hover:not(:focus):not(:focus-visible),
+  .public-theme[data-theme="light"] .input.public-input[data-hovered="true"]:not([data-focused="true"]):not([data-focus-visible="true"]),
+  .public-theme[data-theme="light"] .input.public-input-inverse:hover:not(:focus):not(:focus-visible),
+  .public-theme[data-theme="light"] .input.public-input-inverse[data-hovered="true"]:not([data-focused="true"]):not([data-focus-visible="true"]) {
+    background-color: rgba(0, 0, 0, 0.045);
+    border-color: rgba(0, 0, 0, 0.14);
   }
 
   .input.public-input:focus,
@@ -410,6 +818,15 @@
     @apply ring-2 ring-[#30cf43]/20;
     background-color: rgba(255, 255, 255, 1);
     border-color: rgba(48, 207, 67, 1);
+  }
+
+  .public-theme[data-theme="light"] .input.public-input:focus,
+  .public-theme[data-theme="light"] .input.public-input[data-focused="true"],
+  .public-theme[data-theme="light"] .input.public-input-inverse:focus,
+  .public-theme[data-theme="light"] .input.public-input-inverse[data-focused="true"] {
+    @apply ring-2 ring-black/10;
+    background-color: rgba(255, 255, 255, 1);
+    border-color: rgba(0, 0, 0, 0.16);
   }
 
   .textarea.admin-textarea {
@@ -479,7 +896,23 @@
   }
 
   .public-copy-button {
-    @apply bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] text-white/50 hover:text-white hover:bg-white/10 transition-all;
+    @apply backdrop-blur-xl border transition-all;
+    background-color: var(--public-surface-bg);
+    border-color: var(--public-border);
+    box-shadow: var(--public-shadow);
+    color: var(--public-body-sm);
+  }
+
+  .public-theme[data-theme="light"] .public-primary-button {
+    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.12);
+  }
+
+  .public-theme[data-theme="light"] .public-secondary-button,
+  .public-theme[data-theme="light"] .public-surface,
+  .public-theme[data-theme="light"] .public-surface-strong,
+  .public-theme[data-theme="light"] .public-content-panel,
+  .public-theme[data-theme="light"] .public-contents-panel {
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.06);
   }
 
   /* Vibe island admin theme - Dark mode minimalist */
@@ -528,7 +961,8 @@
   }
 
   .markdown-renderer {
-    @apply space-y-5 text-[1rem] leading-8 text-white/78;
+    @apply space-y-5 text-[1rem] leading-8;
+    color: var(--public-body-lg);
   }
 
   .markdown-renderer > :first-child {
@@ -540,37 +974,52 @@
   }
 
   .markdown-renderer h1 {
-    @apply mt-2 text-[2.25rem] font-semibold leading-[1.08] tracking-[-0.04em] text-white md:text-[3rem];
+    @apply mt-2 text-[2.25rem] font-semibold leading-[1.08] tracking-[-0.04em] md:text-[3rem];
+    color: var(--public-heading);
   }
 
   .markdown-renderer h2 {
-    @apply pt-4 text-[1.7rem] font-semibold leading-[1.15] tracking-[-0.03em] text-white md:text-[2.15rem];
+    @apply pt-4 text-[1.7rem] font-semibold leading-[1.15] tracking-[-0.03em] md:text-[2.15rem];
+    color: var(--public-heading);
   }
 
   .markdown-renderer h3,
   .markdown-renderer h4 {
-    @apply pt-2 text-[1.2rem] font-semibold leading-tight tracking-[-0.02em] text-white md:text-[1.35rem];
+    @apply pt-2 text-[1.2rem] font-semibold leading-tight tracking-[-0.02em] md:text-[1.35rem];
+    color: var(--public-heading);
   }
 
   .markdown-renderer p {
-    @apply leading-8 text-white/78;
+    @apply leading-8;
+    color: var(--public-body-lg);
   }
 
   .markdown-renderer strong {
-    @apply font-semibold text-white;
+    @apply font-semibold;
+    color: var(--public-heading);
   }
 
   .markdown-renderer em {
-    @apply italic text-white/78;
+    @apply italic;
+    color: var(--public-body-lg);
   }
 
   .markdown-renderer a {
-    @apply text-white underline decoration-white/25 underline-offset-4 transition-colors hover:decoration-white/60;
+    color: var(--public-link);
+    text-decoration: underline;
+    text-decoration-color: var(--public-link-decoration);
+    text-underline-offset: 4px;
+    transition: text-decoration-color 200ms ease;
+  }
+
+  .markdown-renderer a:hover {
+    text-decoration-color: currentColor;
   }
 
   .markdown-renderer ul,
   .markdown-renderer ol {
-    @apply space-y-2 pl-5 text-white/78;
+    @apply space-y-2 pl-5;
+    color: var(--public-body-lg);
   }
 
   .markdown-renderer ul {
@@ -582,19 +1031,24 @@
   }
 
   .markdown-renderer li::marker {
-    color: rgba(255, 255, 255, 0.35);
+    color: var(--public-micro);
   }
 
   .markdown-renderer blockquote {
-    @apply border-l border-white/12 pl-5 text-white/52 italic;
+    @apply border-l pl-5 italic;
+    border-color: var(--public-border);
+    color: var(--public-body-sm);
   }
 
   .markdown-renderer hr {
-    @apply my-8 border-white/8;
+    @apply my-8;
+    border-color: var(--public-border-soft);
   }
 
   .markdown-table-wrap {
-    @apply overflow-x-auto rounded-[20px] border border-white/8 bg-white/[0.02];
+    @apply overflow-x-auto rounded-[20px] border;
+    border-color: var(--public-code-border);
+    background-color: var(--public-surface-subtle-bg);
   }
 
   .markdown-renderer table {
@@ -602,20 +1056,24 @@
   }
 
   .markdown-renderer thead {
-    @apply bg-white/[0.03];
+    background-color: var(--public-surface-bg);
   }
 
   .markdown-renderer th,
   .markdown-renderer td {
-    @apply border-b border-white/8 px-4 py-3 align-top;
+    @apply border-b px-4 py-3 align-top;
+    border-color: var(--public-code-border);
   }
 
   .markdown-renderer th {
-    @apply font-mono text-[11px] uppercase tracking-[0.12em] text-white/42;
+    @apply font-mono text-[11px] uppercase tracking-[0.12em];
+    color: var(--public-micro);
   }
 
   .markdown-code-block {
-    @apply overflow-x-auto rounded-[20px] border border-white/8 bg-white/[0.03] p-5 md:p-6;
+    @apply overflow-x-auto rounded-[20px] border p-5 md:p-6;
+    border-color: var(--public-code-border);
+    background-color: var(--public-code-bg);
   }
 
   .code-copy-shell {
@@ -623,19 +1081,36 @@
   }
 
   .code-copy-button {
-    @apply absolute right-4 top-4 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/55 text-white/45 backdrop-blur-xl transition-all hover:border-white/20 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40;
+    @apply absolute right-4 top-4 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border backdrop-blur-xl transition-all focus-visible:outline-none focus-visible:ring-2;
+    background-color: var(--public-code-copy-bg);
+    border-color: var(--public-code-copy-border);
+    color: var(--public-code-copy-text);
+    box-shadow: var(--public-shadow);
+  }
+
+  .code-copy-button:hover {
+    background-color: var(--public-code-copy-hover-bg);
+    border-color: var(--public-code-copy-hover-border);
+    color: var(--public-heading);
+    --tw-ring-color: color-mix(in srgb, var(--public-heading) 30%, transparent);
   }
 
   .code-copy-button[data-copy-state="copied"] {
-    @apply border-white/18 bg-white/12 text-white;
+    border-color: var(--public-code-copy-hover-border);
+    background-color: var(--public-code-copy-hover-bg);
+    color: var(--public-heading);
   }
 
   .code-copy-button[data-copy-state="failed"] {
     @apply border-red-400/25 bg-red-400/10 text-red-200;
   }
 
+  .public-theme[data-theme="light"] .code-copy-button[data-copy-state="failed"] {
+    @apply border-red-500/25 bg-red-500/10 text-red-600;
+  }
+
   .markdown-code-block code {
-    @apply text-white/80;
+    color: var(--public-code-text);
   }
 
   .markdown-renderer .shiki,

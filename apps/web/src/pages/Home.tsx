@@ -70,24 +70,24 @@ export default function Home() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="mx-auto max-w-[1380px] px-6 pb-24 pt-44 md:px-10 md:pt-56"
+      className="public-page public-home mx-auto max-w-[1380px] px-6 pb-24 pt-44 md:px-10 md:pt-56"
     >
       {/* Hero Section */}
       <section className="mb-32">
         <div className="mx-auto max-w-[900px] text-center">
           <motion.div variants={itemVariants} className="flex flex-col items-center gap-6">
-            <span className="type-mono-label px-3 py-1 border border-white/10 rounded-full bg-white/5">
+            <span className="public-pill type-mono-label px-3 py-1 rounded-full">
               Just Do Swift v1.0
             </span>
-            <h1 className="type-display max-w-[14ch] text-white">
+            <h1 className="type-display max-w-[14ch]">
               Exceptional Builds. Native SwiftUI.
             </h1>
-            <p className="type-body-lg mx-auto max-w-[620px] text-white/50">
+            <p className="type-body-lg mx-auto max-w-[620px]">
               Discover a curated library of premium SwiftUI implementations, deconstructed for clarity and rebuilt for high-performance Apple ecosystem workflows.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4 mt-4">
               <Button
-                className="type-action h-12 px-8 bg-white text-black hover:bg-white/90"
+                className="public-primary-button type-action h-12 px-8"
                 radius="full"
                 onPress={() => {
                   const el = document.getElementById("library-index");
@@ -109,10 +109,10 @@ export default function Home() {
       <section id="library-index" className="mb-32">
         <motion.div variants={itemVariants} className="mb-12 flex items-end justify-between">
           <div>
-            <h4 className="type-mono-micro text-white/20 mb-2">Featured Collection</h4>
-            <h2 className="type-section-title text-white">The Essentials</h2>
+            <h4 className="type-mono-micro mb-2">Featured Collection</h4>
+            <h2 className="type-section-title">The Essentials</h2>
           </div>
-          <p className="type-mono-micro text-white/20 hidden md:block">001 — 004 / 0{publishedSnippets.length}</p>
+          <p className="type-mono-micro hidden md:block">001 — 004 / 0{publishedSnippets.length}</p>
         </motion.div>
         <div className="grid grid-cols-1 gap-12 md:grid-cols-2">
           {featuredSnippets.map((snippet) => (
@@ -121,14 +121,14 @@ export default function Home() {
             </motion.div>
           ))}
         </div>
-        {isLoading ? <p className="type-mono-micro mt-12 text-white/30 text-center animate-pulse">Accessing Data Stores...</p> : null}
+        {isLoading ? <p className="type-mono-micro mt-12 text-center animate-pulse">Accessing Data Stores...</p> : null}
         {!isLoading && !error && !featuredSnippets.length ? (
           <motion.div variants={itemVariants}>
-            <Card className="vibe-glass mt-12 rounded-[32px] border-dashed border-white/10">
+            <Card className="public-surface mt-12 rounded-[32px] border-dashed">
               <Card.Content className="px-10 py-20 text-center">
-                <span className="type-mono-micro text-white/20">System Status</span>
-                <h2 className="type-section-title mt-6 text-white/90">No live objects detected</h2>
-                <p className="type-body-sm mt-4 text-white/40 max-w-md mx-auto">
+                <span className="type-mono-micro">System Status</span>
+                <h2 className="type-section-title mt-6">No live objects detected</h2>
+                <p className="type-body-sm mt-4 max-w-md mx-auto">
                   The lab is currently empty. Connect the publishing engine to sync native SwiftUI snippet records.
                 </p>
               </Card.Content>
@@ -138,32 +138,32 @@ export default function Home() {
       </section>
 
       {/* Methodology Section */}
-      <section className="mb-32 pt-24 border-t border-white/5">
+      <section className="public-divider-top mb-32 pt-24">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <motion.div variants={itemVariants}>
-            <span className="type-mono-label text-white/20 block mb-6">Execution Log</span>
-            <h2 className="type-section-title mb-8 text-white leading-tight">
+            <span className="type-mono-label block mb-6">Execution Log</span>
+            <h2 className="type-section-title mb-8 leading-tight">
               Deconstructing Design <br/>Into Native Code.
             </h2>
-            <div className="type-body space-y-8 text-white/40">
+            <div className="type-body space-y-8">
               <p>We don't believe in abstractions. Just Do Swift focuses on the raw, native SwiftUI primitives that drive modern interactive experiences. Every pixel has a purpose, and every component has a prompt.</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
                 <div className="flex flex-col gap-2">
-                  <span className="type-mono-micro text-white/60">01. ANALYSIS</span>
+                  <span className="type-mono-micro public-meta-strong">01. ANALYSIS</span>
                   <p className="type-body-sm">Deconstructing high-end motion and layout intent.</p>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <span className="type-mono-micro text-white/60">02. TRANSLATION</span>
+                  <span className="type-mono-micro public-meta-strong">02. TRANSLATION</span>
                   <p className="type-body-sm">Mapping creative vision to performant Swift code.</p>
                 </div>
               </div>
             </div>
           </motion.div>
-          <motion.div variants={itemVariants} className="vibe-glass p-2 rounded-[32px] border-white/10 group">
+          <motion.div variants={itemVariants} className="public-surface p-2 rounded-[32px] group">
             <div className="aspect-[4/3] rounded-[26px] overflow-hidden relative">
-              <div className="absolute inset-0 bg-white/5 group-hover:bg-white/10 transition-colors" />
+              <div className="public-preview-placeholder absolute inset-0 transition-colors" />
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="type-mono-micro text-white/20 group-hover:text-white/40 transition-colors">Visual Analysis Preview</span>
+                <span className="public-preview-label type-mono-micro transition-colors">Visual Analysis Preview</span>
               </div>
             </div>
           </motion.div>
@@ -171,14 +171,14 @@ export default function Home() {
       </section>
 
       {/* Latest Additions */}
-      <section id="latest-additions" className="mb-32 border-t border-white/5 pt-24">
+      <section id="latest-additions" className="public-divider-top mb-32 pt-24">
         <motion.div variants={itemVariants} className="mb-12 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div>
-            <h4 className="type-mono-micro text-white/20 mb-2">Technical Index</h4>
-            <h2 className="type-section-title text-white">Latest Lab Records</h2>
+            <h4 className="type-mono-micro mb-2">Technical Index</h4>
+            <h2 className="type-section-title">Latest Lab Records</h2>
           </div>
           <Button
-            className="type-action h-10 border border-white/10 bg-white/5 text-white/60 hover:text-white hover:bg-white/10"
+            className="public-secondary-button type-action h-10"
             radius="full"
             variant="bordered"
             onPress={() => {
@@ -199,11 +199,11 @@ export default function Home() {
 
       {/* Subscribe Section */}
       <motion.div variants={itemVariants}>
-        <div className="vibe-glass mx-auto max-w-[1080px] rounded-[40px] border-white/10">
+        <div className="public-surface mx-auto max-w-[1080px] rounded-[40px]">
           <div className="flex flex-col items-center px-8 py-16 text-center md:px-20 md:py-24">
-            <span className="type-mono-label mb-8 text-white/20">Updates Shell</span>
-            <h2 className="type-page-title mb-8 text-white tracking-tight">Sync the latest builds.</h2>
-            <p className="type-body mb-12 max-w-lg text-white/40">
+            <span className="type-mono-label mb-8">Updates Shell</span>
+            <h2 className="type-page-title mb-8 tracking-tight">Sync the latest builds.</h2>
+            <p className="type-body mb-12 max-w-lg">
               Get raw SwiftUI snippets, prompt logic, and implementation logs delivered directly to your inbox. No noise, just native craft.
             </p>
             <div className="flex w-full max-w-md flex-col gap-4 md:flex-row">
@@ -213,7 +213,7 @@ export default function Home() {
                 placeholder="ADDRESS@DOMAIN.COM" 
                 type="email"
               />
-              <Button className="type-action h-12 px-10 bg-white text-black font-bold" radius="full" variant="solid">
+              <Button className="public-primary-button type-action h-12 px-10 font-bold" radius="full" variant="solid">
                 JOIN
               </Button>
             </div>

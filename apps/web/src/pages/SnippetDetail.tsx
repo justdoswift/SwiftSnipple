@@ -118,7 +118,7 @@ export default function SnippetDetail() {
         number: "01",
         label: "Implementation Notes",
         content: (
-          <div className="rounded-[32px] border border-white/8 bg-white/[0.02] px-6 py-7 md:px-8 md:py-9">
+          <div className="public-content-panel rounded-[32px] px-6 py-7 md:px-8 md:py-9">
             <MarkdownRenderer content={snippet.content} />
           </div>
         ),
@@ -136,8 +136,8 @@ export default function SnippetDetail() {
             language="swift"
             copyable
             copyLabel="Swift code"
-            className="markdown-code-block snippet-highlight type-code-block overflow-x-auto selection:bg-white/20"
-            fallbackClassName="markdown-code-block type-code-block overflow-x-auto text-white/80"
+            className="markdown-code-block public-code-block snippet-highlight type-code-block overflow-x-auto"
+            fallbackClassName="markdown-code-block public-code-block type-code-block overflow-x-auto"
           />
         ),
       });
@@ -153,7 +153,7 @@ export default function SnippetDetail() {
             code={snippet.prompts}
             copyable
             copyLabel="prompt logic"
-            fallbackClassName="markdown-code-block type-code-block whitespace-pre-wrap text-white/50 selection:bg-white/20"
+            fallbackClassName="markdown-code-block public-code-block type-code-block whitespace-pre-wrap"
           />
         ),
       });
@@ -248,21 +248,21 @@ export default function SnippetDetail() {
   const desktopContentWrapperClass = activeSection?.id === "notes" ? "mx-auto max-w-[800px]" : "mx-auto max-w-[800px]";
 
   if (isLoading) {
-    return <div className="mx-auto max-w-[1380px] px-8 pb-20 pt-32 text-white/58">Loading snippet...</div>;
+    return <div className="public-page public-snippet-detail mx-auto max-w-[1380px] px-8 pb-20 pt-32 public-status-copy">Loading snippet...</div>;
   }
 
   if (!snippet || error) {
     return (
-      <div className="mx-auto max-w-[1380px] px-8 pb-20 pt-32 text-center">
-        <h1 className="type-section-title mb-4 text-white">Snippet Not Found</h1>
-        <p className="type-body mb-6 text-white/56">{error || "The requested snippet could not be loaded."}</p>
-        <a href="/#library-index" className="text-white underline underline-offset-4">Back to homepage library</a>
+      <div className="public-page public-snippet-detail mx-auto max-w-[1380px] px-8 pb-20 pt-32 text-center">
+        <h1 className="type-section-title mb-4">Snippet Not Found</h1>
+        <p className="type-body mb-6 public-status-copy">{error || "The requested snippet could not be loaded."}</p>
+        <a href="/#library-index" className="public-inline-link">Back to homepage library</a>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-[1380px] px-6 pb-24 pt-44 md:px-10 md:pt-56">
+    <div className="public-page public-snippet-detail mx-auto max-w-[1380px] px-6 pb-24 pt-44 md:px-10 md:pt-56">
       <header className="mb-20">
         <div className="mx-auto max-w-[800px] text-center">
           <motion.div
@@ -270,13 +270,13 @@ export default function SnippetDetail() {
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col items-center gap-6"
           >
-            <span className="type-mono-label px-3 py-1 border border-white/10 rounded-full bg-white/5">
+            <span className="public-pill type-mono-label px-3 py-1 rounded-full">
               {snippet.category} / {formatDate(snippet.publishedAt)}
             </span>
-            <h1 className="type-display text-white">
+            <h1 className="type-display">
               {snippet.title}
             </h1>
-            <p className="type-body-lg mx-auto max-w-[620px] text-white/50">
+            <p className="type-body-lg mx-auto max-w-[620px]">
               {snippet.excerpt}
             </p>
           </motion.div>
@@ -284,8 +284,8 @@ export default function SnippetDetail() {
       </header>
 
       <section className="mb-24 px-4 md:px-0">
-        <div className="vibe-glass mx-auto max-w-[1120px] p-2 rounded-[40px] border-white/10">
-          <div className="aspect-[16/9] overflow-hidden rounded-[32px] bg-white/[0.02]">
+        <div className="public-content-frame vibe-glass mx-auto max-w-[1120px] rounded-[40px] p-2">
+          <div className="public-media-shell aspect-[16/9] overflow-hidden rounded-[32px]">
             <img
               src={snippet.coverImage}
               alt={snippet.title}
@@ -317,7 +317,7 @@ export default function SnippetDetail() {
                       <button
                         key={section.id}
                         type="button"
-                        className="group flex items-center gap-4 text-left"
+                        className="public-section-rail-button group flex items-center gap-4 text-left"
                         aria-label={`${section.number} ${section.label}`}
                         aria-pressed={isActive}
                         onMouseEnter={() => {
@@ -342,15 +342,13 @@ export default function SnippetDetail() {
                         }}
                       >
                         <span
-                          className={`block h-14 w-[3px] rounded-full transition-colors ${
-                            isActive ? "bg-white" : "bg-white/16 group-hover:bg-white/35"
-                          }`}
+                          className="public-section-rail-line block h-14 w-[3px] rounded-full transition-colors"
+                          data-active={isActive ? "true" : "false"}
                           aria-hidden="true"
                         />
                         <span
-                          className={`font-mono text-[11px] font-medium tracking-[0.22em] transition-colors ${
-                            isActive ? "text-white" : "text-white/34 group-hover:text-white/62"
-                          }`}
+                          className="public-section-rail-number font-mono text-[11px] font-medium tracking-[0.22em] transition-colors"
+                          data-active={isActive ? "true" : "false"}
                         >
                           {section.number}
                         </span>
@@ -367,9 +365,9 @@ export default function SnippetDetail() {
                       animate={{ opacity: 1, x: 0, scale: 1 }}
                       exit={{ opacity: 0, x: -8, scale: 0.98 }}
                       transition={{ duration: 0.18, ease: "easeOut" }}
-                      className="hidden w-[250px] rounded-[24px] border border-white/8 bg-[#111111] px-5 py-6 shadow-[0_24px_80px_rgba(0,0,0,0.45)] md:block"
+                      className="public-contents-panel hidden w-[250px] rounded-[24px] px-5 py-6 md:block"
                     >
-                      <p className="type-mono-label mb-6 text-white/78">Contents</p>
+                      <p className="type-mono-label mb-6">Contents</p>
                       <div className="space-y-3">
                         {notesOutline.map((item) => {
                           const isActive = item.id === activeOutlineId;
@@ -378,9 +376,10 @@ export default function SnippetDetail() {
                             <button
                               key={item.id}
                               type="button"
-                              className={`block w-full truncate text-left text-[0.95rem] leading-tight transition-colors ${
+                              className={`public-contents-link block w-full truncate text-left text-[0.95rem] leading-tight transition-colors ${
                                 item.level === 3 ? "pl-4" : ""
-                              } ${isActive ? "text-white" : "text-white/54 hover:text-white/74"}`}
+                              }`}
+                              data-active={isActive ? "true" : "false"}
                               aria-current={isActive ? "true" : undefined}
                               onClick={() => {
                                 setActiveOutlineId(item.id);
@@ -409,11 +408,11 @@ export default function SnippetDetail() {
               id={activeSection.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="space-y-8 pb-12 text-white"
+              className="public-section-content space-y-8 pb-12"
             >
               <div className="flex items-center gap-4">
-                <span className="type-mono-label text-white/20">{activeSection.number}</span>
-                <h3 className="type-section-title text-white">{activeSection.label}</h3>
+                <span className="type-mono-label">{activeSection.number}</span>
+                <h3 className="type-section-title">{activeSection.label}</h3>
               </div>
               {activeSection.content}
             </motion.section>
@@ -427,11 +426,11 @@ export default function SnippetDetail() {
               <section
                 key={section.id}
                 id={section.id}
-                className={`space-y-8 text-white ${index === sections.length - 1 ? "pb-12" : ""}`}
+                className={`public-section-content space-y-8 ${index === sections.length - 1 ? "pb-12" : ""}`}
               >
                 <div className="flex items-center gap-4">
-                  <span className="type-mono-label text-white/20">{section.number}</span>
-                  <h3 className="type-section-title text-white">{section.label}</h3>
+                  <span className="type-mono-label">{section.number}</span>
+                  <h3 className="type-section-title">{section.label}</h3>
                 </div>
                 {section.content}
               </section>

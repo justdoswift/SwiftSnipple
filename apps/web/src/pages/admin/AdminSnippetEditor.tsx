@@ -1,14 +1,13 @@
 import { motion } from "motion/react";
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { Button, Input, Modal, TextArea, useOverlayState } from "../../lib/heroui";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Button, Input, TextArea } from "../../lib/heroui";
 import { useNavigate, useParams } from "react-router-dom";
 import EditorSection from "../../components/admin/EditorSection";
-import MarkdownRenderer from "../../components/MarkdownRenderer";
 import StatusBadge from "../../components/admin/StatusBadge";
 import { useAdminHeader } from "../../components/admin/useAdminHeader";
 import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, unpublishSnippet, updateSnippet } from "../../services/snippets";
 import { Snippet, SnippetFormState, SnippetPayload, SnippetStatus } from "../../types";
-import { ChevronLeft, Columns2, Layout, Settings2, Trash2 } from "lucide-react";
+import { ChevronLeft, Columns2, Layout, Monitor, Smartphone, Settings2, Trash2, X } from "lucide-react";
 
 const STATUS_OPTIONS: SnippetStatus[] = ["Draft", "In Review", "Scheduled", "Published"];
 const EDITOR_TABS = [
@@ -16,6 +15,7 @@ const EDITOR_TABS = [
   { key: "builder", label: "Builder", icon: Columns2 },
   { key: "meta", label: "Surface", icon: Settings2 },
 ] as const;
+type PreviewDevice = "desktop" | "mobile";
 
 function slugify(value: string) {
   return value
@@ -160,11 +160,7 @@ export default function AdminSnippetEditor() {
   const [feedback, setFeedback] = useState("");
   const [activeTab, setActiveTab] = useState("content");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-
-  const previewState = useOverlayState({
-    isOpen: isPreviewOpen,
-    onOpenChange: setIsPreviewOpen,
-  });
+  const [previewDevice, setPreviewDevice] = useState<PreviewDevice>("desktop");
 
   useEffect(() => {
     if (isNew || !id) {
@@ -199,12 +195,30 @@ export default function AdminSnippetEditor() {
     };
   }, [id, isNew]);
 
+  useEffect(() => {
+    if (!isPreviewOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsPreviewOpen(false);
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isPreviewOpen]);
+
   const previewSnippet = useMemo(() => fromFormState(baseSnippet, form), [baseSnippet, form]);
   const previewPath = baseSnippet.slug ? `/snippets/${baseSnippet.slug}` : "";
   const hasSavedPreview = Boolean(baseSnippet.id && baseSnippet.slug);
   const hasUnsavedChanges =
     JSON.stringify(toSnippetPayload(previewSnippet)) !== JSON.stringify(toSnippetPayload(baseSnippet));
-  const deferredContent = useDeferredValue(form.content);
 
   const updateField = <K extends keyof SnippetFormState>(field: K, value: SnippetFormState[K]) => {
     setForm((current) => {
@@ -292,8 +306,13 @@ export default function AdminSnippetEditor() {
       return;
     }
 
+    setPreviewDevice("desktop");
     setIsPreviewOpen(true);
   }, [form.slug, hasSavedPreview, previewPath]);
+
+  const closePreview = useCallback(() => {
+    setIsPreviewOpen(false);
+  }, []);
 
   const headerConfig = useMemo(
     () => ({
@@ -397,6 +416,7 @@ export default function AdminSnippetEditor() {
     }),
     [
       activeTab,
+      closePreview,
       feedback,
       form.title,
       handlePreview,
@@ -447,41 +467,21 @@ export default function AdminSnippetEditor() {
                   aria-labelledby="editor-tab-content"
                   className="space-y-12 py-4"
                 >
-                  <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.92fr)]">
-                    <div className="group relative rounded-[28px] border border-white/8 bg-white/[0.02] px-6 py-6">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="type-mono-micro text-white/30">Implementation narrative</p>
-                        <span className="type-mono-micro text-white/15">Markdown source</span>
-                      </div>
-                      <textarea
-                        aria-label="Implementation notes"
-                        placeholder="Shape the narrative around the technique and tradeoffs. You can use Markdown."
-                        value={form.content}
-                        onChange={(event) => updateField("content", event.target.value)}
-                        className="mt-5 min-h-[420px] w-full resize-y border-0 bg-transparent px-0 text-lg leading-relaxed text-white/90 shadow-none outline-none focus:ring-0 placeholder:text-white/20"
-                      />
-                      <p className="mt-4 text-sm leading-relaxed text-white/35">
-                        Supports headings, lists, tables, quotes, inline code, and fenced code blocks like <span className="font-mono text-white/55">```swift</span> or <span className="font-mono text-white/55">```ts</span>.
-                      </p>
+                  <div className="group relative rounded-[28px] border border-white/8 bg-white/[0.02] px-6 py-6">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="type-mono-micro text-white/30">Implementation narrative</p>
+                      <span className="type-mono-micro text-white/15">Markdown source</span>
                     </div>
-
-                    <div className="rounded-[28px] border border-white/8 bg-white/[0.02] p-6">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="type-mono-micro text-white/30">Live preview</p>
-                        <span className="type-mono-micro text-white/15">Shared with public view</span>
-                      </div>
-                      <div className="mt-5 min-h-[420px] rounded-[22px] border border-white/8 bg-black/40 p-5 md:p-6">
-                        {deferredContent.trim() ? (
-                          <MarkdownRenderer content={deferredContent} />
-                        ) : (
-                          <div className="flex min-h-[360px] items-center justify-center text-center">
-                            <p className="max-w-sm text-sm leading-relaxed text-white/35">
-                              Start writing in Markdown on the left to preview the final tutorial layout and highlighted code blocks here.
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    <textarea
+                      aria-label="Implementation notes"
+                      placeholder="Shape the narrative around the technique and tradeoffs. You can use Markdown."
+                      value={form.content}
+                      onChange={(event) => updateField("content", event.target.value)}
+                      className="mt-5 min-h-[520px] w-full resize-y border-0 bg-transparent px-0 text-lg leading-relaxed text-white/90 shadow-none outline-none focus:ring-0 placeholder:text-white/20"
+                    />
+                    <p className="mt-4 text-sm leading-relaxed text-white/35">
+                      Supports headings, lists, tables, quotes, inline code, and fenced code blocks like <span className="font-mono text-white/55">```swift</span> or <span className="font-mono text-white/55">```ts</span>. Use the preview button in the top bar to inspect the public reading view.
+                    </p>
                   </div>
 
                   <div className="group relative border-t border-white/5 pt-8">
@@ -682,19 +682,35 @@ export default function AdminSnippetEditor() {
         </div>
       </main>
 
-      <Modal state={previewState}>
-        <Modal.Backdrop className="bg-black/80 backdrop-blur-2xl" />
-        <Modal.Container className="max-w-[min(1600px,96vw)]">
-          <Modal.Dialog className="vibe-glass flex h-[92vh] w-full flex-col overflow-hidden shadow-2xl border-white/10">
-            <Modal.Header className="flex items-center justify-between border-b border-white/5 px-8 py-6">
-              <div>
-                <p className="type-mono-micro text-white/30">Registry Preview</p>
-                <Modal.Heading className="mt-2 text-2xl font-semibold text-white">
-                  {hasSavedPreview ? "Registry Live View" : "Registry entry required"}
-                </Modal.Heading>
-              </div>
-              <div className="flex items-center gap-3">
-                {hasSavedPreview ? (
+      {isPreviewOpen ? (
+        <div className="fixed inset-0 z-[80]">
+          <button
+            type="button"
+            aria-label="Dismiss preview backdrop"
+            className="absolute inset-0 bg-black/88 backdrop-blur-xl"
+            onClick={closePreview}
+          />
+          <div className="relative z-10 flex h-full w-full flex-col p-4 md:p-6">
+            <div className="admin-header flex h-full w-full flex-col overflow-hidden rounded-[28px] border border-white/10 shadow-[0_32px_120px_rgba(0,0,0,0.55)]">
+              <div className="flex flex-col gap-4 border-b border-white/6 px-5 py-4 md:px-8 md:py-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <Button
+                    isIconOnly
+                    aria-label="Close preview"
+                    className="admin-button-secondary h-10 w-10 border-white/10"
+                    onPress={closePreview}
+                  >
+                    <X size={16} />
+                  </Button>
+                  <div>
+                    <p className="type-mono-micro text-white/28">Preview Mode</p>
+                    <h2 className="mt-1 text-lg font-semibold text-white md:text-xl">
+                      {form.title || "Untitled Snippet"}
+                    </h2>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
                   <a
                     href={previewPath}
                     target="_blank"
@@ -703,34 +719,91 @@ export default function AdminSnippetEditor() {
                   >
                     Open in tab
                   </a>
-                ) : null}
-                <Button className="admin-button-primary h-10" onPress={() => previewState.close()}>
-                  Close
-                </Button>
+                  <Button className="admin-button-primary h-10" onPress={closePreview}>
+                    Done
+                  </Button>
+                </div>
               </div>
-            </Modal.Header>
-            <Modal.Body className="flex-1 bg-black/60 p-0">
-              {hasSavedPreview ? (
-                <iframe
-                  title="Snippet public preview"
-                  src={previewPath}
-                  className="h-full w-full border-0"
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center px-6">
-                  <div className="max-w-xl text-center">
-                    <p className="type-mono-micro text-white/30">Awaiting sync</p>
-                    <h3 className="mt-4 text-3xl font-semibold text-white">Registry entry required</h3>
-                    <p className="mt-4 text-sm leading-relaxed text-white/50">
-                      The live preview route is generated from the registry entry. Save this draft to initialize the preview at <span className="font-mono text-white">/snippets/{form.slug || "untitled"}</span>.
-                    </p>
+
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div
+                  className="inline-flex items-center rounded-[18px] border border-white/8 bg-white/[0.03] p-1"
+                  role="tablist"
+                  aria-label="Preview devices"
+                >
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={previewDevice === "mobile"}
+                    className={`inline-flex h-10 items-center gap-2 rounded-[14px] px-4 text-sm transition-colors ${
+                      previewDevice === "mobile"
+                        ? "bg-white text-black"
+                        : "text-white/48 hover:text-white/72"
+                    }`}
+                    onClick={() => setPreviewDevice("mobile")}
+                  >
+                    <Smartphone size={15} />
+                    <span>Mobile</span>
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={previewDevice === "desktop"}
+                    className={`inline-flex h-10 items-center gap-2 rounded-[14px] px-4 text-sm transition-colors ${
+                      previewDevice === "desktop"
+                        ? "bg-white text-black"
+                        : "text-white/48 hover:text-white/72"
+                    }`}
+                    onClick={() => setPreviewDevice("desktop")}
+                  >
+                    <Monitor size={15} />
+                    <span>Desktop</span>
+                  </button>
+                </div>
+                <div className="hidden items-center gap-3 md:flex">
+                  <span className="type-mono-micro text-white/22">Public route</span>
+                  <span className="rounded-full border border-white/8 bg-white/[0.03] px-3 py-1.5 font-mono text-xs text-white/45">
+                    {previewPath}
+                  </span>
+                </div>
+              </div>
+              </div>
+              <div className="flex flex-1 min-h-0 bg-[#050505] px-3 py-3 md:px-6 md:py-6">
+                <div className="flex h-full min-h-0 w-full items-center justify-center overflow-auto rounded-[24px] border border-white/6 bg-[#0b0b0b] p-4 md:p-7">
+                <div
+                  className={`w-full rounded-[24px] border border-white/8 bg-[#0e0e0e] shadow-[0_20px_60px_rgba(0,0,0,0.38)] transition-all duration-300 ${
+                    previewDevice === "desktop"
+                      ? "max-w-[min(1440px,92vw)]"
+                      : "max-w-[430px]"
+                  }`}
+                  data-preview-device={previewDevice}
+                >
+                  <div className="flex items-center gap-2 border-b border-white/6 px-4 py-4 md:px-6">
+                    <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
+                    <span className="h-3 w-3 rounded-full bg-[#ffbd2e]" />
+                    <span className="h-3 w-3 rounded-full bg-[#28c840]" />
+                    <div className="ml-4 flex-1 rounded-full border border-white/7 bg-white/[0.04] px-4 py-2 text-center font-mono text-xs text-white/35">
+                      {previewPath}
+                    </div>
+                  </div>
+                  <div
+                    className={`overflow-hidden rounded-b-[24px] bg-black ${
+                      previewDevice === "mobile" ? "mx-auto aspect-[390/844]" : "aspect-[16/10]"
+                    }`}
+                  >
+                    <iframe
+                      title="Snippet public preview"
+                      src={previewPath}
+                      className="h-full w-full border-0 bg-black"
+                    />
                   </div>
                 </div>
-              )}
-            </Modal.Body>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal>
+              </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

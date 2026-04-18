@@ -1,10 +1,10 @@
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, ChevronDown } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import type { AdminAuthSession } from "../../lib/admin-auth";
-import { ListBox, Select } from "../../lib/heroui";
+import { Dropdown } from "../../lib/heroui";
 import { getMessages } from "../../lib/messages";
-import { APP_LOCALE_OPTIONS, useAppLocale } from "../../lib/locale";
+import { APP_LOCALE_OPTIONS, getLocaleOption, useAppLocale } from "../../lib/locale";
 import { usePublicTheme } from "../../lib/public-theme";
 import AdminSidebar from "./AdminSidebar";
 import { type AdminHeaderConfig, type AdminHeaderOutletContext } from "./useAdminHeader";
@@ -18,6 +18,7 @@ export default function AdminLayout({ adminAuthSession, onSignOut }: AdminLayout
   const theme = usePublicTheme();
   const { locale, setLocale } = useAppLocale();
   const copy = getMessages(locale);
+  const currentLocaleLabel = getLocaleOption(locale).nativeLabel;
   const location = useLocation();
   const [headerConfig, setHeaderConfig] = useState<AdminHeaderConfig | null>(null);
   const outletContext = useMemo<AdminHeaderOutletContext>(() => ({ setHeaderConfig }), []);
@@ -59,33 +60,33 @@ export default function AdminLayout({ adminAuthSession, onSignOut }: AdminLayout
                   {copy.common.logOut}
                 </button>
               ) : null}
-              <Select
-                aria-label={copy.nav.selectLanguage}
-                selectedKey={locale}
-                onSelectionChange={(key) => setLocale?.(String(key) as typeof locale)}
-                className="admin-nav-locale-root"
-              >
-                <Select.Trigger className="admin-nav-locale-trigger type-action">
-                  <Select.Value className="admin-nav-locale-value" />
-                  <Select.Indicator className="admin-nav-locale-indicator" />
-                </Select.Trigger>
-                <Select.Popover className="admin-nav-select-popover">
-                  <ListBox className="admin-nav-select-list" items={APP_LOCALE_OPTIONS}>
-                    {(option: (typeof APP_LOCALE_OPTIONS)[number]) => (
-                      <ListBox.Item
-                        id={option.code}
-                        textValue={option.nativeLabel}
-                        className={({ isFocusVisible, isFocused, isSelected }: { isFocusVisible: boolean; isFocused: boolean; isSelected: boolean }) =>
-                          `admin-nav-select-item ${isSelected ? "is-selected" : ""} ${isFocused || isFocusVisible ? "is-focused" : ""}`.trim()
-                        }
-                      >
-                        <span>{option.nativeLabel}</span>
-                        <ListBox.ItemIndicator className="admin-nav-select-item-indicator" />
-                      </ListBox.Item>
-                    )}
-                  </ListBox>
-                </Select.Popover>
-              </Select>
+              <div className="admin-nav-locale-root">
+                <Dropdown>
+                  <Dropdown.Trigger
+                    aria-label={copy.nav.selectLanguage}
+                    className="admin-nav-locale-trigger type-action"
+                  >
+                    <span className="admin-nav-locale-value">{currentLocaleLabel}</span>
+                    <ChevronDown className="admin-nav-locale-indicator" />
+                  </Dropdown.Trigger>
+                  <Dropdown.Popover>
+                    <Dropdown.Menu
+                      items={APP_LOCALE_OPTIONS}
+                      selectionMode="single"
+                      disallowEmptySelection
+                      selectedKeys={[locale]}
+                      onAction={(key) => setLocale?.(String(key) as typeof locale)}
+                    >
+                      {(option: (typeof APP_LOCALE_OPTIONS)[number]) => (
+                        <Dropdown.Item id={option.code} textValue={option.nativeLabel}>
+                          {option.nativeLabel}
+                          <Dropdown.ItemIndicator />
+                        </Dropdown.Item>
+                      )}
+                    </Dropdown.Menu>
+                  </Dropdown.Popover>
+                </Dropdown>
+              </div>
               <Link
                 to={`/${locale}`}
                 aria-label={copy.common.viewFrontSite}

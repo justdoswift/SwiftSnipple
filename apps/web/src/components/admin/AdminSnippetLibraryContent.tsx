@@ -1,4 +1,5 @@
-import { Input, ListBox, Select } from "../../lib/heroui";
+import { ChevronDown } from "lucide-react";
+import { Dropdown, Input } from "../../lib/heroui";
 import { Link } from "react-router-dom";
 import { useMemo, useState } from "react";
 import type { Snippet, SnippetStatus } from "../../types";
@@ -60,7 +61,8 @@ export default function AdminSnippetLibraryContent({
   const [statusFilter, setStatusFilter] = useState<SnippetStatus | "All">("All");
   const [categoryFilter, setCategoryFilter] = useState<string>("All");
   const [query, setQuery] = useState("");
-
+  const statusFilterLabel = statusFilterOptions.find((option) => option.id === statusFilter)?.label ?? copy.statusAll;
+  const categoryFilterLabel = categoryFilterOptions.find((option) => option.id === categoryFilter)?.label ?? copy.categoryAll;
   const filteredSnippets = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
@@ -89,61 +91,57 @@ export default function AdminSnippetLibraryContent({
             className="admin-input admin-filter-input"
           />
 
-          <Select
-            aria-label={copy.statusAll}
-            selectedKey={statusFilter}
-            onSelectionChange={(key) => setStatusFilter(String(key) as SnippetStatus | "All")}
-            className="admin-filter-select-root"
-          >
-            <Select.Trigger className="admin-filter-select-trigger">
-              <Select.Value className="admin-filter-select-value" />
-              <Select.Indicator className="admin-filter-select-indicator" />
-            </Select.Trigger>
-            <Select.Popover className="admin-filter-select-popover">
-              <ListBox className="admin-filter-select-list" items={statusFilterOptions}>
+          <Dropdown>
+            <Dropdown.Trigger
+              aria-label={copy.statusAll}
+              className="admin-filter-select-trigger"
+            >
+              <span className="admin-filter-select-value">{statusFilterLabel}</span>
+              <ChevronDown className="admin-filter-select-indicator" />
+            </Dropdown.Trigger>
+            <Dropdown.Popover>
+              <Dropdown.Menu
+                items={statusFilterOptions}
+                selectionMode="single"
+                disallowEmptySelection
+                selectedKeys={[statusFilter]}
+                onAction={(key) => setStatusFilter(String(key) as SnippetStatus | "All")}
+              >
                 {(option: LibrarySelectOption) => (
-                  <ListBox.Item
-                    id={option.id}
-                    textValue={option.label}
-                    className={({ isFocusVisible, isFocused, isSelected }: { isFocusVisible: boolean; isFocused: boolean; isSelected: boolean }) =>
-                      `admin-filter-select-item ${isSelected ? "is-selected" : ""} ${isFocused || isFocusVisible ? "is-focused" : ""}`.trim()
-                    }
-                  >
-                    <span>{option.label}</span>
-                    <ListBox.ItemIndicator className="admin-filter-select-item-indicator" />
-                  </ListBox.Item>
+                  <Dropdown.Item id={option.id} textValue={option.label}>
+                    {option.label}
+                    <Dropdown.ItemIndicator />
+                  </Dropdown.Item>
                 )}
-              </ListBox>
-            </Select.Popover>
-          </Select>
+              </Dropdown.Menu>
+            </Dropdown.Popover>
+          </Dropdown>
 
-          <Select
-            aria-label={copy.categoryAll}
-            selectedKey={categoryFilter}
-            onSelectionChange={(key) => setCategoryFilter(String(key))}
-            className="admin-filter-select-root"
-          >
-            <Select.Trigger className="admin-filter-select-trigger">
-              <Select.Value className="admin-filter-select-value" />
-              <Select.Indicator className="admin-filter-select-indicator" />
-            </Select.Trigger>
-            <Select.Popover className="admin-filter-select-popover">
-              <ListBox className="admin-filter-select-list" items={categoryFilterOptions}>
+          <Dropdown>
+            <Dropdown.Trigger
+              aria-label={copy.categoryAll}
+              className="admin-filter-select-trigger"
+            >
+              <span className="admin-filter-select-value">{categoryFilterLabel}</span>
+              <ChevronDown className="admin-filter-select-indicator" />
+            </Dropdown.Trigger>
+            <Dropdown.Popover>
+              <Dropdown.Menu
+                items={categoryFilterOptions}
+                selectionMode="single"
+                disallowEmptySelection
+                selectedKeys={[categoryFilter]}
+                onAction={(key) => setCategoryFilter(String(key))}
+              >
                 {(option: LibrarySelectOption) => (
-                  <ListBox.Item
-                    id={option.id}
-                    textValue={option.label}
-                    className={({ isFocusVisible, isFocused, isSelected }: { isFocusVisible: boolean; isFocused: boolean; isSelected: boolean }) =>
-                      `admin-filter-select-item ${isSelected ? "is-selected" : ""} ${isFocused || isFocusVisible ? "is-focused" : ""}`.trim()
-                    }
-                  >
-                    <span>{option.label}</span>
-                    <ListBox.ItemIndicator className="admin-filter-select-item-indicator" />
-                  </ListBox.Item>
+                  <Dropdown.Item id={option.id} textValue={option.label}>
+                    {option.label}
+                    <Dropdown.ItemIndicator />
+                  </Dropdown.Item>
                 )}
-              </ListBox>
-            </Select.Popover>
-          </Select>
+              </Dropdown.Menu>
+            </Dropdown.Popover>
+          </Dropdown>
         </div>
       </div>
 

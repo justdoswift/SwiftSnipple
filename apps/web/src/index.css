@@ -7,9 +7,14 @@
 @import "@heroui/styles/components/button.css" layer(components);
 @import "@heroui/styles/components/card.css" layer(components);
 @import "@heroui/styles/components/chip.css" layer(components);
+@import "@heroui/styles/components/dropdown.css" layer(components);
 @import "@heroui/styles/components/input.css" layer(components);
 @import "@heroui/styles/components/textarea.css" layer(components);
 @import "@heroui/styles/components/modal.css" layer(components);
+@import "@heroui/styles/components/popover.css" layer(components);
+@import "@heroui/styles/components/menu.css" layer(components);
+@import "@heroui/styles/components/menu-item.css" layer(components);
+@import "@heroui/styles/components/menu-section.css" layer(components);
 @import "@heroui/styles/components/progress-bar.css" layer(components);
 @import "@heroui/styles/components/spinner.css" layer(components);
 @import "@heroui/styles/utilities";
@@ -469,21 +474,29 @@
   }
 
   .public-nav-locale-root {
-    @apply shrink-0;
-    min-width: 5.5rem;
+    @apply block shrink-0 self-center;
+    min-width: 4.75rem;
   }
 
   .public-nav-locale-trigger {
-    @apply inline-flex h-10 w-full items-center justify-center gap-1 rounded-[12px] border border-transparent bg-transparent px-3 text-center transition-colors duration-200 md:px-4;
+    @apply inline-flex h-10 w-full items-center justify-center gap-1 rounded-[12px] border border-transparent bg-transparent px-3 py-0 text-center shadow-none outline-none transition-colors duration-200 md:px-4;
     color: inherit;
+    appearance: none;
+    -webkit-appearance: none;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    row-gap: 0 !important;
   }
 
   .public-nav-locale-value {
-    @apply truncate text-center;
+    @apply min-w-0 flex-1 truncate text-center;
+    line-height: 1;
   }
 
   .public-nav-locale-indicator {
-    @apply h-3.5 w-3.5 shrink-0;
+    @apply flex h-3.5 w-3.5 shrink-0 items-center justify-center;
   }
 
   .public-nav-select-popover {
@@ -495,11 +508,15 @@
   }
 
   .public-nav-select-item {
-    @apply flex cursor-default items-center justify-between rounded-[14px] px-3 py-2 text-[0.9375rem] font-medium transition-colors;
+    @apply flex cursor-default items-center justify-between rounded-[14px] border border-transparent px-3 py-2 text-[0.9375rem] font-medium shadow-none outline-none transition-colors;
   }
 
-  .public-nav-select-item.is-focused {
+  .public-nav-select-item:focus,
+  .public-nav-select-item:focus-visible,
+  .public-nav-select-item[data-focused="true"],
+  .public-nav-select-item[data-focus-visible="true"] {
     @apply outline-none;
+    box-shadow: none;
   }
 
   .public-nav-select-item-indicator {
@@ -555,8 +572,9 @@
     color: rgba(255, 255, 255, 0.78);
   }
 
-  .public-nav-root[data-theme="dark"] .public-nav-select-item.is-selected,
-  .public-nav-root[data-theme="dark"] .public-nav-select-item.is-focused {
+  .public-nav-root[data-theme="dark"] .public-nav-select-item[data-selected="true"],
+  .public-nav-root[data-theme="dark"] .public-nav-select-item[data-focused="true"],
+  .public-nav-root[data-theme="dark"] .public-nav-select-item[data-focus-visible="true"] {
     background-color: rgba(255, 255, 255, 0.08);
     color: rgba(255, 255, 255, 0.96);
   }
@@ -610,8 +628,9 @@
     color: rgba(0, 0, 0, 0.72);
   }
 
-  .public-nav-root[data-theme="light"] .public-nav-select-item.is-selected,
-  .public-nav-root[data-theme="light"] .public-nav-select-item.is-focused {
+  .public-nav-root[data-theme="light"] .public-nav-select-item[data-selected="true"],
+  .public-nav-root[data-theme="light"] .public-nav-select-item[data-focused="true"],
+  .public-nav-root[data-theme="light"] .public-nav-select-item[data-focus-visible="true"] {
     background-color: rgba(0, 0, 0, 0.06);
     color: #000000;
   }
@@ -1702,19 +1721,30 @@
     line-height: 1.4;
   }
 
+  .admin-filter-input {
+    @apply self-start;
+  }
+
   .input.admin-filter-input {
     min-height: 40px;
   }
 
   .admin-filter-select-root {
-    @apply w-full;
+    @apply block w-full self-start;
   }
 
   .admin-filter-select-trigger {
-    @apply inline-flex min-h-10 w-full items-center justify-between rounded-lg border px-4 py-[0.625rem] text-left shadow-none outline-none transition-all duration-200;
+    @apply inline-flex h-10 w-full items-center justify-between rounded-lg border px-4 py-0 text-left shadow-none outline-none transition-all duration-200;
     border-color: var(--admin-field-border);
     background-color: var(--admin-field-background);
     color: var(--admin-field-foreground);
+    appearance: none;
+    -webkit-appearance: none;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    row-gap: 0 !important;
   }
 
   .admin-filter-select-trigger:hover,
@@ -1732,11 +1762,12 @@
   }
 
   .admin-filter-select-value {
-    @apply truncate pr-3;
+    @apply min-w-0 flex-1 truncate pr-3 text-left;
+    line-height: 1.4;
   }
 
   .admin-filter-select-indicator {
-    @apply h-4 w-4 shrink-0;
+    @apply flex h-4 w-4 shrink-0 items-center justify-center;
   }
 
   .admin-filter-select-popover,
@@ -1753,20 +1784,30 @@
 
   .admin-filter-select-item,
   .admin-form-select-item {
-    @apply flex cursor-default items-center justify-between rounded-[14px] px-3 py-2 transition-colors;
+    @apply flex cursor-default items-center justify-between rounded-[14px] border border-transparent px-3 py-2 shadow-none outline-none transition-colors;
     color: var(--admin-field-foreground);
   }
 
-  .admin-filter-select-item.is-selected,
-  .admin-filter-select-item.is-focused,
-  .admin-form-select-item.is-selected,
-  .admin-form-select-item.is-focused {
+  .admin-filter-select-item:focus,
+  .admin-filter-select-item:focus-visible,
+  .admin-filter-select-item[data-focused="true"],
+  .admin-filter-select-item[data-focus-visible="true"],
+  .admin-filter-select-item[data-selected="true"],
+  .admin-form-select-item:focus,
+  .admin-form-select-item:focus-visible,
+  .admin-form-select-item[data-focused="true"],
+  .admin-form-select-item[data-focus-visible="true"],
+  .admin-form-select-item[data-selected="true"] {
+    outline: none;
+    box-shadow: none;
     background-color: var(--admin-surface-hover);
     color: var(--admin-title);
   }
 
   .admin-filter-select-item.is-disabled,
-  .admin-form-select-item.is-disabled {
+  .admin-filter-select-item[data-disabled="true"],
+  .admin-form-select-item.is-disabled,
+  .admin-form-select-item[data-disabled="true"] {
     opacity: 0.45;
     cursor: not-allowed;
   }
@@ -1777,14 +1818,21 @@
   }
 
   .admin-form-select-root {
-    @apply w-full;
+    @apply block w-full self-start;
   }
 
   .admin-form-select-trigger {
-    @apply inline-flex min-h-10 w-full items-center justify-between rounded-lg border px-4 py-3 text-left text-base shadow-none outline-none transition-all duration-200;
+    @apply inline-flex h-11 w-full items-center justify-between rounded-lg border px-4 py-0 text-left text-base shadow-none outline-none transition-all duration-200;
     border-color: var(--admin-field-border);
     background-color: var(--admin-field-background);
     color: var(--admin-field-foreground);
+    appearance: none;
+    -webkit-appearance: none;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    row-gap: 0 !important;
   }
 
   .admin-form-select-trigger:hover,
@@ -1807,11 +1855,12 @@
   }
 
   .admin-form-select-value {
-    @apply truncate pr-3;
+    @apply min-w-0 flex-1 truncate pr-3 text-left;
+    line-height: 1.5;
   }
 
   .admin-form-select-indicator {
-    @apply h-4 w-4 shrink-0;
+    @apply flex h-4 w-4 shrink-0 items-center justify-center;
   }
 
   .public-input:-webkit-autofill,
@@ -2211,21 +2260,29 @@
   }
 
   .admin-nav-locale-root {
-    @apply shrink-0;
-    min-width: 5.5rem;
+    @apply block shrink-0 self-center;
+    min-width: 5rem;
   }
 
   .admin-nav-locale-trigger {
-    @apply inline-flex h-10 w-full items-center justify-center gap-1 rounded-[12px] border border-transparent bg-transparent px-2.5 text-center transition-colors duration-200 md:px-3;
+    @apply inline-flex h-10 w-full items-center justify-center gap-1 rounded-[12px] border border-transparent bg-transparent px-2.5 py-0 text-center shadow-none outline-none transition-colors duration-200 md:px-3;
     color: var(--admin-header-action-text);
+    appearance: none;
+    -webkit-appearance: none;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    row-gap: 0 !important;
   }
 
   .admin-nav-locale-value {
-    @apply truncate text-center;
+    @apply min-w-0 flex-1 truncate text-center;
+    line-height: 1;
   }
 
   .admin-nav-locale-indicator {
-    @apply h-3.5 w-3.5 shrink-0;
+    @apply flex h-3.5 w-3.5 shrink-0 items-center justify-center;
   }
 
   .admin-nav-select-popover {
@@ -2239,7 +2296,7 @@
   }
 
   .admin-nav-select-item {
-    @apply flex cursor-default items-center justify-between rounded-[14px] px-3 py-2 text-[0.9375rem] font-medium transition-colors;
+    @apply flex cursor-default items-center justify-between rounded-[14px] border border-transparent px-3 py-2 text-[0.9375rem] font-medium shadow-none outline-none transition-colors;
     color: inherit;
   }
 
@@ -2252,8 +2309,13 @@
     color: var(--admin-header-action-hover-text);
   }
 
-  .admin-nav-select-item.is-selected,
-  .admin-nav-select-item.is-focused {
+  .admin-nav-select-item:focus,
+  .admin-nav-select-item:focus-visible,
+  .admin-nav-select-item[data-focused="true"],
+  .admin-nav-select-item[data-focus-visible="true"],
+  .admin-nav-select-item[data-selected="true"] {
+    outline: none;
+    box-shadow: none;
     background-color: var(--admin-header-action-hover-bg);
     color: var(--admin-header-action-hover-text);
   }

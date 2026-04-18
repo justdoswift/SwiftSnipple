@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Button, Input, ListBox, Modal, Select, TextArea, useOverlayState } from "../../lib/heroui";
+import { Button, Dropdown, Input, Modal, TextArea, useOverlayState } from "../../lib/heroui";
 import { useNavigate, useParams } from "react-router-dom";
 import EditorSection from "../../components/admin/EditorSection";
 import HighlightedCodeEditor from "../../components/admin/HighlightedCodeEditor";
@@ -11,7 +11,7 @@ import { getLocalizedSnippetFields, localizePath, useAppLocale } from "../../lib
 import { createEmptyLocalizedFields, getFormLocale, getSnippetLocale } from "../../lib/snippet-localization";
 import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, unpublishSnippet, updateSnippet } from "../../services/snippets";
 import { AppLocale, Snippet, SnippetFormState, SnippetPayload, SnippetStatus } from "../../types";
-import { Code2, Layout, Monitor, MessageSquareQuote, Smartphone, Settings2, Trash2, X } from "lucide-react";
+import { ChevronDown, Code2, Layout, Monitor, MessageSquareQuote, Smartphone, Settings2, Trash2, X } from "lucide-react";
 
 const EDITABLE_STATUS_OPTIONS: SnippetStatus[] = ["Draft", "In Review", "Scheduled"];
 const EDITOR_TABS = [
@@ -368,6 +368,7 @@ export default function AdminSnippetEditor() {
     () => statusOptions.map((status) => ({ id: status, label: status })),
     [statusOptions],
   );
+  const selectedStatusLabel = statusSelectOptions.find((option) => option.id === form.status)?.label ?? form.status;
   const primaryActionLabel =
     primaryActionState === "publishing"
       ? "Publishing..."
@@ -779,34 +780,35 @@ export default function AdminSnippetEditor() {
                     <div className="grid gap-6 md:grid-cols-2">
                        <label className="grid gap-2">
                          <span className="admin-eyebrow type-mono-micro">Status</span>
-                         <Select
-                           aria-label="Status"
-                           selectedKey={form.status}
-                           onSelectionChange={(key) => updateField("status", String(key) as SnippetStatus)}
-                           className="admin-form-select-root w-full"
-                           isDisabled={isPublishedEntry}
-                         >
-                           <Select.Trigger className="admin-form-select-trigger">
-                             <Select.Value className="admin-form-select-value" />
-                             <Select.Indicator className="admin-form-select-indicator" />
-                           </Select.Trigger>
-                           <Select.Popover className="admin-form-select-popover">
-                             <ListBox className="admin-form-select-list" items={statusSelectOptions}>
+                         <Dropdown>
+                           <Dropdown.Trigger
+                             aria-label="Status"
+                             className="admin-form-select-trigger"
+                             isDisabled={isPublishedEntry}
+                           >
+                             <span className="admin-form-select-value">{selectedStatusLabel}</span>
+                             <ChevronDown className="admin-form-select-indicator" />
+                           </Dropdown.Trigger>
+                           <Dropdown.Popover>
+                             <Dropdown.Menu
+                               items={statusSelectOptions}
+                               selectionMode="single"
+                               disallowEmptySelection
+                               selectedKeys={[form.status]}
+                               onAction={(key) => updateField("status", String(key) as SnippetStatus)}
+                             >
                                {(option: EditorStatusOption) => (
-                                 <ListBox.Item
+                                 <Dropdown.Item
                                    id={option.id}
                                    textValue={option.label}
-                                   className={({ isDisabled, isFocusVisible, isFocused, isSelected }: { isDisabled: boolean; isFocusVisible: boolean; isFocused: boolean; isSelected: boolean }) =>
-                                     `admin-form-select-item ${isSelected ? "is-selected" : ""} ${isFocused || isFocusVisible ? "is-focused" : ""} ${isDisabled ? "is-disabled" : ""}`.trim()
-                                   }
                                  >
-                                   <span>{option.label}</span>
-                                   <ListBox.ItemIndicator className="admin-form-select-item-indicator" />
-                                 </ListBox.Item>
+                                   {option.label}
+                                   <Dropdown.ItemIndicator />
+                                 </Dropdown.Item>
                                )}
-                             </ListBox>
-                           </Select.Popover>
-                         </Select>
+                             </Dropdown.Menu>
+                           </Dropdown.Popover>
+                         </Dropdown>
                        </label>
                        <label className="grid gap-2">
                          <span className="admin-eyebrow type-mono-micro">Published At</span>

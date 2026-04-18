@@ -1,9 +1,9 @@
-import { Monitor, Moon, Search, Sun } from "lucide-react";
+import { ChevronDown, Monitor, Moon, Search, Sun } from "lucide-react";
 import { Link } from "react-router-dom";
 import { getMessages } from "../lib/messages";
-import { ListBox, Select } from "../lib/heroui";
+import { Dropdown } from "../lib/heroui";
 import type { MockAuthSession } from "../lib/mock-auth";
-import { APP_LOCALE_OPTIONS, useAppLocale } from "../lib/locale";
+import { APP_LOCALE_OPTIONS, getLocaleOption, useAppLocale } from "../lib/locale";
 import { getNextPublicTheme, type PublicTheme } from "../lib/public-theme";
 
 interface NavbarProps {
@@ -16,6 +16,7 @@ export default function Navbar({ theme, onToggleTheme, authSession }: NavbarProp
   const { locale, setLocale } = useAppLocale();
   const copy = getMessages(locale);
   const nextTheme = getNextPublicTheme(theme);
+  const currentLocaleLabel = getLocaleOption(locale).nativeLabel;
 
   return (
     <nav
@@ -62,33 +63,33 @@ export default function Navbar({ theme, onToggleTheme, authSession }: NavbarProp
             {theme === "dark" ? <Sun size={16} strokeWidth={2} /> : <Moon size={16} strokeWidth={2} />}
           </button>
 
-          <Select
-            aria-label={copy.nav.selectLanguage}
-            selectedKey={locale}
-            onSelectionChange={(key) => setLocale?.(String(key) as typeof locale)}
-            className="public-nav-locale-root"
-          >
-            <Select.Trigger className="public-nav-locale-trigger type-action">
-              <Select.Value className="public-nav-locale-value" />
-              <Select.Indicator className="public-nav-locale-indicator" />
-            </Select.Trigger>
-            <Select.Popover className="public-nav-select-popover">
-              <ListBox className="public-nav-select-list" items={APP_LOCALE_OPTIONS}>
-                {(option: (typeof APP_LOCALE_OPTIONS)[number]) => (
-                  <ListBox.Item
-                    id={option.code}
-                    textValue={option.nativeLabel}
-                    className={({ isFocusVisible, isFocused, isSelected }: { isFocusVisible: boolean; isFocused: boolean; isSelected: boolean }) =>
-                      `public-nav-select-item ${isSelected ? "is-selected" : ""} ${isFocused || isFocusVisible ? "is-focused" : ""}`.trim()
-                    }
-                  >
-                    <span>{option.nativeLabel}</span>
-                    <ListBox.ItemIndicator className="public-nav-select-item-indicator" />
-                  </ListBox.Item>
-                )}
-              </ListBox>
-            </Select.Popover>
-          </Select>
+          <div className="public-nav-locale-root">
+            <Dropdown>
+              <Dropdown.Trigger
+                aria-label={copy.nav.selectLanguage}
+                className="public-nav-locale-trigger type-action"
+              >
+                <span className="public-nav-locale-value">{currentLocaleLabel}</span>
+                <ChevronDown className="public-nav-locale-indicator" />
+              </Dropdown.Trigger>
+              <Dropdown.Popover>
+                <Dropdown.Menu
+                  items={APP_LOCALE_OPTIONS}
+                  selectionMode="single"
+                  disallowEmptySelection
+                  selectedKeys={[locale]}
+                  onAction={(key) => setLocale?.(String(key) as typeof locale)}
+                >
+                  {(option: (typeof APP_LOCALE_OPTIONS)[number]) => (
+                    <Dropdown.Item id={option.code} textValue={option.nativeLabel}>
+                      {option.nativeLabel}
+                      <Dropdown.ItemIndicator />
+                    </Dropdown.Item>
+                  )}
+                </Dropdown.Menu>
+              </Dropdown.Popover>
+            </Dropdown>
+          </div>
 
           <Link
             to={authSession ? `/${locale}/account` : `/${locale}/login`}

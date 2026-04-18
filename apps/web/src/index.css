@@ -1290,7 +1290,6 @@
   }
 
   .input.public-input,
-  .input.public-input-inverse,
   .input.admin-input {
     --field-background: rgba(255, 255, 255, 1);
     --field-foreground: rgba(21, 23, 26, 1);
@@ -1299,6 +1298,16 @@
     --color-field-focus: rgba(255, 255, 255, 1);
     --color-field-border-hover: rgba(209, 213, 219, 1);
     --color-field-border-focus: rgba(48, 207, 67, 1);
+  }
+
+  .input.public-input-inverse {
+    --field-background: rgba(255, 255, 255, 0.04);
+    --field-foreground: rgba(255, 255, 255, 0.88);
+    --field-placeholder: rgba(255, 255, 255, 0.34);
+    --field-border: rgba(255, 255, 255, 0.1);
+    --color-field-focus: rgba(255, 255, 255, 0.065);
+    --color-field-border-hover: rgba(255, 255, 255, 0.16);
+    --color-field-border-focus: rgba(255, 255, 255, 0.22);
   }
 
   .public-theme[data-theme="light"] .input.public-input,
@@ -1314,12 +1323,16 @@
 
   .input.public-input:hover:not(:focus):not(:focus-visible),
   .input.public-input[data-hovered="true"]:not([data-focused="true"]):not([data-focus-visible="true"]),
-  .input.public-input-inverse:hover:not(:focus):not(:focus-visible),
-  .input.public-input-inverse[data-hovered="true"]:not([data-focused="true"]):not([data-focus-visible="true"]),
   .input.admin-input:hover:not(:focus):not(:focus-visible),
   .input.admin-input[data-hovered="true"]:not([data-focused="true"]):not([data-focus-visible="true"]) {
     background-color: rgba(255, 255, 255, 1);
     border-color: rgba(209, 213, 219, 1);
+  }
+
+  .input.public-input-inverse:hover:not(:focus):not(:focus-visible),
+  .input.public-input-inverse[data-hovered="true"]:not([data-focused="true"]):not([data-focus-visible="true"]) {
+    background-color: rgba(255, 255, 255, 0.055);
+    border-color: rgba(255, 255, 255, 0.16);
   }
 
   .public-theme[data-theme="light"] .input.public-input:hover:not(:focus):not(:focus-visible),
@@ -1332,13 +1345,18 @@
 
   .input.public-input:focus,
   .input.public-input[data-focused="true"],
-  .input.public-input-inverse:focus,
-  .input.public-input-inverse[data-focused="true"],
   .input.admin-input:focus,
   .input.admin-input[data-focused="true"] {
     @apply ring-2 ring-[#30cf43]/20;
     background-color: rgba(255, 255, 255, 1);
     border-color: rgba(48, 207, 67, 1);
+  }
+
+  .input.public-input-inverse:focus,
+  .input.public-input-inverse[data-focused="true"] {
+    @apply ring-2 ring-white/10;
+    background-color: rgba(255, 255, 255, 0.065);
+    border-color: rgba(255, 255, 255, 0.22);
   }
 
   .public-theme[data-theme="light"] .input.public-input:focus,
@@ -1436,9 +1454,6 @@
   .public-input:-webkit-autofill,
   .public-input:-webkit-autofill:hover,
   .public-input:-webkit-autofill:focus,
-  .public-input-inverse:-webkit-autofill,
-  .public-input-inverse:-webkit-autofill:hover,
-  .public-input-inverse:-webkit-autofill:focus,
   .admin-input:-webkit-autofill,
   .admin-input:-webkit-autofill:hover,
   .admin-input:-webkit-autofill:focus,
@@ -1450,6 +1465,25 @@
     -webkit-box-shadow: 0 0 0 1000px rgba(255, 255, 255, 1) inset;
     box-shadow: 0 0 0 1000px rgba(255, 255, 255, 1) inset;
     transition: background-color 9999s ease-out 0s;
+  }
+
+  .public-input-inverse:-webkit-autofill,
+  .public-input-inverse:-webkit-autofill:hover,
+  .public-input-inverse:-webkit-autofill:focus {
+    -webkit-text-fill-color: rgba(255, 255, 255, 0.88);
+    caret-color: rgba(255, 255, 255, 0.88);
+    -webkit-box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.04) inset;
+    box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.04) inset;
+    transition: background-color 9999s ease-out 0s;
+  }
+
+  .public-theme[data-theme="light"] .public-input-inverse:-webkit-autofill,
+  .public-theme[data-theme="light"] .public-input-inverse:-webkit-autofill:hover,
+  .public-theme[data-theme="light"] .public-input-inverse:-webkit-autofill:focus {
+    -webkit-text-fill-color: rgba(0, 0, 0, 0.86);
+    caret-color: rgba(0, 0, 0, 0.86);
+    -webkit-box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.03) inset;
+    box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.03) inset;
   }
 
   .admin-textarea:-webkit-autofill,

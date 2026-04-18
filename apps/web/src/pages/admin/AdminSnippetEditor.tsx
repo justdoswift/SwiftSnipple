@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Button, Input, Modal, TextArea, useOverlayState } from "../../lib/heroui";
+import { Button, Input, ListBox, Modal, Select, TextArea, useOverlayState } from "../../lib/heroui";
 import { useNavigate, useParams } from "react-router-dom";
 import EditorSection from "../../components/admin/EditorSection";
 import HighlightedCodeEditor from "../../components/admin/HighlightedCodeEditor";
@@ -24,6 +24,10 @@ type EditorTabKey = (typeof EDITOR_TABS)[number]["key"];
 type PreviewDevice = "desktop" | "mobile";
 type AutosaveState = "idle" | "saving" | "saved";
 type PrimaryActionState = "idle" | "publishing" | "updating";
+type EditorStatusOption = {
+  id: SnippetStatus;
+  label: string;
+};
 
 function EditorSectionRail({
   activeTab,
@@ -360,6 +364,10 @@ export default function AdminSnippetEditor() {
   const hasUnsavedChanges = previewPayloadSignature !== basePayloadSignature;
   const isPublishedEntry = baseSnippet.status === "Published";
   const statusOptions = isPublishedEntry ? (["Published"] as const) : EDITABLE_STATUS_OPTIONS;
+  const statusSelectOptions = useMemo<EditorStatusOption[]>(
+    () => statusOptions.map((status) => ({ id: status, label: status })),
+    [statusOptions],
+  );
   const primaryActionLabel =
     primaryActionState === "publishing"
       ? "Publishing..."
@@ -771,18 +779,34 @@ export default function AdminSnippetEditor() {
                     <div className="grid gap-6 md:grid-cols-2">
                        <label className="grid gap-2">
                          <span className="admin-eyebrow type-mono-micro">Status</span>
-                         <select
-                           value={form.status}
-                           onChange={(event) => updateField("status", event.target.value as SnippetStatus)}
-                           className="admin-select w-full"
-                           disabled={isPublishedEntry}
+                         <Select
+                           aria-label="Status"
+                           selectedKey={form.status}
+                           onSelectionChange={(key) => updateField("status", String(key) as SnippetStatus)}
+                           className="admin-form-select-root w-full"
+                           isDisabled={isPublishedEntry}
                          >
-                           {statusOptions.map((status) => (
-                             <option key={status} value={status} disabled={status === "Published"}>
-                               {status}
-                             </option>
-                           ))}
-                         </select>
+                           <Select.Trigger className="admin-form-select-trigger">
+                             <Select.Value className="admin-form-select-value" />
+                             <Select.Indicator className="admin-form-select-indicator" />
+                           </Select.Trigger>
+                           <Select.Popover className="admin-form-select-popover">
+                             <ListBox className="admin-form-select-list" items={statusSelectOptions}>
+                               {(option: EditorStatusOption) => (
+                                 <ListBox.Item
+                                   id={option.id}
+                                   textValue={option.label}
+                                   className={({ isDisabled, isFocusVisible, isFocused, isSelected }: { isDisabled: boolean; isFocusVisible: boolean; isFocused: boolean; isSelected: boolean }) =>
+                                     `admin-form-select-item ${isSelected ? "is-selected" : ""} ${isFocused || isFocusVisible ? "is-focused" : ""} ${isDisabled ? "is-disabled" : ""}`.trim()
+                                   }
+                                 >
+                                   <span>{option.label}</span>
+                                   <ListBox.ItemIndicator className="admin-form-select-item-indicator" />
+                                 </ListBox.Item>
+                               )}
+                             </ListBox>
+                           </Select.Popover>
+                         </Select>
                        </label>
                        <label className="grid gap-2">
                          <span className="admin-eyebrow type-mono-micro">Published At</span>

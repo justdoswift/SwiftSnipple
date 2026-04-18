@@ -1,4 +1,4 @@
-import { Input } from "../../lib/heroui";
+import { Input, ListBox, Select } from "../../lib/heroui";
 import { Link } from "react-router-dom";
 import { useMemo, useState } from "react";
 import type { Snippet, SnippetStatus } from "../../types";
@@ -7,6 +7,10 @@ import { getLocalizedSnippetFields, useAppLocale } from "../../lib/locale";
 import StatusBadge from "./StatusBadge";
 
 const STATUS_OPTIONS: Array<SnippetStatus | "All"> = ["All", "Draft", "In Review", "Scheduled", "Published"];
+type LibrarySelectOption = {
+  id: string;
+  label: string;
+};
 
 function formatDate(value: string | null) {
   if (!value) return "";
@@ -34,6 +38,24 @@ export default function AdminSnippetLibraryContent({
   const categories = useMemo(
     () => Array.from(new Set(snippets.map((snippet) => getLocalizedSnippetFields(snippet, locale).category))),
     [locale, snippets],
+  );
+  const statusFilterOptions = useMemo<LibrarySelectOption[]>(
+    () =>
+      STATUS_OPTIONS.map((status) => ({
+        id: status,
+        label: status === "All" ? copy.statusAll : `${copy.status}: ${common.statuses[status]}`,
+      })),
+    [common.statuses, copy.status, copy.statusAll],
+  );
+  const categoryFilterOptions = useMemo<LibrarySelectOption[]>(
+    () => [
+      { id: "All", label: copy.categoryAll },
+      ...categories.map((category) => ({
+        id: category,
+        label: `Category: ${category}`,
+      })),
+    ],
+    [categories, copy.categoryAll],
   );
   const [statusFilter, setStatusFilter] = useState<SnippetStatus | "All">("All");
   const [categoryFilter, setCategoryFilter] = useState<string>("All");
@@ -67,30 +89,61 @@ export default function AdminSnippetLibraryContent({
             className="admin-input admin-filter-input"
           />
 
-          <select
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value as SnippetStatus | "All")}
-            className="admin-select admin-filter-select"
+          <Select
+            aria-label={copy.statusAll}
+            selectedKey={statusFilter}
+            onSelectionChange={(key) => setStatusFilter(String(key) as SnippetStatus | "All")}
+            className="admin-filter-select-root"
           >
-            {STATUS_OPTIONS.map((status) => (
-              <option key={status} value={status}>
-                {status === "All" ? copy.statusAll : `${copy.status}: ${common.statuses[status]}`}
-              </option>
-            ))}
-          </select>
+            <Select.Trigger className="admin-filter-select-trigger">
+              <Select.Value className="admin-filter-select-value" />
+              <Select.Indicator className="admin-filter-select-indicator" />
+            </Select.Trigger>
+            <Select.Popover className="admin-filter-select-popover">
+              <ListBox className="admin-filter-select-list" items={statusFilterOptions}>
+                {(option: LibrarySelectOption) => (
+                  <ListBox.Item
+                    id={option.id}
+                    textValue={option.label}
+                    className={({ isFocusVisible, isFocused, isSelected }: { isFocusVisible: boolean; isFocused: boolean; isSelected: boolean }) =>
+                      `admin-filter-select-item ${isSelected ? "is-selected" : ""} ${isFocused || isFocusVisible ? "is-focused" : ""}`.trim()
+                    }
+                  >
+                    <span>{option.label}</span>
+                    <ListBox.ItemIndicator className="admin-filter-select-item-indicator" />
+                  </ListBox.Item>
+                )}
+              </ListBox>
+            </Select.Popover>
+          </Select>
 
-          <select
-            value={categoryFilter}
-            onChange={(event) => setCategoryFilter(event.target.value)}
-            className="admin-select admin-filter-select"
+          <Select
+            aria-label={copy.categoryAll}
+            selectedKey={categoryFilter}
+            onSelectionChange={(key) => setCategoryFilter(String(key))}
+            className="admin-filter-select-root"
           >
-            <option value="All">{copy.categoryAll}</option>
-            {categories.map((category) => (
-              <option key={category} value={category}>
-                Category: {category}
-              </option>
-            ))}
-          </select>
+            <Select.Trigger className="admin-filter-select-trigger">
+              <Select.Value className="admin-filter-select-value" />
+              <Select.Indicator className="admin-filter-select-indicator" />
+            </Select.Trigger>
+            <Select.Popover className="admin-filter-select-popover">
+              <ListBox className="admin-filter-select-list" items={categoryFilterOptions}>
+                {(option: LibrarySelectOption) => (
+                  <ListBox.Item
+                    id={option.id}
+                    textValue={option.label}
+                    className={({ isFocusVisible, isFocused, isSelected }: { isFocusVisible: boolean; isFocused: boolean; isSelected: boolean }) =>
+                      `admin-filter-select-item ${isSelected ? "is-selected" : ""} ${isFocused || isFocusVisible ? "is-focused" : ""}`.trim()
+                    }
+                  >
+                    <span>{option.label}</span>
+                    <ListBox.ItemIndicator className="admin-filter-select-item-indicator" />
+                  </ListBox.Item>
+                )}
+              </ListBox>
+            </Select.Popover>
+          </Select>
         </div>
       </div>
 

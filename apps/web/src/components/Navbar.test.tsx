@@ -25,9 +25,7 @@ describe("Navbar", () => {
     expect(screen.getByText("Just Do Swift")).toBeInTheDocument();
     expect(screen.getByRole("searchbox", { name: "Search snippets" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Switch to light site mode" })).toBeInTheDocument();
-    expect(screen.getByRole("combobox", { name: "Select language" })).toHaveClass("public-nav-locale-select");
-    expect(screen.getByRole("option", { name: "English" })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "中文" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Select language" })).toHaveClass("public-nav-locale-trigger");
     expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute("href", "/en/login");
     expect(screen.getByRole("link", { name: "Log in" })).toHaveClass("public-nav-auth-button");
   });

@@ -1,9 +1,9 @@
-import { ArrowUpRight, ChevronDown } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import type { AdminAuthSession } from "../../lib/admin-auth";
+import { ListBox, Select } from "../../lib/heroui";
 import { getMessages } from "../../lib/messages";
-import type { AppLocale } from "../../types";
 import { APP_LOCALE_OPTIONS, useAppLocale } from "../../lib/locale";
 import { usePublicTheme } from "../../lib/public-theme";
 import AdminSidebar from "./AdminSidebar";
@@ -59,21 +59,33 @@ export default function AdminLayout({ adminAuthSession, onSignOut }: AdminLayout
                   {copy.common.logOut}
                 </button>
               ) : null}
-              <div className="admin-nav-locale-shell">
-                <select
-                  className="admin-nav-locale-select type-action"
-                  aria-label={copy.nav.selectLanguage}
-                  value={locale}
-                  onChange={(event) => setLocale?.(event.target.value as AppLocale)}
-                >
-                  {APP_LOCALE_OPTIONS.map((option) => (
-                    <option key={option.code} value={option.code}>
-                      {option.nativeLabel}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
-              </div>
+              <Select
+                aria-label={copy.nav.selectLanguage}
+                selectedKey={locale}
+                onSelectionChange={(key) => setLocale?.(String(key) as typeof locale)}
+                className="admin-nav-locale-root"
+              >
+                <Select.Trigger className="admin-nav-locale-trigger type-action">
+                  <Select.Value className="admin-nav-locale-value" />
+                  <Select.Indicator className="admin-nav-locale-indicator" />
+                </Select.Trigger>
+                <Select.Popover className="admin-nav-select-popover">
+                  <ListBox className="admin-nav-select-list" items={APP_LOCALE_OPTIONS}>
+                    {(option: (typeof APP_LOCALE_OPTIONS)[number]) => (
+                      <ListBox.Item
+                        id={option.code}
+                        textValue={option.nativeLabel}
+                        className={({ isFocusVisible, isFocused, isSelected }: { isFocusVisible: boolean; isFocused: boolean; isSelected: boolean }) =>
+                          `admin-nav-select-item ${isSelected ? "is-selected" : ""} ${isFocused || isFocusVisible ? "is-focused" : ""}`.trim()
+                        }
+                      >
+                        <span>{option.nativeLabel}</span>
+                        <ListBox.ItemIndicator className="admin-nav-select-item-indicator" />
+                      </ListBox.Item>
+                    )}
+                  </ListBox>
+                </Select.Popover>
+              </Select>
               <Link
                 to={`/${locale}`}
                 aria-label={copy.common.viewFrontSite}

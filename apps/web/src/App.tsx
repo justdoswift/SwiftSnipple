@@ -4,6 +4,12 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import AdminLayout from "./components/admin/AdminLayout";
 import { Card, Spinner } from "./lib/heroui";
+import {
+  clearStoredAdminAuth,
+  readStoredAdminAuth,
+  writeStoredAdminAuth,
+  type AdminAuthSession,
+} from "./lib/admin-auth";
 import { clearStoredMockAuth, readStoredMockAuth, writeStoredMockAuth, type MockAuthSession } from "./lib/mock-auth";
 import {
   PUBLIC_THEME_STORAGE_KEY,
@@ -19,6 +25,7 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const AccountPage = lazy(() => import("./pages/AccountPage"));
+const AdminLoginPage = lazy(() => import("./pages/admin/AdminLoginPage"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminSnippets = lazy(() => import("./pages/admin/AdminSnippets"));
 const AdminSnippetEditor = lazy(() => import("./pages/admin/AdminSnippetEditor"));
@@ -68,6 +75,20 @@ function AdminRouteFallback() {
   );
 }
 
+function AdminAuthGate({
+  authSession,
+  children,
+}: {
+  authSession: AdminAuthSession | null;
+  children: ReactNode;
+}) {
+  if (!authSession) {
+    return <Navigate to="/admin/login" replace />;
+  }
+
+  return <>{children}</>;
+}
+
 function PublicShell({
   children,
   theme,
@@ -102,6 +123,7 @@ function PublicShell({
 export default function App() {
   const [theme, setTheme] = useState<PublicTheme>(readStoredPublicTheme);
   const [authSession, setAuthSession] = useState<MockAuthSession | null>(readStoredMockAuth);
+  const [adminAuthSession, setAdminAuthSession] = useState<AdminAuthSession | null>(readStoredAdminAuth);
 
   useEffect(() => {
     window.localStorage.setItem(PUBLIC_THEME_STORAGE_KEY, theme);
@@ -115,6 +137,14 @@ export default function App() {
   const handleSignOut = () => {
     clearStoredMockAuth();
     setAuthSession(null);
+  };
+  const handleAdminAuthenticate = (session: AdminAuthSession) => {
+    writeStoredAdminAuth(session);
+    setAdminAuthSession(session);
+  };
+  const handleAdminSignOut = () => {
+    clearStoredAdminAuth();
+    setAdminAuthSession(null);
   };
 
   return (
@@ -176,8 +206,27 @@ export default function App() {
               </PublicShell>
             }
           />
+          <Route
+            path="/admin/login"
+            element={
+              adminAuthSession ? (
+                <Navigate to="/admin" replace />
+              ) : (
+                <Suspense fallback={<AdminRouteFallback />}>
+                  <AdminLoginPage authSession={adminAuthSession} onAuthenticate={handleAdminAuthenticate} />
+                </Suspense>
+              )
+            }
+          />
           <Route path="/articles/:slug" element={<LegacySnippetRedirect />} />
-          <Route path="/admin" element={<AdminLayout />}>
+          <Route
+            path="/admin"
+            element={
+              <AdminAuthGate authSession={adminAuthSession}>
+                <AdminLayout adminAuthSession={adminAuthSession} onSignOut={handleAdminSignOut} />
+              </AdminAuthGate>
+            }
+          >
             <Route
               index
               element={

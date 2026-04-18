@@ -834,6 +834,15 @@
     letter-spacing: -0.05em;
   }
 
+  .auth-admin-kicker {
+    color: rgba(255, 255, 255, 0.46);
+  }
+
+  .auth-admin-copy {
+    max-width: 28rem;
+    color: rgba(255, 255, 255, 0.62);
+  }
+
   .auth-session-banner {
     display: flex;
     flex-direction: column;
@@ -1011,6 +1020,12 @@
     color: rgba(255, 255, 255, 0.64);
   }
 
+  .auth-admin-footer {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: flex-start;
+  }
+
   .account-page {
     display: flex;
     flex-direction: column;
@@ -1101,6 +1116,14 @@
     background: rgba(255, 255, 255, 0.88);
     color: rgba(0, 0, 0, 0.92);
     box-shadow: 0 30px 90px rgba(0, 0, 0, 0.12);
+  }
+
+  .public-theme[data-theme="light"] .auth-admin-kicker {
+    color: rgba(0, 0, 0, 0.44);
+  }
+
+  .public-theme[data-theme="light"] .auth-admin-copy {
+    color: rgba(0, 0, 0, 0.62);
   }
 
   .public-theme[data-theme="light"] .auth-divider,

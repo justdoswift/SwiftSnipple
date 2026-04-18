@@ -7,6 +7,7 @@ import AdminSnippets from "../../pages/admin/AdminSnippets";
 import { getSnippets } from "../../services/snippets";
 import { Snippet } from "../../types";
 import AdminLayout from "./AdminLayout";
+import type { AdminAuthSession } from "../../lib/admin-auth";
 
 vi.mock("../../services/snippets", () => ({
   createSnippet: vi.fn(),
@@ -38,11 +39,17 @@ const baseSnippet: Snippet = {
   publishedAt: null,
 };
 
+const adminAuthSession: AdminAuthSession = {
+  email: "creator@example.com",
+  provider: "email",
+  createdAt: "2026-04-18T00:00:00.000Z",
+};
+
 function renderAdminRoute(initialEntry: string) {
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
       <Routes>
-        <Route path="/admin" element={<AdminLayout />}>
+        <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
           <Route index element={<AdminDashboard />} />
           <Route path="snippets" element={<AdminSnippets />} />
           <Route path="snippets/new" element={<AdminSnippetEditor />} />
@@ -70,6 +77,7 @@ describe("AdminLayout", () => {
     expect(screen.getByRole("link", { name: "Just Do Swift admin" })).toBeInTheDocument();
     expect(header).not.toBeNull();
     expect(within(header!).getByRole("link", { name: "New Snippet" })).toHaveAttribute("href", "/admin/snippets/new");
+    expect(within(header!).getByRole("button", { name: "Log out" })).toBeInTheDocument();
     expect(within(header!).getByRole("link", { name: /View Front Site/i })).toBeInTheDocument();
     expect(screen.queryByRole("navigation", { name: "Admin sections" })).not.toBeInTheDocument();
     expect(screen.queryByText("Ship SwiftUI snippets with the same care you use to build them.")).not.toBeInTheDocument();
@@ -97,6 +105,7 @@ describe("AdminLayout", () => {
 
     expect(header).not.toBeNull();
     expect(within(header!).getByRole("link", { name: "New Snippet" })).toHaveAttribute("href", "/admin/snippets/new");
+    expect(within(header!).getByRole("button", { name: "Log out" })).toBeInTheDocument();
     expect(within(header!).getByRole("link", { name: /View Front Site/i })).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Admin sections" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /overview/i })).toBeInTheDocument();
@@ -118,6 +127,7 @@ describe("AdminLayout", () => {
 
     expect(header).not.toBeNull();
     expect(within(header!).getByRole("link", { name: "Just Do Swift admin" })).toBeInTheDocument();
+    expect(within(header!).getByRole("button", { name: "Log out" })).toBeInTheDocument();
     expect(screen.queryByRole("navigation", { name: "Admin sections" })).not.toBeInTheDocument();
     expect(screen.getByTestId("admin-content-shell")).toHaveClass("md:px-24");
     expect(screen.getByTestId("admin-content-shell")).toHaveClass("xl:px-28");

@@ -1,11 +1,17 @@
 import { ArrowUpRight } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
+import type { AdminAuthSession } from "../../lib/admin-auth";
 import { usePublicTheme } from "../../lib/public-theme";
 import AdminSidebar from "./AdminSidebar";
 import { type AdminHeaderConfig, type AdminHeaderOutletContext } from "./useAdminHeader";
 
-export default function AdminLayout() {
+interface AdminLayoutProps {
+  adminAuthSession: AdminAuthSession | null;
+  onSignOut: () => void;
+}
+
+export default function AdminLayout({ adminAuthSession, onSignOut }: AdminLayoutProps) {
   const theme = usePublicTheme();
   const location = useLocation();
   const [headerConfig, setHeaderConfig] = useState<AdminHeaderConfig | null>(null);
@@ -39,6 +45,11 @@ export default function AdminLayout() {
 
             <div className="admin-nav-actions flex items-center justify-end gap-2">
               {activeHeader.end}
+              {adminAuthSession ? (
+                <button type="button" className="admin-button-secondary type-action h-11 px-5" onClick={onSignOut}>
+                  Log out
+                </button>
+              ) : null}
               <Link
                 to="/"
                 aria-label="View Front Site"

@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
+import { ADMIN_AUTH_STORAGE_KEY } from "./lib/admin-auth";
 import { getSnippets } from "./services/snippets";
 import type { Snippet } from "./types";
 
@@ -89,7 +90,26 @@ describe("App public theme", () => {
     expect(screen.getByRole("button", { name: "Switch to dark site mode" })).toBeInTheDocument();
   });
 
-  it("defaults the admin workspace to dark mode", async () => {
+  it("redirects unauthenticated admin visits to the creator login page", async () => {
+    renderAppAt("/admin");
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Creator Log In" })).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText("Entries")).not.toBeInTheDocument();
+  });
+
+  it("allows authenticated creators into the admin workspace", async () => {
+    window.localStorage.setItem(
+      ADMIN_AUTH_STORAGE_KEY,
+      JSON.stringify({
+        email: "creator@example.com",
+        provider: "email",
+        createdAt: "2026-04-18T00:00:00.000Z",
+      }),
+    );
+
     renderAppAt("/admin");
 
     await waitFor(() => {
@@ -97,6 +117,46 @@ describe("App public theme", () => {
     });
 
     expect(screen.getByTestId("admin-theme-root")).toHaveAttribute("data-theme", "dark");
+  });
+
+  it("redirects authenticated creators away from admin login", async () => {
+    window.localStorage.setItem(
+      ADMIN_AUTH_STORAGE_KEY,
+      JSON.stringify({
+        email: "creator@example.com",
+        provider: "email",
+        createdAt: "2026-04-18T00:00:00.000Z",
+      }),
+    );
+
+    renderAppAt("/admin/login");
+
+    await waitFor(() => {
+      expect(screen.getByText("Entries")).toBeInTheDocument();
+    });
+  });
+
+  it("returns creators to the admin login page after sign out", async () => {
+    window.localStorage.setItem(
+      ADMIN_AUTH_STORAGE_KEY,
+      JSON.stringify({
+        email: "creator@example.com",
+        provider: "email",
+        createdAt: "2026-04-18T00:00:00.000Z",
+      }),
+    );
+
+    renderAppAt("/admin");
+
+    await waitFor(() => {
+      expect(screen.getByText("Entries")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Log out" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Creator Log In" })).toBeInTheDocument();
+    });
   });
 
   it("keeps the login route in sync with the selected public theme", async () => {

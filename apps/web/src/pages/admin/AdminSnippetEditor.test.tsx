@@ -1,9 +1,9 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import AdminLayout from "../../components/admin/AdminLayout";
 import AdminSnippetEditor from "./AdminSnippetEditor";
-import { createSnippet, getSnippetById, publishSnippet } from "../../services/snippets";
+import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, updateSnippet } from "../../services/snippets";
 
 vi.mock("../../services/snippets", () => ({
   createSnippet: vi.fn(),
@@ -16,7 +16,13 @@ vi.mock("../../services/snippets", () => ({
 
 const mockedGetSnippetById = vi.mocked(getSnippetById);
 const mockedCreateSnippet = vi.mocked(createSnippet);
+const mockedDeleteSnippet = vi.mocked(deleteSnippet);
 const mockedPublishSnippet = vi.mocked(publishSnippet);
+const mockedUpdateSnippet = vi.mocked(updateSnippet);
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe("AdminSnippetEditor", () => {
   it("renders the new snippet editor route without inline preview", () => {
@@ -42,7 +48,6 @@ describe("AdminSnippetEditor", () => {
     expect(screen.getByRole("tab", { name: "Prompt" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Surface" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Preview" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Draft" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Publish" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /view front site/i })).toBeInTheDocument();
     expect(screen.getByLabelText("Implementation notes")).toHaveClass("admin-editor-scrollbar");
@@ -66,6 +71,7 @@ describe("AdminSnippetEditor", () => {
         <Routes>
           <Route path="/admin" element={<AdminLayout />}>
             <Route path="snippets/new" element={<AdminSnippetEditor />} />
+            <Route path="snippets/:id" element={<AdminSnippetEditor />} />
           </Route>
         </Routes>
       </MemoryRouter>,
@@ -78,7 +84,6 @@ describe("AdminSnippetEditor", () => {
     expect(screen.getByRole("tab", { name: "Prompt" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Surface" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Preview" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Draft" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Publish" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /view front site/i })).toBeInTheDocument();
     expect(screen.getByLabelText("Implementation notes")).toBeInTheDocument();
@@ -189,6 +194,7 @@ describe("AdminSnippetEditor", () => {
         <Routes>
           <Route path="/admin" element={<AdminLayout />}>
             <Route path="snippets/new" element={<AdminSnippetEditor />} />
+            <Route path="snippets/:id" element={<AdminSnippetEditor />} />
           </Route>
         </Routes>
       </MemoryRouter>,
@@ -204,10 +210,254 @@ describe("AdminSnippetEditor", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Publish" }));
     fireEvent.click(screen.getByRole("button", { name: "Confirm Publish" }));
+    expect(screen.queryByText("Publish this snippet to the public library?")).not.toBeInTheDocument();
 
     await waitFor(() => {
       expect(mockedCreateSnippet).toHaveBeenCalledTimes(1);
       expect(mockedPublishSnippet).toHaveBeenCalledWith("snippet-1");
+      expect(screen.getByRole("button", { name: "Published" })).toBeDisabled();
+    });
+  });
+
+  it("auto-saves a new snippet after the first edit", async () => {
+    vi.useFakeTimers();
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+    mockedUpdateSnippet.mockReset();
+    mockedCreateSnippet.mockResolvedValue({
+      id: "snippet-1",
+      title: "Fresh Draft",
+      slug: "fresh-draft",
+      excerpt: "",
+      category: "Workflow",
+      tags: [],
+      coverImage: "https://example.com/cover.jpg",
+      content: "# New Snippet",
+      code: "Text(\"Hello\")",
+      prompts: "Build a polished snippet.",
+      seoTitle: "",
+      seoDescription: "",
+      status: "Draft",
+      updatedAt: "2026-04-18T00:00:00.000Z",
+      publishedAt: null,
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route path="snippets/new" element={<AdminSnippetEditor />} />
+            <Route path="snippets/:id" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByLabelText("Snippet Title"), { target: { value: "Fresh Draft" } });
+
+    await act(async () => {
+      vi.advanceTimersByTime(950);
+      await Promise.resolve();
+    });
+
+    expect(mockedCreateSnippet).toHaveBeenCalledTimes(1);
+    expect(mockedUpdateSnippet).not.toHaveBeenCalled();
+  });
+
+  it("opens a HeroUI delete confirmation modal before deleting", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+    mockedUpdateSnippet.mockReset();
+    mockedDeleteSnippet.mockReset();
+    mockedGetSnippetById.mockResolvedValue({
+      id: "snippet-1",
+      title: "Live Snippet",
+      slug: "live-snippet",
+      excerpt: "Published snippet.",
+      category: "Workflow",
+      tags: ["SwiftUI"],
+      coverImage: "https://example.com/cover.jpg",
+      content: "# Live Snippet",
+      code: "Text(\"Live\")",
+      prompts: "Keep it polished.",
+      seoTitle: "Live Snippet",
+      seoDescription: "SEO copy",
+      status: "Draft",
+      updatedAt: "2026-04-18T00:00:00.000Z",
+      publishedAt: null,
+    });
+    mockedDeleteSnippet.mockResolvedValue(undefined);
+
+    render(
+      <MemoryRouter initialEntries={["/admin/snippets/snippet-1"]}>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route path="snippets" element={<div>Snippet Library</div>} />
+            <Route path="snippets/:id" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Snippet Title")).toHaveValue("Live Snippet");
+    });
+
+    fireEvent.click(screen.getByRole("tab", { name: "Surface" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete Snippet" }));
+
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByText("Delete this snippet permanently?")).toBeInTheDocument();
+    expect(mockedDeleteSnippet).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+    expect(mockedDeleteSnippet).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Delete Snippet" }));
+    const dialog = screen.getByRole("dialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Delete Snippet" }));
+
+    await waitFor(() => {
+      expect(mockedDeleteSnippet).toHaveBeenCalledWith("snippet-1");
+      expect(screen.getByText("Snippet Library")).toBeInTheDocument();
+    });
+  });
+
+  it("turns Published into Update when a published snippet is edited", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+    mockedUpdateSnippet.mockReset();
+    mockedGetSnippetById.mockResolvedValue({
+      id: "snippet-1",
+      title: "Live Snippet",
+      slug: "live-snippet",
+      excerpt: "Published snippet.",
+      category: "Workflow",
+      tags: ["SwiftUI"],
+      coverImage: "https://example.com/cover.jpg",
+      content: "# Live Snippet",
+      code: "Text(\"Live\")",
+      prompts: "Keep it polished.",
+      seoTitle: "Live Snippet",
+      seoDescription: "SEO copy",
+      status: "Published",
+      updatedAt: "2026-04-18T00:00:00.000Z",
+      publishedAt: "2026-04-18T00:00:00.000Z",
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/admin/snippets/snippet-1"]}>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route path="snippets/:id" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Published" })).toBeDisabled();
+    });
+
+    fireEvent.change(screen.getByLabelText("Snippet Title"), { target: { value: "Live Snippet Updated" } });
+
+    expect(screen.getByRole("button", { name: "Update" })).toBeInTheDocument();
+    expect(mockedUpdateSnippet).not.toHaveBeenCalled();
+  });
+
+  it("updates a published snippet only after confirmation", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+    mockedUpdateSnippet.mockReset();
+    mockedGetSnippetById.mockResolvedValue({
+      id: "snippet-1",
+      title: "Live Snippet",
+      slug: "live-snippet",
+      excerpt: "Published snippet.",
+      category: "Workflow",
+      tags: ["SwiftUI"],
+      coverImage: "https://example.com/cover.jpg",
+      content: "# Live Snippet",
+      code: "Text(\"Live\")",
+      prompts: "Keep it polished.",
+      seoTitle: "Live Snippet",
+      seoDescription: "SEO copy",
+      status: "Published",
+      updatedAt: "2026-04-18T00:00:00.000Z",
+      publishedAt: "2026-04-18T00:00:00.000Z",
+    });
+    mockedUpdateSnippet.mockResolvedValue({
+      id: "snippet-1",
+      title: "Live Snippet Updated",
+      slug: "live-snippet",
+      excerpt: "Published snippet.",
+      category: "Workflow",
+      tags: ["SwiftUI"],
+      coverImage: "https://example.com/cover.jpg",
+      content: "# Live Snippet",
+      code: "Text(\"Live\")",
+      prompts: "Keep it polished.",
+      seoTitle: "Live Snippet",
+      seoDescription: "SEO copy",
+      status: "Published",
+      updatedAt: "2026-04-18T00:10:00.000Z",
+      publishedAt: "2026-04-18T00:00:00.000Z",
+    });
+    mockedPublishSnippet.mockResolvedValue({
+      id: "snippet-1",
+      title: "Live Snippet Updated",
+      slug: "live-snippet",
+      excerpt: "Published snippet.",
+      category: "Workflow",
+      tags: ["SwiftUI"],
+      coverImage: "https://example.com/cover.jpg",
+      content: "# Live Snippet",
+      code: "Text(\"Live\")",
+      prompts: "Keep it polished.",
+      seoTitle: "Live Snippet",
+      seoDescription: "SEO copy",
+      status: "Published",
+      updatedAt: "2026-04-18T00:12:00.000Z",
+      publishedAt: "2026-04-18T00:12:00.000Z",
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/admin/snippets/snippet-1"]}>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route path="snippets/:id" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Published" })).toBeDisabled();
+    });
+
+    fireEvent.change(screen.getByLabelText("Snippet Title"), { target: { value: "Live Snippet Updated" } });
+    fireEvent.click(screen.getByRole("button", { name: "Update" }));
+
+    expect(screen.getByText("Update this snippet in the public library?")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Confirm Update" }));
+    expect(screen.queryByText("Update this snippet in the public library?")).not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(mockedUpdateSnippet).toHaveBeenCalledWith(
+        "snippet-1",
+        expect.objectContaining({
+          title: "Live Snippet Updated",
+        }),
+      );
+      expect(mockedPublishSnippet).toHaveBeenCalledWith("snippet-1");
+      expect(screen.getByRole("button", { name: "Published" })).toBeDisabled();
     });
   });
 

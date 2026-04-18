@@ -131,7 +131,6 @@ describe("AdminLayout", () => {
     expect(screen.getByRole("tab", { name: "Prompt" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Surface" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Preview" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Draft" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Publish" })).toBeInTheDocument();
     expect(within(header!).getByRole("link", { name: /View Front Site/i })).toBeInTheDocument();
   });

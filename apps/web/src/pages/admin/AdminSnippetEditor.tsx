@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Button, Input, TextArea } from "../../lib/heroui";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Button, Input, Modal, TextArea, useOverlayState } from "../../lib/heroui";
 import { useNavigate, useParams } from "react-router-dom";
 import EditorSection from "../../components/admin/EditorSection";
 import HighlightedCodeEditor from "../../components/admin/HighlightedCodeEditor";
@@ -19,6 +19,8 @@ const EDITOR_TABS = [
 ] as const;
 type EditorTabKey = (typeof EDITOR_TABS)[number]["key"];
 type PreviewDevice = "desktop" | "mobile";
+type AutosaveState = "idle" | "saving" | "saved";
+type PrimaryActionState = "idle" | "publishing" | "updating";
 
 function EditorSectionRail({
   activeTab,
@@ -195,15 +197,27 @@ export default function AdminSnippetEditor() {
   const isNew = id === undefined;
   const [baseSnippet, setBaseSnippet] = useState<Snippet>(createEmptySnippet());
   const [form, setForm] = useState<SnippetFormState>(() => toFormState(createEmptySnippet()));
-  const [saveLabel, setSaveLabel] = useState("Draft");
   const [isLoading, setIsLoading] = useState(!isNew);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
   const [activeTab, setActiveTab] = useState<EditorTabKey>("content");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<PreviewDevice>("desktop");
+  const [autosaveState, setAutosaveState] = useState<AutosaveState>("idle");
+  const [primaryActionState, setPrimaryActionState] = useState<PrimaryActionState>("idle");
+  const hydratedSnippetRef = useRef<Snippet | null>(null);
+  const formRef = useRef(form);
+  const deleteConfirmState = useOverlayState({
+    isOpen: isDeleteConfirmOpen,
+    onOpenChange: setIsDeleteConfirmOpen,
+  });
+
+  useEffect(() => {
+    formRef.current = form;
+  }, [form]);
 
   useEffect(() => {
     if (isNew || !id) {
@@ -211,6 +225,19 @@ export default function AdminSnippetEditor() {
       setBaseSnippet(emptySnippet);
       setForm(toFormState(emptySnippet));
       setIsLoading(false);
+      setAutosaveState("idle");
+      setPrimaryActionState("idle");
+      return;
+    }
+
+    if (hydratedSnippetRef.current?.id === id) {
+      const hydratedSnippet = hydratedSnippetRef.current;
+      hydratedSnippetRef.current = null;
+      setBaseSnippet(hydratedSnippet);
+      setForm(toFormState(hydratedSnippet));
+      setIsLoading(false);
+      setAutosaveState("idle");
+      setPrimaryActionState("idle");
       return;
     }
 
@@ -223,6 +250,8 @@ export default function AdminSnippetEditor() {
         setForm(toFormState(snippet));
         setError("");
         setFeedback("");
+        setAutosaveState("idle");
+        setPrimaryActionState("idle");
       })
       .catch((err: Error) => {
         if (!active) return;
@@ -265,9 +294,40 @@ export default function AdminSnippetEditor() {
   const previewSnippet = useMemo(() => fromFormState(baseSnippet, form), [baseSnippet, form]);
   const previewPath = baseSnippet.slug ? `/snippets/${baseSnippet.slug}` : "";
   const hasSavedPreview = Boolean(baseSnippet.id && baseSnippet.slug);
-  const hasUnsavedChanges =
-    JSON.stringify(toSnippetPayload(previewSnippet)) !== JSON.stringify(toSnippetPayload(baseSnippet));
-  const statusOptions = form.status === "Published" ? (["Published"] as const) : EDITABLE_STATUS_OPTIONS;
+  const previewPayloadSignature = useMemo(() => JSON.stringify(toSnippetPayload(previewSnippet)), [previewSnippet]);
+  const basePayloadSignature = useMemo(() => JSON.stringify(toSnippetPayload(baseSnippet)), [baseSnippet]);
+  const hasUnsavedChanges = previewPayloadSignature !== basePayloadSignature;
+  const isPublishedEntry = baseSnippet.status === "Published";
+  const statusOptions = isPublishedEntry ? (["Published"] as const) : EDITABLE_STATUS_OPTIONS;
+  const primaryActionLabel =
+    primaryActionState === "publishing"
+      ? "Publishing..."
+      : primaryActionState === "updating"
+        ? "Updating..."
+        : isPublishedEntry
+          ? hasUnsavedChanges
+            ? "Update"
+            : "Published"
+          : "Publish";
+  const isPrimaryActionDisabled =
+    isLoading ||
+    isDeleting ||
+    autosaveState === "saving" ||
+    primaryActionState !== "idle" ||
+    (isPublishedEntry && !hasUnsavedChanges);
+  const publishDialogTitle = isPublishedEntry
+    ? "Update this snippet in the public library?"
+    : "Publish this snippet to the public library?";
+  const publishDialogButtonLabel =
+    primaryActionState === "publishing"
+      ? "Publishing..."
+      : primaryActionState === "updating"
+        ? "Updating..."
+        : isPublishedEntry
+          ? "Confirm Update"
+          : "Confirm Publish";
+  const autosaveFeedbackLabel =
+    autosaveState === "saving" ? "Saving..." : autosaveState === "saved" ? "Saved" : "";
 
   const updateField = <K extends keyof SnippetFormState>(field: K, value: SnippetFormState[K]) => {
     setForm((current) => {
@@ -286,91 +346,110 @@ export default function AdminSnippetEditor() {
     [baseSnippet, isNew],
   );
 
-  const handleSave = useCallback(async () => {
-    try {
-      setIsSubmitting(true);
-      setError("");
-      setFeedback("");
-      const finalSnippet = await persistSnippet(form);
+  useEffect(() => {
+    if (autosaveState !== "saved") return undefined;
 
-      setBaseSnippet(finalSnippet);
-      setForm(toFormState(finalSnippet));
-      setSaveLabel("Saved");
-      setFeedback(
-        finalSnippet.status === "Scheduled"
-          ? "Snippet saved in the schedule. It will stay off the public homepage until published."
-          : "Changes saved successfully.",
-      );
-      window.setTimeout(() => setSaveLabel("Draft"), 1800);
+    const timeoutId = window.setTimeout(() => {
+      setAutosaveState("idle");
+    }, 1400);
 
-      if (isNew) {
-        navigate(`/admin/snippets/${finalSnippet.id}`, { replace: true });
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save snippet");
-    } finally {
-      setIsSubmitting(false);
+    return () => window.clearTimeout(timeoutId);
+  }, [autosaveState]);
+
+  useEffect(() => {
+    if (isLoading || isDeleting || primaryActionState !== "idle" || isPublishedEntry || !hasUnsavedChanges) {
+      return undefined;
     }
-  }, [form, isNew, navigate, persistSnippet]);
+
+    const timeoutId = window.setTimeout(async () => {
+      setAutosaveState("saving");
+
+      try {
+        setError("");
+        const currentForm = formRef.current;
+        const savedSnippet = await persistSnippet(currentForm);
+
+        setBaseSnippet(savedSnippet);
+        setFeedback(
+          savedSnippet.status === "Scheduled"
+            ? "Snippet saved in the schedule. It will stay off the public homepage until published."
+            : "Draft changes saved automatically.",
+        );
+        setAutosaveState("saved");
+
+        if (isNew) {
+          hydratedSnippetRef.current = savedSnippet;
+          navigate(`/admin/snippets/${savedSnippet.id}`, { replace: true });
+        }
+      } catch (err) {
+        setAutosaveState("idle");
+        setError(err instanceof Error ? err.message : "Failed to save snippet");
+      }
+    }, 900);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [hasUnsavedChanges, isDeleting, isLoading, isNew, isPublishedEntry, navigate, persistSnippet, primaryActionState]);
 
   const handleConfirmPublish = useCallback(async () => {
+    const nextActionState: PrimaryActionState = isPublishedEntry ? "updating" : "publishing";
+    setIsPublishConfirmOpen(false);
+    setPrimaryActionState(nextActionState);
+
     try {
-      setIsSubmitting(true);
       setError("");
       setFeedback("");
-      const savedSnippet = await persistSnippet(form);
+      setAutosaveState("idle");
+      const savedSnippet = await persistSnippet(formRef.current);
       const finalSnippet = await publishSnippet(savedSnippet.id);
 
       setBaseSnippet(finalSnippet);
       setForm(toFormState(finalSnippet));
-      setSaveLabel("Published");
-      setFeedback("Snippet published and now eligible for the public homepage.");
-      setIsPublishConfirmOpen(false);
-      window.setTimeout(() => setSaveLabel("Draft"), 1800);
+      setFeedback(
+        nextActionState === "updating"
+          ? "Snippet updated in the public library."
+          : "Snippet published and now eligible for the public homepage.",
+      );
 
       if (isNew) {
+        hydratedSnippetRef.current = finalSnippet;
         navigate(`/admin/snippets/${finalSnippet.id}`, { replace: true });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to publish snippet");
     } finally {
-      setIsSubmitting(false);
+      setPrimaryActionState("idle");
     }
-  }, [form, isNew, navigate, persistSnippet]);
+  }, [isNew, isPublishedEntry, navigate, persistSnippet]);
 
   const handleUnpublish = async () => {
     if (!baseSnippet.id) return;
 
     try {
-      setIsSubmitting(true);
+      setPrimaryActionState("idle");
       setError("");
       setFeedback("");
       const snippet = await unpublishSnippet(baseSnippet.id);
       setBaseSnippet(snippet);
       setForm(toFormState(snippet));
-      setSaveLabel("Unpublished");
       setFeedback("Snippet moved back to draft and removed from the public library.");
-      window.setTimeout(() => setSaveLabel("Draft"), 1800);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to unpublish snippet");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   const handleDelete = async () => {
     if (!baseSnippet.id) return;
-    if (!window.confirm("Delete this snippet permanently?")) return;
 
     try {
-      setIsSubmitting(true);
+      setIsDeleting(true);
       setError("");
+      setIsDeleteConfirmOpen(false);
       await deleteSnippet(baseSnippet.id);
       navigate("/admin/snippets");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete snippet");
     } finally {
-      setIsSubmitting(false);
+      setIsDeleting(false);
     }
   };
 
@@ -404,8 +483,11 @@ export default function AdminSnippetEditor() {
             </div>
           )}
           {feedback ? (
-            <span className="admin-feedback-success hidden text-xs font-mono animate-in fade-in duration-500 2xl:block">
-              {feedback}
+            <span className="admin-feedback-success hidden text-xs font-mono animate-in fade-in duration-500 2xl:block">{feedback}</span>
+          ) : null}
+          {autosaveFeedbackLabel ? (
+            <span className="admin-copy-muted hidden text-xs font-mono animate-in fade-in duration-500 xl:block">
+              {autosaveFeedbackLabel}
             </span>
           ) : null}
           <Button
@@ -416,14 +498,7 @@ export default function AdminSnippetEditor() {
             <Monitor size={16} />
           </Button>
           <Button
-            isDisabled={isSubmitting}
-            className="h-11 shrink-0 px-2.5 text-sm admin-button-secondary min-[1500px]:px-3 2xl:px-4"
-            onPress={handleSave}
-          >
-            {isSubmitting ? "..." : saveLabel}
-          </Button>
-          <Button
-            isDisabled={isSubmitting}
+            isDisabled={isPrimaryActionDisabled}
             className="h-11 shrink-0 px-2.5 text-sm admin-button-primary min-[1500px]:px-3 2xl:px-4"
             onPress={() => {
               setError("");
@@ -431,19 +506,21 @@ export default function AdminSnippetEditor() {
               setIsPublishConfirmOpen(true);
             }}
           >
-            Publish
+            {primaryActionLabel}
           </Button>
         </>
       ),
     }),
     [
+      autosaveFeedbackLabel,
       feedback,
       handlePreview,
-      handleSave,
+      isDeleting,
       isLoading,
-      isSubmitting,
+      isPrimaryActionDisabled,
+      primaryActionLabel,
+      primaryActionState,
       previewSnippet.status,
-      saveLabel,
     ],
   );
 
@@ -600,7 +677,7 @@ export default function AdminSnippetEditor() {
                            value={form.status}
                            onChange={(event) => updateField("status", event.target.value as SnippetStatus)}
                            className="admin-select w-full text-sm"
-                           disabled={form.status === "Published"}
+                           disabled={isPublishedEntry}
                          >
                            {statusOptions.map((status) => (
                              <option key={status} value={status} disabled={status === "Published"}>
@@ -660,7 +737,8 @@ export default function AdminSnippetEditor() {
                           variant="outline"
                           radius="full"
                           className="admin-danger-button h-10 border-dashed transition-all"
-                          onPress={handleDelete}
+                          isDisabled={isDeleting || primaryActionState !== "idle"}
+                          onPress={() => setIsDeleteConfirmOpen(true)}
                         >
                           <Trash2 size={16} className="mr-2" />
                           Delete Snippet
@@ -804,6 +882,49 @@ export default function AdminSnippetEditor() {
         </div>
       ) : null}
 
+      <Modal state={deleteConfirmState}>
+        <Modal.Trigger className="sr-only">
+          <button type="button" tabIndex={-1} aria-hidden="true">
+            Open delete confirmation
+          </button>
+        </Modal.Trigger>
+        <Modal.Backdrop className="admin-delete-modal-backdrop" isDismissable={!isDeleting}>
+          <Modal.Container placement="center">
+            <Modal.Dialog className="admin-delete-modal w-full max-w-xl">
+              <Modal.Header className="admin-delete-modal-header">
+                <span className="admin-eyebrow type-mono-micro">Delete Confirmation</span>
+                <Modal.Heading className="admin-section-title mt-3 text-[1.55rem] md:text-[1.8rem]">
+                  Delete this snippet permanently?
+                </Modal.Heading>
+              </Modal.Header>
+              <Modal.Body className="admin-delete-modal-body">
+                <p className="admin-copy-muted text-sm leading-relaxed md:text-base">
+                  This will permanently remove{" "}
+                  <strong className="admin-title-strong">{previewSnippet.title || "Untitled Snippet"}</strong> from
+                  the registry. This action cannot be undone.
+                </p>
+              </Modal.Body>
+              <Modal.Footer className="admin-delete-modal-footer">
+                <Button
+                  isDisabled={isDeleting}
+                  className="admin-button-secondary h-11 px-5"
+                  onPress={() => setIsDeleteConfirmOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  isDisabled={isDeleting}
+                  className="admin-button-danger h-11 px-5"
+                  onPress={handleDelete}
+                >
+                  {isDeleting ? "Deleting..." : "Delete Snippet"}
+                </Button>
+              </Modal.Footer>
+            </Modal.Dialog>
+          </Modal.Container>
+        </Modal.Backdrop>
+      </Modal>
+
       {isPublishConfirmOpen ? (
         <div className="fixed inset-0 z-[85]">
           <button
@@ -818,31 +939,37 @@ export default function AdminSnippetEditor() {
                 <div className="space-y-3">
                   <span className="admin-eyebrow type-mono-micro">Publish Confirmation</span>
                   <h2 className="admin-section-title text-[1.6rem] md:text-[1.9rem]">
-                    Publish this snippet to the public library?
+                    {publishDialogTitle}
                   </h2>
                   <p className="admin-copy-muted text-sm leading-relaxed md:text-base">
-                    Confirming will save the current editor state and make <strong className="admin-title-strong">{previewSnippet.title || "Untitled Snippet"}</strong> live in the public snippet library.
+                    {isPublishedEntry ? "Confirming will save the current editor state and replace the live public version of " : "Confirming will save the current editor state and make "}
+                    <strong className="admin-title-strong">{previewSnippet.title || "Untitled Snippet"}</strong>
+                    {isPublishedEntry ? "." : " live in the public snippet library."}
                   </p>
                 </div>
                 <div className="admin-publish-dialog-callout rounded-[22px] border px-4 py-4 text-sm leading-relaxed">
                   {hasUnsavedChanges
-                    ? "This entry has unsaved changes. We will save those edits before publishing."
-                    : "No unsaved changes detected. Publishing will update the current public state only."}
+                    ? isPublishedEntry
+                      ? "This published snippet has local edits. We will save those changes before updating the live public version."
+                      : "This entry has unsaved changes. We will save those edits before publishing."
+                    : isPublishedEntry
+                      ? "No local edits detected. Updating now will re-publish the current saved version."
+                      : "No unsaved changes detected. Publishing will make the current saved version live."}
                 </div>
                 <div className="flex flex-wrap justify-end gap-3 pt-2">
                   <Button
-                    isDisabled={isSubmitting}
+                    isDisabled={primaryActionState !== "idle"}
                     className="admin-button-secondary h-11 px-5"
                     onPress={() => setIsPublishConfirmOpen(false)}
                   >
                     Cancel
                   </Button>
                   <Button
-                    isDisabled={isSubmitting}
+                    isDisabled={primaryActionState !== "idle"}
                     className="admin-button-primary h-11 px-5"
                     onPress={handleConfirmPublish}
                   >
-                    {isSubmitting ? "Publishing..." : "Confirm Publish"}
+                    {publishDialogButtonLabel}
                   </Button>
                 </div>
               </div>

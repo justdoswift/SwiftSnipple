@@ -56,11 +56,23 @@
   }
 
   html {
-    @apply scroll-smooth selection:bg-white selection:text-black;
+    @apply scroll-smooth;
   }
 
   body {
     @apply bg-black text-white font-sans antialiased overflow-x-hidden;
+  }
+
+  .public-theme:not([data-theme="light"]) ::selection,
+  .admin-theme:not([data-theme="light"]) ::selection {
+    background-color: rgba(235, 240, 255, 0.36);
+    color: #050608;
+  }
+
+  .public-theme[data-theme="light"] ::selection,
+  .admin-theme[data-theme="light"] ::selection {
+    background-color: rgba(0, 0, 0, 0.14);
+    color: #050608;
   }
 }
 
@@ -2324,6 +2336,7 @@
 
   .markdown-renderer {
     @apply space-y-5 text-[1.125rem] leading-8;
+    letter-spacing: 0.01em;
     color: var(--public-body-lg);
   }
 

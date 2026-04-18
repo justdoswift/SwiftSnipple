@@ -76,9 +76,6 @@ export default function Home() {
       <section className="mb-32">
         <div className="mx-auto max-w-[900px] text-center">
           <motion.div variants={itemVariants} className="flex flex-col items-center gap-6">
-            <span className="public-pill type-mono-label px-3 py-1 rounded-full">
-              Just Do Swift v1.0
-            </span>
             <h1 className="type-display max-w-[14ch]">
               Exceptional Builds. Native SwiftUI.
             </h1>

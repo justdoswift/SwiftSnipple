@@ -110,13 +110,15 @@ export default function LoginPage({ authSession, onAuthenticate }: LoginPageProp
       <div className="auth-page-backdrop" aria-hidden="true" />
       <div className="auth-page-overlay" aria-hidden="true" />
 
-      <header className="auth-page-brand-shell">
-        <Link to="/" className="auth-page-brand" aria-label="Return to Just Do Swift home">
+      <header className="auth-page-brand-shell public-nav-shell mx-auto flex max-w-[1380px] items-center justify-between gap-3 px-4 py-3 md:px-6">
+        <Link to="/" className="auth-page-brand public-nav-brand min-w-0" aria-label="Return to Just Do Swift home">
           <span className="public-nav-logo" aria-hidden="true">
             <span className="public-nav-logo-bar public-nav-logo-bar-primary" />
             <span className="public-nav-logo-bar public-nav-logo-bar-secondary" />
           </span>
-          <span>Just Do Swift</span>
+          <span className="truncate text-[1.05rem] font-semibold tracking-[-0.03em] md:text-[1.2rem]">
+            Just Do Swift
+          </span>
         </Link>
       </header>
 

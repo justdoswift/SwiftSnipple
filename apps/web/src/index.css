@@ -784,30 +784,16 @@
   }
 
   .auth-page-brand-shell {
-    padding: 1.4rem 1.6rem 0;
+    width: 100%;
   }
 
   .auth-page-brand {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.875rem;
     color: rgba(255, 255, 255, 0.96);
-    text-decoration: none;
-    font-size: 1.2rem;
-    font-weight: 600;
-    letter-spacing: -0.03em;
   }
 
   .auth-page-brand .public-nav-logo {
-    position: relative;
-    display: inline-flex;
-    height: 2.7rem;
-    width: 2.7rem;
-    align-items: center;
-    justify-content: center;
-    border-radius: 1.15rem;
-    border: 1px solid rgba(255, 255, 255, 0.16);
     background-color: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.12);
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
   }
 
@@ -1103,7 +1089,7 @@
 
   .public-theme[data-theme="light"] .auth-page-brand .public-nav-logo {
     border-color: rgba(0, 0, 0, 0.1);
-    background-color: rgba(255, 255, 255, 0.55);
+    background-color: rgba(0, 0, 0, 0.03);
   }
 
   .public-theme[data-theme="light"] .auth-page-brand .public-nav-logo-bar {
@@ -1193,7 +1179,7 @@
 
   @media (max-width: 639px) {
     .auth-page-brand-shell {
-      padding: 1rem 1rem 0;
+      width: 100%;
     }
 
     .auth-page-content {

@@ -110,7 +110,7 @@ describe("App public theme", () => {
       }),
     );
 
-    renderAppAt("/admin");
+    renderAppAt("/en/admin");
 
     await waitFor(() => {
       expect(screen.getByText("Entries")).toBeInTheDocument();
@@ -129,7 +129,7 @@ describe("App public theme", () => {
       }),
     );
 
-    renderAppAt("/admin/login");
+    renderAppAt("/en/admin/login");
 
     await waitFor(() => {
       expect(screen.getByText("Entries")).toBeInTheDocument();
@@ -146,7 +146,7 @@ describe("App public theme", () => {
       }),
     );
 
-    renderAppAt("/admin");
+    renderAppAt("/en/admin");
 
     await waitFor(() => {
       expect(screen.getByText("Entries")).toBeInTheDocument();
@@ -177,7 +177,7 @@ describe("App public theme", () => {
   });
 
   it("routes a simulated login into the member center", async () => {
-    renderAppAt("/login");
+    renderAppAt("/en/login");
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Log In" })).toBeInTheDocument();

@@ -23,9 +23,36 @@ func NewSnippetRepository(pool *pgxpool.Pool) *SnippetRepository {
 	return &SnippetRepository{pool: pool}
 }
 
+const snippetSelectColumns = `
+	id,
+	cover_image,
+	code,
+	status,
+	updated_at,
+	published_at,
+	title_en,
+	slug_en,
+	excerpt_en,
+	category_en,
+	tags_en,
+	content_en,
+	prompts_en,
+	seo_title_en,
+	seo_description_en,
+	title_zh,
+	slug_zh,
+	excerpt_zh,
+	category_zh,
+	tags_zh,
+	content_zh,
+	prompts_zh,
+	seo_title_zh,
+	seo_description_zh
+`
+
 func (r *SnippetRepository) List(ctx context.Context) ([]domain.Snippet, error) {
 	rows, err := r.pool.Query(ctx, `
-		SELECT id, title, slug, excerpt, category, tags, cover_image, content, code, prompts, seo_title, seo_description, status, updated_at, published_at
+		SELECT `+snippetSelectColumns+`
 		FROM snippets
 		ORDER BY updated_at DESC
 	`)
@@ -48,7 +75,7 @@ func (r *SnippetRepository) List(ctx context.Context) ([]domain.Snippet, error) 
 
 func (r *SnippetRepository) GetByID(ctx context.Context, id string) (domain.Snippet, error) {
 	row := r.pool.QueryRow(ctx, `
-		SELECT id, title, slug, excerpt, category, tags, cover_image, content, code, prompts, seo_title, seo_description, status, updated_at, published_at
+		SELECT `+snippetSelectColumns+`
 		FROM snippets
 		WHERE id = $1
 	`, id)
@@ -66,9 +93,9 @@ func (r *SnippetRepository) GetByID(ctx context.Context, id string) (domain.Snip
 
 func (r *SnippetRepository) GetBySlug(ctx context.Context, slug string) (domain.Snippet, error) {
 	row := r.pool.QueryRow(ctx, `
-		SELECT id, title, slug, excerpt, category, tags, cover_image, content, code, prompts, seo_title, seo_description, status, updated_at, published_at
+		SELECT `+snippetSelectColumns+`
 		FROM snippets
-		WHERE slug = $1
+		WHERE slug_en = $1 OR slug_zh = $1
 	`, slug)
 
 	snippet, err := scanSnippet(row)
@@ -88,24 +115,107 @@ func (r *SnippetRepository) Create(ctx context.Context, payload domain.SnippetPa
 
 	row := r.pool.QueryRow(ctx, `
 		INSERT INTO snippets (
-			id, title, slug, excerpt, category, tags, cover_image, content, code, prompts, seo_title, seo_description, status, published_at, created_at, updated_at
+			id,
+			title,
+			slug,
+			excerpt,
+			category,
+			tags,
+			cover_image,
+			content,
+			code,
+			prompts,
+			seo_title,
+			seo_description,
+			title_en,
+			slug_en,
+			excerpt_en,
+			category_en,
+			tags_en,
+			content_en,
+			prompts_en,
+			seo_title_en,
+			seo_description_en,
+			title_zh,
+			slug_zh,
+			excerpt_zh,
+			category_zh,
+			tags_zh,
+			content_zh,
+			prompts_zh,
+			seo_title_zh,
+			seo_description_zh,
+			status,
+			published_at,
+			created_at,
+			updated_at
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW(), NOW()
+			$1,
+			$2,
+			$3,
+			$4,
+			$5,
+			$6,
+			$7,
+			$8,
+			$9,
+			$10,
+			$11,
+			$12,
+			$13,
+			$14,
+			$15,
+			$16,
+			$17,
+			$18,
+			$19,
+			$20,
+			$21,
+			$22,
+			$23,
+			$24,
+			$25,
+			$26,
+			$27,
+			$28,
+			$29,
+			$30,
+			$31,
+			$32,
+			NOW(),
+			NOW()
 		)
-		RETURNING id, title, slug, excerpt, category, tags, cover_image, content, code, prompts, seo_title, seo_description, status, updated_at, published_at
-	`,
+		RETURNING `+snippetSelectColumns,
 		id,
-		payload.Title,
-		payload.Slug,
-		payload.Excerpt,
-		payload.Category,
-		payload.Tags,
+		payload.Locales.EN.Title,
+		payload.Locales.EN.Slug,
+		payload.Locales.EN.Excerpt,
+		payload.Locales.EN.Category,
+		payload.Locales.EN.Tags,
 		payload.CoverImage,
-		payload.Content,
+		payload.Locales.EN.Content,
 		payload.Code,
-		payload.Prompts,
-		payload.SEOTitle,
-		payload.SEODescription,
+		payload.Locales.EN.Prompts,
+		payload.Locales.EN.SEOTitle,
+		payload.Locales.EN.SEODescription,
+		payload.Locales.EN.Title,
+		payload.Locales.EN.Slug,
+		payload.Locales.EN.Excerpt,
+		payload.Locales.EN.Category,
+		payload.Locales.EN.Tags,
+		payload.Locales.EN.Content,
+		payload.Locales.EN.Prompts,
+		payload.Locales.EN.SEOTitle,
+		payload.Locales.EN.SEODescription,
+		payload.Locales.ZH.Title,
+		payload.Locales.ZH.Slug,
+		payload.Locales.ZH.Excerpt,
+		payload.Locales.ZH.Category,
+		payload.Locales.ZH.Tags,
+		payload.Locales.ZH.Content,
+		payload.Locales.ZH.Prompts,
+		payload.Locales.ZH.SEOTitle,
+		payload.Locales.ZH.SEODescription,
 		payload.Status,
 		payload.PublishedAt,
 	)
@@ -130,24 +240,59 @@ func (r *SnippetRepository) Update(ctx context.Context, id string, payload domai
 			prompts = $10,
 			seo_title = $11,
 			seo_description = $12,
-			status = $13,
-			published_at = $14,
+			title_en = $13,
+			slug_en = $14,
+			excerpt_en = $15,
+			category_en = $16,
+			tags_en = $17,
+			content_en = $18,
+			prompts_en = $19,
+			seo_title_en = $20,
+			seo_description_en = $21,
+			title_zh = $22,
+			slug_zh = $23,
+			excerpt_zh = $24,
+			category_zh = $25,
+			tags_zh = $26,
+			content_zh = $27,
+			prompts_zh = $28,
+			seo_title_zh = $29,
+			seo_description_zh = $30,
+			status = $31,
+			published_at = $32,
 			updated_at = NOW()
 		WHERE id = $1
-		RETURNING id, title, slug, excerpt, category, tags, cover_image, content, code, prompts, seo_title, seo_description, status, updated_at, published_at
-	`,
+		RETURNING `+snippetSelectColumns,
 		id,
-		payload.Title,
-		payload.Slug,
-		payload.Excerpt,
-		payload.Category,
-		payload.Tags,
+		payload.Locales.EN.Title,
+		payload.Locales.EN.Slug,
+		payload.Locales.EN.Excerpt,
+		payload.Locales.EN.Category,
+		payload.Locales.EN.Tags,
 		payload.CoverImage,
-		payload.Content,
+		payload.Locales.EN.Content,
 		payload.Code,
-		payload.Prompts,
-		payload.SEOTitle,
-		payload.SEODescription,
+		payload.Locales.EN.Prompts,
+		payload.Locales.EN.SEOTitle,
+		payload.Locales.EN.SEODescription,
+		payload.Locales.EN.Title,
+		payload.Locales.EN.Slug,
+		payload.Locales.EN.Excerpt,
+		payload.Locales.EN.Category,
+		payload.Locales.EN.Tags,
+		payload.Locales.EN.Content,
+		payload.Locales.EN.Prompts,
+		payload.Locales.EN.SEOTitle,
+		payload.Locales.EN.SEODescription,
+		payload.Locales.ZH.Title,
+		payload.Locales.ZH.Slug,
+		payload.Locales.ZH.Excerpt,
+		payload.Locales.ZH.Category,
+		payload.Locales.ZH.Tags,
+		payload.Locales.ZH.Content,
+		payload.Locales.ZH.Prompts,
+		payload.Locales.ZH.SEOTitle,
+		payload.Locales.ZH.SEODescription,
 		payload.Status,
 		payload.PublishedAt,
 	)
@@ -172,8 +317,7 @@ func (r *SnippetRepository) Publish(ctx context.Context, id string) (domain.Snip
 			published_at = $2,
 			updated_at = NOW()
 		WHERE id = $1
-		RETURNING id, title, slug, excerpt, category, tags, cover_image, content, code, prompts, seo_title, seo_description, status, updated_at, published_at
-	`, id, now)
+		RETURNING `+snippetSelectColumns, id, now)
 
 	snippet, err := scanSnippet(row)
 	if err != nil {
@@ -194,8 +338,7 @@ func (r *SnippetRepository) Unpublish(ctx context.Context, id string) (domain.Sn
 			published_at = NULL,
 			updated_at = NOW()
 		WHERE id = $1
-		RETURNING id, title, slug, excerpt, category, tags, cover_image, content, code, prompts, seo_title, seo_description, status, updated_at, published_at
-	`, id)
+		RETURNING `+snippetSelectColumns, id)
 
 	snippet, err := scanSnippet(row)
 	if err != nil {
@@ -227,25 +370,35 @@ func scanSnippet(row interface {
 	var snippet domain.Snippet
 	if err := row.Scan(
 		&snippet.ID,
-		&snippet.Title,
-		&snippet.Slug,
-		&snippet.Excerpt,
-		&snippet.Category,
-		&snippet.Tags,
 		&snippet.CoverImage,
-		&snippet.Content,
 		&snippet.Code,
-		&snippet.Prompts,
-		&snippet.SEOTitle,
-		&snippet.SEODescription,
 		&snippet.Status,
 		&snippet.UpdatedAt,
 		&snippet.PublishedAt,
+		&snippet.Locales.EN.Title,
+		&snippet.Locales.EN.Slug,
+		&snippet.Locales.EN.Excerpt,
+		&snippet.Locales.EN.Category,
+		&snippet.Locales.EN.Tags,
+		&snippet.Locales.EN.Content,
+		&snippet.Locales.EN.Prompts,
+		&snippet.Locales.EN.SEOTitle,
+		&snippet.Locales.EN.SEODescription,
+		&snippet.Locales.ZH.Title,
+		&snippet.Locales.ZH.Slug,
+		&snippet.Locales.ZH.Excerpt,
+		&snippet.Locales.ZH.Category,
+		&snippet.Locales.ZH.Tags,
+		&snippet.Locales.ZH.Content,
+		&snippet.Locales.ZH.Prompts,
+		&snippet.Locales.ZH.SEOTitle,
+		&snippet.Locales.ZH.SEODescription,
 	); err != nil {
 		return domain.Snippet{}, err
 	}
 
-	snippet.Tags = sanitizeTags(snippet.Tags)
+	snippet.Locales.EN.Tags = sanitizeTags(snippet.Locales.EN.Tags)
+	snippet.Locales.ZH.Tags = sanitizeTags(snippet.Locales.ZH.Tags)
 	return snippet, nil
 }
 

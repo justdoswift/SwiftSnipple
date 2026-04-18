@@ -2,6 +2,8 @@ import { useMemo, useState, type FormEvent } from "react";
 import { Eye, EyeOff, Github, Mail } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../lib/heroui";
+import { getMessages } from "../lib/messages";
+import { useAppLocale } from "../lib/locale";
 import type { MockAuthProvider, MockAuthSession } from "../lib/mock-auth";
 
 type AuthMode = "login" | "signup";
@@ -35,6 +37,8 @@ function GoogleMark() {
 }
 
 export default function LoginPage({ authSession, onAuthenticate }: LoginPageProps) {
+  const { locale } = useAppLocale();
+  const copy = getMessages(locale).publicAuth;
   const navigate = useNavigate();
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState(authSession?.email ?? "");
@@ -44,23 +48,23 @@ export default function LoginPage({ authSession, onAuthenticate }: LoginPageProp
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [error, setError] = useState("");
 
-  const title = mode === "login" ? "Log In" : "Sign Up";
-  const ctaLabel = mode === "login" ? "Log In" : "Create Account";
+  const title = mode === "login" ? copy.titleLogin : copy.titleSignup;
+  const ctaLabel = mode === "login" ? copy.logIn : copy.createAccount;
 
   const modePrompt = useMemo(
     () =>
       mode === "login"
         ? {
-            label: "Need to create an account?",
-            action: "Sign Up",
+            label: copy.needAccount,
+            action: copy.signUp,
             nextMode: "signup" as const,
           }
         : {
-            label: "Already have an account?",
-            action: "Log In",
+            label: copy.alreadyHaveAccount,
+            action: copy.logIn,
             nextMode: "login" as const,
           },
-    [mode],
+    [copy.alreadyHaveAccount, copy.logIn, copy.needAccount, copy.signUp, mode],
   );
 
   function validateEmail(value: string) {
@@ -75,24 +79,24 @@ export default function LoginPage({ authSession, onAuthenticate }: LoginPageProp
     };
 
     onAuthenticate(session, provider === "email" ? rememberMe : true);
-    navigate("/account");
+    navigate(`/${locale}/account`);
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!validateEmail(email)) {
-      setError("Use a valid email address to enter the member shell.");
+      setError(copy.invalidEmail);
       return;
     }
 
     if (password.trim().length < 6) {
-      setError("Passwords need at least six characters in this UI preview.");
+      setError(copy.passwordShort);
       return;
     }
 
     if (mode === "signup" && password !== confirmPassword) {
-      setError("Password confirmation needs to match before we can stage the account.");
+      setError(copy.passwordMismatch);
       return;
     }
 
@@ -111,7 +115,7 @@ export default function LoginPage({ authSession, onAuthenticate }: LoginPageProp
       <div className="auth-page-overlay" aria-hidden="true" />
 
       <header className="auth-page-brand-shell public-nav-shell mx-auto flex max-w-[1380px] items-center justify-between gap-3 px-4 py-3 md:px-6">
-        <Link to="/" className="auth-page-brand public-nav-brand min-w-0" aria-label="Return to Just Do Swift home">
+        <Link to={`/${locale}`} className="auth-page-brand public-nav-brand min-w-0" aria-label="Return to Just Do Swift home">
           <span className="public-nav-logo" aria-hidden="true">
             <span className="public-nav-logo-bar public-nav-logo-bar-primary" />
             <span className="public-nav-logo-bar public-nav-logo-bar-secondary" />
@@ -131,35 +135,35 @@ export default function LoginPage({ authSession, onAuthenticate }: LoginPageProp
           {authSession ? (
             <div className="auth-session-banner">
               <p className="type-body-sm">
-                You already have a staged member session for <strong>{authSession.email}</strong>.
+                {copy.sessionBanner} <strong>{authSession.email}</strong>.
               </p>
-              <Button className="public-primary-button type-action h-12 w-full" radius="full" onPress={() => navigate("/account")}>
-                Open Member Center
+              <Button className="public-primary-button type-action h-12 w-full" radius="full" onPress={() => navigate(`/${locale}/account`)}>
+                {copy.openMemberCenter}
               </Button>
             </div>
           ) : null}
 
           <form className="auth-form" onSubmit={handleSubmit}>
             <label className="auth-field">
-              <span className="type-mono-micro auth-field-label">Email Address</span>
+              <span className="type-mono-micro auth-field-label">{copy.emailAddress}</span>
               <input
                 type="email"
                 name="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder="Enter your email"
+                placeholder={copy.enterEmail}
                 autoComplete="email"
               />
             </label>
 
             <label className="auth-field auth-field-password">
-              <span className="type-mono-micro auth-field-label">Password</span>
+              <span className="type-mono-micro auth-field-label">{copy.password}</span>
               <input
                 type={isPasswordVisible ? "text" : "password"}
                 name="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder={mode === "login" ? "Enter your password" : "Create a password"}
+                placeholder={mode === "login" ? copy.enterPassword : copy.createPassword}
                 autoComplete={mode === "login" ? "current-password" : "new-password"}
               />
               <button
@@ -174,13 +178,13 @@ export default function LoginPage({ authSession, onAuthenticate }: LoginPageProp
 
             {mode === "signup" ? (
               <label className="auth-field">
-                <span className="type-mono-micro auth-field-label">Confirm Password</span>
+                <span className="type-mono-micro auth-field-label">{copy.confirmPassword}</span>
                 <input
                   type="password"
                   name="confirmPassword"
                   value={confirmPassword}
                   onChange={(event) => setConfirmPassword(event.target.value)}
-                  placeholder="Confirm your password"
+                  placeholder={copy.confirmPasswordPlaceholder}
                   autoComplete="new-password"
                 />
               </label>
@@ -194,10 +198,10 @@ export default function LoginPage({ authSession, onAuthenticate }: LoginPageProp
                     checked={rememberMe}
                     onChange={(event) => setRememberMe(event.target.checked)}
                   />
-                  <span>Remember me</span>
+                  <span>{copy.rememberMe}</span>
                 </label>
                 <button type="button" className="auth-text-button">
-                  Forgot password?
+                  {copy.forgotPassword}
                 </button>
               </div>
             ) : null}
@@ -219,11 +223,11 @@ export default function LoginPage({ authSession, onAuthenticate }: LoginPageProp
           <div className="auth-provider-stack">
             <button type="button" className="auth-provider-button" onClick={() => handleProviderAuth("google")}>
               <GoogleMark />
-              <span>Continue with Google</span>
+              <span>{copy.continueGoogle}</span>
             </button>
             <button type="button" className="auth-provider-button" onClick={() => handleProviderAuth("github")}>
               <Github size={18} strokeWidth={2} />
-              <span>Continue with GitHub</span>
+              <span>{copy.continueGithub}</span>
             </button>
           </div>
 

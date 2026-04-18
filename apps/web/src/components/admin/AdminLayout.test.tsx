@@ -49,7 +49,7 @@ function renderAdminRoute(initialEntry: string) {
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
       <Routes>
-        <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+        <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
           <Route index element={<AdminDashboard />} />
           <Route path="snippets" element={<AdminSnippets />} />
           <Route path="snippets/new" element={<AdminSnippetEditor />} />
@@ -66,7 +66,7 @@ describe("AdminLayout", () => {
   });
 
   it("shows the unified dashboard command bar", async () => {
-    renderAdminRoute("/admin");
+    renderAdminRoute("/en/admin");
 
     await waitFor(() => {
       expect(screen.getByLabelText("Search title or slug")).toBeInTheDocument();
@@ -76,7 +76,7 @@ describe("AdminLayout", () => {
 
     expect(screen.getByRole("link", { name: "Just Do Swift admin" })).toBeInTheDocument();
     expect(header).not.toBeNull();
-    expect(within(header!).getByRole("link", { name: "New Snippet" })).toHaveAttribute("href", "/admin/snippets/new");
+    expect(within(header!).getByRole("link", { name: "New Snippet" })).toHaveAttribute("href", "/en/admin/snippets/new");
     expect(within(header!).getByRole("button", { name: "Log out" })).toBeInTheDocument();
     expect(within(header!).getByRole("link", { name: /View Front Site/i })).toBeInTheDocument();
     expect(screen.queryByRole("navigation", { name: "Admin sections" })).not.toBeInTheDocument();
@@ -95,7 +95,7 @@ describe("AdminLayout", () => {
   });
 
   it("shows the unified snippets command bar", async () => {
-    renderAdminRoute("/admin/snippets");
+    renderAdminRoute("/en/admin/snippets");
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Snippet Library" })).toBeInTheDocument();
@@ -104,7 +104,7 @@ describe("AdminLayout", () => {
     const header = screen.getByTestId("admin-navbar-shell").closest("header");
 
     expect(header).not.toBeNull();
-    expect(within(header!).getByRole("link", { name: "New Snippet" })).toHaveAttribute("href", "/admin/snippets/new");
+    expect(within(header!).getByRole("link", { name: "New Snippet" })).toHaveAttribute("href", "/en/admin/snippets/new");
     expect(within(header!).getByRole("button", { name: "Log out" })).toBeInTheDocument();
     expect(within(header!).getByRole("link", { name: /View Front Site/i })).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Admin sections" })).toBeInTheDocument();
@@ -117,7 +117,7 @@ describe("AdminLayout", () => {
   });
 
   it("shows the unified editor command bar", async () => {
-    renderAdminRoute("/admin/snippets/new");
+    renderAdminRoute("/en/admin/snippets/new");
 
     await waitFor(() => {
       expect(screen.getByLabelText("Snippet Title")).toBeInTheDocument();

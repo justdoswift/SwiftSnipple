@@ -36,11 +36,22 @@ func newFakeSnippetStore(items ...domain.Snippet) *fakeSnippetStore {
 	}
 
 	for _, snippet := range items {
-		store.snippets[snippet.ID] = snippet
-		store.snippetsBySlug[snippet.Slug] = snippet.ID
+		store.storeSnippet(snippet)
 	}
 
 	return store
+}
+
+func (f *fakeSnippetStore) storeSnippet(snippet domain.Snippet) {
+	f.snippets[snippet.ID] = snippet
+	f.snippetsBySlug[snippet.Locales.EN.Slug] = snippet.ID
+	f.snippetsBySlug[snippet.Locales.ZH.Slug] = snippet.ID
+}
+
+func (f *fakeSnippetStore) removeSnippet(snippet domain.Snippet) {
+	delete(f.snippetsBySlug, snippet.Locales.EN.Slug)
+	delete(f.snippetsBySlug, snippet.Locales.ZH.Slug)
+	delete(f.snippets, snippet.ID)
 }
 
 func (f *fakeSnippetStore) List(context.Context) ([]domain.Snippet, error) {
@@ -68,30 +79,22 @@ func (f *fakeSnippetStore) GetBySlug(_ context.Context, slug string) (domain.Sni
 }
 
 func (f *fakeSnippetStore) Create(_ context.Context, payload domain.SnippetPayload) (domain.Snippet, error) {
-	if payload.Slug == f.duplicateSlug {
+	normalized := payload.Normalize()
+	if normalized.Locales.EN.Slug == f.duplicateSlug || normalized.Locales.ZH.Slug == f.duplicateSlug {
 		return domain.Snippet{}, errors.New("duplicate key value violates unique constraint")
 	}
 
 	snippet := domain.Snippet{
-		ID:             "new-id",
-		Title:          payload.Title,
-		Slug:           payload.Slug,
-		Excerpt:        payload.Excerpt,
-		Category:       payload.Category,
-		Tags:           payload.Tags,
-		CoverImage:     payload.CoverImage,
-		Content:        payload.Content,
-		Code:           payload.Code,
-		Prompts:        payload.Prompts,
-		SEOTitle:       payload.SEOTitle,
-		SEODescription: payload.SEODescription,
-		Status:         payload.Status,
-		UpdatedAt:      time.Now().UTC(),
-		PublishedAt:    payload.PublishedAt,
+		ID:          "new-id",
+		CoverImage:  normalized.CoverImage,
+		Code:        normalized.Code,
+		Status:      normalized.Status,
+		UpdatedAt:   time.Now().UTC(),
+		PublishedAt: normalized.PublishedAt,
+		Locales:     normalized.Locales,
 	}
 
-	f.snippets[snippet.ID] = snippet
-	f.snippetsBySlug[snippet.Slug] = snippet.ID
+	f.storeSnippet(snippet)
 	return snippet, nil
 }
 
@@ -100,27 +103,23 @@ func (f *fakeSnippetStore) Update(_ context.Context, id string, payload domain.S
 	if !ok {
 		return domain.Snippet{}, repo.ErrNotFound
 	}
-	if payload.Slug == f.duplicateSlug && payload.Slug != snippet.Slug {
+
+	normalized := payload.Normalize()
+	if (normalized.Locales.EN.Slug == f.duplicateSlug && normalized.Locales.EN.Slug != snippet.Locales.EN.Slug) ||
+		(normalized.Locales.ZH.Slug == f.duplicateSlug && normalized.Locales.ZH.Slug != snippet.Locales.ZH.Slug) {
 		return domain.Snippet{}, errors.New("duplicate key value violates unique constraint")
 	}
 
-	snippet.Title = payload.Title
-	snippet.Slug = payload.Slug
-	snippet.Excerpt = payload.Excerpt
-	snippet.Category = payload.Category
-	snippet.Tags = payload.Tags
-	snippet.CoverImage = payload.CoverImage
-	snippet.Content = payload.Content
-	snippet.Code = payload.Code
-	snippet.Prompts = payload.Prompts
-	snippet.SEOTitle = payload.SEOTitle
-	snippet.SEODescription = payload.SEODescription
-	snippet.Status = payload.Status
-	snippet.PublishedAt = payload.PublishedAt
-	snippet.UpdatedAt = time.Now().UTC()
-	f.snippets[id] = snippet
-	f.snippetsBySlug[snippet.Slug] = id
+	f.removeSnippet(snippet)
 
+	snippet.CoverImage = normalized.CoverImage
+	snippet.Code = normalized.Code
+	snippet.Status = normalized.Status
+	snippet.PublishedAt = normalized.PublishedAt
+	snippet.UpdatedAt = time.Now().UTC()
+	snippet.Locales = normalized.Locales
+
+	f.storeSnippet(snippet)
 	return snippet, nil
 }
 
@@ -132,7 +131,7 @@ func (f *fakeSnippetStore) Publish(_ context.Context, id string) (domain.Snippet
 	now := time.Now().UTC()
 	snippet.Status = domain.StatusPublished
 	snippet.PublishedAt = &now
-	f.snippets[id] = snippet
+	f.storeSnippet(snippet)
 	return snippet, nil
 }
 
@@ -143,7 +142,7 @@ func (f *fakeSnippetStore) Unpublish(_ context.Context, id string) (domain.Snipp
 	}
 	snippet.Status = domain.StatusDraft
 	snippet.PublishedAt = nil
-	f.snippets[id] = snippet
+	f.storeSnippet(snippet)
 	return snippet, nil
 }
 
@@ -152,28 +151,54 @@ func (f *fakeSnippetStore) Delete(_ context.Context, id string) error {
 	if !ok {
 		return repo.ErrNotFound
 	}
-	delete(f.snippetsBySlug, snippet.Slug)
-	delete(f.snippets, id)
+	f.removeSnippet(snippet)
 	return nil
+}
+
+func localizedFields(title, slug, category string) domain.SnippetLocalizedFields {
+	return domain.SnippetLocalizedFields{
+		Title:          title,
+		Slug:           slug,
+		Excerpt:        title + " excerpt",
+		Category:       category,
+		Tags:           []string{"SwiftUI"},
+		Content:        "# " + title,
+		Prompts:        "Build " + title,
+		SEOTitle:       title,
+		SEODescription: title + " SEO",
+	}
+}
+
+func snippetPayloadJSON(t *testing.T, payload domain.SnippetPayload) string {
+	t.Helper()
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		t.Fatalf("marshal payload: %v", err)
+	}
+
+	return string(body)
 }
 
 func TestSnippetRoutesSuccess(t *testing.T) {
 	now := time.Now().UTC()
 	store := newFakeSnippetStore(domain.Snippet{
 		ID:          "snippet-1",
-		Title:       "Glass Drawer Navigation",
-		Slug:        "glass-drawer-navigation",
-		Category:    "Navigation",
+		CoverImage:  "https://example.com/cover.jpg",
+		Code:        "Text(\"Hello\")",
 		Status:      domain.StatusPublished,
 		UpdatedAt:   now,
 		PublishedAt: &now,
+		Locales: domain.SnippetLocales{
+			EN: localizedFields("Glass Drawer Navigation", "glass-drawer-navigation", "Navigation"),
+			ZH: localizedFields("玻璃抽屉导航", "bo-li-chou-ti-dao-hang", "Navigation"),
+		},
 	})
 	router := NewRouter(fakePinger{}, store)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/snippets", nil)
 	rec := httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
-
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected list status 200, got %d", rec.Code)
 	}
@@ -189,7 +214,14 @@ func TestSnippetRoutesSuccess(t *testing.T) {
 	rec = httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
 	if rec.Code != http.StatusOK {
-		t.Fatalf("expected get-by-slug status 200, got %d", rec.Code)
+		t.Fatalf("expected get-by-slug EN status 200, got %d", rec.Code)
+	}
+
+	req = httptest.NewRequest(http.MethodGet, "/api/snippets/slug/bo-li-chou-ti-dao-hang", nil)
+	rec = httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected get-by-slug ZH status 200, got %d", rec.Code)
 	}
 }
 
@@ -200,31 +232,43 @@ func TestCreateValidationAndDuplicateErrors(t *testing.T) {
 
 	testCases := []struct {
 		name       string
-		body       string
+		payload    domain.SnippetPayload
 		statusCode int
 		errorText  string
 	}{
 		{
-			name:       "empty title",
-			body:       `{"title":"","slug":"valid-slug","status":"Draft"}`,
+			name: "empty localized title",
+			payload: domain.SnippetPayload{
+				Status: domain.StatusDraft,
+				Locales: domain.SnippetLocales{
+					EN: localizedFields("", "valid-slug", "Workflow"),
+					ZH: localizedFields("标题", "valid-zh-slug", "Workflow"),
+				},
+			},
 			statusCode: http.StatusBadRequest,
-			errorText:  "title and slug are required",
+			errorText:  "localized title and slug are required",
 		},
 		{
-			name:       "invalid status",
-			body:       `{"title":"A","slug":"valid-slug","status":"Archived"}`,
+			name: "invalid status",
+			payload: domain.SnippetPayload{
+				Status: "Archived",
+				Locales: domain.SnippetLocales{
+					EN: localizedFields("A", "valid-slug", "Workflow"),
+					ZH: localizedFields("A 中文", "valid-zh-slug", "Workflow"),
+				},
+			},
 			statusCode: http.StatusBadRequest,
 			errorText:  "invalid status",
 		},
 		{
-			name:       "malformed publishedAt",
-			body:       `{"title":"A","slug":"valid-slug","status":"Scheduled","publishedAt":"tomorrowish"}`,
-			statusCode: http.StatusBadRequest,
-			errorText:  "invalid publishedAt",
-		},
-		{
-			name:       "duplicate slug",
-			body:       `{"title":"A","slug":"taken-slug","status":"Draft"}`,
+			name: "duplicate slug",
+			payload: domain.SnippetPayload{
+				Status: domain.StatusDraft,
+				Locales: domain.SnippetLocales{
+					EN: localizedFields("A", "taken-slug", "Workflow"),
+					ZH: localizedFields("A 中文", "zh-slug", "Workflow"),
+				},
+			},
 			statusCode: http.StatusBadRequest,
 			errorText:  "slug already exists",
 		},
@@ -232,7 +276,7 @@ func TestCreateValidationAndDuplicateErrors(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodPost, "/api/admin/snippets", strings.NewReader(tc.body))
+			req := httptest.NewRequest(http.MethodPost, "/api/admin/snippets", strings.NewReader(snippetPayloadJSON(t, tc.payload)))
 			req.Header.Set("Content-Type", "application/json")
 			rec := httptest.NewRecorder()
 			router.ServeHTTP(rec, req)
@@ -245,17 +289,36 @@ func TestCreateValidationAndDuplicateErrors(t *testing.T) {
 			}
 		})
 	}
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/api/admin/snippets",
+		strings.NewReader(`{"status":"Scheduled","publishedAt":"tomorrowish","locales":{"en":{"title":"A","slug":"valid-slug"},"zh":{"title":"中文","slug":"valid-zh-slug"}}}`),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected malformed publishedAt status 400, got %d", rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), "invalid publishedAt") {
+		t.Fatalf("expected publishedAt validation error, got %q", rec.Body.String())
+	}
 }
 
 func TestPublishUnpublishDeleteAndMissingRoutes(t *testing.T) {
 	now := time.Now().UTC()
 	store := newFakeSnippetStore(domain.Snippet{
 		ID:          "snippet-1",
-		Title:       "Prompt Driven Layout",
-		Slug:        "prompt-driven-layout",
+		CoverImage:  "https://example.com/cover.jpg",
+		Code:        "Text(\"Hello\")",
 		Status:      domain.StatusScheduled,
 		UpdatedAt:   now,
 		PublishedAt: &now,
+		Locales: domain.SnippetLocales{
+			EN: localizedFields("Prompt Driven Layout", "prompt-driven-layout", "Workflow"),
+			ZH: localizedFields("提示驱动布局", "ti-shi-qu-dong-bu-ju", "Workflow"),
+		},
 	})
 	router := NewRouter(fakePinger{}, store)
 

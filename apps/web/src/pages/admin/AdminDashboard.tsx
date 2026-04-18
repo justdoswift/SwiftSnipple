@@ -2,10 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import AdminSnippetLibraryContent from "../../components/admin/AdminSnippetLibraryContent";
 import StatCard from "../../components/admin/StatCard";
 import { useAdminHeader } from "../../components/admin/useAdminHeader";
+import { getMessages } from "../../lib/messages";
+import { useAppLocale } from "../../lib/locale";
 import { getSnippets } from "../../services/snippets";
 import { Snippet } from "../../types";
 
 export default function AdminDashboard() {
+  const { locale } = useAppLocale();
+  const copy = getMessages(locale).admin;
   const [snippets, setSnippets] = useState<Snippet[]>([]);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -13,14 +17,14 @@ export default function AdminDashboard() {
     () => ({
       end: (
         <a
-          href="/admin/snippets/new"
+          href={`/${locale}/admin/snippets/new`}
           className="admin-button-primary type-action inline-flex h-11 shrink-0 items-center px-4"
         >
-          New Snippet
+          {copy.newSnippet}
         </a>
       ),
     }),
-    [],
+    [copy.newSnippet, locale],
   );
 
   useAdminHeader(headerConfig);
@@ -57,10 +61,10 @@ export default function AdminDashboard() {
   return (
     <div className="px-6 py-10 md:px-8 md:py-12 xl:px-10">
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Entries" value={snippets.length} note="Total snippets currently managed inside the publishing workspace." />
-        <StatCard label="Drafts" value={draftCount} note="Snippets still being shaped before they go live." />
-        <StatCard label="Published" value={publishedCount} note="Entries that are live and visible in the public library." />
-        <StatCard label="Pipeline" value={reviewCount + scheduledCount} note="Snippets queued in review or already staged for release." />
+        <StatCard label={copy.entries} value={snippets.length} note={copy.entriesNote} />
+        <StatCard label={copy.drafts} value={draftCount} note={copy.draftsNote} />
+        <StatCard label={copy.published} value={publishedCount} note={copy.publishedNote} />
+        <StatCard label={copy.pipeline} value={reviewCount + scheduledCount} note={copy.pipelineNote} />
       </section>
 
       <AdminSnippetLibraryContent snippets={snippets} isLoading={isLoading} error={error} />

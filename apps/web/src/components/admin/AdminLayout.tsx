@@ -2,6 +2,8 @@ import { ArrowUpRight } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import type { AdminAuthSession } from "../../lib/admin-auth";
+import { getMessages } from "../../lib/messages";
+import { useAppLocale } from "../../lib/locale";
 import { usePublicTheme } from "../../lib/public-theme";
 import AdminSidebar from "./AdminSidebar";
 import { type AdminHeaderConfig, type AdminHeaderOutletContext } from "./useAdminHeader";
@@ -13,13 +15,15 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ adminAuthSession, onSignOut }: AdminLayoutProps) {
   const theme = usePublicTheme();
+  const { locale, setLocale } = useAppLocale();
+  const copy = getMessages(locale);
   const location = useLocation();
   const [headerConfig, setHeaderConfig] = useState<AdminHeaderConfig | null>(null);
   const outletContext = useMemo<AdminHeaderOutletContext>(() => ({ setHeaderConfig }), []);
-  const isOverviewRoute = location.pathname === "/admin";
+  const isOverviewRoute = location.pathname === `/${locale}/admin`;
   const isEditorRoute =
-    location.pathname === "/admin/snippets/new" ||
-    (location.pathname.startsWith("/admin/snippets/") && location.pathname !== "/admin/snippets");
+    location.pathname === `/${locale}/admin/snippets/new` ||
+    (location.pathname.startsWith(`/${locale}/admin/snippets/`) && location.pathname !== `/${locale}/admin/snippets`);
   const activeHeader: AdminHeaderConfig = headerConfig ?? {};
 
   return (
@@ -27,7 +31,7 @@ export default function AdminLayout({ adminAuthSession, onSignOut }: AdminLayout
       <header className="admin-nav-root sticky top-0 z-40 w-full" aria-label="Admin header">
         <div className="admin-nav-shell mx-auto max-w-[1380px] px-4 py-3 md:px-6" data-testid="admin-navbar-shell">
           <div className="admin-nav-main relative flex items-center justify-between gap-4">
-            <Link to="/admin" className="admin-nav-brand min-w-0" aria-label="Just Do Swift admin">
+            <Link to={`/${locale}/admin`} className="admin-nav-brand min-w-0" aria-label="Just Do Swift admin">
               <span className="admin-nav-logo" aria-hidden="true">
                 <span className="admin-nav-logo-bar admin-nav-logo-bar-primary" />
                 <span className="admin-nav-logo-bar admin-nav-logo-bar-secondary" />
@@ -47,12 +51,19 @@ export default function AdminLayout({ adminAuthSession, onSignOut }: AdminLayout
               {activeHeader.end}
               {adminAuthSession ? (
                 <button type="button" className="admin-button-secondary type-action h-11 px-5" onClick={onSignOut}>
-                  Log out
+                  {copy.common.logOut}
                 </button>
               ) : null}
+              <button
+                type="button"
+                className="admin-button-secondary type-action h-11 px-4"
+                onClick={() => setLocale?.(locale === "en" ? "zh" : "en")}
+              >
+                {copy.nav.localeSwitch}
+              </button>
               <Link
-                to="/"
-                aria-label="View Front Site"
+                to={`/${locale}`}
+                aria-label={copy.common.viewFrontSite}
                 className="admin-button-secondary inline-flex h-11 w-11 shrink-0 items-center justify-center px-0"
               >
                 <ArrowUpRight className="h-4 w-4" />

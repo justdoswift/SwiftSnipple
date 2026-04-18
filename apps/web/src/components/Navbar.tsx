@@ -1,6 +1,8 @@
 import { Monitor, Moon, Search, Sun } from "lucide-react";
 import { Link } from "react-router-dom";
+import { getMessages } from "../lib/messages";
 import type { MockAuthSession } from "../lib/mock-auth";
+import { useAppLocale } from "../lib/locale";
 import { getNextPublicTheme, type PublicTheme } from "../lib/public-theme";
 
 interface NavbarProps {
@@ -10,7 +12,10 @@ interface NavbarProps {
 }
 
 export default function Navbar({ theme, onToggleTheme, authSession }: NavbarProps) {
+  const { locale, setLocale } = useAppLocale();
+  const copy = getMessages(locale);
   const nextTheme = getNextPublicTheme(theme);
+  const nextLocale = locale === "en" ? "zh" : "en";
 
   return (
     <nav
@@ -22,7 +27,7 @@ export default function Navbar({ theme, onToggleTheme, authSession }: NavbarProp
         className="public-nav-shell mx-auto flex max-w-[1380px] items-center justify-between gap-3 px-4 py-3 md:px-6"
         data-testid="public-navbar-shell"
       >
-        <Link to="/" className="public-nav-brand min-w-0" aria-label="Just Do Swift homepage">
+        <Link to={`/${locale}`} className="public-nav-brand min-w-0" aria-label="Just Do Swift homepage">
           <span className="public-nav-logo" aria-hidden="true">
             <span className="public-nav-logo-bar public-nav-logo-bar-primary" />
             <span className="public-nav-logo-bar public-nav-logo-bar-secondary" />
@@ -37,8 +42,8 @@ export default function Navbar({ theme, onToggleTheme, authSession }: NavbarProp
             <Search size={16} strokeWidth={2} aria-hidden="true" />
             <input
               type="search"
-              aria-label="Search snippets"
-              placeholder="Search snippets"
+              aria-label={copy.nav.searchSnippets}
+              placeholder={copy.nav.searchSnippets}
               autoComplete="off"
             />
             <span className="public-nav-search-shortcut" aria-hidden="true">
@@ -57,8 +62,17 @@ export default function Navbar({ theme, onToggleTheme, authSession }: NavbarProp
             {theme === "dark" ? <Sun size={16} strokeWidth={2} /> : <Moon size={16} strokeWidth={2} />}
           </button>
 
-          <Link to={authSession ? "/account" : "/login"} className="public-nav-login-button type-action">
-            {authSession ? "Account" : "Log in"}
+          <button
+            type="button"
+            className="public-nav-login-button type-action"
+            onClick={() => setLocale?.(nextLocale)}
+            aria-label={`Switch language to ${nextLocale}`}
+          >
+            {copy.nav.localeSwitch}
+          </button>
+
+          <Link to={authSession ? `/${locale}/account` : `/${locale}/login`} className="public-nav-login-button type-action">
+            {authSession ? copy.nav.account : copy.nav.login}
           </Link>
         </div>
       </div>

@@ -111,7 +111,7 @@ export default function HighlightedCodeBlock({
           data-copy-state={copyState}
           onClick={() => void handleCopy()}
         >
-          <CopyIcon size={14} />
+          <CopyIcon size={14} aria-hidden="true" focusable="false" />
         </button>
         <div
           className={blockClassName}
@@ -140,7 +140,7 @@ export default function HighlightedCodeBlock({
         data-copy-state={copyState}
         onClick={() => void handleCopy()}
       >
-        <CopyIcon size={14} />
+        <CopyIcon size={14} aria-hidden="true" focusable="false" />
       </button>
       <pre className={fallbackBlockClassName} data-theme={theme} data-language={resolvedLanguage ?? language ?? ""}>
         <code>{code}</code>

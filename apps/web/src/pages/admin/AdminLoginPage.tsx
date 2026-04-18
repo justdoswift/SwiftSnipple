@@ -2,6 +2,8 @@ import { useState, type FormEvent } from "react";
 import { Github, Mail } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../../lib/heroui";
+import { getMessages } from "../../lib/messages";
+import { useAppLocale } from "../../lib/locale";
 import type { AdminAuthProvider, AdminAuthSession } from "../../lib/admin-auth";
 
 interface AdminLoginPageProps {
@@ -33,6 +35,8 @@ function GoogleMark() {
 }
 
 export default function AdminLoginPage({ authSession, onAuthenticate }: AdminLoginPageProps) {
+  const { locale } = useAppLocale();
+  const copy = getMessages(locale).adminAuth;
   const navigate = useNavigate();
   const [email, setEmail] = useState(authSession?.email ?? "");
   const [password, setPassword] = useState("");
@@ -50,19 +54,19 @@ export default function AdminLoginPage({ authSession, onAuthenticate }: AdminLog
     };
 
     onAuthenticate(session);
-    navigate("/admin");
+    navigate(`/${locale}/admin`);
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!validateEmail(email)) {
-      setError("Use a valid creator email before entering the workspace.");
+      setError(copy.invalidEmail);
       return;
     }
 
     if (password.trim().length < 6) {
-      setError("Passwords need at least six characters in this creator preview.");
+      setError(copy.passwordShort);
       return;
     }
 
@@ -81,7 +85,7 @@ export default function AdminLoginPage({ authSession, onAuthenticate }: AdminLog
       <div className="auth-page-overlay" aria-hidden="true" />
 
       <header className="auth-page-brand-shell public-nav-shell mx-auto flex max-w-[1380px] items-center justify-between gap-3 px-4 py-3 md:px-6">
-        <Link to="/" className="auth-page-brand public-nav-brand min-w-0" aria-label="Return to Just Do Swift home">
+        <Link to={`/${locale}`} className="auth-page-brand public-nav-brand min-w-0" aria-label="Return to Just Do Swift home">
           <span className="public-nav-logo" aria-hidden="true">
             <span className="public-nav-logo-bar public-nav-logo-bar-primary" />
             <span className="public-nav-logo-bar public-nav-logo-bar-secondary" />
@@ -95,34 +99,34 @@ export default function AdminLoginPage({ authSession, onAuthenticate }: AdminLog
       <div className="auth-page-content auth-page-content-admin">
         <div className="auth-card auth-card-admin">
           <div className="auth-card-copy">
-            <p className="type-mono-micro auth-admin-kicker">Creator Workspace</p>
-            <h1 className="auth-card-title">Creator Log In</h1>
+            <p className="type-mono-micro auth-admin-kicker">{copy.kicker}</p>
+            <h1 className="auth-card-title">{copy.title}</h1>
             <p className="type-body-sm auth-admin-copy">
-              Enter the publishing workspace built for shaping SwiftUI snippets before they go live.
+              {copy.copy}
             </p>
           </div>
 
           <form className="auth-form" onSubmit={handleSubmit}>
             <label className="auth-field">
-              <span className="type-mono-micro auth-field-label">Email Address</span>
+              <span className="type-mono-micro auth-field-label">{copy.emailAddress}</span>
               <input
                 type="email"
                 name="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder="creator@justdoswift.com"
+                placeholder={copy.creatorEmailPlaceholder}
                 autoComplete="email"
               />
             </label>
 
             <label className="auth-field">
-              <span className="type-mono-micro auth-field-label">Password</span>
+              <span className="type-mono-micro auth-field-label">{copy.password}</span>
               <input
                 type="password"
                 name="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder="Enter your password"
+                placeholder={copy.passwordPlaceholder}
                 autoComplete="current-password"
               />
             </label>
@@ -131,7 +135,7 @@ export default function AdminLoginPage({ authSession, onAuthenticate }: AdminLog
 
             <Button className="auth-primary-button" radius="full" type="submit">
               <Mail size={18} strokeWidth={2.2} />
-              <span>Enter Creator Workspace</span>
+              <span>{copy.enterWorkspace}</span>
             </Button>
           </form>
 
@@ -144,17 +148,17 @@ export default function AdminLoginPage({ authSession, onAuthenticate }: AdminLog
           <div className="auth-provider-stack">
             <button type="button" className="auth-provider-button" onClick={() => handleProviderAuth("google")}>
               <GoogleMark />
-              <span>Continue with Google</span>
+              <span>{copy.continueGoogle}</span>
             </button>
             <button type="button" className="auth-provider-button" onClick={() => handleProviderAuth("github")}>
               <Github size={18} strokeWidth={2} />
-              <span>Continue with GitHub</span>
+              <span>{copy.continueGithub}</span>
             </button>
           </div>
 
           <div className="auth-admin-footer">
-            <Link to="/" className="auth-text-button">
-              Back to public collection
+            <Link to={`/${locale}`} className="auth-text-button">
+              {copy.backToPublicCollection}
             </Link>
           </div>
         </div>

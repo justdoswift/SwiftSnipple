@@ -38,9 +38,9 @@ describe("AdminSnippetEditor", () => {
     mockedPublishSnippet.mockReset();
 
     render(
-      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
+      <MemoryRouter initialEntries={["/en/admin/snippets/new"]}>
         <Routes>
-          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+          <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
             <Route path="snippets/new" element={<AdminSnippetEditor />} />
             <Route path="snippets/:id" element={<AdminSnippetEditor />} />
           </Route>
@@ -74,9 +74,9 @@ describe("AdminSnippetEditor", () => {
     mockedPublishSnippet.mockReset();
 
     render(
-      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
+      <MemoryRouter initialEntries={["/en/admin/snippets/new"]}>
         <Routes>
-          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+          <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
             <Route path="snippets/new" element={<AdminSnippetEditor />} />
             <Route path="snippets/:id" element={<AdminSnippetEditor />} />
           </Route>
@@ -95,7 +95,7 @@ describe("AdminSnippetEditor", () => {
     expect(screen.getByRole("link", { name: /view front site/i })).toBeInTheDocument();
     expect(screen.getByLabelText("Implementation notes")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Preview" }));
-    expect(screen.getByText("Save this draft first to open the public preview at /snippets/untitled.")).toBeInTheDocument();
+    expect(screen.getByText("Save this draft first to open the public preview at /en/snippets/untitled.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Done" })).not.toBeInTheDocument();
   });
 
@@ -122,9 +122,9 @@ describe("AdminSnippetEditor", () => {
     });
 
     render(
-      <MemoryRouter initialEntries={["/admin/snippets/snippet-1"]}>
+      <MemoryRouter initialEntries={["/en/admin/snippets/snippet-1"]}>
         <Routes>
-          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+          <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
             <Route path="snippets/:id" element={<AdminSnippetEditor />} />
           </Route>
         </Routes>
@@ -146,7 +146,7 @@ describe("AdminSnippetEditor", () => {
 
     expect(screen.getByRole("tab", { name: "Desktop" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("tab", { name: "Mobile" })).toHaveAttribute("aria-selected", "false");
-    expect(screen.getByRole("link", { name: "Open in tab" })).toHaveAttribute("href", "/snippets/smooth-feedback-loops");
+    expect(screen.getByRole("link", { name: "Open in tab" })).toHaveAttribute("href", "/en/snippets/smooth-feedback-loops");
     expect(screen.getByRole("button", { name: "Done" })).toBeInTheDocument();
     expect(screen.getByTitle("Snippet public preview").closest("[data-preview-device]")).toHaveAttribute("data-preview-device", "desktop");
 
@@ -197,9 +197,9 @@ describe("AdminSnippetEditor", () => {
     });
 
     render(
-      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
+      <MemoryRouter initialEntries={["/en/admin/snippets/new"]}>
         <Routes>
-          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+          <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
             <Route path="snippets/new" element={<AdminSnippetEditor />} />
             <Route path="snippets/:id" element={<AdminSnippetEditor />} />
           </Route>
@@ -251,9 +251,9 @@ describe("AdminSnippetEditor", () => {
     });
 
     render(
-      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
+      <MemoryRouter initialEntries={["/en/admin/snippets/new"]}>
         <Routes>
-          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+          <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
             <Route path="snippets/new" element={<AdminSnippetEditor />} />
             <Route path="snippets/:id" element={<AdminSnippetEditor />} />
           </Route>
@@ -298,9 +298,9 @@ describe("AdminSnippetEditor", () => {
     mockedDeleteSnippet.mockResolvedValue(undefined);
 
     render(
-      <MemoryRouter initialEntries={["/admin/snippets/snippet-1"]}>
+      <MemoryRouter initialEntries={["/en/admin/snippets/snippet-1"]}>
         <Routes>
-          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+          <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
             <Route path="snippets" element={<div>Snippet Library</div>} />
             <Route path="snippets/:id" element={<AdminSnippetEditor />} />
           </Route>
@@ -359,9 +359,9 @@ describe("AdminSnippetEditor", () => {
     });
 
     render(
-      <MemoryRouter initialEntries={["/admin/snippets/snippet-1"]}>
+      <MemoryRouter initialEntries={["/en/admin/snippets/snippet-1"]}>
         <Routes>
-          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+          <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
             <Route path="snippets/:id" element={<AdminSnippetEditor />} />
           </Route>
         </Routes>
@@ -436,9 +436,9 @@ describe("AdminSnippetEditor", () => {
     });
 
     render(
-      <MemoryRouter initialEntries={["/admin/snippets/snippet-1"]}>
+      <MemoryRouter initialEntries={["/en/admin/snippets/snippet-1"]}>
         <Routes>
-          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+          <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
             <Route path="snippets/:id" element={<AdminSnippetEditor />} />
           </Route>
         </Routes>
@@ -460,7 +460,11 @@ describe("AdminSnippetEditor", () => {
       expect(mockedUpdateSnippet).toHaveBeenCalledWith(
         "snippet-1",
         expect.objectContaining({
-          title: "Live Snippet Updated",
+          locales: expect.objectContaining({
+            en: expect.objectContaining({
+              title: "Live Snippet Updated",
+            }),
+          }),
         }),
       );
       expect(mockedPublishSnippet).toHaveBeenCalledWith("snippet-1");
@@ -474,9 +478,9 @@ describe("AdminSnippetEditor", () => {
     mockedPublishSnippet.mockReset();
 
     render(
-      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
+      <MemoryRouter initialEntries={["/en/admin/snippets/new"]}>
         <Routes>
-          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+          <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
             <Route path="snippets/new" element={<AdminSnippetEditor />} />
           </Route>
         </Routes>
@@ -511,9 +515,9 @@ describe("AdminSnippetEditor", () => {
     });
 
     render(
-      <MemoryRouter initialEntries={["/admin/snippets/snippet-1"]}>
+      <MemoryRouter initialEntries={["/en/admin/snippets/snippet-1"]}>
         <Routes>
-          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+          <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
             <Route path="snippets/:id" element={<AdminSnippetEditor />} />
           </Route>
         </Routes>

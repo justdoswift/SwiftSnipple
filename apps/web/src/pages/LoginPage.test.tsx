@@ -9,10 +9,10 @@ function renderLoginPage() {
 
   render(
     <PublicThemeContext.Provider value="dark">
-      <MemoryRouter initialEntries={["/login"]}>
+      <MemoryRouter initialEntries={["/en/login"]}>
         <Routes>
-          <Route path="/login" element={<LoginPage authSession={null} onAuthenticate={onAuthenticate} />} />
-          <Route path="/account" element={<div>member center route</div>} />
+          <Route path="/en/login" element={<LoginPage authSession={null} onAuthenticate={onAuthenticate} />} />
+          <Route path="/en/account" element={<div>member center route</div>} />
         </Routes>
       </MemoryRouter>
     </PublicThemeContext.Provider>,

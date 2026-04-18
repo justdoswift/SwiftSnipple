@@ -6,7 +6,7 @@ import AccountPage from "./AccountPage";
 describe("AccountPage", () => {
   it("renders a member center surface for a staged session", () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={["/en/account"]}>
         <AccountPage
           authSession={{
             email: "builder@example.com",
@@ -19,26 +19,26 @@ describe("AccountPage", () => {
     );
 
     expect(screen.getByText("builder@example.com")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /publishing workspace/i })).toHaveAttribute("href", "/admin");
+    expect(screen.getByRole("link", { name: /publishing workspace/i })).toHaveAttribute("href", "/en/admin");
     expect(screen.queryByText("Admin Console")).not.toBeInTheDocument();
   });
 
   it("renders the empty member shell when there is no staged session", () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={["/en/account"]}>
         <AccountPage authSession={null} onSignOut={vi.fn()} />
       </MemoryRouter>,
     );
 
     expect(screen.getByText("No staged member session yet.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Open Login" })).toHaveAttribute("href", "/login");
+    expect(screen.getByRole("link", { name: "Open Login" })).toHaveAttribute("href", "/en/login");
   });
 
   it("lets the member sign out from the account page", () => {
     const onSignOut = vi.fn();
 
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={["/en/account"]}>
         <AccountPage
           authSession={{
             email: "builder@example.com",

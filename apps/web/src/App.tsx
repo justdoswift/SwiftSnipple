@@ -1,9 +1,9 @@
-import { BrowserRouter as Router, Routes, Route, useLocation, Navigate, useParams } from "react-router-dom";
-import { Suspense, lazy, useEffect, useState, type ReactNode } from "react";
+import { BrowserRouter as Router, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Suspense, lazy, useEffect, useMemo, useState, type ReactNode } from "react";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import AdminLayout from "./components/admin/AdminLayout";
-import { Card, Spinner } from "./lib/heroui";
+import { Spinner } from "./lib/heroui";
 import {
   clearStoredAdminAuth,
   readStoredAdminAuth,
@@ -12,12 +12,23 @@ import {
 } from "./lib/admin-auth";
 import { clearStoredMockAuth, readStoredMockAuth, writeStoredMockAuth, type MockAuthSession } from "./lib/mock-auth";
 import {
+  LocaleContext,
+  isAppLocale,
+  localizePath,
+  readStoredLocale,
+  stripLocalePrefix,
+  switchLocalePath,
+  writeStoredLocale,
+} from "./lib/locale";
+import { getMessages } from "./lib/messages";
+import {
   PUBLIC_THEME_STORAGE_KEY,
   PublicThemeContext,
   getNextPublicTheme,
   readStoredPublicTheme,
   type PublicTheme,
 } from "./lib/public-theme";
+import type { AppLocale } from "./types";
 
 const Home = lazy(() => import("./pages/Home"));
 const SnippetDetail = lazy(() => import("./pages/SnippetDetail"));
@@ -40,29 +51,20 @@ function ScrollToTop() {
   return null;
 }
 
-function LegacySnippetRedirect() {
-  const { slug } = useParams();
-  return <Navigate to={slug ? `/snippets/${slug}` : "/"} replace />;
-}
-
-function LegacyAdminSnippetRedirect() {
-  const { id } = useParams();
-  return <Navigate to={id ? `/admin/snippets/${id}` : "/admin/snippets"} replace />;
-}
-
 function PublicRouteFallback() {
+  const { locale } = useAppLocaleShell();
+  const copy = getMessages(locale).app;
+
   return (
     <div className="public-route-fallback mx-auto flex w-full max-w-[1380px] flex-1 items-center justify-center px-6 py-20 md:px-8">
-      <Card className="public-surface w-full max-w-xl rounded-[22px]">
-        <Card.Content className="flex flex-col items-center gap-4 px-8 py-12 text-center">
+      <div className="public-surface w-full max-w-xl rounded-[22px] px-8 py-12 text-center">
+        <div className="flex flex-col items-center gap-4">
           <Spinner size="lg" />
-          <p className="type-mono-micro public-loading-label">Loading</p>
-          <h2 className="type-card-title public-loading-title">Preparing the next view</h2>
-          <p className="type-body-sm public-loading-copy max-w-md">
-            Just Do Swift is loading the route shell and snippet content without blocking the rest of the app.
-          </p>
-        </Card.Content>
-      </Card>
+          <p className="type-mono-micro public-loading-label">{copy.loading}</p>
+          <h2 className="type-card-title public-loading-title">{copy.loadingTitle}</h2>
+          <p className="type-body-sm public-loading-copy max-w-md">{copy.loadingCopy}</p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -75,6 +77,67 @@ function AdminRouteFallback() {
   );
 }
 
+function useAppLocaleShell() {
+  const params = useParams();
+  const locale = isAppLocale(params.locale) ? params.locale : readStoredLocale();
+  return { locale };
+}
+
+function LegacySnippetRedirect() {
+  const { locale, slug } = useParams();
+  return <Navigate to={localizePath((locale as AppLocale) || "en", slug ? `/snippets/${slug}` : "/")} replace />;
+}
+
+function LegacyAdminSnippetRedirect() {
+  const { locale, id } = useParams();
+  return (
+    <Navigate to={localizePath((locale as AppLocale) || "en", id ? `/admin/snippets/${id}` : "/admin/snippets")} replace />
+  );
+}
+
+function AdminLoginRedirect() {
+  const { locale } = useAppLocaleShell();
+  return <Navigate to={localizePath(locale, "/admin")} replace />;
+}
+
+function LocalePrefixRedirect() {
+  const location = useLocation();
+  const preferredLocale = readStoredLocale();
+  return <Navigate to={localizePath(preferredLocale, stripLocalePrefix(location.pathname))} replace />;
+}
+
+function LocaleGate() {
+  const { locale } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const resolvedLocale = isAppLocale(locale) ? locale : readStoredLocale();
+
+  useEffect(() => {
+    if (!isAppLocale(locale)) {
+      navigate(localizePath(resolvedLocale, stripLocalePrefix(location.pathname)), { replace: true });
+      return;
+    }
+    writeStoredLocale(locale);
+  }, [locale, location.pathname, navigate, resolvedLocale]);
+
+  const contextValue = useMemo(
+    () => ({
+      locale: resolvedLocale,
+      setLocale: (nextLocale: AppLocale) => {
+        writeStoredLocale(nextLocale);
+        navigate(switchLocalePath(location.pathname, nextLocale), { replace: true });
+      },
+    }),
+    [location.pathname, navigate, resolvedLocale],
+  );
+
+  return (
+    <LocaleContext.Provider value={contextValue}>
+      <Outlet />
+    </LocaleContext.Provider>
+  );
+}
+
 function AdminAuthGate({
   authSession,
   children,
@@ -82,8 +145,9 @@ function AdminAuthGate({
   authSession: AdminAuthSession | null;
   children: ReactNode;
 }) {
+  const { locale } = useAppLocaleShell();
   if (!authSession) {
-    return <Navigate to="/admin/login" replace />;
+    return <Navigate to={localizePath(locale, "/admin/login")} replace />;
   }
 
   return <>{children}</>;
@@ -105,14 +169,10 @@ function PublicShell({
   showFooter?: boolean;
 }) {
   return (
-    <div
-      className="public-theme min-h-screen flex flex-col relative"
-      data-theme={theme}
-      data-testid="public-theme-root"
-    >
+    <div className="public-theme relative flex min-h-screen flex-col" data-theme={theme} data-testid="public-theme-root">
       <div className="vibe-grain" />
       {showNavbar ? <Navbar theme={theme} onToggleTheme={onToggleTheme} authSession={authSession} /> : null}
-      <main className="flex-grow z-10">
+      <main className="z-10 flex-grow">
         <Suspense fallback={<PublicRouteFallback />}>{children}</Suspense>
       </main>
       {showFooter ? <Footer /> : null}
@@ -152,117 +212,122 @@ export default function App() {
       <Router>
         <ScrollToTop />
         <Routes>
-          <Route
-            path="/"
-            element={
-              <PublicShell theme={theme} onToggleTheme={toggleTheme} authSession={authSession}>
-                <Home />
-              </PublicShell>
-            }
-          />
-          <Route
-            path="/snippets/:slug"
-            element={
-              <PublicShell theme={theme} onToggleTheme={toggleTheme} authSession={authSession}>
-                <SnippetDetail />
-              </PublicShell>
-            }
-          />
-          <Route
-            path="/privacy-policy"
-            element={
-              <PublicShell theme={theme} onToggleTheme={toggleTheme} authSession={authSession}>
-                <PrivacyPolicy />
-              </PublicShell>
-            }
-          />
-          <Route
-            path="/terms-of-service"
-            element={
-              <PublicShell theme={theme} onToggleTheme={toggleTheme} authSession={authSession}>
-                <TermsOfService />
-              </PublicShell>
-            }
-          />
-          <Route
-            path="/login"
-            element={
-              <PublicShell
-                theme={theme}
-                onToggleTheme={toggleTheme}
-                authSession={authSession}
-                showNavbar={false}
-                showFooter={false}
-              >
-                <LoginPage authSession={authSession} onAuthenticate={handleAuthenticate} />
-              </PublicShell>
-            }
-          />
-          <Route
-            path="/account"
-            element={
-              <PublicShell theme={theme} onToggleTheme={toggleTheme} authSession={authSession}>
-                <AccountPage authSession={authSession} onSignOut={handleSignOut} />
-              </PublicShell>
-            }
-          />
-          <Route
-            path="/admin/login"
-            element={
-              adminAuthSession ? (
-                <Navigate to="/admin" replace />
-              ) : (
-                <Suspense fallback={<AdminRouteFallback />}>
-                  <AdminLoginPage authSession={adminAuthSession} onAuthenticate={handleAdminAuthenticate} />
-                </Suspense>
-              )
-            }
-          />
-          <Route path="/articles/:slug" element={<LegacySnippetRedirect />} />
-          <Route
-            path="/admin"
-            element={
-              <AdminAuthGate authSession={adminAuthSession}>
-                <AdminLayout adminAuthSession={adminAuthSession} onSignOut={handleAdminSignOut} />
-              </AdminAuthGate>
-            }
-          >
+          <Route path="/" element={<LocalePrefixRedirect />} />
+          <Route path="/:locale" element={<LocaleGate />}>
             <Route
               index
               element={
-                <Suspense fallback={<AdminRouteFallback />}>
-                  <AdminDashboard />
-                </Suspense>
-              }
-            />
-            <Route path="articles" element={<Navigate to="/admin/snippets" replace />} />
-            <Route path="articles/new" element={<Navigate to="/admin/snippets/new" replace />} />
-            <Route path="articles/:id" element={<LegacyAdminSnippetRedirect />} />
-            <Route
-              path="snippets"
-              element={
-                <Suspense fallback={<AdminRouteFallback />}>
-                  <AdminSnippets />
-                </Suspense>
+                <PublicShell theme={theme} onToggleTheme={toggleTheme} authSession={authSession}>
+                  <Home />
+                </PublicShell>
               }
             />
             <Route
-              path="snippets/new"
+              path="snippets/:slug"
               element={
-                <Suspense fallback={<AdminRouteFallback />}>
-                  <AdminSnippetEditor />
-                </Suspense>
+                <PublicShell theme={theme} onToggleTheme={toggleTheme} authSession={authSession}>
+                  <SnippetDetail />
+                </PublicShell>
               }
             />
             <Route
-              path="snippets/:id"
+              path="privacy-policy"
               element={
-                <Suspense fallback={<AdminRouteFallback />}>
-                  <AdminSnippetEditor />
-                </Suspense>
+                <PublicShell theme={theme} onToggleTheme={toggleTheme} authSession={authSession}>
+                  <PrivacyPolicy />
+                </PublicShell>
               }
             />
+            <Route
+              path="terms-of-service"
+              element={
+                <PublicShell theme={theme} onToggleTheme={toggleTheme} authSession={authSession}>
+                  <TermsOfService />
+                </PublicShell>
+              }
+            />
+            <Route
+              path="login"
+              element={
+                <PublicShell
+                  theme={theme}
+                  onToggleTheme={toggleTheme}
+                  authSession={authSession}
+                  showNavbar={false}
+                  showFooter={false}
+                >
+                  <LoginPage authSession={authSession} onAuthenticate={handleAuthenticate} />
+                </PublicShell>
+              }
+            />
+            <Route
+              path="account"
+              element={
+                <PublicShell theme={theme} onToggleTheme={toggleTheme} authSession={authSession}>
+                  <AccountPage authSession={authSession} onSignOut={handleSignOut} />
+                </PublicShell>
+              }
+            />
+            <Route
+              path="admin/login"
+              element={
+                adminAuthSession ? (
+                  <AdminLoginRedirect />
+                ) : (
+                  <Suspense fallback={<AdminRouteFallback />}>
+                    <AdminLoginPage authSession={adminAuthSession} onAuthenticate={handleAdminAuthenticate} />
+                  </Suspense>
+                )
+              }
+            />
+            <Route path="articles/:slug" element={<LegacySnippetRedirect />} />
+            <Route
+              path="admin"
+              element={
+                <AdminAuthGate authSession={adminAuthSession}>
+                  <AdminLayout adminAuthSession={adminAuthSession} onSignOut={handleAdminSignOut} />
+                </AdminAuthGate>
+              }
+            >
+              <Route
+                index
+                element={
+                  <Suspense fallback={<AdminRouteFallback />}>
+                    <AdminDashboard />
+                  </Suspense>
+                }
+              />
+              <Route path="articles" element={<Navigate to="../snippets" replace />} />
+              <Route path="articles/new" element={<Navigate to="../snippets/new" replace />} />
+              <Route path="articles/:id" element={<LegacyAdminSnippetRedirect />} />
+              <Route
+                path="snippets"
+                element={
+                  <Suspense fallback={<AdminRouteFallback />}>
+                    <AdminSnippets />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="snippets/new"
+                element={
+                  <Suspense fallback={<AdminRouteFallback />}>
+                    <AdminSnippetEditor />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="snippets/:id"
+                element={
+                  <Suspense fallback={<AdminRouteFallback />}>
+                    <AdminSnippetEditor />
+                  </Suspense>
+                }
+              />
+            </Route>
+            <Route path="*" element={<LocalePrefixRedirect />} />
           </Route>
+          <Route path="*" element={<LocalePrefixRedirect />} />
         </Routes>
       </Router>
     </PublicThemeContext.Provider>

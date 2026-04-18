@@ -165,8 +165,11 @@ func decodeSnippetPayload(w http.ResponseWriter, r *http.Request) (domain.Snippe
 	}
 
 	payload = payload.Normalize()
-	if strings.TrimSpace(payload.Title) == "" || strings.TrimSpace(payload.Slug) == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "title and slug are required"})
+	if strings.TrimSpace(payload.Locales.EN.Title) == "" ||
+		strings.TrimSpace(payload.Locales.EN.Slug) == "" ||
+		strings.TrimSpace(payload.Locales.ZH.Title) == "" ||
+		strings.TrimSpace(payload.Locales.ZH.Slug) == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "localized title and slug are required"})
 		return domain.SnippetPayload{}, false
 	}
 	if !domain.IsValidStatus(payload.Status) {

@@ -1,13 +1,17 @@
-import { termsOfServiceContent } from "../content/legal";
+import { legalContent } from "../content/legal";
+import { getMessages } from "../lib/messages";
+import { useAppLocale } from "../lib/locale";
 import LegalPage from "./LegalPage";
 
 export default function TermsOfService() {
+  const { locale } = useAppLocale();
+  const copy = getMessages(locale).legal;
   return (
     <LegalPage
-      eyebrow="Legal"
-      title="Terms of Service"
-      intro="The terms that govern access to Just Do Swift products, content, subscriptions, and related services."
-      content={termsOfServiceContent}
+      eyebrow={copy.termsEyebrow}
+      title={copy.termsTitle}
+      intro={copy.termsIntro}
+      content={legalContent.terms[locale]}
     />
   );
 }

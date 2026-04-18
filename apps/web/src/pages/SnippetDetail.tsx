@@ -3,7 +3,9 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import HighlightedCodeBlock from "../components/HighlightedCodeBlock";
 import MarkdownRenderer from "../components/MarkdownRenderer";
+import { getMessages } from "../lib/messages";
 import { extractMarkdownOutline, type MarkdownOutlineItem } from "../lib/markdown-outline";
+import { getLocalizedSnippetFields, getLocalizedSnippetPath, useAppLocale } from "../lib/locale";
 import { getSnippetBySlug } from "../services/snippets";
 import { Snippet } from "../types";
 
@@ -18,7 +20,7 @@ type SnippetSection = {
 
 function formatDate(value: string | null) {
   if (!value) return "Draft";
-  return new Intl.DateTimeFormat("en", {
+  return new Intl.DateTimeFormat(undefined, {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -43,6 +45,8 @@ function normalizeSectionHash(hash: string): SnippetSectionId | null {
 }
 
 export default function SnippetDetail() {
+  const { locale } = useAppLocale();
+  const copy = getMessages(locale).snippetDetail;
   const { slug } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -101,11 +105,15 @@ export default function SnippetDetail() {
     };
   }, []);
 
+  const localizedFields = useMemo(
+    () => (snippet ? getLocalizedSnippetFields(snippet, locale) : null),
+    [locale, snippet],
+  );
   const hasCode = snippet?.code.trim().length ? true : false;
-  const hasPrompts = snippet?.prompts.trim().length ? true : false;
+  const hasPrompts = localizedFields?.prompts.trim().length ? true : false;
   const notesOutline = useMemo<MarkdownOutlineItem[]>(
-    () => (snippet ? extractMarkdownOutline(snippet.content) : []),
-    [snippet],
+    () => (localizedFields ? extractMarkdownOutline(localizedFields.content) : []),
+    [localizedFields],
   );
   const sections = useMemo<SnippetSection[]>(() => {
     if (!snippet) {
@@ -116,10 +124,10 @@ export default function SnippetDetail() {
       {
         id: "notes",
         number: "01",
-        label: "Implementation Notes",
+        label: copy.implementationNotes,
         content: (
           <div className="public-content-panel rounded-[32px] px-6 py-7 md:px-8 md:py-9">
-            <MarkdownRenderer content={snippet.content} />
+            <MarkdownRenderer content={localizedFields?.content ?? ""} />
           </div>
         ),
       },
@@ -129,13 +137,13 @@ export default function SnippetDetail() {
       availableSections.push({
         id: "code",
         number: "02",
-        label: "SwiftUI Source",
+        label: copy.swiftuiSource,
         content: (
           <HighlightedCodeBlock
             code={snippet.code}
             language="swift"
             copyable
-            copyLabel="Swift code"
+            copyLabel={copy.copySwiftCode}
             className="markdown-code-block public-code-block snippet-highlight type-code-block overflow-x-auto"
             fallbackClassName="markdown-code-block public-code-block type-code-block overflow-x-auto"
           />
@@ -147,12 +155,12 @@ export default function SnippetDetail() {
       availableSections.push({
         id: "prompts",
         number: "03",
-        label: "Prompt Logic",
+        label: copy.promptLogic,
         content: (
           <HighlightedCodeBlock
-            code={snippet.prompts}
+            code={localizedFields?.prompts ?? ""}
             copyable
-            copyLabel="prompt logic"
+            copyLabel={copy.copyPromptLogic}
             fallbackClassName="markdown-code-block public-code-block type-code-block whitespace-pre-wrap"
           />
         ),
@@ -160,7 +168,14 @@ export default function SnippetDetail() {
     }
 
     return availableSections;
-  }, [hasCode, hasPrompts, snippet?.code, snippet?.content, snippet?.prompts]);
+  }, [copy.copyPromptLogic, copy.copySwiftCode, copy.implementationNotes, copy.promptLogic, copy.swiftuiSource, hasCode, hasPrompts, localizedFields?.content, localizedFields?.prompts, snippet?.code]);
+
+  useEffect(() => {
+    if (!snippet || !localizedFields || !slug) return;
+    if (localizedFields.slug !== slug) {
+      navigate(getLocalizedSnippetPath(locale, snippet), { replace: true });
+    }
+  }, [localizedFields, locale, navigate, slug, snippet]);
 
   useEffect(() => {
     if (!sections.length) return;
@@ -248,15 +263,15 @@ export default function SnippetDetail() {
   const desktopContentWrapperClass = activeSection?.id === "notes" ? "mx-auto max-w-[800px]" : "mx-auto max-w-[800px]";
 
   if (isLoading) {
-    return <div className="public-page public-snippet-detail mx-auto max-w-[1380px] px-8 pb-20 pt-32 public-status-copy">Loading snippet...</div>;
+    return <div className="public-page public-snippet-detail mx-auto max-w-[1380px] px-8 pb-20 pt-32 public-status-copy">{copy.loadingSnippet}</div>;
   }
 
   if (!snippet || error) {
     return (
       <div className="public-page public-snippet-detail mx-auto max-w-[1380px] px-8 pb-20 pt-32 text-center">
-        <h1 className="type-section-title mb-4">Snippet Not Found</h1>
-        <p className="type-body mb-6 public-status-copy">{error || "The requested snippet could not be loaded."}</p>
-        <a href="/#library-index" className="public-inline-link">Back to homepage library</a>
+        <h1 className="type-section-title mb-4">{copy.snippetNotFound}</h1>
+        <p className="type-body mb-6 public-status-copy">{error || copy.snippetNotFoundCopy}</p>
+        <a href={`/${locale}#library-index`} className="public-inline-link">{copy.backToLibrary}</a>
       </div>
     );
   }
@@ -271,13 +286,13 @@ export default function SnippetDetail() {
             className="flex flex-col items-center gap-6"
           >
             <span className="public-pill type-mono-label px-3 py-1 rounded-full">
-              {snippet.category} / {formatDate(snippet.publishedAt)}
+              {localizedFields?.category} / {formatDate(snippet.publishedAt)}
             </span>
             <h1 className="type-display">
-              {snippet.title}
+              {localizedFields?.title}
             </h1>
             <p className="type-body-lg mx-auto max-w-[620px]">
-              {snippet.excerpt}
+              {localizedFields?.excerpt}
             </p>
           </motion.div>
         </div>
@@ -288,7 +303,7 @@ export default function SnippetDetail() {
           <div className="public-media-shell aspect-[16/9] overflow-hidden rounded-[32px]">
             <img
               src={snippet.coverImage}
-              alt={snippet.title}
+              alt={localizedFields?.title}
               className="h-full w-full object-cover"
               referrerPolicy="no-referrer"
             />

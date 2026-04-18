@@ -6,8 +6,11 @@ import EditorSection from "../../components/admin/EditorSection";
 import HighlightedCodeEditor from "../../components/admin/HighlightedCodeEditor";
 import StatusBadge from "../../components/admin/StatusBadge";
 import { useAdminHeader } from "../../components/admin/useAdminHeader";
+import { getMessages } from "../../lib/messages";
+import { getLocalizedSnippetFields, localizePath, useAppLocale } from "../../lib/locale";
+import { createEmptyLocalizedFields, getFormLocale, getSnippetLocale } from "../../lib/snippet-localization";
 import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, unpublishSnippet, updateSnippet } from "../../services/snippets";
-import { Snippet, SnippetFormState, SnippetPayload, SnippetStatus } from "../../types";
+import { AppLocale, Snippet, SnippetFormState, SnippetPayload, SnippetStatus } from "../../types";
 import { Code2, Layout, Monitor, MessageSquareQuote, Smartphone, Settings2, Trash2, X } from "lucide-react";
 
 const EDITABLE_STATUS_OPTIONS: SnippetStatus[] = ["Draft", "In Review", "Scheduled"];
@@ -87,14 +90,14 @@ function toDateTimeInputValue(value: string | null) {
 function createEmptySnippet(): Snippet {
   return {
     id: "",
-    title: "",
-    slug: "",
-    excerpt: "",
-    category: "Workflow",
-    tags: [],
     coverImage:
       "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=80",
-    content: `# New Snippet
+    locales: {
+      en: {
+        ...createEmptyLocalizedFields(),
+        title: "",
+        slug: "",
+        content: `# New Snippet
 
 Show the implementation here.
 
@@ -103,6 +106,34 @@ Show the implementation here.
 - add your first point
 - add supporting evidence
 - explain what makes it useful`,
+        prompts: `Build a polished SwiftUI snippet with:
+- clear visual hierarchy
+- native-feeling motion
+- reusable layout structure
+
+Explain the tradeoffs briefly after the code.`,
+      },
+      zh: {
+        ...createEmptyLocalizedFields(),
+        title: "",
+        slug: "",
+        content: `# 新 Snippet
+
+在这里记录实现说明。
+
+## 关键点
+
+- 先写出第一条重点
+- 补充支持证据
+- 解释它为什么值得复用`,
+        prompts: `构建一个高完成度的 SwiftUI snippet：
+- 有清晰的信息层级
+- 有原生感的动效
+- 具备可复用的布局结构
+
+在代码后简要说明关键取舍。`,
+      },
+    },
     code: `import SwiftUI
 
 struct ExampleSnippetView: View {
@@ -111,14 +142,6 @@ struct ExampleSnippetView: View {
       .padding()
   }
 }`,
-    prompts: `Build a polished SwiftUI snippet with:
-- clear visual hierarchy
-- native-feeling motion
-- reusable layout structure
-
-Explain the tradeoffs briefly after the code.`,
-    seoTitle: "",
-    seoDescription: "",
     status: "Draft",
     updatedAt: new Date().toISOString(),
     publishedAt: null,
@@ -126,20 +149,38 @@ Explain the tradeoffs briefly after the code.`,
 }
 
 function toFormState(snippet: Snippet): SnippetFormState {
+  const english = getSnippetLocale(snippet, "en");
+  const chinese = getSnippetLocale(snippet, "zh");
+
   return {
-    title: snippet.title,
-    slug: snippet.slug,
-    excerpt: snippet.excerpt,
-    category: snippet.category,
-    tags: snippet.tags.join(", "),
     coverImage: snippet.coverImage,
-    content: snippet.content,
     code: snippet.code,
-    prompts: snippet.prompts,
-    seoTitle: snippet.seoTitle,
-    seoDescription: snippet.seoDescription,
     status: snippet.status,
     publishedAt: toDateTimeInputValue(snippet.publishedAt),
+    locales: {
+      en: {
+        title: english.title,
+        slug: english.slug,
+        excerpt: english.excerpt,
+        category: english.category,
+        tags: english.tags.join(", "),
+        content: english.content,
+        prompts: english.prompts,
+        seoTitle: english.seoTitle,
+        seoDescription: english.seoDescription,
+      },
+      zh: {
+        title: chinese.title,
+        slug: chinese.slug,
+        excerpt: chinese.excerpt,
+        category: chinese.category,
+        tags: chinese.tags.join(", "),
+        content: chinese.content,
+        prompts: chinese.prompts,
+        seoTitle: chinese.seoTitle,
+        seoDescription: chinese.seoDescription,
+      },
+    },
   };
 }
 
@@ -153,20 +194,32 @@ function fromFormState(baseSnippet: Snippet, form: SnippetFormState): Snippet {
 
   return {
     ...baseSnippet,
-    title: form.title.trim() || "Untitled Snippet",
-    slug: form.slug.trim() || slugify(form.title || "untitled-snippet"),
-    excerpt: form.excerpt.trim(),
-    category: form.category.trim() || "Workflow",
-    tags: form.tags
-      .split(",")
-      .map((tag) => tag.trim())
-      .filter(Boolean),
+    locales: {
+      en: {
+        title: form.locales.en.title.trim() || "Untitled Snippet",
+        slug: form.locales.en.slug.trim() || slugify(form.locales.en.title || "untitled-snippet"),
+        excerpt: form.locales.en.excerpt.trim(),
+        category: form.locales.en.category.trim() || "Workflow",
+        tags: form.locales.en.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
+        content: form.locales.en.content,
+        prompts: form.locales.en.prompts,
+        seoTitle: form.locales.en.seoTitle.trim(),
+        seoDescription: form.locales.en.seoDescription.trim(),
+      },
+      zh: {
+        title: form.locales.zh.title.trim() || "未命名 Snippet",
+        slug: form.locales.zh.slug.trim() || slugify(form.locales.zh.title || "untitled-snippet"),
+        excerpt: form.locales.zh.excerpt.trim(),
+        category: form.locales.zh.category.trim() || "Workflow",
+        tags: form.locales.zh.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
+        content: form.locales.zh.content,
+        prompts: form.locales.zh.prompts,
+        seoTitle: form.locales.zh.seoTitle.trim(),
+        seoDescription: form.locales.zh.seoDescription.trim(),
+      },
+    },
     coverImage: form.coverImage.trim(),
-    content: form.content,
     code: form.code,
-    prompts: form.prompts,
-    seoTitle: form.seoTitle.trim(),
-    seoDescription: form.seoDescription.trim(),
     status: form.status,
     publishedAt,
     updatedAt: new Date().toISOString(),
@@ -174,24 +227,24 @@ function fromFormState(baseSnippet: Snippet, form: SnippetFormState): Snippet {
 }
 
 function toSnippetPayload(snippet: Snippet): SnippetPayload {
+  const english = getSnippetLocale(snippet, "en");
+  const chinese = getSnippetLocale(snippet, "zh");
+
   return {
-    title: snippet.title,
-    slug: snippet.slug,
-    excerpt: snippet.excerpt,
-    category: snippet.category,
-    tags: snippet.tags,
     coverImage: snippet.coverImage,
-    content: snippet.content,
     code: snippet.code,
-    prompts: snippet.prompts,
-    seoTitle: snippet.seoTitle,
-    seoDescription: snippet.seoDescription,
     status: snippet.status,
     publishedAt: snippet.publishedAt,
+    locales: {
+      en: { ...english },
+      zh: { ...chinese },
+    },
   };
 }
 
 export default function AdminSnippetEditor() {
+  const { locale } = useAppLocale();
+  const copy = getMessages(locale).admin;
   const { id } = useParams();
   const navigate = useNavigate();
   const isNew = id === undefined;
@@ -205,6 +258,7 @@ export default function AdminSnippetEditor() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [editorLocale, setEditorLocale] = useState<AppLocale>("en");
   const [previewDevice, setPreviewDevice] = useState<PreviewDevice>("desktop");
   const [autosaveState, setAutosaveState] = useState<AutosaveState>("idle");
   const [primaryActionState, setPrimaryActionState] = useState<PrimaryActionState>("idle");
@@ -218,6 +272,10 @@ export default function AdminSnippetEditor() {
   useEffect(() => {
     formRef.current = form;
   }, [form]);
+
+  useEffect(() => {
+    setEditorLocale(locale);
+  }, [locale]);
 
   useEffect(() => {
     if (isNew || !id) {
@@ -292,8 +350,11 @@ export default function AdminSnippetEditor() {
   }, [isPreviewOpen, isPublishConfirmOpen]);
 
   const previewSnippet = useMemo(() => fromFormState(baseSnippet, form), [baseSnippet, form]);
-  const previewPath = baseSnippet.slug ? `/snippets/${baseSnippet.slug}` : "";
-  const hasSavedPreview = Boolean(baseSnippet.id && baseSnippet.slug);
+  const localizedForm = useMemo(() => getFormLocale(form, editorLocale), [editorLocale, form]);
+  const localizedPreview = useMemo(() => getLocalizedSnippetFields(previewSnippet, editorLocale), [editorLocale, previewSnippet]);
+  const localizedBase = useMemo(() => getLocalizedSnippetFields(baseSnippet, editorLocale), [baseSnippet, editorLocale]);
+  const previewPath = baseSnippet.id && localizedBase.slug ? localizePath(locale, `/snippets/${localizedBase.slug}`) : "";
+  const hasSavedPreview = Boolean(baseSnippet.id && localizedBase.slug);
   const previewPayloadSignature = useMemo(() => JSON.stringify(toSnippetPayload(previewSnippet)), [previewSnippet]);
   const basePayloadSignature = useMemo(() => JSON.stringify(toSnippetPayload(baseSnippet)), [baseSnippet]);
   const hasUnsavedChanges = previewPayloadSignature !== basePayloadSignature;
@@ -331,10 +392,29 @@ export default function AdminSnippetEditor() {
 
   const updateField = <K extends keyof SnippetFormState>(field: K, value: SnippetFormState[K]) => {
     setForm((current) => {
-      if (field === "title" && (!current.slug || current.slug === slugify(current.title))) {
-        return { ...current, title: String(value), slug: slugify(String(value)) };
-      }
       return { ...current, [field]: value };
+    });
+  };
+
+  const updateLocalizedField = (field: keyof SnippetFormState["locales"]["en"], value: string) => {
+    setForm((current) => {
+      const currentLocaleForm = current.locales[editorLocale];
+      const nextLocaleForm = {
+        ...currentLocaleForm,
+        [field]: value,
+      };
+
+      if (field === "title" && (!currentLocaleForm.slug || currentLocaleForm.slug === slugify(currentLocaleForm.title))) {
+        nextLocaleForm.slug = slugify(value);
+      }
+
+      return {
+        ...current,
+        locales: {
+          ...current.locales,
+          [editorLocale]: nextLocaleForm,
+        },
+      };
     });
   };
 
@@ -379,7 +459,7 @@ export default function AdminSnippetEditor() {
 
         if (isNew) {
           hydratedSnippetRef.current = savedSnippet;
-          navigate(`/admin/snippets/${savedSnippet.id}`, { replace: true });
+          navigate(localizePath(locale, `/admin/snippets/${savedSnippet.id}`), { replace: true });
         }
       } catch (err) {
         setAutosaveState("idle");
@@ -412,7 +492,7 @@ export default function AdminSnippetEditor() {
 
       if (isNew) {
         hydratedSnippetRef.current = finalSnippet;
-        navigate(`/admin/snippets/${finalSnippet.id}`, { replace: true });
+        navigate(localizePath(locale, `/admin/snippets/${finalSnippet.id}`), { replace: true });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to publish snippet");
@@ -445,7 +525,7 @@ export default function AdminSnippetEditor() {
       setError("");
       setIsDeleteConfirmOpen(false);
       await deleteSnippet(baseSnippet.id);
-      navigate("/admin/snippets");
+      navigate(localizePath(locale, "/admin/snippets"));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete snippet");
     } finally {
@@ -456,13 +536,15 @@ export default function AdminSnippetEditor() {
   const handlePreview = useCallback(() => {
     if (!hasSavedPreview || !previewPath) {
       setError("");
-      setFeedback(`Save this draft first to open the public preview at /snippets/${form.slug || "untitled"}.`);
+      setFeedback(
+        `Save this draft first to open the public preview at ${localizePath(locale, `/snippets/${localizedForm.slug || "untitled"}`)}.`,
+      );
       return;
     }
 
     setPreviewDevice("desktop");
     setIsPreviewOpen(true);
-  }, [form.slug, hasSavedPreview, previewPath]);
+  }, [hasSavedPreview, localizedForm.slug, previewPath]);
 
   const closePreview = useCallback(() => {
     setIsPreviewOpen(false);
@@ -532,13 +614,29 @@ export default function AdminSnippetEditor() {
         <div className="flex flex-col gap-12">
           <EditorSectionRail activeTab={activeTab} onSelect={setActiveTab} />
 
-          <div className="space-y-12">
-            <div className="relative flex flex-col gap-2">
-              <textarea
+	          <div className="space-y-12">
+	            <div className="relative flex flex-col gap-2">
+                <div className="mb-3 flex items-center gap-2">
+                  <button
+                    type="button"
+                    className={`admin-button-secondary h-9 px-4 text-xs ${editorLocale === "en" ? "admin-button-primary" : ""}`}
+                    onClick={() => setEditorLocale("en")}
+                  >
+                    {copy.localeEditorEnglish}
+                  </button>
+                  <button
+                    type="button"
+                    className={`admin-button-secondary h-9 px-4 text-xs ${editorLocale === "zh" ? "admin-button-primary" : ""}`}
+                    onClick={() => setEditorLocale("zh")}
+                  >
+                    {copy.localeEditorChinese}
+                  </button>
+                </div>
+	              <textarea
                 aria-label="Snippet Title"
                 placeholder="Snippet Title"
-                value={form.title}
-                onChange={(e) => updateField("title", e.target.value)}
+                value={localizedForm.title}
+                onChange={(e) => updateLocalizedField("title", e.target.value)}
                 className="admin-editor-title-input w-full border-none bg-transparent p-0 text-5xl font-bold tracking-tighter transition-all duration-500 resize-none outline-none overflow-hidden focus:ring-0 md:text-7xl"
                 rows={1}
                 onInput={(e) => {
@@ -566,8 +664,8 @@ export default function AdminSnippetEditor() {
                     <textarea
                       aria-label="Implementation notes"
                       placeholder="Shape the narrative around the technique and tradeoffs. You can use Markdown."
-                      value={form.content}
-                      onChange={(event) => updateField("content", event.target.value)}
+                      value={localizedForm.content}
+                      onChange={(event) => updateLocalizedField("content", event.target.value)}
                       className="admin-editor-textarea admin-editor-panel-body admin-editor-scrollbar w-full resize-none border-0 bg-transparent px-0 text-lg leading-relaxed shadow-none outline-none focus:ring-0"
                     />
                   </div>
@@ -604,8 +702,8 @@ export default function AdminSnippetEditor() {
                     <textarea
                       aria-label="Prompt notes"
                       placeholder="Capture the AI direction notes that helped shape this specific implementation."
-                      value={form.prompts}
-                      onChange={(event) => updateField("prompts", event.target.value)}
+                      value={localizedForm.prompts}
+                      onChange={(event) => updateLocalizedField("prompts", event.target.value)}
                       className="admin-editor-textarea admin-editor-panel-body admin-editor-scrollbar w-full resize-none border-0 bg-transparent px-0 shadow-none outline-none focus:ring-0"
                     />
                   </div>
@@ -629,8 +727,8 @@ export default function AdminSnippetEditor() {
                         <span className="admin-eyebrow type-mono-micro">Category</span>
                         <Input
                           aria-label="Category"
-                          value={form.category}
-                          onChange={(event) => updateField("category", event.target.value)}
+                          value={localizedForm.category}
+                          onChange={(event) => updateLocalizedField("category", event.target.value)}
                           className="admin-input w-full"
                         />
                       </label>
@@ -638,8 +736,8 @@ export default function AdminSnippetEditor() {
                         <span className="admin-eyebrow type-mono-micro">Tags</span>
                         <Input
                           aria-label="Tags"
-                          value={form.tags}
-                          onChange={(event) => updateField("tags", event.target.value)}
+                          value={localizedForm.tags}
+                          onChange={(event) => updateLocalizedField("tags", event.target.value)}
                           placeholder="SwiftUI, Motion"
                           className="admin-input w-full"
                         />
@@ -648,8 +746,8 @@ export default function AdminSnippetEditor() {
                          <span className="admin-eyebrow type-mono-micro">Route Slug</span>
                          <Input
                            aria-label="Slug"
-                           value={form.slug}
-                           onChange={(event) => updateField("slug", event.target.value)}
+                           value={localizedForm.slug}
+                           onChange={(event) => updateLocalizedField("slug", event.target.value)}
                            className="admin-input w-full"
                          />
                       </label>
@@ -708,8 +806,8 @@ export default function AdminSnippetEditor() {
                         <span className="admin-eyebrow type-mono-micro">SEO Title</span>
                         <Input
                           aria-label="SEO Title"
-                          value={form.seoTitle}
-                          onChange={(event) => updateField("seoTitle", event.target.value)}
+                          value={localizedForm.seoTitle}
+                          onChange={(event) => updateLocalizedField("seoTitle", event.target.value)}
                           className="admin-input w-full"
                         />
                       </label>
@@ -717,8 +815,8 @@ export default function AdminSnippetEditor() {
                         <span className="admin-eyebrow type-mono-micro">SEO Description</span>
                         <TextArea
                           aria-label="SEO Description"
-                          value={form.seoDescription}
-                          onChange={(event) => updateField("seoDescription", event.target.value)}
+                          value={localizedForm.seoDescription}
+                          onChange={(event) => updateLocalizedField("seoDescription", event.target.value)}
                           rows={3}
                           className="admin-textarea w-full"
                         />
@@ -787,7 +885,7 @@ export default function AdminSnippetEditor() {
                   <div>
                     <p className="admin-copy-faint type-mono-micro">Preview Mode</p>
                     <h2 className="admin-header-title mt-1 text-lg font-semibold md:text-xl">
-                      {form.title || "Untitled Snippet"}
+                      {localizedForm.title || "Untitled Snippet"}
                     </h2>
                   </div>
                 </div>
@@ -900,7 +998,7 @@ export default function AdminSnippetEditor() {
               <Modal.Body className="admin-delete-modal-body">
                 <p className="admin-copy-muted text-sm leading-relaxed md:text-base">
                   This will permanently remove{" "}
-                  <strong className="admin-title-strong">{previewSnippet.title || "Untitled Snippet"}</strong> from
+                  <strong className="admin-title-strong">{localizedPreview.title || "Untitled Snippet"}</strong> from
                   the registry. This action cannot be undone.
                 </p>
               </Modal.Body>
@@ -943,7 +1041,7 @@ export default function AdminSnippetEditor() {
                   </h2>
                   <p className="admin-copy-muted text-sm leading-relaxed md:text-base">
                     {isPublishedEntry ? "Confirming will save the current editor state and replace the live public version of " : "Confirming will save the current editor state and make "}
-                    <strong className="admin-title-strong">{previewSnippet.title || "Untitled Snippet"}</strong>
+                    <strong className="admin-title-strong">{localizedPreview.title || "Untitled Snippet"}</strong>
                     {isPublishedEntry ? "." : " live in the public snippet library."}
                   </p>
                 </div>

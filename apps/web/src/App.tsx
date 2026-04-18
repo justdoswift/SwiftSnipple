@@ -57,7 +57,7 @@ function PublicRouteFallback() {
 
   return (
     <div className="public-route-fallback mx-auto flex w-full max-w-[1380px] flex-1 items-center justify-center px-6 py-20 md:px-8">
-      <div className="public-surface w-full max-w-xl rounded-[22px] px-8 py-12 text-center">
+      <div className="public-surface w-full max-w-xl px-8 py-12 text-center">
         <div className="flex flex-col items-center gap-4">
           <Spinner size="lg" />
           <p className="type-mono-micro public-loading-label">{copy.loading}</p>

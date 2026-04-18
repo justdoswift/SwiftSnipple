@@ -130,7 +130,7 @@ export default function SnippetDetail() {
         number: "01",
         label: copy.implementationNotes,
         content: (
-          <div className="public-content-panel rounded-[24px] px-6 py-6 md:px-8 md:py-8">
+          <div className="public-content-panel px-6 py-6 md:px-8 md:py-8">
             <MarkdownRenderer content={localizedFields?.content ?? ""} />
           </div>
         ),
@@ -320,7 +320,7 @@ export default function SnippetDetail() {
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col items-center gap-6"
           >
-            <span className="public-pill type-mono-label px-3 py-1 rounded-full">
+            <span className="public-pill type-mono-label px-3 py-1">
               {localizedFields?.category} / {formatDate(snippet.publishedAt)}
             </span>
             <h1 className="type-display">
@@ -334,8 +334,8 @@ export default function SnippetDetail() {
       </header>
 
       <section className="mb-20 px-4 md:mb-24 md:px-0">
-        <div className="public-content-frame vibe-glass mx-auto max-w-[1120px] rounded-[32px] p-2">
-          <div className="public-media-shell aspect-[16/9] overflow-hidden rounded-[24px]">
+        <div className="public-content-frame vibe-glass mx-auto max-w-[1120px] p-2">
+          <div className="public-media-shell aspect-[16/9] overflow-hidden">
             <img
               src={snippet.coverImage}
               alt={localizedFields?.title}
@@ -416,7 +416,7 @@ export default function SnippetDetail() {
                       animate={{ opacity: 1, x: 0, scale: 1 }}
                       exit={{ opacity: 0, x: -8, scale: 0.98 }}
                       transition={{ duration: 0.18, ease: "easeOut" }}
-                      className="public-contents-panel hidden w-[250px] rounded-[24px] px-5 py-6 md:block"
+                      className="public-contents-panel hidden w-[250px] px-5 py-6 md:block"
                     >
                       <p className="type-mono-label mb-6">Contents</p>
                       <div className="space-y-3">

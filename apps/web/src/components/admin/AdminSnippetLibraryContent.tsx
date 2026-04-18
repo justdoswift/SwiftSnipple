@@ -81,7 +81,7 @@ export default function AdminSnippetLibraryContent({
 
   return (
     <>
-      <div className="admin-section-card mt-8 rounded-[28px]">
+      <div className="admin-section-card mt-8">
         <div className="grid gap-4 p-5 md:grid-cols-[minmax(0,1fr)_220px_220px]">
           <Input
             aria-label={copy.searchTitleOrSlug}
@@ -147,10 +147,10 @@ export default function AdminSnippetLibraryContent({
 
       <section className="mt-8 grid gap-6">
         {isLoading ? <p className="admin-copy-muted type-body-sm">{copy.loadingSnippetLibrary}</p> : null}
-        {error ? <p className="admin-inline-alert rounded-[20px] px-4 py-3">{error}</p> : null}
+        {error ? <p className="admin-inline-alert px-4 py-3">{error}</p> : null}
 
         {!isLoading && !error && !snippets.length ? (
-          <div className="admin-section-card admin-list-divider rounded-[28px] border border-dashed">
+          <div className="admin-section-card admin-list-divider border border-dashed">
             <div className="px-6 py-12 text-center">
               <p className="admin-empty-kicker type-mono-micro">{copy.noSnippets}</p>
               <h2 className="admin-section-title admin-section-title-lg mt-4">{copy.startFirstEntry}</h2>
@@ -170,9 +170,9 @@ export default function AdminSnippetLibraryContent({
                 to={`/${locale}/admin/snippets/${snippet.id}`}
                 className="admin-list-link block"
               >
-                <div className="admin-section-card rounded-[28px] transition-all hover:-translate-y-0.5">
+                <div className="admin-section-card transition-all hover:-translate-y-0.5">
                   <div className="grid gap-6 p-5 md:grid-cols-[220px_minmax(0,1fr)] md:p-6">
-                    <div className="admin-image-stage aspect-[4/3] overflow-hidden rounded-[22px]">
+                    <div className="admin-image-stage aspect-[4/3] overflow-hidden">
                       <img
                         src={snippet.coverImage}
                         alt={fields.title}
@@ -189,7 +189,7 @@ export default function AdminSnippetLibraryContent({
                           {fields.tags.map((tag) => (
                             <span
                               key={tag}
-                              className="admin-tag-chip type-mono-micro inline-flex items-center rounded-full px-3 py-1.5"
+                              className="admin-tag-chip type-mono-micro inline-flex items-center px-3 py-1.5"
                             >
                               {tag}
                             </span>
@@ -211,7 +211,7 @@ export default function AdminSnippetLibraryContent({
           : null}
 
         {!isLoading && !error && !filteredSnippets.length && snippets.length ? (
-          <div className="admin-section-card admin-list-divider rounded-[28px] border border-dashed">
+          <div className="admin-section-card admin-list-divider border border-dashed">
             <div className="px-6 py-12 text-center">
               <p className="admin-empty-kicker type-mono-micro">{copy.noMatches}</p>
               <h2 className="admin-section-title admin-section-title-lg mt-4">{copy.tryAnotherFilter}</h2>

@@ -30,7 +30,7 @@ export default function SnippetCard({ snippet }: SnippetCardProps) {
         whileHover={{ scale: 1.01, y: -4 }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
       >
-        <Card className="public-surface overflow-hidden rounded-[24px]">
+        <Card className="public-surface overflow-hidden">
           <div className="relative aspect-[16/10] overflow-hidden">
             <img
               src={snippet.coverImage}
@@ -42,7 +42,7 @@ export default function SnippetCard({ snippet }: SnippetCardProps) {
           </div>
           <Card.Content className="space-y-4 px-5 py-5 md:px-6 md:py-6">
             <div className="flex flex-wrap items-center gap-2">
-              <Chip size="sm" radius="md" variant="flat" className="public-chip type-action">
+              <Chip size="sm" variant="flat" className="public-chip type-action">
                 {fields.category}
               </Chip>
             </div>

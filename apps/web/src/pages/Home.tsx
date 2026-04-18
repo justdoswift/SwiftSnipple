@@ -89,7 +89,6 @@ export default function Home() {
             <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
               <Button
                 className="public-primary-button public-button-lg type-action"
-                radius="full"
                 onPress={() => {
                   const el = document.getElementById("library-index");
                   el?.scrollIntoView({ behavior: "smooth" });
@@ -97,7 +96,7 @@ export default function Home() {
               >
                 {copy.exploreLab}
               </Button>
-              <Chip radius="md" variant="flat" className="public-chip public-chip-metric type-action">
+              <Chip variant="flat" className="public-chip public-chip-metric type-action">
                 {publishedSnippets.length} {copy.liveObjects}
               </Chip>
             </div>
@@ -125,7 +124,7 @@ export default function Home() {
         {isLoading ? <p className="type-mono-micro mt-12 text-center animate-pulse">{copy.accessingDataStores}</p> : null}
         {!isLoading && !error && !featuredSnippets.length ? (
           <motion.div variants={itemVariants}>
-            <Card className="public-surface mt-12 rounded-[24px] border-dashed">
+            <Card className="public-surface mt-12 border-dashed">
               <Card.Content className="px-8 py-14 text-center md:px-10 md:py-16">
                 <span className="type-mono-micro">{copy.systemStatus}</span>
                 <h2 className="type-section-title mt-5">{copy.noLiveObjects}</h2>
@@ -147,7 +146,6 @@ export default function Home() {
           </div>
           <Button
             className="public-secondary-button public-button-md type-action"
-            radius="full"
             variant="bordered"
             onPress={() => {
               window.location.hash = "library-index";
@@ -167,7 +165,7 @@ export default function Home() {
 
       {/* Subscribe Section */}
       <motion.div variants={itemVariants}>
-        <div className="public-surface mx-auto max-w-[1080px] rounded-[32px]">
+        <div className="public-surface mx-auto max-w-[1080px]">
           <div className="flex flex-col items-center px-8 py-14 text-center md:px-16 md:py-20 lg:px-20 lg:py-24">
             <span className="type-mono-label mb-6">{copy.updatesShell}</span>
             <h2 className="type-page-title mb-6">{copy.syncLatestBuilds}</h2>
@@ -181,7 +179,7 @@ export default function Home() {
                 placeholder={copy.subscribePlaceholder}
                 type="email"
               />
-              <Button className="public-primary-button public-button-lg type-action" radius="full" variant="solid">
+              <Button className="public-primary-button public-button-lg type-action" variant="solid">
                 {copy.join}
               </Button>
             </div>

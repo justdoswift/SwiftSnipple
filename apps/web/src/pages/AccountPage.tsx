@@ -36,7 +36,7 @@ export default function AccountPage({ authSession, onSignOut }: AccountPageProps
   if (!authSession) {
     return (
       <section className="public-page mx-auto flex min-h-[calc(100vh-12rem)] max-w-[980px] items-center px-8 pb-24 pt-36 md:px-12 md:pt-40 lg:px-16 lg:pt-48">
-        <Card className="public-surface w-full rounded-[34px]">
+        <Card className="public-surface w-full">
           <Card.Content className="flex flex-col gap-6 px-8 py-10 md:px-12 md:py-14">
             <span className="type-mono-label">{copy.memberCenter}</span>
             <h1 className="type-page-title max-w-[12ch]">{copy.noSessionTitle}</h1>
@@ -83,7 +83,7 @@ export default function AccountPage({ authSession, onSignOut }: AccountPageProps
             {copy.publishingWorkspace}
             <ArrowUpRight size={15} strokeWidth={2.2} />
           </Link>
-          <Button className="public-primary-button public-button-lg type-action" radius="full" onPress={onSignOut}>
+          <Button className="public-primary-button public-button-lg type-action" onPress={onSignOut}>
             <LogOut size={16} strokeWidth={2.2} />
             <span>{copy.signOut}</span>
           </Button>
@@ -92,7 +92,7 @@ export default function AccountPage({ authSession, onSignOut }: AccountPageProps
 
       <div className="account-grid">
         {memberPanels.map(({ eyebrow, title, copy, icon: Icon }) => (
-          <Card key={`${eyebrow}-${title}`} className="public-surface account-panel rounded-[30px]">
+          <Card key={`${eyebrow}-${title}`} className="public-surface account-panel">
             <Card.Content className="flex h-full flex-col gap-6 px-7 py-8 md:px-8 md:py-9">
               <div className="account-panel-icon">
                 <Icon size={18} strokeWidth={2.2} />

@@ -19,7 +19,7 @@ export default function SnippetMiniCard({ snippet }: SnippetMiniCardProps) {
         whileHover={{ scale: 1.02, y: -2 }}
         transition={{ type: "spring", stiffness: 400, damping: 22 }}
       >
-          <Card className="public-snippet-mini-card-shell vibe-glass overflow-hidden rounded-[20px] transition-colors">
+          <Card className="public-snippet-mini-card-shell vibe-glass overflow-hidden transition-colors">
           <div className="public-snippet-mini-card-media aspect-square overflow-hidden">
             <img
               src={snippet.coverImage}
@@ -29,7 +29,7 @@ export default function SnippetMiniCard({ snippet }: SnippetMiniCardProps) {
             />
           </div>
             <Card.Content className="space-y-3 px-4 py-4 md:px-5 md:py-5">
-              <Chip size="sm" radius="md" variant="flat" className="public-chip type-action w-fit">
+              <Chip size="sm" variant="flat" className="public-chip type-action w-fit">
                 {fields.category}
               </Chip>
             <h4 className="public-snippet-mini-card-title type-card-title">{fields.title}</h4>

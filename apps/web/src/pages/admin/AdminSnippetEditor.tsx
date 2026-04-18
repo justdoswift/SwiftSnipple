@@ -669,7 +669,7 @@ export default function AdminSnippetEditor() {
                   aria-labelledby="editor-tab-content"
                   className="py-4"
                 >
-                  <div className="admin-editor-panel admin-editor-panel-frame group relative rounded-[28px] border px-6 py-6">
+                  <div className="admin-editor-panel admin-editor-panel-frame group relative border px-6 py-6">
                     <textarea
                       aria-label="Implementation notes"
                       placeholder="Shape the narrative around the technique and tradeoffs. You can use Markdown."
@@ -688,7 +688,7 @@ export default function AdminSnippetEditor() {
                   aria-labelledby="editor-tab-code"
                   className="py-4"
                 >
-                  <div className="admin-editor-panel admin-editor-panel-frame group relative rounded-[28px] border px-6 py-6">
+                  <div className="admin-editor-panel admin-editor-panel-frame group relative border px-6 py-6">
                     <HighlightedCodeEditor
                       ariaLabel="SwiftUI code"
                       placeholder="import SwiftUI..."
@@ -707,7 +707,7 @@ export default function AdminSnippetEditor() {
                   aria-labelledby="editor-tab-prompt"
                   className="py-4"
                 >
-                  <div className="group relative rounded-[28px] border px-6 py-6 admin-editor-panel admin-editor-panel-frame">
+                  <div className="group relative border px-6 py-6 admin-editor-panel admin-editor-panel-frame">
                     <textarea
                       aria-label="Prompt notes"
                       placeholder="Capture the AI direction notes that helped shape this specific implementation."
@@ -852,14 +852,13 @@ export default function AdminSnippetEditor() {
 
                   {!isNew && (
                     <section className="admin-divider-soft pt-10 border-t">
-                      <div className="admin-danger-shell flex items-center justify-between p-6 rounded-[32px]">
+                      <div className="admin-danger-shell flex items-center justify-between p-6">
                       <div>
                           <h3 className="admin-danger-title font-semibold">Danger Zone</h3>
                           <p className="admin-copy-muted mt-1">Permanently remove this entry from the registry.</p>
                         </div>
                         <Button
                           variant="outline"
-                          radius="full"
                           className="admin-danger-button h-10 border-dashed transition-all"
                           isDisabled={isDeleting || primaryActionState !== "idle"}
                           onPress={() => setIsDeleteConfirmOpen(true)}
@@ -879,7 +878,7 @@ export default function AdminSnippetEditor() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="admin-inline-alert rounded-[24px] p-5"
+              className="admin-inline-alert p-5"
             >
               {error}
             </motion.div>
@@ -896,7 +895,7 @@ export default function AdminSnippetEditor() {
             onClick={closePreview}
           />
           <div className="relative z-10 flex h-full w-full flex-col p-4 md:p-6">
-            <div className="admin-header admin-preview-shell flex h-full w-full flex-col overflow-hidden rounded-[28px]">
+            <div className="admin-header admin-preview-shell flex h-full w-full flex-col overflow-hidden">
               <div className="admin-preview-toolbar flex flex-col gap-4 px-5 py-4 md:px-8 md:py-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
@@ -932,7 +931,7 @@ export default function AdminSnippetEditor() {
 
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div
-                  className="admin-preview-device-tabs inline-flex items-center rounded-[18px] border p-1"
+                  className="admin-preview-device-tabs inline-flex items-center border p-1"
                   role="tablist"
                   aria-label="Preview devices"
                 >
@@ -940,7 +939,7 @@ export default function AdminSnippetEditor() {
                     type="button"
                     role="tab"
                     aria-selected={previewDevice === "mobile"}
-                    className={`admin-preview-device-button inline-flex h-10 items-center gap-2 rounded-[14px] px-4 transition-colors ${
+                    className={`admin-preview-device-button inline-flex h-10 items-center gap-2 px-4 transition-colors ${
                       previewDevice === "mobile" ? "admin-preview-device-button-active" : "admin-preview-device-button-inactive"
                     }`}
                     onClick={() => setPreviewDevice("mobile")}
@@ -952,7 +951,7 @@ export default function AdminSnippetEditor() {
                     type="button"
                     role="tab"
                     aria-selected={previewDevice === "desktop"}
-                    className={`admin-preview-device-button inline-flex h-10 items-center gap-2 rounded-[14px] px-4 transition-colors ${
+                    className={`admin-preview-device-button inline-flex h-10 items-center gap-2 px-4 transition-colors ${
                       previewDevice === "desktop" ? "admin-preview-device-button-active" : "admin-preview-device-button-inactive"
                     }`}
                     onClick={() => setPreviewDevice("desktop")}
@@ -963,16 +962,16 @@ export default function AdminSnippetEditor() {
                 </div>
                 <div className="hidden items-center gap-3 md:flex">
                   <span className="admin-copy-faint type-mono-micro">Public route</span>
-                  <span className="admin-preview-route-chip rounded-full border px-3 py-1.5">
+                  <span className="admin-preview-route-chip border px-3 py-1.5">
                     {previewPath}
                   </span>
                 </div>
               </div>
               </div>
               <div className="admin-preview-canvas flex flex-1 min-h-0 px-3 py-3 md:px-6 md:py-6">
-                <div className="admin-preview-stage flex h-full min-h-0 w-full items-center justify-center overflow-auto rounded-[24px] border p-4 md:p-7">
+                <div className="admin-preview-stage flex h-full min-h-0 w-full items-center justify-center overflow-auto border p-4 md:p-7">
                 <div
-                  className={`admin-preview-frame w-full rounded-[24px] border transition-all duration-300 ${
+                  className={`admin-preview-frame w-full border transition-all duration-300 ${
                     previewDevice === "desktop"
                       ? "max-w-[min(1440px,92vw)]"
                       : "max-w-[430px]"
@@ -983,12 +982,12 @@ export default function AdminSnippetEditor() {
                     <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
                     <span className="h-3 w-3 rounded-full bg-[#ffbd2e]" />
                     <span className="h-3 w-3 rounded-full bg-[#28c840]" />
-                    <div className="admin-preview-address ml-4 flex-1 rounded-full border px-4 py-2 text-center">
+                    <div className="admin-preview-address ml-4 flex-1 border px-4 py-2 text-center">
                       {previewPath}
                     </div>
                   </div>
                   <div
-                    className={`admin-preview-iframe-shell overflow-hidden rounded-b-[24px] ${
+                    className={`admin-preview-iframe-shell overflow-hidden ${
                       previewDevice === "mobile" ? "mx-auto aspect-[390/844]" : "aspect-[16/10]"
                     }`}
                   >
@@ -1058,7 +1057,7 @@ export default function AdminSnippetEditor() {
             onClick={() => setIsPublishConfirmOpen(false)}
           />
           <div className="relative z-10 flex h-full w-full items-center justify-center px-4 py-6 md:px-6">
-            <div className="admin-publish-dialog w-full max-w-xl rounded-[30px] border px-6 py-6 md:px-8 md:py-8">
+            <div className="admin-publish-dialog w-full max-w-xl border px-6 py-6 md:px-8 md:py-8">
               <div className="flex flex-col gap-4">
                 <div className="space-y-3">
                   <span className="admin-eyebrow type-mono-micro">Publish Confirmation</span>
@@ -1071,7 +1070,7 @@ export default function AdminSnippetEditor() {
                     {isPublishedEntry ? "." : " live in the public snippet library."}
                   </p>
                 </div>
-                <div className="admin-publish-dialog-callout rounded-[22px] border px-4 py-4">
+                <div className="admin-publish-dialog-callout border px-4 py-4">
                   {hasUnsavedChanges
                     ? isPublishedEntry
                       ? "This published snippet has local edits. We will save those changes before updating the live public version."

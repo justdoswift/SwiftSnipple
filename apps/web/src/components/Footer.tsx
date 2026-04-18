@@ -8,7 +8,7 @@ export default function Footer() {
 
   return (
     <footer className="public-footer mt-24 w-full px-8 pb-12 md:px-12 lg:px-16">
-      <div className="vibe-glass mx-auto max-w-[1400px] rounded-[24px] px-6 py-8 md:px-8 md:py-10 lg:px-10">
+      <div className="public-surface vibe-glass mx-auto max-w-[1400px] px-6 py-8 md:px-8 md:py-10 lg:px-10">
         <div className="flex flex-col justify-between gap-10 md:flex-row md:items-start">
           <div className="flex flex-col gap-4">
             <span className="site-brand-title">Just Do Swift</span>

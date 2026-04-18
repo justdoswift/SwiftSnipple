@@ -53,8 +53,13 @@
     --border: rgba(255, 255, 255, 0.08);
     --separator: rgba(255, 255, 255, 0.08);
     --focus: #ffffff;
-    --radius: 12px;
-    --field-radius: 10px;
+    --radius-control: 12px;
+    --radius-menu: 18px;
+    --radius-panel: 24px;
+    --radius-panel-lg: 28px;
+    --radius-pill: 999px;
+    --radius: var(--radius-control);
+    --field-radius: var(--radius-control);
     --surface-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
     --overlay-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
     --field-shadow: none;
@@ -444,6 +449,7 @@
   .public-nav-search {
     @apply flex h-10 min-w-0 items-center gap-3 rounded-[12px] border px-3 transition-colors duration-200;
     width: min(36vw, 260px);
+    border-radius: var(--radius-control);
   }
 
   .public-nav-search input {
@@ -456,6 +462,7 @@
 
   .public-nav-search-shortcut {
     @apply hidden items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-medium uppercase tracking-[0.1em] sm:inline-flex;
+    border-radius: var(--radius-pill);
   }
 
   .public-nav-icon-button,
@@ -465,10 +472,12 @@
 
   .public-nav-icon-button {
     @apply w-11 rounded-full border border-transparent bg-transparent;
+    border-radius: var(--radius-pill);
   }
 
   .public-nav-login-button {
     @apply rounded-[12px] border border-transparent px-3 md:px-4;
+    border-radius: var(--radius-control);
     color: inherit;
     text-decoration: none;
   }
@@ -480,6 +489,7 @@
 
   .public-nav-locale-trigger {
     @apply inline-flex h-10 w-full items-center justify-center gap-1 rounded-[12px] border border-transparent bg-transparent px-3 py-0 text-center shadow-none outline-none transition-colors duration-200 md:px-4;
+    border-radius: var(--radius-control);
     color: inherit;
     appearance: none;
     -webkit-appearance: none;
@@ -501,6 +511,7 @@
 
   .public-nav-select-popover {
     @apply rounded-[18px] border p-1 shadow-[0_20px_60px_rgba(0,0,0,0.35)];
+    border-radius: var(--radius-menu);
   }
 
   .public-nav-select-list {
@@ -509,6 +520,7 @@
 
   .public-nav-select-item {
     @apply flex cursor-default items-center justify-between rounded-[14px] border border-transparent px-3 py-2 text-[0.9375rem] font-medium shadow-none outline-none transition-colors;
+    border-radius: var(--radius-control);
   }
 
   .public-nav-select-item:focus,
@@ -703,6 +715,7 @@
 
   .public-surface {
     @apply backdrop-blur-xl border rounded-[24px];
+    border-radius: var(--radius-panel);
     background-color: var(--public-surface-bg);
     border-color: var(--public-border-faint);
     box-shadow: var(--public-shadow);
@@ -710,12 +723,14 @@
 
   .public-surface-subtle {
     @apply border rounded-[20px];
+    border-radius: var(--radius-panel);
     background-color: var(--public-surface-subtle-bg);
     border-color: var(--public-border-faint);
   }
 
   .public-surface-strong {
     @apply border rounded-[28px];
+    border-radius: var(--radius-panel-lg);
     background-color: var(--public-surface-strong-bg);
     border-color: var(--public-border);
     box-shadow: var(--public-strong-shadow);
@@ -726,7 +741,7 @@
     background-color: var(--public-chip-bg);
     border-color: var(--public-chip-border);
     color: var(--public-chip-text);
-    border-radius: 8px;
+    border-radius: var(--radius-pill);
   }
 
   .public-chip-strong {
@@ -744,12 +759,13 @@
     border: 1px solid var(--public-pill-border);
     background-color: var(--public-pill-bg);
     color: var(--public-pill-text);
+    border-radius: var(--radius-pill);
   }
 
   .public-primary-button {
     min-height: 40px;
     padding-inline: 1rem;
-    border-radius: 8px;
+    border-radius: var(--radius-control);
     font-size: 0.875rem;
     font-weight: 500;
     line-height: 1.2;
@@ -768,7 +784,7 @@
   .public-secondary-button {
     min-height: 40px;
     padding-inline: 1rem;
-    border-radius: 8px;
+    border-radius: var(--radius-control);
     font-size: 0.875rem;
     font-weight: 500;
     line-height: 1.2;
@@ -805,6 +821,7 @@
   .public-content-panel {
     border: 1px solid var(--public-border-soft);
     background-color: var(--public-panel-bg);
+    border-radius: var(--radius-panel);
   }
 
   .public-divider-top {
@@ -817,10 +834,12 @@
 
   .public-content-frame {
     border-color: var(--public-border);
+    border-radius: var(--radius-panel);
   }
 
   .public-media-shell {
     background-color: var(--public-surface-subtle-bg);
+    border-radius: var(--radius-panel);
   }
 
   .public-section-rail-line[data-active="true"] {
@@ -851,6 +870,7 @@
     border: 1px solid var(--public-border-soft);
     background-color: var(--public-contents-bg);
     box-shadow: var(--public-strong-shadow);
+    border-radius: var(--radius-panel);
   }
 
   .public-contents-link {
@@ -908,6 +928,7 @@
   .public-snippet-mini-card-shell {
     box-shadow: var(--public-shadow);
     border-color: var(--public-border-faint);
+    border-radius: var(--radius-panel);
   }
 
   .public-snippet-mini-card:hover .public-snippet-mini-card-shell {
@@ -917,32 +938,32 @@
   .public-button-sm {
     min-height: 28px;
     padding-inline: 0.75rem;
-    border-radius: 6px;
+    border-radius: var(--radius-control);
   }
 
   .public-button-md {
     min-height: 36px;
     padding-inline: 0.875rem;
-    border-radius: 8px;
+    border-radius: var(--radius-control);
   }
 
   .public-button-lg {
     min-height: 40px;
     padding-inline: 1rem;
-    border-radius: 8px;
+    border-radius: var(--radius-control);
   }
 
   .public-button-icon {
     min-height: 40px;
     width: 40px;
     padding-inline: 0;
-    border-radius: 8px;
+    border-radius: var(--radius-control);
   }
 
   .public-chip-metric {
     min-height: 40px;
     padding-inline: 1rem;
-    border-radius: 8px;
+    border-radius: var(--radius-pill);
   }
 
   .public-snippet-mini-card-media {
@@ -963,12 +984,14 @@
 
   .public-input {
     @apply h-10 appearance-none rounded-[12px] text-base shadow-none transition-all;
+    border-radius: var(--radius-control);
     appearance: none;
     -webkit-appearance: none;
   }
 
   .public-input-inverse {
     @apply h-10 appearance-none rounded-[12px] text-base shadow-none transition-all;
+    border-radius: var(--radius-control);
     appearance: none;
     -webkit-appearance: none;
   }
@@ -1052,7 +1075,7 @@
     --auth-button-line-height: 1;
     width: min(100%, 34rem);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 1.75rem;
+    border-radius: var(--radius-panel);
     background: rgba(20, 20, 24, 0.88);
     box-shadow: 0 30px 100px rgba(0, 0, 0, 0.45);
     backdrop-filter: blur(16px);
@@ -1102,7 +1125,7 @@
     flex-direction: column;
     gap: 0.75rem;
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 1.5rem;
+    border-radius: var(--radius-panel);
     background: rgba(255, 255, 255, 0.03);
     padding: 1rem;
     margin-bottom: 1rem;
@@ -1121,7 +1144,7 @@
     min-height: 3.5rem;
     gap: 0.5rem;
     border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 1.2rem;
+    border-radius: var(--radius-control);
     background: rgba(255, 255, 255, 0.03);
     padding: 0.75rem 1rem;
     transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
@@ -1175,7 +1198,7 @@
     align-items: center;
     justify-content: center;
     border: 0;
-    border-radius: 999px;
+    border-radius: var(--radius-control);
     background: transparent;
     color: rgba(255, 255, 255, 0.42);
     cursor: pointer;
@@ -1234,7 +1257,7 @@
     justify-content: center;
     gap: 0.5rem;
     padding-inline: 1.25rem;
-    border-radius: 999px;
+    border-radius: var(--radius-control);
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: #ffffff;
     color: #000000;
@@ -1279,7 +1302,7 @@
     justify-content: center;
     gap: 0.5rem;
     padding-inline: 1.25rem;
-    border-radius: 999px;
+    border-radius: var(--radius-control);
     border: 1px solid rgba(255, 255, 255, 0.12);
     background: rgba(255, 255, 255, 0.04);
     color: rgba(255, 255, 255, 0.92);
@@ -1332,7 +1355,7 @@
     display: grid;
     gap: 1.5rem;
     border: 1px solid var(--public-border-soft);
-    border-radius: 2rem;
+    border-radius: var(--radius-panel);
     background: var(--public-surface-bg);
     box-shadow: var(--public-shadow);
     padding: 1.75rem;
@@ -1351,7 +1374,7 @@
     align-items: center;
     gap: 0.55rem;
     border: 1px solid var(--public-border-soft);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: var(--public-surface-subtle-bg);
     padding: 0.55rem 0.85rem;
     color: var(--public-body);
@@ -1377,7 +1400,7 @@
     display: inline-flex;
     width: fit-content;
     border: 1px solid var(--public-border-soft);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: var(--public-surface-subtle-bg);
     padding: 0.75rem;
     color: var(--public-heading);
@@ -1526,6 +1549,7 @@
 
   .admin-input {
     @apply appearance-none rounded-lg shadow-none transition-all duration-200;
+    border-radius: var(--radius-control);
     font-size: 1rem;
     line-height: 1.5;
     appearance: none;
@@ -1667,6 +1691,7 @@
     --color-field-border-hover: var(--admin-field-hover-border);
     --color-field-border-focus: var(--admin-field-focus-border);
     @apply rounded-lg appearance-none shadow-none outline-none transition-all duration-200;
+    border-radius: var(--radius-control);
     font-size: 1rem;
     line-height: 1.5;
     color: var(--admin-field-foreground);
@@ -1690,6 +1715,7 @@
 
   .admin-native-input {
     @apply appearance-none rounded-lg border px-4 py-3 text-base shadow-none outline-none transition-all duration-200 focus:ring-2;
+    border-radius: var(--radius-control);
     min-height: 40px;
     line-height: 1.5;
     border-color: var(--admin-field-border);
@@ -1735,6 +1761,7 @@
 
   .admin-filter-select-trigger {
     @apply inline-flex h-10 w-full items-center justify-between rounded-lg border px-4 py-0 text-left shadow-none outline-none transition-all duration-200;
+    border-radius: var(--radius-control);
     border-color: var(--admin-field-border);
     background-color: var(--admin-field-background);
     color: var(--admin-field-foreground);
@@ -1773,6 +1800,7 @@
   .admin-filter-select-popover,
   .admin-form-select-popover {
     @apply rounded-[18px] border p-1 shadow-[0_20px_60px_rgba(0,0,0,0.24)];
+    border-radius: var(--radius-menu);
     border-color: var(--admin-border);
     background-color: color-mix(in srgb, var(--admin-header-bg) 94%, var(--admin-surface) 6%);
   }
@@ -1785,6 +1813,7 @@
   .admin-filter-select-item,
   .admin-form-select-item {
     @apply flex cursor-default items-center justify-between rounded-[14px] border border-transparent px-3 py-2 shadow-none outline-none transition-colors;
+    border-radius: var(--radius-control);
     color: var(--admin-field-foreground);
   }
 
@@ -1823,6 +1852,7 @@
 
   .admin-form-select-trigger {
     @apply inline-flex h-11 w-full items-center justify-between rounded-lg border px-4 py-0 text-left text-base shadow-none outline-none transition-all duration-200;
+    border-radius: var(--radius-control);
     border-color: var(--admin-field-border);
     background-color: var(--admin-field-background);
     color: var(--admin-field-foreground);
@@ -2199,6 +2229,7 @@
   .admin-sidebar-shell,
   .admin-section-card {
     @apply rounded-[24px] backdrop-blur-xl;
+    border-radius: var(--radius-panel);
     border: 1px solid var(--admin-border);
     background-color: var(--admin-surface);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
@@ -2208,7 +2239,7 @@
     @apply transition-all active:scale-95;
     min-height: 40px;
     padding-inline: 1rem;
-    border-radius: 8px;
+    border-radius: var(--radius-control);
     font-size: 0.875rem;
     font-weight: 500;
     line-height: 1.2;
@@ -2229,7 +2260,7 @@
     @apply border transition-all active:scale-95;
     min-height: 40px;
     padding-inline: 1rem;
-    border-radius: 8px;
+    border-radius: var(--radius-control);
     font-size: 0.875rem;
     font-weight: 500;
     line-height: 1.2;
@@ -2252,11 +2283,13 @@
 
   .admin-nav-action-button {
     @apply rounded-[12px] px-2.5 md:px-3;
+    border-radius: var(--radius-control);
     text-decoration: none;
   }
 
   .admin-nav-action-icon {
     @apply w-11 rounded-full;
+    border-radius: var(--radius-pill);
   }
 
   .admin-nav-locale-root {
@@ -2266,6 +2299,7 @@
 
   .admin-nav-locale-trigger {
     @apply inline-flex h-10 w-full items-center justify-center gap-1 rounded-[12px] border border-transparent bg-transparent px-2.5 py-0 text-center shadow-none outline-none transition-colors duration-200 md:px-3;
+    border-radius: var(--radius-control);
     color: var(--admin-header-action-text);
     appearance: none;
     -webkit-appearance: none;
@@ -2287,6 +2321,7 @@
 
   .admin-nav-select-popover {
     @apply rounded-[18px] border p-1 shadow-[0_20px_60px_rgba(0,0,0,0.24)];
+    border-radius: var(--radius-menu);
     border-color: var(--admin-border);
     background-color: color-mix(in srgb, var(--admin-header-bg) 94%, var(--admin-surface) 6%);
   }
@@ -2297,6 +2332,7 @@
 
   .admin-nav-select-item {
     @apply flex cursor-default items-center justify-between rounded-[14px] border border-transparent px-3 py-2 text-[0.9375rem] font-medium shadow-none outline-none transition-colors;
+    border-radius: var(--radius-control);
     color: inherit;
   }
 
@@ -2357,33 +2393,33 @@
   .admin-button-sm {
     min-height: 28px;
     padding-inline: 0.75rem;
-    border-radius: 6px;
+    border-radius: var(--radius-control);
   }
 
   .admin-button-md {
     min-height: 36px;
     padding-inline: 0.875rem;
-    border-radius: 8px;
+    border-radius: var(--radius-control);
   }
 
   .admin-button-lg {
     min-height: 40px;
     padding-inline: 1rem;
-    border-radius: 8px;
+    border-radius: var(--radius-control);
   }
 
   .admin-button-icon {
     min-height: 40px;
     width: 40px;
     padding-inline: 0;
-    border-radius: 8px;
+    border-radius: var(--radius-control);
   }
 
   .admin-button-danger {
     @apply border transition-all;
     min-height: 40px;
     padding-inline: 1rem;
-    border-radius: 8px;
+    border-radius: var(--radius-control);
     font-size: 0.875rem;
     font-weight: 500;
     line-height: 1.2;
@@ -2625,6 +2661,7 @@
     border: 1px solid var(--admin-tag-border);
     background-color: var(--admin-tag-bg);
     color: var(--admin-tag-text);
+    border-radius: var(--radius-pill);
   }
 
   .admin-progress-track {
@@ -2675,6 +2712,7 @@
   .admin-callout-card {
     background-color: var(--admin-surface-strong);
     border: 1px solid var(--admin-border);
+    border-radius: var(--radius-panel);
   }
 
   .admin-spinner {
@@ -2702,6 +2740,7 @@
   .admin-editor-panel {
     background-color: var(--admin-surface);
     border-color: var(--admin-border);
+    border-radius: var(--radius-panel-lg);
   }
 
   .admin-editor-panel-frame {
@@ -2829,6 +2868,7 @@
   .admin-danger-shell {
     border: 1px solid var(--admin-danger-border);
     background-color: color-mix(in srgb, var(--admin-surface) 88%, var(--admin-danger-surface) 12%);
+    border-radius: var(--radius-panel-lg);
   }
 
   .admin-danger-title {
@@ -2854,6 +2894,7 @@
     box-shadow: 0 14px 32px rgba(0, 0, 0, 0.06);
     font-size: 0.9375rem;
     line-height: 1.4;
+    border-radius: var(--radius-panel);
   }
 
   .admin-title-strong {
@@ -2886,6 +2927,7 @@
     background-color: color-mix(in srgb, var(--admin-header-bg) 92%, var(--admin-surface) 8%);
     backdrop-filter: blur(18px);
     box-shadow: 0 32px 120px rgba(0, 0, 0, 0.24);
+    border-radius: var(--radius-panel-lg);
   }
 
   .admin-delete-modal-backdrop {
@@ -2895,7 +2937,7 @@
 
   .admin-delete-modal {
     border: 1px solid var(--admin-border);
-    border-radius: 30px;
+    border-radius: var(--radius-panel-lg);
     background-color: color-mix(in srgb, var(--admin-header-bg) 92%, var(--admin-surface) 8%);
     box-shadow: 0 32px 120px rgba(0, 0, 0, 0.24);
   }
@@ -2920,15 +2962,22 @@
     color: var(--admin-muted);
     font-size: 0.9375rem;
     line-height: 1.4;
+    border-radius: var(--radius-panel);
   }
 
   .admin-preview-shell {
     box-shadow: 0 32px 120px rgba(0, 0, 0, 0.22);
+    border-radius: var(--radius-panel-lg);
   }
 
   .admin-preview-device-tabs {
     border-color: var(--admin-border);
     background-color: var(--admin-preview-tabs-bg);
+    border-radius: var(--radius-menu);
+  }
+
+  .admin-preview-device-button {
+    border-radius: var(--radius-control);
   }
 
   .admin-preview-device-button-active {
@@ -2977,6 +3026,14 @@
     line-height: 1.3;
   }
 
+  .admin-preview-route-chip {
+    border-radius: var(--radius-pill);
+  }
+
+  .admin-preview-address {
+    border-radius: var(--radius-pill);
+  }
+
   .admin-preview-canvas {
     background-color: var(--admin-preview-canvas);
   }
@@ -2984,17 +3041,24 @@
   .admin-preview-stage {
     border-color: var(--admin-preview-stage-border);
     background-color: var(--admin-preview-stage-bg);
+    border-radius: var(--radius-panel);
   }
 
   .admin-preview-frame {
     border-color: var(--admin-preview-frame-border);
     background-color: var(--admin-preview-frame-bg);
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.16);
+    border-radius: var(--radius-panel);
   }
 
   .admin-preview-iframe-shell,
   .admin-preview-iframe {
     background-color: var(--admin-preview-iframe-bg);
+  }
+
+  .admin-preview-iframe-shell {
+    border-bottom-left-radius: var(--radius-panel);
+    border-bottom-right-radius: var(--radius-panel);
   }
 
   .markdown-renderer {

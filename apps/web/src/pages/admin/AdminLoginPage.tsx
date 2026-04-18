@@ -133,7 +133,7 @@ export default function AdminLoginPage({ authSession, onAuthenticate }: AdminLog
 
             {error ? <p className="auth-error">{error}</p> : null}
 
-            <Button className="auth-primary-button" radius="full" type="submit">
+            <Button className="auth-primary-button" type="submit">
               <Mail size={16} strokeWidth={2.1} />
               <span>{copy.enterWorkspace}</span>
             </Button>

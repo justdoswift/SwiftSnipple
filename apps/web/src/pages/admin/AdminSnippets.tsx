@@ -16,13 +16,13 @@ export default function AdminSnippets() {
     () => ({
       center: (
         <div className="admin-nav-inline-context min-w-0">
-          <h1 className="admin-header-title truncate text-sm font-semibold">{copy.snippetLibrary}</h1>
+          <h1 className="admin-header-title truncate">{copy.snippetLibrary}</h1>
         </div>
       ),
       end: (
         <a
           href={`/${locale}/admin/snippets/new`}
-          className="admin-button-primary admin-create-button type-action inline-flex h-11 shrink-0 items-center px-0"
+          className="admin-nav-action-button admin-create-button type-action inline-flex shrink-0 items-center"
         >
           {copy.newSnippet}
         </a>
@@ -58,7 +58,7 @@ export default function AdminSnippets() {
   }, []);
 
   return (
-    <div className="px-6 py-10 md:px-8 md:py-12 xl:px-10">
+    <div className="px-6 py-8 md:px-8 md:py-10 xl:px-10">
       <AdminSnippetLibraryContent snippets={snippets} isLoading={isLoading} error={error} />
     </div>
   );

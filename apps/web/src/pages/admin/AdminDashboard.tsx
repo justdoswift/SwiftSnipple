@@ -18,7 +18,7 @@ export default function AdminDashboard() {
       end: (
         <a
           href={`/${locale}/admin/snippets/new`}
-          className="admin-button-primary admin-create-button type-action inline-flex h-11 shrink-0 items-center px-0"
+          className="admin-nav-action-button admin-create-button type-action inline-flex shrink-0 items-center"
         >
           {copy.newSnippet}
         </a>
@@ -59,7 +59,7 @@ export default function AdminDashboard() {
   const scheduledCount = snippets.filter((snippet) => snippet.status === "Scheduled").length;
 
   return (
-    <div className="px-6 py-10 md:px-8 md:py-12 xl:px-10">
+    <div className="px-6 py-8 md:px-8 md:py-10 xl:px-10">
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard label={copy.entries} value={snippets.length} note={copy.entriesNote} />
         <StatCard label={copy.drafts} value={draftCount} note={copy.draftsNote} />

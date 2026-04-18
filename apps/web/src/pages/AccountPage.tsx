@@ -35,7 +35,7 @@ export default function AccountPage({ authSession, onSignOut }: AccountPageProps
   ];
   if (!authSession) {
     return (
-      <section className="public-page mx-auto flex min-h-[calc(100vh-12rem)] max-w-[980px] items-center px-6 pb-24 pt-44 md:px-10 md:pt-52">
+      <section className="public-page mx-auto flex min-h-[calc(100vh-12rem)] max-w-[980px] items-center px-8 pb-24 pt-36 md:px-12 md:pt-40 lg:px-16 lg:pt-48">
         <Card className="public-surface w-full rounded-[34px]">
           <Card.Content className="flex flex-col gap-6 px-8 py-10 md:px-12 md:py-14">
             <span className="type-mono-label">{copy.memberCenter}</span>
@@ -44,10 +44,10 @@ export default function AccountPage({ authSession, onSignOut }: AccountPageProps
               {copy.noSessionCopy}
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link to={`/${locale}/login`} className="public-primary-button type-action inline-flex h-12 items-center justify-center rounded-full px-6">
+              <Link to={`/${locale}/login`} className="public-primary-button public-button-lg type-action inline-flex items-center justify-center">
                 {copy.openLogin}
               </Link>
-              <Link to={`/${locale}`} className="public-secondary-button type-action inline-flex h-12 items-center justify-center rounded-full px-6">
+              <Link to={`/${locale}`} className="public-secondary-button public-button-lg type-action inline-flex items-center justify-center">
                 {copy.returnHome}
               </Link>
             </div>
@@ -58,7 +58,7 @@ export default function AccountPage({ authSession, onSignOut }: AccountPageProps
   }
 
   return (
-    <section className="public-page account-page mx-auto max-w-[1180px] px-6 pb-24 pt-44 md:px-10 md:pt-52">
+    <section className="public-page account-page mx-auto max-w-[1180px] px-8 pb-24 pt-36 md:px-12 md:pt-40 lg:px-16 lg:pt-48">
       <div className="account-hero">
         <div className="account-identity-card">
           <div className="account-identity-copy">
@@ -79,11 +79,11 @@ export default function AccountPage({ authSession, onSignOut }: AccountPageProps
         </div>
 
         <div className="account-actions">
-          <Link to={`/${locale}/admin`} className="public-secondary-button type-action inline-flex h-12 items-center justify-center rounded-full px-6">
+          <Link to={`/${locale}/admin`} className="public-secondary-button public-button-lg type-action inline-flex items-center justify-center gap-2">
             {copy.publishingWorkspace}
             <ArrowUpRight size={15} strokeWidth={2.2} />
           </Link>
-          <Button className="public-primary-button type-action h-12 px-6" radius="full" onPress={onSignOut}>
+          <Button className="public-primary-button public-button-lg type-action" radius="full" onPress={onSignOut}>
             <LogOut size={16} strokeWidth={2.2} />
             <span>{copy.signOut}</span>
           </Button>
@@ -99,7 +99,7 @@ export default function AccountPage({ authSession, onSignOut }: AccountPageProps
               </div>
               <div className="space-y-3">
                 <span className="type-mono-label">{eyebrow}</span>
-                <h2 className="type-section-title text-[1.55rem] md:text-[1.8rem]">{title}</h2>
+                <h2 className="type-section-title">{title}</h2>
                 <p className="type-body">{copy}</p>
               </div>
             </Card.Content>

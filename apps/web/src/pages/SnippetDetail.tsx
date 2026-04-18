@@ -130,7 +130,7 @@ export default function SnippetDetail() {
         number: "01",
         label: copy.implementationNotes,
         content: (
-          <div className="public-content-panel rounded-[32px] px-6 py-7 md:px-8 md:py-9">
+          <div className="public-content-panel rounded-[24px] px-6 py-6 md:px-8 md:py-8">
             <MarkdownRenderer content={localizedFields?.content ?? ""} />
           </div>
         ),
@@ -298,12 +298,12 @@ export default function SnippetDetail() {
   const desktopContentWrapperClass = activeSection?.id === "notes" ? "mx-auto max-w-[800px]" : "mx-auto max-w-[800px]";
 
   if (isLoading) {
-    return <div className="public-page public-snippet-detail mx-auto max-w-[1380px] px-8 pb-20 pt-32 public-status-copy">{copy.loadingSnippet}</div>;
+    return <div className="public-page public-snippet-detail mx-auto max-w-[1400px] px-8 pb-20 pt-28 md:px-12 lg:px-16 lg:pt-32 public-status-copy">{copy.loadingSnippet}</div>;
   }
 
   if (!snippet || error) {
     return (
-      <div className="public-page public-snippet-detail mx-auto max-w-[1380px] px-8 pb-20 pt-32 text-center">
+      <div className="public-page public-snippet-detail mx-auto max-w-[1400px] px-8 pb-20 pt-28 text-center md:px-12 lg:px-16 lg:pt-32">
         <h1 className="type-section-title mb-4">{copy.snippetNotFound}</h1>
         <p className="type-body mb-6 public-status-copy">{error || copy.snippetNotFoundCopy}</p>
         <a href={`/${locale}#library-index`} className="public-inline-link">{copy.backToLibrary}</a>
@@ -312,8 +312,8 @@ export default function SnippetDetail() {
   }
 
   return (
-    <div className="public-page public-snippet-detail mx-auto max-w-[1380px] px-6 pb-24 pt-24 md:px-10 md:pt-28">
-      <header className="mb-20">
+    <div className="public-page public-snippet-detail mx-auto max-w-[1400px] px-8 pb-24 pt-24 md:px-12 md:pt-28 lg:px-16 lg:pt-32">
+      <header className="mb-16 md:mb-20">
         <div className="mx-auto max-w-[800px] text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -333,9 +333,9 @@ export default function SnippetDetail() {
         </div>
       </header>
 
-      <section className="mb-24 px-4 md:px-0">
-        <div className="public-content-frame vibe-glass mx-auto max-w-[1120px] rounded-[40px] p-2">
-          <div className="public-media-shell aspect-[16/9] overflow-hidden rounded-[32px]">
+      <section className="mb-20 px-4 md:mb-24 md:px-0">
+        <div className="public-content-frame vibe-glass mx-auto max-w-[1120px] rounded-[32px] p-2">
+          <div className="public-media-shell aspect-[16/9] overflow-hidden rounded-[24px]">
             <img
               src={snippet.coverImage}
               alt={localizedFields?.title}
@@ -398,7 +398,7 @@ export default function SnippetDetail() {
                           aria-hidden="true"
                         />
                         <span
-                          className="public-section-rail-number font-mono text-[11px] font-medium tracking-[0.22em] transition-colors"
+                          className="public-section-rail-number type-mono-micro tracking-[0.22em] transition-colors"
                           data-active={isActive ? "true" : "false"}
                         >
                           {section.number}
@@ -427,7 +427,7 @@ export default function SnippetDetail() {
                             <button
                               key={item.id}
                               type="button"
-                              className={`public-contents-link block w-full truncate text-left text-[0.95rem] leading-tight transition-colors ${
+                              className={`public-contents-link type-body-sm block w-full truncate text-left transition-colors ${
                                 item.level === 3 ? "pl-4" : ""
                               }`}
                               data-active={isActive ? "true" : "false"}

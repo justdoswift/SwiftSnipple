@@ -29,14 +29,14 @@ export default function AdminLayout({ adminAuthSession, onSignOut }: AdminLayout
   return (
     <div className="admin-theme admin-page min-h-screen" data-theme={theme} data-testid="admin-theme-root">
       <header className="admin-nav-root sticky top-0 z-40 w-full" aria-label="Admin header">
-        <div className="admin-nav-shell mx-auto max-w-[1380px] px-4 py-3 md:px-6" data-testid="admin-navbar-shell">
+        <div className="admin-nav-shell mx-auto max-w-[1400px] px-8 py-3 md:px-12 lg:px-16" data-testid="admin-navbar-shell">
           <div className="admin-nav-main relative flex items-center justify-between gap-4">
             <Link to={`/${locale}/admin`} className="admin-nav-brand min-w-0" aria-label="Just Do Swift admin">
               <span className="admin-nav-logo" aria-hidden="true">
                 <span className="admin-nav-logo-bar admin-nav-logo-bar-primary" />
                 <span className="admin-nav-logo-bar admin-nav-logo-bar-secondary" />
               </span>
-              <span className="truncate text-[1.05rem] font-semibold tracking-[-0.03em] md:text-[1.2rem]">
+              <span className="admin-brand-title truncate">
                 Just Do Swift
               </span>
             </Link>
@@ -47,12 +47,12 @@ export default function AdminLayout({ adminAuthSession, onSignOut }: AdminLayout
               </div>
             ) : null}
 
-            <div className="admin-nav-actions flex items-center justify-end gap-2">
+            <div className="admin-nav-actions flex items-center justify-end gap-2 md:gap-3">
               {activeHeader.end}
               {adminAuthSession ? (
                 <button
                   type="button"
-                  className="admin-button-secondary admin-auth-button type-action h-11 px-0"
+                  className="admin-nav-action-button admin-auth-button type-action"
                   onClick={onSignOut}
                 >
                   {copy.common.logOut}
@@ -60,7 +60,7 @@ export default function AdminLayout({ adminAuthSession, onSignOut }: AdminLayout
               ) : null}
               <button
                 type="button"
-                className="admin-button-secondary admin-locale-button type-action h-11 px-0"
+                className="admin-nav-action-button admin-locale-button type-action"
                 onClick={() => setLocale?.(locale === "en" ? "zh" : "en")}
               >
                 {copy.nav.localeSwitch}
@@ -68,7 +68,7 @@ export default function AdminLayout({ adminAuthSession, onSignOut }: AdminLayout
               <Link
                 to={`/${locale}`}
                 aria-label={copy.common.viewFrontSite}
-                className="admin-button-secondary inline-flex h-11 w-11 shrink-0 items-center justify-center px-0"
+                className="admin-nav-action-icon"
               >
                 <ArrowUpRight className="h-4 w-4" />
               </Link>

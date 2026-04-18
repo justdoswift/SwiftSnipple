@@ -7,11 +7,11 @@ export default function Footer() {
   const copy = getMessages(locale).footer;
 
   return (
-    <footer className="public-footer mt-24 w-full px-6 pb-12 md:px-8">
-      <div className="vibe-glass mx-auto max-w-[1380px] rounded-[24px] px-8 py-10 md:py-12">
+    <footer className="public-footer mt-24 w-full px-8 pb-12 md:px-12 lg:px-16">
+      <div className="vibe-glass mx-auto max-w-[1400px] rounded-[24px] px-6 py-8 md:px-8 md:py-10 lg:px-10">
         <div className="flex flex-col justify-between gap-10 md:flex-row md:items-start">
           <div className="flex flex-col gap-4">
-            <span className="type-card-title font-bold">Just Do Swift</span>
+            <span className="site-brand-title">Just Do Swift</span>
             <p className="type-body-sm max-w-xs">
               {copy.brandCopy}
             </p>

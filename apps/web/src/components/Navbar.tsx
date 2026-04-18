@@ -24,7 +24,7 @@ export default function Navbar({ theme, onToggleTheme, authSession }: NavbarProp
       data-theme={theme}
     >
       <div
-        className="public-nav-shell mx-auto flex max-w-[1380px] items-center justify-between gap-3 px-4 py-3 md:px-6"
+        className="public-nav-shell mx-auto flex max-w-[1400px] items-center justify-between gap-3 px-8 py-3 md:px-12 lg:px-16"
         data-testid="public-navbar-shell"
       >
         <Link to={`/${locale}`} className="public-nav-brand min-w-0" aria-label="Just Do Swift homepage">
@@ -32,7 +32,7 @@ export default function Navbar({ theme, onToggleTheme, authSession }: NavbarProp
             <span className="public-nav-logo-bar public-nav-logo-bar-primary" />
             <span className="public-nav-logo-bar public-nav-logo-bar-secondary" />
           </span>
-          <span className="truncate text-[1.05rem] font-semibold tracking-[-0.03em] md:text-[1.2rem]">
+          <span className="site-brand-title truncate">
             Just Do Swift
           </span>
         </Link>

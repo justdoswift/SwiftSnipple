@@ -64,13 +64,13 @@ export default function AdminSnippetLibraryContent({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={copy.searchTitleOrSlug}
-            className="admin-input"
+            className="admin-input admin-filter-input"
           />
 
           <select
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value as SnippetStatus | "All")}
-            className="admin-select"
+            className="admin-select admin-filter-select"
           >
             {STATUS_OPTIONS.map((status) => (
               <option key={status} value={status}>
@@ -82,7 +82,7 @@ export default function AdminSnippetLibraryContent({
           <select
             value={categoryFilter}
             onChange={(event) => setCategoryFilter(event.target.value)}
-            className="admin-select"
+            className="admin-select admin-filter-select"
           >
             <option value="All">{copy.categoryAll}</option>
             {categories.map((category) => (
@@ -96,13 +96,13 @@ export default function AdminSnippetLibraryContent({
 
       <section className="mt-8 grid gap-6">
         {isLoading ? <p className="admin-copy-muted type-body-sm">{copy.loadingSnippetLibrary}</p> : null}
-        {error ? <p className="admin-inline-alert rounded-[20px] px-4 py-3 text-sm leading-relaxed">{error}</p> : null}
+        {error ? <p className="admin-inline-alert rounded-[20px] px-4 py-3">{error}</p> : null}
 
         {!isLoading && !error && !snippets.length ? (
           <div className="admin-section-card admin-list-divider rounded-[28px] border border-dashed">
             <div className="px-6 py-12 text-center">
               <p className="admin-empty-kicker type-mono-micro">{copy.noSnippets}</p>
-              <h2 className="type-section-title mt-4 text-[2rem]">{copy.startFirstEntry}</h2>
+              <h2 className="admin-section-title admin-section-title-lg mt-4">{copy.startFirstEntry}</h2>
               <p className="type-body-sm mt-3">
                 {copy.noSnippetsCopy}
               </p>
@@ -163,7 +163,7 @@ export default function AdminSnippetLibraryContent({
           <div className="admin-section-card admin-list-divider rounded-[28px] border border-dashed">
             <div className="px-6 py-12 text-center">
               <p className="admin-empty-kicker type-mono-micro">{copy.noMatches}</p>
-              <h2 className="type-section-title mt-4 text-[2rem]">{copy.tryAnotherFilter}</h2>
+              <h2 className="admin-section-title admin-section-title-lg mt-4">{copy.tryAnotherFilter}</h2>
               <p className="type-body-sm mt-3">
                 {copy.noMatchesCopy}
               </p>

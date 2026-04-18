@@ -40,14 +40,14 @@ export default function SnippetCard({ snippet }: SnippetCardProps) {
             />
             <div className="public-snippet-card-overlay absolute inset-0 opacity-60" />
           </div>
-          <Card.Content className="space-y-4 px-6 py-7">
+          <Card.Content className="space-y-4 px-5 py-5 md:px-6 md:py-6">
             <div className="flex flex-wrap items-center gap-2">
-              <Chip size="sm" radius="full" variant="flat" className="public-chip type-action">
+              <Chip size="sm" radius="md" variant="flat" className="public-chip type-action">
                 {fields.category}
               </Chip>
             </div>
             <div className="space-y-2">
-              <h3 className="public-snippet-card-title type-card-title font-bold">{fields.title}</h3>
+              <h3 className="public-snippet-card-title type-card-title">{fields.title}</h3>
               {publishedDate ? (
                 <p className="type-mono-micro text-[var(--public-micro)]">{publishedDate}</p>
               ) : null}

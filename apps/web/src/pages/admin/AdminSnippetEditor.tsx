@@ -565,23 +565,23 @@ export default function AdminSnippetEditor() {
             </div>
           )}
           {feedback ? (
-            <span className="admin-feedback-success hidden text-xs font-mono animate-in fade-in duration-500 2xl:block">{feedback}</span>
+            <span className="admin-feedback-success type-mono-micro hidden animate-in fade-in duration-500 2xl:block">{feedback}</span>
           ) : null}
           {autosaveFeedbackLabel ? (
-            <span className="admin-copy-muted hidden text-xs font-mono animate-in fade-in duration-500 xl:block">
+            <span className="admin-copy-muted type-mono-micro hidden animate-in fade-in duration-500 xl:block">
               {autosaveFeedbackLabel}
             </span>
           ) : null}
           <Button
             aria-label="Preview"
-            className="h-11 w-11 shrink-0 justify-center px-0 text-sm admin-button-secondary"
+            className="admin-button-secondary admin-button-icon shrink-0 justify-center"
             onPress={handlePreview}
           >
             <Monitor size={16} />
           </Button>
           <Button
             isDisabled={isPrimaryActionDisabled}
-            className="h-11 shrink-0 px-2.5 text-sm admin-button-primary min-[1500px]:px-3 2xl:px-4"
+            className="admin-button-primary admin-button-lg shrink-0 px-3 min-[1500px]:px-3 2xl:px-4"
             onPress={() => {
               setError("");
               setFeedback("");
@@ -614,30 +614,30 @@ export default function AdminSnippetEditor() {
         <div className="flex flex-col gap-12">
           <EditorSectionRail activeTab={activeTab} onSelect={setActiveTab} />
 
-	          <div className="space-y-12">
-	            <div className="relative flex flex-col gap-2">
+          <div className="space-y-12">
+            <div className="relative flex flex-col gap-2">
                 <div className="mb-3 flex items-center gap-2">
                   <button
                     type="button"
-                    className={`admin-button-secondary h-9 px-4 text-xs ${editorLocale === "en" ? "admin-button-primary" : ""}`}
+                    className={`admin-button-md ${editorLocale === "en" ? "admin-button-primary" : "admin-button-secondary"}`}
                     onClick={() => setEditorLocale("en")}
                   >
                     {copy.localeEditorEnglish}
                   </button>
                   <button
                     type="button"
-                    className={`admin-button-secondary h-9 px-4 text-xs ${editorLocale === "zh" ? "admin-button-primary" : ""}`}
+                    className={`admin-button-md ${editorLocale === "zh" ? "admin-button-primary" : "admin-button-secondary"}`}
                     onClick={() => setEditorLocale("zh")}
                   >
                     {copy.localeEditorChinese}
                   </button>
                 </div>
-	              <textarea
+              <textarea
                 aria-label="Snippet Title"
                 placeholder="Snippet Title"
                 value={localizedForm.title}
                 onChange={(e) => updateLocalizedField("title", e.target.value)}
-                className="admin-editor-title-input w-full border-none bg-transparent p-0 text-5xl font-bold tracking-tighter transition-all duration-500 resize-none outline-none overflow-hidden focus:ring-0 md:text-7xl"
+                className="admin-editor-title-input w-full resize-none overflow-hidden border-none bg-transparent p-0 outline-none transition-all duration-500 focus:ring-0"
                 rows={1}
                 onInput={(e) => {
                   const target = e.target as HTMLTextAreaElement;
@@ -666,7 +666,7 @@ export default function AdminSnippetEditor() {
                       placeholder="Shape the narrative around the technique and tradeoffs. You can use Markdown."
                       value={localizedForm.content}
                       onChange={(event) => updateLocalizedField("content", event.target.value)}
-                      className="admin-editor-textarea admin-editor-panel-body admin-editor-scrollbar w-full resize-none border-0 bg-transparent px-0 text-lg leading-relaxed shadow-none outline-none focus:ring-0"
+                      className="admin-editor-textarea admin-editor-panel-body admin-editor-scrollbar w-full resize-none border-0 bg-transparent px-0 shadow-none outline-none focus:ring-0"
                     />
                   </div>
                 </div>
@@ -774,7 +774,7 @@ export default function AdminSnippetEditor() {
                          <select
                            value={form.status}
                            onChange={(event) => updateField("status", event.target.value as SnippetStatus)}
-                           className="admin-select w-full text-sm"
+                           className="admin-select w-full"
                            disabled={isPublishedEntry}
                          >
                            {statusOptions.map((status) => (
@@ -827,9 +827,9 @@ export default function AdminSnippetEditor() {
                   {!isNew && (
                     <section className="admin-divider-soft pt-10 border-t">
                       <div className="admin-danger-shell flex items-center justify-between p-6 rounded-[32px]">
-                        <div>
+                      <div>
                           <h3 className="admin-danger-title font-semibold">Danger Zone</h3>
-                          <p className="admin-copy-muted text-sm mt-1">Permanently remove this entry from the registry.</p>
+                          <p className="admin-copy-muted mt-1">Permanently remove this entry from the registry.</p>
                         </div>
                         <Button
                           variant="outline"
@@ -853,7 +853,7 @@ export default function AdminSnippetEditor() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="admin-inline-alert rounded-[24px] p-5 text-sm leading-relaxed"
+              className="admin-inline-alert rounded-[24px] p-5"
             >
               {error}
             </motion.div>
@@ -884,7 +884,7 @@ export default function AdminSnippetEditor() {
                   </Button>
                   <div>
                     <p className="admin-copy-faint type-mono-micro">Preview Mode</p>
-                    <h2 className="admin-header-title mt-1 text-lg font-semibold md:text-xl">
+                    <h2 className="admin-section-title mt-1">
                       {localizedForm.title || "Untitled Snippet"}
                     </h2>
                   </div>
@@ -914,7 +914,7 @@ export default function AdminSnippetEditor() {
                     type="button"
                     role="tab"
                     aria-selected={previewDevice === "mobile"}
-                    className={`admin-preview-device-button inline-flex h-10 items-center gap-2 rounded-[14px] px-4 text-sm transition-colors ${
+                    className={`admin-preview-device-button inline-flex h-10 items-center gap-2 rounded-[14px] px-4 transition-colors ${
                       previewDevice === "mobile" ? "admin-preview-device-button-active" : "admin-preview-device-button-inactive"
                     }`}
                     onClick={() => setPreviewDevice("mobile")}
@@ -926,7 +926,7 @@ export default function AdminSnippetEditor() {
                     type="button"
                     role="tab"
                     aria-selected={previewDevice === "desktop"}
-                    className={`admin-preview-device-button inline-flex h-10 items-center gap-2 rounded-[14px] px-4 text-sm transition-colors ${
+                    className={`admin-preview-device-button inline-flex h-10 items-center gap-2 rounded-[14px] px-4 transition-colors ${
                       previewDevice === "desktop" ? "admin-preview-device-button-active" : "admin-preview-device-button-inactive"
                     }`}
                     onClick={() => setPreviewDevice("desktop")}
@@ -937,7 +937,7 @@ export default function AdminSnippetEditor() {
                 </div>
                 <div className="hidden items-center gap-3 md:flex">
                   <span className="admin-copy-faint type-mono-micro">Public route</span>
-                  <span className="admin-preview-route-chip rounded-full border px-3 py-1.5 font-mono text-xs">
+                  <span className="admin-preview-route-chip rounded-full border px-3 py-1.5">
                     {previewPath}
                   </span>
                 </div>
@@ -957,7 +957,7 @@ export default function AdminSnippetEditor() {
                     <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
                     <span className="h-3 w-3 rounded-full bg-[#ffbd2e]" />
                     <span className="h-3 w-3 rounded-full bg-[#28c840]" />
-                    <div className="admin-preview-address ml-4 flex-1 rounded-full border px-4 py-2 text-center font-mono text-xs">
+                    <div className="admin-preview-address ml-4 flex-1 rounded-full border px-4 py-2 text-center">
                       {previewPath}
                     </div>
                   </div>
@@ -991,12 +991,12 @@ export default function AdminSnippetEditor() {
             <Modal.Dialog className="admin-delete-modal w-full max-w-xl">
               <Modal.Header className="admin-delete-modal-header">
                 <span className="admin-eyebrow type-mono-micro">Delete Confirmation</span>
-                <Modal.Heading className="admin-section-title mt-3 text-[1.55rem] md:text-[1.8rem]">
+                <Modal.Heading className="admin-section-title admin-section-title-lg mt-3">
                   Delete this snippet permanently?
                 </Modal.Heading>
               </Modal.Header>
               <Modal.Body className="admin-delete-modal-body">
-                <p className="admin-copy-muted text-sm leading-relaxed md:text-base">
+                <p className="admin-copy-muted">
                   This will permanently remove{" "}
                   <strong className="admin-title-strong">{localizedPreview.title || "Untitled Snippet"}</strong> from
                   the registry. This action cannot be undone.
@@ -1005,14 +1005,14 @@ export default function AdminSnippetEditor() {
               <Modal.Footer className="admin-delete-modal-footer">
                 <Button
                   isDisabled={isDeleting}
-                  className="admin-button-secondary h-11 px-5"
+                  className="admin-button-secondary admin-button-lg px-5"
                   onPress={() => setIsDeleteConfirmOpen(false)}
                 >
                   Cancel
                 </Button>
                 <Button
                   isDisabled={isDeleting}
-                  className="admin-button-danger h-11 px-5"
+                  className="admin-button-danger admin-button-lg px-5"
                   onPress={handleDelete}
                 >
                   {isDeleting ? "Deleting..." : "Delete Snippet"}
@@ -1036,16 +1036,16 @@ export default function AdminSnippetEditor() {
               <div className="flex flex-col gap-4">
                 <div className="space-y-3">
                   <span className="admin-eyebrow type-mono-micro">Publish Confirmation</span>
-                  <h2 className="admin-section-title text-[1.6rem] md:text-[1.9rem]">
+                  <h2 className="admin-section-title admin-section-title-lg">
                     {publishDialogTitle}
                   </h2>
-                  <p className="admin-copy-muted text-sm leading-relaxed md:text-base">
+                  <p className="admin-copy-muted">
                     {isPublishedEntry ? "Confirming will save the current editor state and replace the live public version of " : "Confirming will save the current editor state and make "}
                     <strong className="admin-title-strong">{localizedPreview.title || "Untitled Snippet"}</strong>
                     {isPublishedEntry ? "." : " live in the public snippet library."}
                   </p>
                 </div>
-                <div className="admin-publish-dialog-callout rounded-[22px] border px-4 py-4 text-sm leading-relaxed">
+                <div className="admin-publish-dialog-callout rounded-[22px] border px-4 py-4">
                   {hasUnsavedChanges
                     ? isPublishedEntry
                       ? "This published snippet has local edits. We will save those changes before updating the live public version."
@@ -1057,14 +1057,14 @@ export default function AdminSnippetEditor() {
                 <div className="flex flex-wrap justify-end gap-3 pt-2">
                   <Button
                     isDisabled={primaryActionState !== "idle"}
-                    className="admin-button-secondary h-11 px-5"
+                    className="admin-button-secondary admin-button-lg px-5"
                     onPress={() => setIsPublishConfirmOpen(false)}
                   >
                     Cancel
                   </Button>
                   <Button
                     isDisabled={primaryActionState !== "idle"}
-                    className="admin-button-primary h-11 px-5"
+                    className="admin-button-primary admin-button-lg px-5"
                     onPress={handleConfirmPublish}
                   >
                     {publishDialogButtonLabel}

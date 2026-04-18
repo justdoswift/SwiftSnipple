@@ -74,21 +74,21 @@ export default function Home() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="public-page public-home mx-auto max-w-[1380px] px-6 pb-24 pt-44 md:px-10 md:pt-56"
+      className="public-page public-home mx-auto max-w-[1400px] px-8 pb-24 pt-36 md:px-12 md:pt-40 lg:px-16 lg:pt-48"
     >
       {/* Hero Section */}
-      <section className="mb-32">
-        <div className="mx-auto max-w-[900px] text-center">
-          <motion.div variants={itemVariants} className="flex flex-col items-center gap-6">
+      <section className="mb-24 lg:mb-28">
+        <div className="mx-auto max-w-[960px] text-center">
+          <motion.div variants={itemVariants} className="flex flex-col items-center gap-5 md:gap-6">
             <h1 className="type-display max-w-[14ch]">
               {copy.heroTitle}
             </h1>
             <p className="type-body-lg mx-auto max-w-[620px]">
               {copy.heroBody}
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-4 mt-4">
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
               <Button
-                className="public-primary-button type-action h-12 px-8"
+                className="public-primary-button public-button-lg type-action"
                 radius="full"
                 onPress={() => {
                   const el = document.getElementById("library-index");
@@ -97,7 +97,7 @@ export default function Home() {
               >
                 {copy.exploreLab}
               </Button>
-              <Chip radius="full" variant="flat" className="public-chip h-12 px-6 type-action">
+              <Chip radius="md" variant="flat" className="public-chip public-chip-metric type-action">
                 {publishedSnippets.length} {copy.liveObjects}
               </Chip>
             </div>
@@ -107,8 +107,8 @@ export default function Home() {
       </section>
 
       {/* Library Grid */}
-      <section id="library-index" className="mb-32">
-        <motion.div variants={itemVariants} className="mb-12 flex items-end justify-between">
+      <section id="library-index" className="mb-24 lg:mb-28">
+        <motion.div variants={itemVariants} className="mb-10 flex items-end justify-between md:mb-12">
           <div>
             <h4 className="type-mono-micro mb-2">{copy.featuredCollection}</h4>
             <h2 className="type-section-title">{copy.essentials}</h2>
@@ -125,11 +125,11 @@ export default function Home() {
         {isLoading ? <p className="type-mono-micro mt-12 text-center animate-pulse">{copy.accessingDataStores}</p> : null}
         {!isLoading && !error && !featuredSnippets.length ? (
           <motion.div variants={itemVariants}>
-            <Card className="public-surface mt-12 rounded-[32px] border-dashed">
-              <Card.Content className="px-10 py-20 text-center">
+            <Card className="public-surface mt-12 rounded-[24px] border-dashed">
+              <Card.Content className="px-8 py-14 text-center md:px-10 md:py-16">
                 <span className="type-mono-micro">{copy.systemStatus}</span>
-                <h2 className="type-section-title mt-6">{copy.noLiveObjects}</h2>
-                <p className="type-body-sm mt-4 max-w-md mx-auto">
+                <h2 className="type-section-title mt-5">{copy.noLiveObjects}</h2>
+                <p className="type-body-sm mt-3 mx-auto max-w-md">
                   {copy.noLiveObjectsCopy}
                 </p>
               </Card.Content>
@@ -139,14 +139,14 @@ export default function Home() {
       </section>
 
       {/* Latest Additions */}
-      <section id="latest-additions" className="public-divider-top mb-32 pt-24">
-        <motion.div variants={itemVariants} className="mb-12 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+      <section id="latest-additions" className="public-divider-top mb-24 pt-16 md:pt-20 lg:mb-28 lg:pt-24">
+        <motion.div variants={itemVariants} className="mb-10 flex flex-col gap-5 md:flex-row md:items-end md:justify-between md:gap-6 md:mb-12">
           <div>
             <h4 className="type-mono-micro mb-2">{copy.technicalIndex}</h4>
             <h2 className="type-section-title">{copy.latestLabRecords}</h2>
           </div>
           <Button
-            className="public-secondary-button type-action h-10"
+            className="public-secondary-button public-button-md type-action"
             radius="full"
             variant="bordered"
             onPress={() => {
@@ -167,11 +167,11 @@ export default function Home() {
 
       {/* Subscribe Section */}
       <motion.div variants={itemVariants}>
-        <div className="public-surface mx-auto max-w-[1080px] rounded-[40px]">
-          <div className="flex flex-col items-center px-8 py-16 text-center md:px-20 md:py-24">
-            <span className="type-mono-label mb-8">{copy.updatesShell}</span>
-            <h2 className="type-page-title mb-8 tracking-tight">{copy.syncLatestBuilds}</h2>
-            <p className="type-body mb-12 max-w-lg">
+        <div className="public-surface mx-auto max-w-[1080px] rounded-[32px]">
+          <div className="flex flex-col items-center px-8 py-14 text-center md:px-16 md:py-20 lg:px-20 lg:py-24">
+            <span className="type-mono-label mb-6">{copy.updatesShell}</span>
+            <h2 className="type-page-title mb-6">{copy.syncLatestBuilds}</h2>
+            <p className="type-body mb-10 max-w-lg md:mb-12">
               {copy.updatesCopy}
             </p>
             <div className="flex w-full max-w-md flex-col gap-4 md:flex-row">
@@ -181,7 +181,7 @@ export default function Home() {
                 placeholder={copy.subscribePlaceholder}
                 type="email"
               />
-              <Button className="public-primary-button type-action h-12 px-10 font-bold" radius="full" variant="solid">
+              <Button className="public-primary-button public-button-lg type-action" radius="full" variant="solid">
                 {copy.join}
               </Button>
             </div>

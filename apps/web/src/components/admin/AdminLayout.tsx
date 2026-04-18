@@ -31,7 +31,7 @@ export default function AdminLayout({ adminAuthSession, onSignOut }: AdminLayout
   return (
     <div className="admin-theme admin-page min-h-screen" data-theme={theme} data-testid="admin-theme-root">
       <header className="admin-nav-root sticky top-0 z-40 w-full" aria-label="Admin header">
-        <div className="admin-nav-shell mx-auto max-w-[1400px] px-8 py-3 md:px-12 lg:px-16" data-testid="admin-navbar-shell">
+        <div className="admin-nav-shell w-full px-4 py-3 md:px-6 lg:px-8" data-testid="admin-navbar-shell">
           <div className="admin-nav-main relative flex items-center justify-between gap-4">
             <Link to={`/${locale}/admin`} className="admin-nav-brand min-w-0" aria-label="Just Do Swift admin">
               <span className="admin-nav-logo" aria-hidden="true">

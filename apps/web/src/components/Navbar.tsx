@@ -25,7 +25,7 @@ export default function Navbar({ theme, onToggleTheme, authSession }: NavbarProp
       data-theme={theme}
     >
       <div
-        className="public-nav-shell mx-auto flex max-w-[1400px] items-center justify-between gap-3 px-8 py-3 md:px-12 lg:px-16"
+        className="public-nav-shell flex w-full items-center justify-between gap-3 px-4 py-3 md:px-6 lg:px-8"
         data-testid="public-navbar-shell"
       >
         <Link to={`/${locale}`} className="public-nav-brand min-w-0" aria-label="Just Do Swift homepage">

@@ -84,7 +84,7 @@ export default function AdminLoginPage({ authSession, onAuthenticate }: AdminLog
       <div className="auth-page-backdrop" aria-hidden="true" />
       <div className="auth-page-overlay" aria-hidden="true" />
 
-      <header className="auth-page-brand-shell public-nav-shell mx-auto flex max-w-[1400px] items-center justify-between gap-3 px-8 py-3 md:px-12 lg:px-16">
+      <header className="auth-page-brand-shell public-nav-shell flex w-full items-center justify-between gap-3 px-4 py-3 md:px-6 lg:px-8">
         <Link to={`/${locale}`} className="auth-page-brand public-nav-brand min-w-0" aria-label="Return to Just Do Swift home">
           <span className="public-nav-logo" aria-hidden="true">
             <span className="public-nav-logo-bar public-nav-logo-bar-primary" />

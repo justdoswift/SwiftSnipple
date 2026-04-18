@@ -73,7 +73,10 @@ describe("AdminLayout", () => {
     });
 
     const header = screen.getByTestId("admin-navbar-shell").closest("header");
+    const navShell = screen.getByTestId("admin-navbar-shell");
 
+    expect(navShell).toHaveClass("w-full", "px-4", "md:px-6", "lg:px-8");
+    expect(navShell).not.toHaveClass("mx-auto", "max-w-[1400px]");
     expect(screen.getByRole("link", { name: "Just Do Swift admin" })).toBeInTheDocument();
     expect(header).not.toBeNull();
     expect(within(header!).getByRole("link", { name: "New" })).toHaveAttribute("href", "/en/admin/snippets/new");

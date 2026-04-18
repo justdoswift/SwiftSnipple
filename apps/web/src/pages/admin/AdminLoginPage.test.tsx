@@ -25,6 +25,9 @@ describe("AdminLoginPage", () => {
   it("renders creator workspace login language", () => {
     renderAdminLoginPage();
 
+    const brandShell = screen.getByRole("banner");
+    expect(brandShell).toHaveClass("w-full", "px-4", "md:px-6", "lg:px-8");
+    expect(brandShell).not.toHaveClass("mx-auto", "max-w-[1400px]");
     expect(screen.getByRole("heading", { name: "Creator Log In" })).toBeInTheDocument();
     expect(screen.getByText("Creator Workspace")).toBeInTheDocument();
     expect(screen.getByLabelText("Email Address")).toBeInTheDocument();

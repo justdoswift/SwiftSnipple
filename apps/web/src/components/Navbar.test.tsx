@@ -21,6 +21,8 @@ describe("Navbar", () => {
   it("renders the hero-style brand and actions", () => {
     renderNavbar();
 
+    expect(screen.getByTestId("public-navbar-shell")).toHaveClass("w-full", "px-4", "md:px-6", "lg:px-8");
+    expect(screen.getByTestId("public-navbar-shell")).not.toHaveClass("mx-auto", "max-w-[1400px]");
     expect(screen.getByRole("link", { name: "Just Do Swift homepage" })).toBeInTheDocument();
     expect(screen.getByText("Just Do Swift")).toBeInTheDocument();
     expect(screen.getByRole("searchbox", { name: "Search snippets" })).toBeInTheDocument();

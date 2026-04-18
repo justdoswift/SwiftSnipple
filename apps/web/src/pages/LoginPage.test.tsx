@@ -25,6 +25,9 @@ describe("LoginPage", () => {
   it("renders the login mode by default", () => {
     renderLoginPage();
 
+    const brandShell = screen.getByRole("banner");
+    expect(brandShell).toHaveClass("w-full", "px-4", "md:px-6", "lg:px-8");
+    expect(brandShell).not.toHaveClass("mx-auto", "max-w-[1400px]");
     expect(screen.getByRole("heading", { name: "Log In" })).toBeInTheDocument();
     expect(screen.queryByText("Member Access")).not.toBeInTheDocument();
     expect(

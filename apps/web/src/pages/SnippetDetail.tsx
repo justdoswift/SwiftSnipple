@@ -277,7 +277,7 @@ export default function SnippetDetail() {
   }
 
   return (
-    <div className="public-page public-snippet-detail mx-auto max-w-[1380px] px-6 pb-24 pt-44 md:px-10 md:pt-56">
+    <div className="public-page public-snippet-detail mx-auto max-w-[1380px] px-6 pb-24 pt-24 md:px-10 md:pt-28">
       <header className="mb-20">
         <div className="mx-auto max-w-[800px] text-center">
           <motion.div

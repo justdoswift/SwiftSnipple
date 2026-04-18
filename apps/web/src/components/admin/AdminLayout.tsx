@@ -50,13 +50,17 @@ export default function AdminLayout({ adminAuthSession, onSignOut }: AdminLayout
             <div className="admin-nav-actions flex items-center justify-end gap-2">
               {activeHeader.end}
               {adminAuthSession ? (
-                <button type="button" className="admin-button-secondary type-action h-11 px-5" onClick={onSignOut}>
+                <button
+                  type="button"
+                  className="admin-button-secondary admin-auth-button type-action h-11 px-0"
+                  onClick={onSignOut}
+                >
                   {copy.common.logOut}
                 </button>
               ) : null}
               <button
                 type="button"
-                className="admin-button-secondary type-action h-11 px-4"
+                className="admin-button-secondary admin-locale-button type-action h-11 px-0"
                 onClick={() => setLocale?.(locale === "en" ? "zh" : "en")}
               >
                 {copy.nav.localeSwitch}

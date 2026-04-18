@@ -64,14 +64,17 @@ export default function Navbar({ theme, onToggleTheme, authSession }: NavbarProp
 
           <button
             type="button"
-            className="public-nav-login-button type-action"
+            className="public-nav-login-button public-nav-locale-button type-action"
             onClick={() => setLocale?.(nextLocale)}
             aria-label={`Switch language to ${nextLocale}`}
           >
             {copy.nav.localeSwitch}
           </button>
 
-          <Link to={authSession ? `/${locale}/account` : `/${locale}/login`} className="public-nav-login-button type-action">
+          <Link
+            to={authSession ? `/${locale}/account` : `/${locale}/login`}
+            className="public-nav-login-button public-nav-auth-button type-action"
+          >
             {authSession ? copy.nav.account : copy.nav.login}
           </Link>
         </div>

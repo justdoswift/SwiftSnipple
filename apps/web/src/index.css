@@ -140,10 +140,10 @@
     --public-background: #000000;
     --public-foreground: #ffffff;
     --public-heading: #ffffff;
-    --public-body-lg: rgba(255, 255, 255, 0.7);
-    --public-body: rgba(255, 255, 255, 0.6);
-    --public-body-sm: rgba(255, 255, 255, 0.5);
-    --public-micro: rgba(255, 255, 255, 0.4);
+    --public-body-lg: rgba(255, 255, 255, 0.78);
+    --public-body: rgba(255, 255, 255, 0.7);
+    --public-body-sm: rgba(255, 255, 255, 0.58);
+    --public-micro: rgba(255, 255, 255, 0.46);
     --public-border: rgba(255, 255, 255, 0.1);
     --public-border-soft: rgba(255, 255, 255, 0.08);
     --public-border-faint: rgba(255, 255, 255, 0.05);
@@ -420,6 +420,20 @@
     text-decoration: none;
   }
 
+  .public-nav-locale-button {
+    min-width: 4.5rem;
+    justify-content: center;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    text-align: center;
+  }
+
+  .public-nav-auth-button {
+    min-width: 6.5rem;
+    justify-content: center;
+    text-align: center;
+  }
+
   .public-nav-root[data-theme="dark"] .public-nav-search,
   .public-nav-root[data-theme="dark"] .public-nav-search-shortcut {
     background-color: rgba(255, 255, 255, 0.04);
@@ -523,6 +537,16 @@
     .public-nav-login-button {
       padding-left: 0.85rem;
       padding-right: 0.85rem;
+    }
+
+    .public-nav-locale-button {
+      min-width: 4.1rem;
+      padding-left: 0.65rem;
+      padding-right: 0.65rem;
+    }
+
+    .public-nav-auth-button {
+      min-width: 5.9rem;
     }
   }
 
@@ -1738,6 +1762,24 @@
     background-color: var(--admin-secondary-hover-bg);
   }
 
+  .admin-locale-button {
+    min-width: 4.5rem;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .admin-auth-button {
+    min-width: 6.75rem;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .admin-create-button {
+    min-width: 10.25rem;
+    justify-content: center;
+    text-align: center;
+  }
+
   .admin-button-danger {
     @apply rounded-full border px-5 py-2 transition-all;
     background-color: rgba(239, 68, 68, 0.08);
@@ -2281,7 +2323,7 @@
   }
 
   .markdown-renderer {
-    @apply space-y-5 text-[1rem] leading-8;
+    @apply space-y-5 text-[1.125rem] leading-8;
     color: var(--public-body-lg);
   }
 

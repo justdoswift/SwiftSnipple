@@ -77,7 +77,9 @@ describe("AdminLayout", () => {
     expect(screen.getByRole("link", { name: "Just Do Swift admin" })).toBeInTheDocument();
     expect(header).not.toBeNull();
     expect(within(header!).getByRole("link", { name: "New Snippet" })).toHaveAttribute("href", "/en/admin/snippets/new");
-    expect(within(header!).getByRole("button", { name: "Log out" })).toBeInTheDocument();
+    expect(within(header!).getByRole("link", { name: "New Snippet" })).toHaveClass("admin-create-button");
+    expect(within(header!).getByRole("button", { name: "Log out" })).toHaveClass("admin-auth-button");
+    expect(within(header!).getByRole("button", { name: "中文" })).toHaveClass("admin-locale-button");
     expect(within(header!).getByRole("link", { name: /View Front Site/i })).toBeInTheDocument();
     expect(screen.queryByRole("navigation", { name: "Admin sections" })).not.toBeInTheDocument();
     expect(screen.queryByText("Ship SwiftUI snippets with the same care you use to build them.")).not.toBeInTheDocument();
@@ -105,7 +107,8 @@ describe("AdminLayout", () => {
 
     expect(header).not.toBeNull();
     expect(within(header!).getByRole("link", { name: "New Snippet" })).toHaveAttribute("href", "/en/admin/snippets/new");
-    expect(within(header!).getByRole("button", { name: "Log out" })).toBeInTheDocument();
+    expect(within(header!).getByRole("link", { name: "New Snippet" })).toHaveClass("admin-create-button");
+    expect(within(header!).getByRole("button", { name: "Log out" })).toHaveClass("admin-auth-button");
     expect(within(header!).getByRole("link", { name: /View Front Site/i })).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Admin sections" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /overview/i })).toBeInTheDocument();
@@ -127,7 +130,7 @@ describe("AdminLayout", () => {
 
     expect(header).not.toBeNull();
     expect(within(header!).getByRole("link", { name: "Just Do Swift admin" })).toBeInTheDocument();
-    expect(within(header!).getByRole("button", { name: "Log out" })).toBeInTheDocument();
+    expect(within(header!).getByRole("button", { name: "Log out" })).toHaveClass("admin-auth-button");
     expect(screen.queryByRole("navigation", { name: "Admin sections" })).not.toBeInTheDocument();
     expect(screen.getByTestId("admin-content-shell")).toHaveClass("md:px-24");
     expect(screen.getByTestId("admin-content-shell")).toHaveClass("xl:px-28");

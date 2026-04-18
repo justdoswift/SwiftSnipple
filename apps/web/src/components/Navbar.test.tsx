@@ -25,7 +25,9 @@ describe("Navbar", () => {
     expect(screen.getByText("Just Do Swift")).toBeInTheDocument();
     expect(screen.getByRole("searchbox", { name: "Search snippets" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Switch to light site mode" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Switch language to zh" })).toHaveClass("public-nav-locale-button");
     expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute("href", "/en/login");
+    expect(screen.getByRole("link", { name: "Log in" })).toHaveClass("public-nav-auth-button");
   });
 
   it("calls the parent toggle handler and reflects the provided theme", () => {
@@ -56,5 +58,6 @@ describe("Navbar", () => {
     });
 
     expect(screen.getByRole("link", { name: "Account" })).toHaveAttribute("href", "/en/account");
+    expect(screen.getByRole("link", { name: "Account" })).toHaveClass("public-nav-auth-button");
   });
 });

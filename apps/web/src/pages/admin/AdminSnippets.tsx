@@ -22,7 +22,7 @@ export default function AdminSnippets() {
       end: (
         <a
           href={`/${locale}/admin/snippets/new`}
-          className="admin-button-primary type-action inline-flex h-11 shrink-0 items-center px-4"
+          className="admin-button-primary admin-create-button type-action inline-flex h-11 shrink-0 items-center px-0"
         >
           {copy.newSnippet}
         </a>

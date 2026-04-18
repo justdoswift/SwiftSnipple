@@ -51,7 +51,12 @@ export default function SnippetCard({ snippet }: SnippetCardProps) {
               {publishedDate ? (
                 <p className="type-mono-micro text-[var(--public-micro)]">{publishedDate}</p>
               ) : null}
-              <p className="public-snippet-card-copy type-body-sm line-clamp-2">{fields.excerpt}</p>
+              <p
+                className="public-snippet-card-copy public-snippet-card-copy-slot type-body-sm line-clamp-2"
+                aria-hidden={!fields.excerpt}
+              >
+                {fields.excerpt || "\u00A0"}
+              </p>
             </div>
           </Card.Content>
         </Card>

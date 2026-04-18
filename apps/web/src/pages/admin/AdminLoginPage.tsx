@@ -13,7 +13,7 @@ interface AdminLoginPageProps {
 
 function GoogleMark() {
   return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[18px] w-[18px]">
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4">
       <path
         fill="#EA4335"
         d="M12 10.2v3.9h5.4c-.2 1.2-.9 2.2-1.9 2.9l3.1 2.4c1.8-1.6 2.8-4 2.8-6.9 0-.7-.1-1.5-.2-2.2H12Z"
@@ -90,7 +90,7 @@ export default function AdminLoginPage({ authSession, onAuthenticate }: AdminLog
             <span className="public-nav-logo-bar public-nav-logo-bar-primary" />
             <span className="public-nav-logo-bar public-nav-logo-bar-secondary" />
           </span>
-          <span className="truncate text-[1.05rem] font-semibold tracking-[-0.03em] md:text-[1.2rem]">
+          <span className="auth-brand-title truncate">
             Just Do Swift
           </span>
         </Link>
@@ -99,16 +99,16 @@ export default function AdminLoginPage({ authSession, onAuthenticate }: AdminLog
       <div className="auth-page-content auth-page-content-admin">
         <div className="auth-card auth-card-admin">
           <div className="auth-card-copy">
-            <p className="type-mono-micro auth-admin-kicker">{copy.kicker}</p>
+            <p className="auth-micro-copy auth-admin-kicker">{copy.kicker}</p>
             <h1 className="auth-card-title">{copy.title}</h1>
-            <p className="type-body-sm auth-admin-copy">
+            <p className="auth-body-copy auth-admin-copy">
               {copy.copy}
             </p>
           </div>
 
           <form className="auth-form" onSubmit={handleSubmit}>
             <label className="auth-field">
-              <span className="type-mono-micro auth-field-label">{copy.emailAddress}</span>
+              <span className="auth-micro-copy auth-field-label">{copy.emailAddress}</span>
               <input
                 type="email"
                 name="email"
@@ -120,7 +120,7 @@ export default function AdminLoginPage({ authSession, onAuthenticate }: AdminLog
             </label>
 
             <label className="auth-field">
-              <span className="type-mono-micro auth-field-label">{copy.password}</span>
+              <span className="auth-micro-copy auth-field-label">{copy.password}</span>
               <input
                 type="password"
                 name="password"
@@ -134,14 +134,14 @@ export default function AdminLoginPage({ authSession, onAuthenticate }: AdminLog
             {error ? <p className="auth-error">{error}</p> : null}
 
             <Button className="auth-primary-button" radius="full" type="submit">
-              <Mail size={18} strokeWidth={2.2} />
+              <Mail size={16} strokeWidth={2.1} />
               <span>{copy.enterWorkspace}</span>
             </Button>
           </form>
 
           <div className="auth-divider" aria-hidden="true">
             <span />
-            <span className="type-mono-micro">OR</span>
+            <span className="auth-micro-copy auth-divider-label">OR</span>
             <span />
           </div>
 
@@ -151,7 +151,7 @@ export default function AdminLoginPage({ authSession, onAuthenticate }: AdminLog
               <span>{copy.continueGoogle}</span>
             </button>
             <button type="button" className="auth-provider-button" onClick={() => handleProviderAuth("github")}>
-              <Github size={18} strokeWidth={2} />
+              <Github size={16} strokeWidth={2} />
               <span>{copy.continueGithub}</span>
             </button>
           </div>

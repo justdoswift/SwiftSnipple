@@ -54,4 +54,23 @@ describe("Home", () => {
 
     expect(screen.queryByText("Draft Entry")).not.toBeInTheDocument();
   });
+
+  it("preserves the excerpt slot even when a published snippet has no excerpt", async () => {
+    mockedGetSnippets.mockResolvedValue([
+      publishedSnippet,
+      { ...publishedSnippet, id: "snippet-2", slug: "empty-excerpt", title: "Empty Excerpt", excerpt: "" },
+    ]);
+
+    const { container } = render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Empty Excerpt").length).toBeGreaterThan(0);
+    });
+
+    expect(container.querySelectorAll(".public-snippet-card-copy-slot")).toHaveLength(2);
+  });
 });

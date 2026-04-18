@@ -10,7 +10,7 @@ import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, unpublish
 import { Snippet, SnippetFormState, SnippetPayload, SnippetStatus } from "../../types";
 import { Code2, Layout, Monitor, MessageSquareQuote, Smartphone, Settings2, Trash2, X } from "lucide-react";
 
-const STATUS_OPTIONS: SnippetStatus[] = ["Draft", "In Review", "Scheduled", "Published"];
+const EDITABLE_STATUS_OPTIONS: SnippetStatus[] = ["Draft", "In Review", "Scheduled"];
 const EDITOR_TABS = [
   { key: "content", label: "Narrative", icon: Layout },
   { key: "code", label: "Code", icon: Code2 },
@@ -202,6 +202,7 @@ export default function AdminSnippetEditor() {
   const [feedback, setFeedback] = useState("");
   const [activeTab, setActiveTab] = useState<EditorTabKey>("content");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<PreviewDevice>("desktop");
 
   useEffect(() => {
@@ -238,12 +239,17 @@ export default function AdminSnippetEditor() {
   }, [id, isNew]);
 
   useEffect(() => {
-    if (!isPreviewOpen) return;
+    if (!isPreviewOpen && !isPublishConfirmOpen) return;
 
     const previousOverflow = document.body.style.overflow;
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setIsPreviewOpen(false);
+        if (isPreviewOpen) {
+          setIsPreviewOpen(false);
+          return;
+        }
+
+        setIsPublishConfirmOpen(false);
       }
     };
 
@@ -254,13 +260,14 @@ export default function AdminSnippetEditor() {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isPreviewOpen]);
+  }, [isPreviewOpen, isPublishConfirmOpen]);
 
   const previewSnippet = useMemo(() => fromFormState(baseSnippet, form), [baseSnippet, form]);
   const previewPath = baseSnippet.slug ? `/snippets/${baseSnippet.slug}` : "";
   const hasSavedPreview = Boolean(baseSnippet.id && baseSnippet.slug);
   const hasUnsavedChanges =
     JSON.stringify(toSnippetPayload(previewSnippet)) !== JSON.stringify(toSnippetPayload(baseSnippet));
+  const statusOptions = form.status === "Published" ? (["Published"] as const) : EDITABLE_STATUS_OPTIONS;
 
   const updateField = <K extends keyof SnippetFormState>(field: K, value: SnippetFormState[K]) => {
     setForm((current) => {
@@ -271,27 +278,28 @@ export default function AdminSnippetEditor() {
     });
   };
 
-  const handleSave = useCallback(async (statusOverride?: SnippetStatus) => {
+  const persistSnippet = useCallback(
+    async (nextForm: SnippetFormState) => {
+      const payload = toSnippetPayload(fromFormState(baseSnippet, nextForm));
+      return isNew ? createSnippet(payload) : updateSnippet(baseSnippet.id, payload);
+    },
+    [baseSnippet, isNew],
+  );
+
+  const handleSave = useCallback(async () => {
     try {
       setIsSubmitting(true);
       setError("");
       setFeedback("");
-      const nextForm = statusOverride ? { ...form, status: statusOverride } : form;
-      const payload = toSnippetPayload(fromFormState(baseSnippet, nextForm));
-
-      const savedSnippet = isNew ? await createSnippet(payload) : await updateSnippet(baseSnippet.id, payload);
-      const finalSnippet =
-        statusOverride === "Published" ? await publishSnippet(savedSnippet.id) : savedSnippet;
+      const finalSnippet = await persistSnippet(form);
 
       setBaseSnippet(finalSnippet);
       setForm(toFormState(finalSnippet));
-      setSaveLabel(statusOverride === "Published" ? "Published" : "Saved");
+      setSaveLabel("Saved");
       setFeedback(
-        statusOverride === "Published"
-          ? "Snippet published and now eligible for the public homepage."
-          : finalSnippet.status === "Scheduled"
-            ? "Snippet saved in the schedule. It will stay off the public homepage until published."
-            : "Changes saved successfully.",
+        finalSnippet.status === "Scheduled"
+          ? "Snippet saved in the schedule. It will stay off the public homepage until published."
+          : "Changes saved successfully.",
       );
       window.setTimeout(() => setSaveLabel("Draft"), 1800);
 
@@ -303,7 +311,32 @@ export default function AdminSnippetEditor() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [baseSnippet, form, isNew, navigate]);
+  }, [form, isNew, navigate, persistSnippet]);
+
+  const handleConfirmPublish = useCallback(async () => {
+    try {
+      setIsSubmitting(true);
+      setError("");
+      setFeedback("");
+      const savedSnippet = await persistSnippet(form);
+      const finalSnippet = await publishSnippet(savedSnippet.id);
+
+      setBaseSnippet(finalSnippet);
+      setForm(toFormState(finalSnippet));
+      setSaveLabel("Published");
+      setFeedback("Snippet published and now eligible for the public homepage.");
+      setIsPublishConfirmOpen(false);
+      window.setTimeout(() => setSaveLabel("Draft"), 1800);
+
+      if (isNew) {
+        navigate(`/admin/snippets/${finalSnippet.id}`, { replace: true });
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to publish snippet");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [form, isNew, navigate, persistSnippet]);
 
   const handleUnpublish = async () => {
     if (!baseSnippet.id) return;
@@ -385,14 +418,18 @@ export default function AdminSnippetEditor() {
           <Button
             isDisabled={isSubmitting}
             className="h-11 shrink-0 px-2.5 text-sm admin-button-secondary min-[1500px]:px-3 2xl:px-4"
-            onPress={() => handleSave()}
+            onPress={handleSave}
           >
             {isSubmitting ? "..." : saveLabel}
           </Button>
           <Button
             isDisabled={isSubmitting}
             className="h-11 shrink-0 px-2.5 text-sm admin-button-primary min-[1500px]:px-3 2xl:px-4"
-            onPress={() => handleSave("Published")}
+            onPress={() => {
+              setError("");
+              setFeedback("");
+              setIsPublishConfirmOpen(true);
+            }}
           >
             Publish
           </Button>
@@ -563,9 +600,10 @@ export default function AdminSnippetEditor() {
                            value={form.status}
                            onChange={(event) => updateField("status", event.target.value as SnippetStatus)}
                            className="admin-select w-full text-sm"
+                           disabled={form.status === "Published"}
                          >
-                           {STATUS_OPTIONS.map((status) => (
-                             <option key={status} value={status}>
+                           {statusOptions.map((status) => (
+                             <option key={status} value={status} disabled={status === "Published"}>
                                {status}
                              </option>
                            ))}
@@ -760,6 +798,53 @@ export default function AdminSnippetEditor() {
                   </div>
                 </div>
               </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {isPublishConfirmOpen ? (
+        <div className="fixed inset-0 z-[85]">
+          <button
+            type="button"
+            aria-label="Dismiss publish confirmation backdrop"
+            className="admin-preview-backdrop absolute inset-0"
+            onClick={() => setIsPublishConfirmOpen(false)}
+          />
+          <div className="relative z-10 flex h-full w-full items-center justify-center px-4 py-6 md:px-6">
+            <div className="admin-publish-dialog w-full max-w-xl rounded-[30px] border px-6 py-6 md:px-8 md:py-8">
+              <div className="flex flex-col gap-4">
+                <div className="space-y-3">
+                  <span className="admin-eyebrow type-mono-micro">Publish Confirmation</span>
+                  <h2 className="admin-section-title text-[1.6rem] md:text-[1.9rem]">
+                    Publish this snippet to the public library?
+                  </h2>
+                  <p className="admin-copy-muted text-sm leading-relaxed md:text-base">
+                    Confirming will save the current editor state and make <strong className="admin-title-strong">{previewSnippet.title || "Untitled Snippet"}</strong> live in the public snippet library.
+                  </p>
+                </div>
+                <div className="admin-publish-dialog-callout rounded-[22px] border px-4 py-4 text-sm leading-relaxed">
+                  {hasUnsavedChanges
+                    ? "This entry has unsaved changes. We will save those edits before publishing."
+                    : "No unsaved changes detected. Publishing will update the current public state only."}
+                </div>
+                <div className="flex flex-wrap justify-end gap-3 pt-2">
+                  <Button
+                    isDisabled={isSubmitting}
+                    className="admin-button-secondary h-11 px-5"
+                    onPress={() => setIsPublishConfirmOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    isDisabled={isSubmitting}
+                    className="admin-button-primary h-11 px-5"
+                    onPress={handleConfirmPublish}
+                  >
+                    {isSubmitting ? "Publishing..." : "Confirm Publish"}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

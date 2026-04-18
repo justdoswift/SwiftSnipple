@@ -2144,6 +2144,10 @@
     box-shadow: 0 14px 32px rgba(0, 0, 0, 0.06);
   }
 
+  .admin-title-strong {
+    color: var(--admin-title);
+  }
+
   .admin-feedback-success {
     color: var(--admin-status-success);
   }
@@ -2163,6 +2167,19 @@
   .admin-preview-backdrop {
     background-color: var(--admin-overlay);
     backdrop-filter: blur(18px);
+  }
+
+  .admin-publish-dialog {
+    border-color: var(--admin-border);
+    background-color: color-mix(in srgb, var(--admin-header-bg) 92%, var(--admin-surface) 8%);
+    backdrop-filter: blur(18px);
+    box-shadow: 0 32px 120px rgba(0, 0, 0, 0.24);
+  }
+
+  .admin-publish-dialog-callout {
+    border-color: var(--admin-border);
+    background-color: color-mix(in srgb, var(--admin-surface-strong) 74%, transparent);
+    color: var(--admin-muted);
   }
 
   .admin-preview-shell {

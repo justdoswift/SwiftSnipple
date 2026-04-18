@@ -3,7 +3,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import AdminLayout from "../../components/admin/AdminLayout";
 import AdminSnippetEditor from "./AdminSnippetEditor";
-import { getSnippetById } from "../../services/snippets";
+import { createSnippet, getSnippetById, publishSnippet } from "../../services/snippets";
 
 vi.mock("../../services/snippets", () => ({
   createSnippet: vi.fn(),
@@ -15,16 +15,21 @@ vi.mock("../../services/snippets", () => ({
 }));
 
 const mockedGetSnippetById = vi.mocked(getSnippetById);
+const mockedCreateSnippet = vi.mocked(createSnippet);
+const mockedPublishSnippet = vi.mocked(publishSnippet);
 
 describe("AdminSnippetEditor", () => {
   it("renders the new snippet editor route without inline preview", () => {
     mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
 
     render(
       <MemoryRouter initialEntries={["/admin/snippets/new"]}>
         <Routes>
           <Route path="/admin" element={<AdminLayout />}>
             <Route path="snippets/new" element={<AdminSnippetEditor />} />
+            <Route path="snippets/:id" element={<AdminSnippetEditor />} />
           </Route>
         </Routes>
       </MemoryRouter>,
@@ -53,6 +58,8 @@ describe("AdminSnippetEditor", () => {
 
   it("renders the new snippet editor route", () => {
     mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
 
     render(
       <MemoryRouter initialEntries={["/admin/snippets/new"]}>
@@ -82,6 +89,8 @@ describe("AdminSnippetEditor", () => {
 
   it("opens preview mode with device controls for saved snippets", async () => {
     mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
     mockedGetSnippetById.mockResolvedValue({
       id: "snippet-1",
       title: "Smooth Feedback Loops",
@@ -134,5 +143,133 @@ describe("AdminSnippetEditor", () => {
     await waitFor(() => {
       expect(screen.getByTitle("Snippet public preview").closest("[data-preview-device]")).toHaveAttribute("data-preview-device", "mobile");
     });
+  });
+
+  it("opens a publish confirmation dialog before calling the publish API", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+    mockedCreateSnippet.mockResolvedValue({
+      id: "snippet-1",
+      title: "Untitled Snippet",
+      slug: "untitled-snippet",
+      excerpt: "",
+      category: "Workflow",
+      tags: [],
+      coverImage: "https://example.com/cover.jpg",
+      content: "# New Snippet",
+      code: "Text(\"Hello\")",
+      prompts: "Build a polished snippet.",
+      seoTitle: "",
+      seoDescription: "",
+      status: "Draft",
+      updatedAt: "2026-04-18T00:00:00.000Z",
+      publishedAt: null,
+    });
+    mockedPublishSnippet.mockResolvedValue({
+      id: "snippet-1",
+      title: "Untitled Snippet",
+      slug: "untitled-snippet",
+      excerpt: "",
+      category: "Workflow",
+      tags: [],
+      coverImage: "https://example.com/cover.jpg",
+      content: "# New Snippet",
+      code: "Text(\"Hello\")",
+      prompts: "Build a polished snippet.",
+      seoTitle: "",
+      seoDescription: "",
+      status: "Published",
+      updatedAt: "2026-04-18T00:00:00.000Z",
+      publishedAt: "2026-04-18T00:00:00.000Z",
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route path="snippets/new" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Publish" }));
+
+    expect(screen.getByText("Publish this snippet to the public library?")).toBeInTheDocument();
+    expect(mockedPublishSnippet).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByText("Publish this snippet to the public library?")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Publish" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm Publish" }));
+
+    await waitFor(() => {
+      expect(mockedCreateSnippet).toHaveBeenCalledTimes(1);
+      expect(mockedPublishSnippet).toHaveBeenCalledWith("snippet-1");
+    });
+  });
+
+  it("removes Published from manual status choices for unpublished snippets", () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+
+    render(
+      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route path="snippets/new" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: "Surface" }));
+
+    expect(screen.queryByRole("option", { name: "Published" })).not.toBeInTheDocument();
+  });
+
+  it("shows Published as a disabled status for already published snippets", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+    mockedGetSnippetById.mockResolvedValue({
+      id: "snippet-1",
+      title: "Live Snippet",
+      slug: "live-snippet",
+      excerpt: "Published snippet.",
+      category: "Workflow",
+      tags: ["SwiftUI"],
+      coverImage: "https://example.com/cover.jpg",
+      content: "# Live Snippet",
+      code: "Text(\"Live\")",
+      prompts: "Keep it polished.",
+      seoTitle: "Live Snippet",
+      seoDescription: "SEO copy",
+      status: "Published",
+      updatedAt: "2026-04-18T00:00:00.000Z",
+      publishedAt: "2026-04-18T00:00:00.000Z",
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/admin/snippets/snippet-1"]}>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route path="snippets/:id" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Snippet Title")).toHaveValue("Live Snippet");
+    });
+
+    fireEvent.click(screen.getByRole("tab", { name: "Surface" }));
+
+    const publishedOption = screen.getByRole("option", { name: "Published" });
+    expect(publishedOption).toBeDisabled();
   });
 });

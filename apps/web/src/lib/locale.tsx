@@ -4,7 +4,27 @@ import { coerceLocalizedSnippetFields } from "./snippet-localization";
 
 export const LOCALE_STORAGE_KEY = "just-do-swift-locale";
 export const DEFAULT_LOCALE: AppLocale = "en";
-export const APP_LOCALES: AppLocale[] = ["en", "zh"];
+
+export type AppLocaleOption = {
+  code: AppLocale;
+  nativeLabel: string;
+  matchPrefixes: string[];
+};
+
+export const APP_LOCALE_OPTIONS = [
+  {
+    code: "en",
+    nativeLabel: "English",
+    matchPrefixes: ["en"],
+  },
+  {
+    code: "zh",
+    nativeLabel: "中文",
+    matchPrefixes: ["zh"],
+  },
+] satisfies AppLocaleOption[];
+
+export const APP_LOCALES: AppLocale[] = APP_LOCALE_OPTIONS.map((option) => option.code);
 
 type LocaleContextValue = {
   locale: AppLocale;
@@ -14,7 +34,11 @@ type LocaleContextValue = {
 export const LocaleContext = createContext<LocaleContextValue>({ locale: DEFAULT_LOCALE });
 
 export function isAppLocale(value: string | null | undefined): value is AppLocale {
-  return value === "en" || value === "zh";
+  return APP_LOCALES.includes(value as AppLocale);
+}
+
+export function getLocaleOption(locale: AppLocale) {
+  return APP_LOCALE_OPTIONS.find((option) => option.code === locale) ?? APP_LOCALE_OPTIONS[0];
 }
 
 export function detectPreferredLocale(): AppLocale {
@@ -26,7 +50,18 @@ export function detectPreferredLocale(): AppLocale {
     ? window.navigator.languages
     : [window.navigator.language];
 
-  return browserLanguages.some((language) => language.toLowerCase().startsWith("zh")) ? "zh" : "en";
+  for (const browserLanguage of browserLanguages) {
+    const normalizedLanguage = browserLanguage.toLowerCase();
+    const matchedLocale = APP_LOCALE_OPTIONS.find((option) =>
+      option.matchPrefixes.some((prefix) => normalizedLanguage.startsWith(prefix.toLowerCase())),
+    );
+
+    if (matchedLocale) {
+      return matchedLocale.code;
+    }
+  }
+
+  return DEFAULT_LOCALE;
 }
 
 export function readStoredLocale(): AppLocale {

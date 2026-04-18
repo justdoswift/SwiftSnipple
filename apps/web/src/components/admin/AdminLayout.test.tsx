@@ -76,10 +76,10 @@ describe("AdminLayout", () => {
 
     expect(screen.getByRole("link", { name: "Just Do Swift admin" })).toBeInTheDocument();
     expect(header).not.toBeNull();
-    expect(within(header!).getByRole("link", { name: "New Snippet" })).toHaveAttribute("href", "/en/admin/snippets/new");
-    expect(within(header!).getByRole("link", { name: "New Snippet" })).toHaveClass("admin-create-button");
+    expect(within(header!).getByRole("link", { name: "New" })).toHaveAttribute("href", "/en/admin/snippets/new");
+    expect(within(header!).getByRole("link", { name: "New" })).toHaveClass("admin-create-button");
     expect(within(header!).getByRole("button", { name: "Log out" })).toHaveClass("admin-auth-button");
-    expect(within(header!).getByRole("button", { name: "中文" })).toHaveClass("admin-locale-button");
+    expect(within(header!).getByRole("combobox", { name: "Select language" })).toHaveClass("admin-nav-locale-select");
     expect(within(header!).getByRole("link", { name: /View Front Site/i })).toBeInTheDocument();
     expect(screen.queryByRole("navigation", { name: "Admin sections" })).not.toBeInTheDocument();
     expect(screen.queryByText("Ship SwiftUI snippets with the same care you use to build them.")).not.toBeInTheDocument();
@@ -106,8 +106,8 @@ describe("AdminLayout", () => {
     const header = screen.getByTestId("admin-navbar-shell").closest("header");
 
     expect(header).not.toBeNull();
-    expect(within(header!).getByRole("link", { name: "New Snippet" })).toHaveAttribute("href", "/en/admin/snippets/new");
-    expect(within(header!).getByRole("link", { name: "New Snippet" })).toHaveClass("admin-create-button");
+    expect(within(header!).getByRole("link", { name: "New" })).toHaveAttribute("href", "/en/admin/snippets/new");
+    expect(within(header!).getByRole("link", { name: "New" })).toHaveClass("admin-create-button");
     expect(within(header!).getByRole("button", { name: "Log out" })).toHaveClass("admin-auth-button");
     expect(within(header!).getByRole("link", { name: /View Front Site/i })).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Admin sections" })).toBeInTheDocument();

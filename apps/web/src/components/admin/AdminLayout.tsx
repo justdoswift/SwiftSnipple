@@ -1,9 +1,10 @@
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, ChevronDown } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import type { AdminAuthSession } from "../../lib/admin-auth";
 import { getMessages } from "../../lib/messages";
-import { useAppLocale } from "../../lib/locale";
+import type { AppLocale } from "../../types";
+import { APP_LOCALE_OPTIONS, useAppLocale } from "../../lib/locale";
 import { usePublicTheme } from "../../lib/public-theme";
 import AdminSidebar from "./AdminSidebar";
 import { type AdminHeaderConfig, type AdminHeaderOutletContext } from "./useAdminHeader";
@@ -58,13 +59,21 @@ export default function AdminLayout({ adminAuthSession, onSignOut }: AdminLayout
                   {copy.common.logOut}
                 </button>
               ) : null}
-              <button
-                type="button"
-                className="admin-nav-action-button admin-locale-button type-action"
-                onClick={() => setLocale?.(locale === "en" ? "zh" : "en")}
-              >
-                {copy.nav.localeSwitch}
-              </button>
+              <div className="admin-nav-locale-shell">
+                <select
+                  className="admin-nav-locale-select type-action"
+                  aria-label={copy.nav.selectLanguage}
+                  value={locale}
+                  onChange={(event) => setLocale?.(event.target.value as AppLocale)}
+                >
+                  {APP_LOCALE_OPTIONS.map((option) => (
+                    <option key={option.code} value={option.code}>
+                      {option.nativeLabel}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+              </div>
               <Link
                 to={`/${locale}`}
                 aria-label={copy.common.viewFrontSite}

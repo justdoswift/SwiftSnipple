@@ -7,6 +7,7 @@ export const messages = {
       login: "Log in",
       account: "Account",
       localeSwitch: "中文",
+      selectLanguage: "Select language",
     },
     footer: {
       brandCopy: "A curated collection of exceptional SwiftUI builds, deconstructed and ready for reuse.",
@@ -150,7 +151,7 @@ export const messages = {
     admin: {
       overview: "Overview",
       snippetLibrary: "Snippet Library",
-      newSnippet: "New Snippet",
+      newSnippet: "New",
       searchTitleOrSlug: "Search title or slug",
       statusAll: "Status: All",
       categoryAll: "Category: All",
@@ -259,6 +260,7 @@ export const messages = {
       login: "登录",
       account: "账户",
       localeSwitch: "EN",
+      selectLanguage: "选择语言",
     },
     footer: {
       brandCopy: "一个精选的 SwiftUI 实现库，强调质量、拆解与复用。",
@@ -394,7 +396,7 @@ export const messages = {
     admin: {
       overview: "总览",
       snippetLibrary: "Snippet Library",
-      newSnippet: "新建 Snippet",
+      newSnippet: "新建",
       searchTitleOrSlug: "搜索标题或 slug",
       statusAll: "状态：全部",
       categoryAll: "分类：全部",

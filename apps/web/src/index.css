@@ -476,6 +476,22 @@
     text-align: center;
   }
 
+  .public-nav-locale-shell {
+    @apply relative inline-flex h-10 shrink-0 items-center rounded-[12px] border border-transparent transition-colors duration-200;
+    min-width: 5.5rem;
+    color: inherit;
+  }
+
+  .public-nav-locale-select {
+    @apply h-full w-full appearance-none bg-transparent pl-3 pr-8 text-center outline-none md:pl-4 md:pr-9;
+    color: inherit;
+  }
+
+  .public-nav-locale-shell svg {
+    @apply pointer-events-none absolute right-3 top-1/2 -translate-y-1/2;
+    color: inherit;
+  }
+
   .public-nav-auth-button {
     min-width: 6.5rem;
     justify-content: center;
@@ -490,7 +506,8 @@
   }
 
   .public-nav-root[data-theme="dark"] .public-nav-icon-button,
-  .public-nav-root[data-theme="dark"] .public-nav-login-button {
+  .public-nav-root[data-theme="dark"] .public-nav-login-button,
+  .public-nav-root[data-theme="dark"] .public-nav-locale-shell {
     color: rgba(255, 255, 255, 0.78);
   }
 
@@ -503,9 +520,15 @@
   }
 
   .public-nav-root[data-theme="dark"] .public-nav-icon-button:hover,
-  .public-nav-root[data-theme="dark"] .public-nav-login-button:hover {
+  .public-nav-root[data-theme="dark"] .public-nav-login-button:hover,
+  .public-nav-root[data-theme="dark"] .public-nav-locale-shell:hover {
     background-color: rgba(255, 255, 255, 0.06);
     color: rgba(255, 255, 255, 0.96);
+  }
+
+  .public-nav-root[data-theme="dark"] .public-nav-locale-select option {
+    background-color: #050505;
+    color: #ffffff;
   }
 
   .public-nav-root[data-theme="dark"] .public-nav-search:hover {
@@ -526,7 +549,8 @@
   }
 
   .public-nav-root[data-theme="light"] .public-nav-icon-button,
-  .public-nav-root[data-theme="light"] .public-nav-login-button {
+  .public-nav-root[data-theme="light"] .public-nav-login-button,
+  .public-nav-root[data-theme="light"] .public-nav-locale-shell {
     color: rgba(0, 0, 0, 0.72);
   }
 
@@ -539,8 +563,14 @@
   }
 
   .public-nav-root[data-theme="light"] .public-nav-icon-button:hover,
-  .public-nav-root[data-theme="light"] .public-nav-login-button:hover {
+  .public-nav-root[data-theme="light"] .public-nav-login-button:hover,
+  .public-nav-root[data-theme="light"] .public-nav-locale-shell:hover {
     background-color: rgba(0, 0, 0, 0.06);
+    color: #000000;
+  }
+
+  .public-nav-root[data-theme="light"] .public-nav-locale-select option {
+    background-color: #ffffff;
     color: #000000;
   }
 
@@ -557,6 +587,11 @@
   .public-nav-brand:focus-visible,
   .public-nav-icon-button:focus-visible,
   .public-nav-login-button:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+
+  .public-nav-locale-shell:focus-within {
     outline: 2px solid currentColor;
     outline-offset: 2px;
   }
@@ -2029,7 +2064,7 @@
   }
 
   .admin-nav-action-button {
-    @apply rounded-[12px] px-3 md:px-4;
+    @apply rounded-[12px] px-2.5 md:px-3;
     text-decoration: none;
   }
 
@@ -2037,8 +2072,25 @@
     @apply w-11 rounded-full;
   }
 
+  .admin-nav-locale-shell {
+    @apply relative inline-flex h-10 shrink-0 items-center rounded-[12px] border border-transparent transition-colors duration-200;
+    min-width: 5.5rem;
+    color: var(--admin-header-action-text);
+  }
+
+  .admin-nav-locale-select {
+    @apply h-full w-full appearance-none bg-transparent pl-2.5 pr-8 text-center outline-none md:pl-3 md:pr-9;
+    color: inherit;
+  }
+
+  .admin-nav-locale-shell svg {
+    @apply pointer-events-none absolute right-3 top-1/2 -translate-y-1/2;
+    color: inherit;
+  }
+
   .admin-nav-action-button:hover,
-  .admin-nav-action-icon:hover {
+  .admin-nav-action-icon:hover,
+  .admin-nav-locale-shell:hover {
     background-color: var(--admin-header-action-hover-bg);
     color: var(--admin-header-action-hover-text);
   }
@@ -2049,22 +2101,32 @@
     outline-offset: 2px;
   }
 
+  .admin-nav-locale-shell:focus-within {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+
   .admin-locale-button {
-    min-width: 4.5rem;
+    min-width: 3.25rem;
     justify-content: center;
     text-align: center;
   }
 
   .admin-auth-button {
-    min-width: 6.75rem;
+    min-width: 4.75rem;
     justify-content: center;
     text-align: center;
   }
 
   .admin-create-button {
-    min-width: 10.25rem;
+    min-width: 4.5rem;
     justify-content: center;
     text-align: center;
+  }
+
+  .admin-nav-locale-select option {
+    background-color: var(--admin-background);
+    color: var(--admin-foreground);
   }
 
   .admin-button-sm {

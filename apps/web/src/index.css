@@ -2646,8 +2646,8 @@
       pointer-events: none;
     }
 
-    .admin-editor-section-link-active .admin-editor-section-label,
-    .admin-editor-section-link:hover .admin-editor-section-label {
+    .admin-editor-section-link:hover .admin-editor-section-label,
+    .admin-editor-section-link:focus-visible .admin-editor-section-label {
       opacity: 1;
       transform: translateX(0);
     }

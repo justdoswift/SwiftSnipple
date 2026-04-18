@@ -1,3 +1,5 @@
+import { getMessages } from "../../lib/messages";
+import { useAppLocale } from "../../lib/locale";
 import { SnippetStatus } from "../../types";
 
 const STATUS_CLASSNAMES: Record<SnippetStatus, string> = {
@@ -8,9 +10,12 @@ const STATUS_CLASSNAMES: Record<SnippetStatus, string> = {
 };
 
 export default function StatusBadge({ status }: { status: SnippetStatus }) {
+  const { locale } = useAppLocale();
+  const copy = getMessages(locale).common;
+
   return (
     <span className={`admin-status-badge type-mono-micro ${STATUS_CLASSNAMES[status]}`}>
-      {status}
+      {copy.statuses[status]}
     </span>
   );
 }

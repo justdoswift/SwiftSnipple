@@ -3,6 +3,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import AdminLayout from "../../components/admin/AdminLayout";
 import type { AdminAuthSession } from "../../lib/admin-auth";
+import { LocaleContext } from "../../lib/locale";
 import AdminSnippetEditor from "./AdminSnippetEditor";
 import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, updateSnippet } from "../../services/snippets";
 
@@ -57,6 +58,8 @@ describe("AdminSnippetEditor", () => {
     expect(screen.getByRole("button", { name: "Preview" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Publish" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /view front site/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "EN" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "中文" })).not.toBeInTheDocument();
     expect(screen.getByLabelText("Implementation notes")).toHaveClass("admin-editor-scrollbar");
     fireEvent.click(screen.getByRole("tab", { name: "Code" }));
     expect(screen.getByLabelText("SwiftUI code")).toHaveClass("admin-editor-scrollbar");
@@ -155,6 +158,57 @@ describe("AdminSnippetEditor", () => {
     await waitFor(() => {
       expect(screen.getByTitle("Snippet public preview").closest("[data-preview-device]")).toHaveAttribute("data-preview-device", "mobile");
     });
+  });
+
+  it("renders localized preview controls in the zh editor route", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+    mockedGetSnippetById.mockResolvedValue({
+      id: "snippet-1",
+      title: "Smooth Feedback Loops",
+      slug: "smooth-feedback-loops",
+      excerpt: "A polished snippet preview.",
+      category: "Workflow",
+      tags: ["SwiftUI"],
+      coverImage: "https://example.com/cover.jpg",
+      content: "# Smooth Feedback Loops",
+      code: "Text(\"Preview\")",
+      prompts: "Build a previewable snippet.",
+      seoTitle: "Smooth Feedback Loops",
+      seoDescription: "SEO copy",
+      status: "Draft",
+      updatedAt: "2026-04-09T12:00:00.000Z",
+      publishedAt: null,
+    });
+
+    render(
+      <LocaleContext.Provider value={{ locale: "zh" }}>
+        <MemoryRouter initialEntries={["/zh/admin/snippets/snippet-1"]}>
+          <Routes>
+            <Route path="/zh/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+              <Route path="snippets/:id" element={<AdminSnippetEditor />} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </LocaleContext.Provider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "预览" })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "预览" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("预览模式")).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole("tab", { name: "桌面" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: "手机" })).toHaveAttribute("aria-selected", "false");
+    expect(screen.getByRole("link", { name: "新标签打开" })).toHaveAttribute("href", "/zh/snippets/smooth-feedback-loops");
+    expect(screen.getByRole("button", { name: "完成" })).toBeInTheDocument();
+    expect(screen.getByText("前台路由")).toBeInTheDocument();
   });
 
   it("opens a publish confirmation dialog before calling the publish API", async () => {
@@ -472,6 +526,87 @@ describe("AdminSnippetEditor", () => {
     });
   });
 
+  it("localizes published update actions in the zh editor route", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+    mockedUpdateSnippet.mockReset();
+    mockedGetSnippetById.mockResolvedValue({
+      id: "snippet-1",
+      title: "Live Snippet",
+      slug: "live-snippet",
+      excerpt: "Published snippet.",
+      category: "Workflow",
+      tags: ["SwiftUI"],
+      coverImage: "https://example.com/cover.jpg",
+      content: "# Live Snippet",
+      code: "Text(\"Live\")",
+      prompts: "Keep it polished.",
+      seoTitle: "Live Snippet",
+      seoDescription: "SEO copy",
+      status: "Published",
+      updatedAt: "2026-04-18T00:00:00.000Z",
+      publishedAt: "2026-04-18T00:00:00.000Z",
+    });
+    mockedUpdateSnippet.mockResolvedValue({
+      id: "snippet-1",
+      title: "Live Snippet Updated",
+      slug: "live-snippet",
+      excerpt: "Published snippet.",
+      category: "Workflow",
+      tags: ["SwiftUI"],
+      coverImage: "https://example.com/cover.jpg",
+      content: "# Live Snippet",
+      code: "Text(\"Live\")",
+      prompts: "Keep it polished.",
+      seoTitle: "Live Snippet",
+      seoDescription: "SEO copy",
+      status: "Published",
+      updatedAt: "2026-04-18T00:10:00.000Z",
+      publishedAt: "2026-04-18T00:00:00.000Z",
+    });
+    mockedPublishSnippet.mockResolvedValue({
+      id: "snippet-1",
+      title: "Live Snippet Updated",
+      slug: "live-snippet",
+      excerpt: "Published snippet.",
+      category: "Workflow",
+      tags: ["SwiftUI"],
+      coverImage: "https://example.com/cover.jpg",
+      content: "# Live Snippet",
+      code: "Text(\"Live\")",
+      prompts: "Keep it polished.",
+      seoTitle: "Live Snippet",
+      seoDescription: "SEO copy",
+      status: "Published",
+      updatedAt: "2026-04-18T00:12:00.000Z",
+      publishedAt: "2026-04-18T00:12:00.000Z",
+    });
+
+    render(
+      <LocaleContext.Provider value={{ locale: "zh" }}>
+        <MemoryRouter initialEntries={["/zh/admin/snippets/snippet-1"]}>
+          <Routes>
+            <Route path="/zh/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+              <Route path="snippets/:id" element={<AdminSnippetEditor />} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </LocaleContext.Provider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "已发布" })).toBeDisabled();
+    });
+
+    fireEvent.change(screen.getByLabelText("Snippet 标题"), { target: { value: "Live Snippet Updated" } });
+    expect(screen.getByRole("button", { name: "更新" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "更新" }));
+    expect(screen.getByText("确认更新前台内容库中的这条 snippet？")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "确认更新" })).toBeInTheDocument();
+  });
+
   it("removes Published from manual status choices for unpublished snippets", () => {
     mockedGetSnippetById.mockReset();
     mockedCreateSnippet.mockReset();
@@ -530,7 +665,6 @@ describe("AdminSnippetEditor", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "Surface" }));
 
-    const publishedOption = screen.getByRole("option", { name: "Published" });
-    expect(publishedOption).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Status" })).toBeDisabled();
   });
 });

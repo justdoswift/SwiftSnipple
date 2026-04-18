@@ -10,17 +10,11 @@ import { getMessages } from "../../lib/messages";
 import { getLocalizedSnippetFields, localizePath, useAppLocale } from "../../lib/locale";
 import { createEmptyLocalizedFields, getFormLocale, getSnippetLocale } from "../../lib/snippet-localization";
 import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, unpublishSnippet, updateSnippet } from "../../services/snippets";
-import { AppLocale, Snippet, SnippetFormState, SnippetPayload, SnippetStatus } from "../../types";
+import { Snippet, SnippetFormState, SnippetPayload, SnippetStatus } from "../../types";
 import { ChevronDown, Code2, Layout, Monitor, MessageSquareQuote, Smartphone, Settings2, Trash2, X } from "lucide-react";
 
 const EDITABLE_STATUS_OPTIONS: SnippetStatus[] = ["Draft", "In Review", "Scheduled"];
-const EDITOR_TABS = [
-  { key: "content", label: "Narrative", icon: Layout },
-  { key: "code", label: "Code", icon: Code2 },
-  { key: "prompt", label: "Prompt", icon: MessageSquareQuote },
-  { key: "meta", label: "Surface", icon: Settings2 },
-] as const;
-type EditorTabKey = (typeof EDITOR_TABS)[number]["key"];
+type EditorTabKey = "content" | "code" | "prompt" | "meta";
 type PreviewDevice = "desktop" | "mobile";
 type AutosaveState = "idle" | "saving" | "saved";
 type PrimaryActionState = "idle" | "publishing" | "updating";
@@ -28,18 +22,25 @@ type EditorStatusOption = {
   id: SnippetStatus;
   label: string;
 };
+type EditorTabOption = {
+  key: EditorTabKey;
+  label: string;
+  icon: typeof Layout;
+};
 
 function EditorSectionRail({
   activeTab,
   onSelect,
+  tabs,
 }: {
   activeTab: EditorTabKey;
   onSelect: (tab: EditorTabKey) => void;
+  tabs: EditorTabOption[];
 }) {
   return (
     <div className="relative z-20 -mx-1 overflow-x-auto md:fixed md:left-5 md:top-1/2 md:z-30 md:mx-0 md:overflow-visible md:-translate-y-1/2 xl:left-8">
       <div role="tablist" aria-label="Editor modes" className="flex min-w-full flex-col gap-3 px-1 py-1 md:min-w-0 md:gap-5 md:px-0 md:py-0">
-        {EDITOR_TABS.map(({ key, label, icon: Icon }) => {
+        {tabs.map(({ key, label, icon: Icon }) => {
           const isSelected = activeTab === key;
 
           return (
@@ -248,7 +249,9 @@ function toSnippetPayload(snippet: Snippet): SnippetPayload {
 
 export default function AdminSnippetEditor() {
   const { locale } = useAppLocale();
-  const copy = getMessages(locale).admin;
+  const messages = getMessages(locale);
+  const copy = messages.admin;
+  const common = messages.common;
   const { id } = useParams();
   const navigate = useNavigate();
   const isNew = id === undefined;
@@ -262,7 +265,6 @@ export default function AdminSnippetEditor() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [editorLocale, setEditorLocale] = useState<AppLocale>("en");
   const [previewDevice, setPreviewDevice] = useState<PreviewDevice>("desktop");
   const [autosaveState, setAutosaveState] = useState<AutosaveState>("idle");
   const [primaryActionState, setPrimaryActionState] = useState<PrimaryActionState>("idle");
@@ -276,10 +278,6 @@ export default function AdminSnippetEditor() {
   useEffect(() => {
     formRef.current = form;
   }, [form]);
-
-  useEffect(() => {
-    setEditorLocale(locale);
-  }, [locale]);
 
   useEffect(() => {
     if (isNew || !id) {
@@ -354,9 +352,19 @@ export default function AdminSnippetEditor() {
   }, [isPreviewOpen, isPublishConfirmOpen]);
 
   const previewSnippet = useMemo(() => fromFormState(baseSnippet, form), [baseSnippet, form]);
-  const localizedForm = useMemo(() => getFormLocale(form, editorLocale), [editorLocale, form]);
-  const localizedPreview = useMemo(() => getLocalizedSnippetFields(previewSnippet, editorLocale), [editorLocale, previewSnippet]);
-  const localizedBase = useMemo(() => getLocalizedSnippetFields(baseSnippet, editorLocale), [baseSnippet, editorLocale]);
+  const editorTabs = useMemo<EditorTabOption[]>(
+    () => [
+      { key: "content", label: copy.narrative, icon: Layout },
+      { key: "code", label: copy.code, icon: Code2 },
+      { key: "prompt", label: copy.prompt, icon: MessageSquareQuote },
+      { key: "meta", label: copy.surface, icon: Settings2 },
+    ],
+    [copy.code, copy.narrative, copy.prompt, copy.surface],
+  );
+  const localizedForm = useMemo(() => getFormLocale(form, locale), [form, locale]);
+  const localizedPreview = useMemo(() => getLocalizedSnippetFields(previewSnippet, locale), [locale, previewSnippet]);
+  const localizedBase = useMemo(() => getLocalizedSnippetFields(baseSnippet, locale), [baseSnippet, locale]);
+  const untitledSnippetLabel = copy.untitledSnippet;
   const previewPath = baseSnippet.id && localizedBase.slug ? localizePath(locale, `/snippets/${localizedBase.slug}`) : "";
   const hasSavedPreview = Boolean(baseSnippet.id && localizedBase.slug);
   const previewPayloadSignature = useMemo(() => JSON.stringify(toSnippetPayload(previewSnippet)), [previewSnippet]);
@@ -365,20 +373,20 @@ export default function AdminSnippetEditor() {
   const isPublishedEntry = baseSnippet.status === "Published";
   const statusOptions = isPublishedEntry ? (["Published"] as const) : EDITABLE_STATUS_OPTIONS;
   const statusSelectOptions = useMemo<EditorStatusOption[]>(
-    () => statusOptions.map((status) => ({ id: status, label: status })),
-    [statusOptions],
+    () => statusOptions.map((status) => ({ id: status, label: common.statuses[status] })),
+    [common.statuses, statusOptions],
   );
   const selectedStatusLabel = statusSelectOptions.find((option) => option.id === form.status)?.label ?? form.status;
   const primaryActionLabel =
     primaryActionState === "publishing"
-      ? "Publishing..."
+      ? copy.publishing
       : primaryActionState === "updating"
-        ? "Updating..."
+        ? copy.updating
         : isPublishedEntry
           ? hasUnsavedChanges
-            ? "Update"
-            : "Published"
-          : "Publish";
+            ? copy.update
+            : copy.publishedStable
+          : copy.publish;
   const isPrimaryActionDisabled =
     isLoading ||
     isDeleting ||
@@ -386,18 +394,18 @@ export default function AdminSnippetEditor() {
     primaryActionState !== "idle" ||
     (isPublishedEntry && !hasUnsavedChanges);
   const publishDialogTitle = isPublishedEntry
-    ? "Update this snippet in the public library?"
-    : "Publish this snippet to the public library?";
+    ? copy.updateDialogTitle
+    : copy.publishDialogTitle;
   const publishDialogButtonLabel =
     primaryActionState === "publishing"
-      ? "Publishing..."
+      ? copy.publishing
       : primaryActionState === "updating"
-        ? "Updating..."
+        ? copy.updating
         : isPublishedEntry
-          ? "Confirm Update"
-          : "Confirm Publish";
+          ? copy.confirmUpdate
+          : copy.confirmPublish;
   const autosaveFeedbackLabel =
-    autosaveState === "saving" ? "Saving..." : autosaveState === "saved" ? "Saved" : "";
+    autosaveState === "saving" ? copy.saving : autosaveState === "saved" ? copy.saved : "";
 
   const updateField = <K extends keyof SnippetFormState>(field: K, value: SnippetFormState[K]) => {
     setForm((current) => {
@@ -407,7 +415,7 @@ export default function AdminSnippetEditor() {
 
   const updateLocalizedField = (field: keyof SnippetFormState["locales"]["en"], value: string) => {
     setForm((current) => {
-      const currentLocaleForm = current.locales[editorLocale];
+      const currentLocaleForm = current.locales[locale];
       const nextLocaleForm = {
         ...currentLocaleForm,
         [field]: value,
@@ -421,7 +429,7 @@ export default function AdminSnippetEditor() {
         ...current,
         locales: {
           ...current.locales,
-          [editorLocale]: nextLocaleForm,
+          [locale]: nextLocaleForm,
         },
       };
     });
@@ -461,8 +469,8 @@ export default function AdminSnippetEditor() {
         setBaseSnippet(savedSnippet);
         setFeedback(
           savedSnippet.status === "Scheduled"
-            ? "Snippet saved in the schedule. It will stay off the public homepage until published."
-            : "Draft changes saved automatically.",
+            ? copy.savedScheduled
+            : copy.autoSavedDraft,
         );
         setAutosaveState("saved");
 
@@ -472,7 +480,7 @@ export default function AdminSnippetEditor() {
         }
       } catch (err) {
         setAutosaveState("idle");
-        setError(err instanceof Error ? err.message : "Failed to save snippet");
+        setError(err instanceof Error ? err.message : copy.failedSave);
       }
     }, 900);
 
@@ -495,8 +503,8 @@ export default function AdminSnippetEditor() {
       setForm(toFormState(finalSnippet));
       setFeedback(
         nextActionState === "updating"
-          ? "Snippet updated in the public library."
-          : "Snippet published and now eligible for the public homepage.",
+          ? copy.updateSuccess
+          : copy.publishSuccess,
       );
 
       if (isNew) {
@@ -504,11 +512,11 @@ export default function AdminSnippetEditor() {
         navigate(localizePath(locale, `/admin/snippets/${finalSnippet.id}`), { replace: true });
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to publish snippet");
+      setError(err instanceof Error ? err.message : copy.failedPublish);
     } finally {
       setPrimaryActionState("idle");
     }
-  }, [isNew, isPublishedEntry, navigate, persistSnippet]);
+  }, [copy.failedPublish, copy.publishSuccess, copy.updateSuccess, isNew, isPublishedEntry, navigate, persistSnippet]);
 
   const handleUnpublish = async () => {
     if (!baseSnippet.id) return;
@@ -520,9 +528,9 @@ export default function AdminSnippetEditor() {
       const snippet = await unpublishSnippet(baseSnippet.id);
       setBaseSnippet(snippet);
       setForm(toFormState(snippet));
-      setFeedback("Snippet moved back to draft and removed from the public library.");
+      setFeedback(copy.unpublishSuccess);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to unpublish snippet");
+      setError(err instanceof Error ? err.message : copy.failedPublish);
     }
   };
 
@@ -536,7 +544,7 @@ export default function AdminSnippetEditor() {
       await deleteSnippet(baseSnippet.id);
       navigate(localizePath(locale, "/admin/snippets"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete snippet");
+      setError(err instanceof Error ? err.message : copy.failedDelete);
     } finally {
       setIsDeleting(false);
     }
@@ -545,15 +553,13 @@ export default function AdminSnippetEditor() {
   const handlePreview = useCallback(() => {
     if (!hasSavedPreview || !previewPath) {
       setError("");
-      setFeedback(
-        `Save this draft first to open the public preview at ${localizePath(locale, `/snippets/${localizedForm.slug || "untitled"}`)}.`,
-      );
+      setFeedback(`${copy.saveDraftFirst} ${localizePath(locale, `/snippets/${localizedForm.slug || "untitled"}`)}.`);
       return;
     }
 
     setPreviewDevice("desktop");
     setIsPreviewOpen(true);
-  }, [hasSavedPreview, localizedForm.slug, previewPath]);
+  }, [copy.saveDraftFirst, hasSavedPreview, localizedForm.slug, previewPath]);
 
   const closePreview = useCallback(() => {
     setIsPreviewOpen(false);
@@ -566,7 +572,7 @@ export default function AdminSnippetEditor() {
           {isLoading ? (
             <div className="flex shrink-0 items-center gap-3 xl:mr-1">
               <div className="admin-spinner h-4 w-4 animate-spin rounded-full border-2" />
-              <span className="admin-copy-muted type-mono-micro">Syncing...</span>
+              <span className="admin-copy-muted type-mono-micro">{copy.syncing}</span>
             </div>
           ) : (
             <div className="hidden shrink-0 2xl:block xl:mr-1">
@@ -581,13 +587,14 @@ export default function AdminSnippetEditor() {
               {autosaveFeedbackLabel}
             </span>
           ) : null}
-          <Button
-            aria-label="Preview"
-            className="admin-button-secondary admin-button-icon shrink-0 justify-center"
-            onPress={handlePreview}
+          <button
+            type="button"
+            aria-label={copy.preview}
+            className="admin-nav-action-button admin-auth-button type-action"
+            onClick={handlePreview}
           >
-            <Monitor size={16} />
-          </Button>
+            {copy.preview}
+          </button>
           <Button
             isDisabled={isPrimaryActionDisabled}
             className="admin-button-primary admin-button-lg shrink-0 px-3 min-[1500px]:px-3 2xl:px-4"
@@ -603,6 +610,8 @@ export default function AdminSnippetEditor() {
       ),
     }),
     [
+      copy.preview,
+      copy.syncing,
       autosaveFeedbackLabel,
       feedback,
       handlePreview,
@@ -621,29 +630,13 @@ export default function AdminSnippetEditor() {
     <div className="admin-page">
       <main className="px-6 pb-12 pt-10 md:px-8 md:pb-16 md:pt-10 lg:pb-24 lg:pt-12 xl:px-10">
         <div className="flex flex-col gap-12">
-          <EditorSectionRail activeTab={activeTab} onSelect={setActiveTab} />
+          <EditorSectionRail activeTab={activeTab} onSelect={setActiveTab} tabs={editorTabs} />
 
           <div className="space-y-12">
             <div className="relative flex flex-col gap-2">
-                <div className="mb-3 flex items-center gap-2">
-                  <button
-                    type="button"
-                    className={`admin-button-md ${editorLocale === "en" ? "admin-button-primary" : "admin-button-secondary"}`}
-                    onClick={() => setEditorLocale("en")}
-                  >
-                    {copy.localeEditorEnglish}
-                  </button>
-                  <button
-                    type="button"
-                    className={`admin-button-md ${editorLocale === "zh" ? "admin-button-primary" : "admin-button-secondary"}`}
-                    onClick={() => setEditorLocale("zh")}
-                  >
-                    {copy.localeEditorChinese}
-                  </button>
-                </div>
               <textarea
-                aria-label="Snippet Title"
-                placeholder="Snippet Title"
+                aria-label={copy.snippetTitle}
+                placeholder={copy.snippetTitle}
                 value={localizedForm.title}
                 onChange={(e) => updateLocalizedField("title", e.target.value)}
                 className="admin-editor-title-input w-full resize-none overflow-hidden border-none bg-transparent p-0 outline-none transition-all duration-500 focus:ring-0"
@@ -671,8 +664,8 @@ export default function AdminSnippetEditor() {
                 >
                   <div className="admin-editor-panel admin-editor-panel-frame group relative border px-6 py-6">
                     <textarea
-                      aria-label="Implementation notes"
-                      placeholder="Shape the narrative around the technique and tradeoffs. You can use Markdown."
+                      aria-label={copy.implementationNotes}
+                      placeholder={copy.implementationPlaceholder}
                       value={localizedForm.content}
                       onChange={(event) => updateLocalizedField("content", event.target.value)}
                       className="admin-editor-textarea admin-editor-panel-body admin-editor-scrollbar w-full resize-none border-0 bg-transparent px-0 shadow-none outline-none focus:ring-0"
@@ -690,7 +683,7 @@ export default function AdminSnippetEditor() {
                 >
                   <div className="admin-editor-panel admin-editor-panel-frame group relative border px-6 py-6">
                     <HighlightedCodeEditor
-                      ariaLabel="SwiftUI code"
+                      ariaLabel={copy.codeAria}
                       placeholder="import SwiftUI..."
                       value={form.code}
                       onChange={(value) => updateField("code", value)}
@@ -709,8 +702,8 @@ export default function AdminSnippetEditor() {
                 >
                   <div className="group relative border px-6 py-6 admin-editor-panel admin-editor-panel-frame">
                     <textarea
-                      aria-label="Prompt notes"
-                      placeholder="Capture the AI direction notes that helped shape this specific implementation."
+                      aria-label={copy.promptAria}
+                      placeholder={copy.promptPlaceholder}
                       value={localizedForm.prompts}
                       onChange={(event) => updateLocalizedField("prompts", event.target.value)}
                       className="admin-editor-textarea admin-editor-panel-body admin-editor-scrollbar w-full resize-none border-0 bg-transparent px-0 shadow-none outline-none focus:ring-0"
@@ -727,24 +720,24 @@ export default function AdminSnippetEditor() {
                   className="space-y-8"
                 >
                   <EditorSection
-                    eyebrow="Identity"
-                    title="Snippet frame"
-                    description="Core metadata that determines indexing and discovery."
+                    eyebrow={copy.identity}
+                    title={copy.snippetFrame}
+                    description={copy.snippetFrameCopy}
                   >
                     <div className="grid gap-6 md:grid-cols-2">
                       <label className="grid gap-2">
-                        <span className="admin-eyebrow type-mono-micro">Category</span>
+                        <span className="admin-eyebrow type-mono-micro">{copy.category}</span>
                         <Input
-                          aria-label="Category"
+                          aria-label={copy.category}
                           value={localizedForm.category}
                           onChange={(event) => updateLocalizedField("category", event.target.value)}
                           className="admin-input w-full"
                         />
                       </label>
                       <label className="grid gap-2">
-                        <span className="admin-eyebrow type-mono-micro">Tags</span>
+                        <span className="admin-eyebrow type-mono-micro">{copy.tags}</span>
                         <Input
-                          aria-label="Tags"
+                          aria-label={copy.tags}
                           value={localizedForm.tags}
                           onChange={(event) => updateLocalizedField("tags", event.target.value)}
                           placeholder="SwiftUI, Motion"
@@ -752,18 +745,18 @@ export default function AdminSnippetEditor() {
                         />
                       </label>
                       <label className="grid gap-2 md:col-span-2">
-                         <span className="admin-eyebrow type-mono-micro">Route Slug</span>
+                         <span className="admin-eyebrow type-mono-micro">{copy.routeSlug}</span>
                          <Input
-                           aria-label="Slug"
+                           aria-label={copy.routeSlug}
                            value={localizedForm.slug}
                            onChange={(event) => updateLocalizedField("slug", event.target.value)}
                            className="admin-input w-full"
                          />
                       </label>
                       <label className="grid gap-2 md:col-span-2">
-                        <span className="admin-eyebrow type-mono-micro">Cover Image URL</span>
+                        <span className="admin-eyebrow type-mono-micro">{copy.coverImageUrl}</span>
                         <Input
-                          aria-label="Cover Image URL"
+                          aria-label={copy.coverImageUrl}
                           value={form.coverImage}
                           onChange={(event) => updateField("coverImage", event.target.value)}
                           className="admin-input w-full"
@@ -773,16 +766,16 @@ export default function AdminSnippetEditor() {
                   </EditorSection>
 
                   <EditorSection
-                    eyebrow="Registry"
-                    title="Release controls"
-                    description="Manage the publishing state and visibility orbit of this entry."
+                    eyebrow={copy.registry}
+                    title={copy.releaseControls}
+                    description={copy.releaseControlsCopy}
                   >
                     <div className="grid gap-6 md:grid-cols-2">
                        <label className="grid gap-2">
-                         <span className="admin-eyebrow type-mono-micro">Status</span>
+                         <span className="admin-eyebrow type-mono-micro">{copy.status}</span>
                          <Dropdown>
                            <Dropdown.Trigger
-                             aria-label="Status"
+                             aria-label={copy.status}
                              className="admin-form-select-trigger"
                              isDisabled={isPublishedEntry}
                            >
@@ -811,7 +804,7 @@ export default function AdminSnippetEditor() {
                          </Dropdown>
                        </label>
                        <label className="grid gap-2">
-                         <span className="admin-eyebrow type-mono-micro">Published At</span>
+                         <span className="admin-eyebrow type-mono-micro">{copy.publishedAt}</span>
                          <input
                            type="datetime-local"
                            value={form.publishedAt}
@@ -823,24 +816,24 @@ export default function AdminSnippetEditor() {
                   </EditorSection>
 
                   <EditorSection
-                    eyebrow="Search"
-                    title="Surface optimization"
-                    description="Detailed SEO control for search results and previews."
+                    eyebrow={copy.search}
+                    title={copy.surfaceOptimization}
+                    description={copy.surfaceOptimizationCopy}
                   >
                     <div className="grid gap-6">
                       <label className="grid gap-2">
-                        <span className="admin-eyebrow type-mono-micro">SEO Title</span>
+                        <span className="admin-eyebrow type-mono-micro">{copy.seoTitle}</span>
                         <Input
-                          aria-label="SEO Title"
+                          aria-label={copy.seoTitle}
                           value={localizedForm.seoTitle}
                           onChange={(event) => updateLocalizedField("seoTitle", event.target.value)}
                           className="admin-input w-full"
                         />
                       </label>
                       <label className="grid gap-2">
-                        <span className="admin-eyebrow type-mono-micro">SEO Description</span>
+                        <span className="admin-eyebrow type-mono-micro">{copy.seoDescription}</span>
                         <TextArea
-                          aria-label="SEO Description"
+                          aria-label={copy.seoDescription}
                           value={localizedForm.seoDescription}
                           onChange={(event) => updateLocalizedField("seoDescription", event.target.value)}
                           rows={3}
@@ -854,8 +847,8 @@ export default function AdminSnippetEditor() {
                     <section className="admin-divider-soft pt-10 border-t">
                       <div className="admin-danger-shell flex items-center justify-between p-6">
                       <div>
-                          <h3 className="admin-danger-title font-semibold">Danger Zone</h3>
-                          <p className="admin-copy-muted mt-1">Permanently remove this entry from the registry.</p>
+                          <h3 className="admin-danger-title font-semibold">{copy.dangerZone}</h3>
+                          <p className="admin-copy-muted mt-1">{copy.dangerZoneCopy}</p>
                         </div>
                         <Button
                           variant="outline"
@@ -864,7 +857,7 @@ export default function AdminSnippetEditor() {
                           onPress={() => setIsDeleteConfirmOpen(true)}
                         >
                           <Trash2 size={16} className="mr-2" />
-                          Delete Snippet
+                          {copy.deleteSnippet}
                         </Button>
                       </div>
                     </section>
@@ -901,16 +894,16 @@ export default function AdminSnippetEditor() {
                 <div className="flex items-center gap-3">
                   <Button
                     isIconOnly
-                    aria-label="Close preview"
+                    aria-label={common.cancel}
                     className="admin-button-secondary h-10 w-10"
                     onPress={closePreview}
                   >
                     <X size={16} />
                   </Button>
                   <div>
-                    <p className="admin-copy-faint type-mono-micro">Preview Mode</p>
+                    <p className="admin-copy-faint type-mono-micro">{copy.previewMode}</p>
                     <h2 className="admin-section-title mt-1">
-                      {localizedForm.title || "Untitled Snippet"}
+                      {localizedForm.title || untitledSnippetLabel}
                     </h2>
                   </div>
                 </div>
@@ -921,10 +914,10 @@ export default function AdminSnippetEditor() {
                     rel="noreferrer"
                     className="admin-button-secondary flex h-10 items-center"
                   >
-                    Open in tab
+                    {common.openInTab}
                   </a>
                   <Button className="admin-button-primary h-10" onPress={closePreview}>
-                    Done
+                    {common.done}
                   </Button>
                 </div>
               </div>
@@ -933,7 +926,7 @@ export default function AdminSnippetEditor() {
                 <div
                   className="admin-preview-device-tabs inline-flex items-center border p-1"
                   role="tablist"
-                  aria-label="Preview devices"
+                  aria-label={copy.previewDevices}
                 >
                   <button
                     type="button"
@@ -945,7 +938,7 @@ export default function AdminSnippetEditor() {
                     onClick={() => setPreviewDevice("mobile")}
                   >
                     <Smartphone size={15} />
-                    <span>Mobile</span>
+                    <span>{common.mobile}</span>
                   </button>
                   <button
                     type="button"
@@ -957,11 +950,11 @@ export default function AdminSnippetEditor() {
                     onClick={() => setPreviewDevice("desktop")}
                   >
                     <Monitor size={15} />
-                    <span>Desktop</span>
+                    <span>{common.desktop}</span>
                   </button>
                 </div>
                 <div className="hidden items-center gap-3 md:flex">
-                  <span className="admin-copy-faint type-mono-micro">Public route</span>
+                  <span className="admin-copy-faint type-mono-micro">{copy.publicRoute}</span>
                   <span className="admin-preview-route-chip border px-3 py-1.5">
                     {previewPath}
                   </span>
@@ -1013,19 +1006,15 @@ export default function AdminSnippetEditor() {
         </Modal.Trigger>
         <Modal.Backdrop className="admin-delete-modal-backdrop" isDismissable={!isDeleting}>
           <Modal.Container placement="center">
-            <Modal.Dialog className="admin-delete-modal w-full max-w-xl">
+              <Modal.Dialog className="admin-delete-modal w-full max-w-xl">
               <Modal.Header className="admin-delete-modal-header">
-                <span className="admin-eyebrow type-mono-micro">Delete Confirmation</span>
+                <span className="admin-eyebrow type-mono-micro">{copy.deleteConfirmation}</span>
                 <Modal.Heading className="admin-section-title admin-section-title-lg mt-3">
-                  Delete this snippet permanently?
+                  {copy.deletePermanently}
                 </Modal.Heading>
               </Modal.Header>
               <Modal.Body className="admin-delete-modal-body">
-                <p className="admin-copy-muted">
-                  This will permanently remove{" "}
-                  <strong className="admin-title-strong">{localizedPreview.title || "Untitled Snippet"}</strong> from
-                  the registry. This action cannot be undone.
-                </p>
+                <p className="admin-copy-muted">{copy.deletePermanentCopy}</p>
               </Modal.Body>
               <Modal.Footer className="admin-delete-modal-footer">
                 <Button
@@ -1033,14 +1022,14 @@ export default function AdminSnippetEditor() {
                   className="admin-button-secondary admin-button-lg px-5"
                   onPress={() => setIsDeleteConfirmOpen(false)}
                 >
-                  Cancel
+                  {common.cancel}
                 </Button>
                 <Button
                   isDisabled={isDeleting}
                   className="admin-button-danger admin-button-lg px-5"
                   onPress={handleDelete}
                 >
-                  {isDeleting ? "Deleting..." : "Delete Snippet"}
+                  {isDeleting ? copy.deleting : copy.deleteSnippet}
                 </Button>
               </Modal.Footer>
             </Modal.Dialog>
@@ -1060,24 +1049,24 @@ export default function AdminSnippetEditor() {
             <div className="admin-publish-dialog w-full max-w-xl border px-6 py-6 md:px-8 md:py-8">
               <div className="flex flex-col gap-4">
                 <div className="space-y-3">
-                  <span className="admin-eyebrow type-mono-micro">Publish Confirmation</span>
+                  <span className="admin-eyebrow type-mono-micro">{copy.publishConfirmation}</span>
                   <h2 className="admin-section-title admin-section-title-lg">
                     {publishDialogTitle}
                   </h2>
                   <p className="admin-copy-muted">
-                    {isPublishedEntry ? "Confirming will save the current editor state and replace the live public version of " : "Confirming will save the current editor state and make "}
-                    <strong className="admin-title-strong">{localizedPreview.title || "Untitled Snippet"}</strong>
-                    {isPublishedEntry ? "." : " live in the public snippet library."}
+                    {isPublishedEntry ? copy.updateLivePrefix : copy.publishLivePrefix}{" "}
+                    <strong className="admin-title-strong">{localizedPreview.title || untitledSnippetLabel}</strong>
+                    {isPublishedEntry ? copy.updateLiveSuffix : ` ${copy.publishLiveSuffix}`}
                   </p>
                 </div>
                 <div className="admin-publish-dialog-callout border px-4 py-4">
                   {hasUnsavedChanges
                     ? isPublishedEntry
-                      ? "This published snippet has local edits. We will save those changes before updating the live public version."
-                      : "This entry has unsaved changes. We will save those edits before publishing."
+                      ? copy.updateUnsaved
+                      : copy.publishUnsaved
                     : isPublishedEntry
-                      ? "No local edits detected. Updating now will re-publish the current saved version."
-                      : "No unsaved changes detected. Publishing will make the current saved version live."}
+                      ? copy.updateSaved
+                      : copy.publishSaved}
                 </div>
                 <div className="flex flex-wrap justify-end gap-3 pt-2">
                   <Button
@@ -1085,7 +1074,7 @@ export default function AdminSnippetEditor() {
                     className="admin-button-secondary admin-button-lg px-5"
                     onPress={() => setIsPublishConfirmOpen(false)}
                   >
-                    Cancel
+                    {common.cancel}
                   </Button>
                   <Button
                     isDisabled={primaryActionState !== "idle"}

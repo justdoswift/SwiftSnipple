@@ -1,13 +1,15 @@
 import { Monitor, Moon, Search, Sun } from "lucide-react";
 import { Link } from "react-router-dom";
+import type { MockAuthSession } from "../lib/mock-auth";
 import { getNextPublicTheme, type PublicTheme } from "../lib/public-theme";
 
 interface NavbarProps {
   theme: PublicTheme;
   onToggleTheme: () => void;
+  authSession: MockAuthSession | null;
 }
 
-export default function Navbar({ theme, onToggleTheme }: NavbarProps) {
+export default function Navbar({ theme, onToggleTheme, authSession }: NavbarProps) {
   const nextTheme = getNextPublicTheme(theme);
 
   return (
@@ -55,8 +57,8 @@ export default function Navbar({ theme, onToggleTheme }: NavbarProps) {
             {theme === "dark" ? <Sun size={16} strokeWidth={2} /> : <Moon size={16} strokeWidth={2} />}
           </button>
 
-          <Link to="/admin" className="public-nav-login-button type-action">
-            Log in
+          <Link to={authSession ? "/account" : "/login"} className="public-nav-login-button type-action">
+            {authSession ? "Account" : "Log in"}
           </Link>
         </div>
       </div>

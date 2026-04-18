@@ -137,39 +137,6 @@ export default function Home() {
         ) : null}
       </section>
 
-      {/* Methodology Section */}
-      <section className="public-divider-top mb-32 pt-24">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          <motion.div variants={itemVariants}>
-            <span className="type-mono-label block mb-6">Execution Log</span>
-            <h2 className="type-section-title mb-8 leading-tight">
-              Deconstructing Design <br/>Into Native Code.
-            </h2>
-            <div className="type-body space-y-8">
-              <p>We don't believe in abstractions. Just Do Swift focuses on the raw, native SwiftUI primitives that drive modern interactive experiences. Every pixel has a purpose, and every component has a prompt.</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-                <div className="flex flex-col gap-2">
-                  <span className="type-mono-micro public-meta-strong">01. ANALYSIS</span>
-                  <p className="type-body-sm">Deconstructing high-end motion and layout intent.</p>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <span className="type-mono-micro public-meta-strong">02. TRANSLATION</span>
-                  <p className="type-body-sm">Mapping creative vision to performant Swift code.</p>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-          <motion.div variants={itemVariants} className="public-surface p-2 rounded-[32px] group">
-            <div className="aspect-[4/3] rounded-[26px] overflow-hidden relative">
-              <div className="public-preview-placeholder absolute inset-0 transition-colors" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="public-preview-label type-mono-micro transition-colors">Visual Analysis Preview</span>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
       {/* Latest Additions */}
       <section id="latest-additions" className="public-divider-top mb-32 pt-24">
         <motion.div variants={itemVariants} className="mb-12 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">

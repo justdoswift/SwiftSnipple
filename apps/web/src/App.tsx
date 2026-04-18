@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import AdminLayout from "./components/admin/AdminLayout";
 import { Card, Spinner } from "./lib/heroui";
+import { clearStoredMockAuth, readStoredMockAuth, writeStoredMockAuth, type MockAuthSession } from "./lib/mock-auth";
 import {
   PUBLIC_THEME_STORAGE_KEY,
   PublicThemeContext,
@@ -16,6 +17,8 @@ const Home = lazy(() => import("./pages/Home"));
 const SnippetDetail = lazy(() => import("./pages/SnippetDetail"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const AccountPage = lazy(() => import("./pages/AccountPage"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminSnippets = lazy(() => import("./pages/admin/AdminSnippets"));
 const AdminSnippetEditor = lazy(() => import("./pages/admin/AdminSnippetEditor"));
@@ -69,10 +72,16 @@ function PublicShell({
   children,
   theme,
   onToggleTheme,
+  authSession,
+  showNavbar = true,
+  showFooter = true,
 }: {
   children: ReactNode;
   theme: PublicTheme;
   onToggleTheme: () => void;
+  authSession: MockAuthSession | null;
+  showNavbar?: boolean;
+  showFooter?: boolean;
 }) {
   return (
     <div
@@ -81,21 +90,32 @@ function PublicShell({
       data-testid="public-theme-root"
     >
       <div className="vibe-grain" />
-      <Navbar theme={theme} onToggleTheme={onToggleTheme} />
+      {showNavbar ? <Navbar theme={theme} onToggleTheme={onToggleTheme} authSession={authSession} /> : null}
       <main className="flex-grow z-10">
         <Suspense fallback={<PublicRouteFallback />}>{children}</Suspense>
       </main>
-      <Footer />
+      {showFooter ? <Footer /> : null}
     </div>
   );
 }
 
 export default function App() {
   const [theme, setTheme] = useState<PublicTheme>(readStoredPublicTheme);
+  const [authSession, setAuthSession] = useState<MockAuthSession | null>(readStoredMockAuth);
 
   useEffect(() => {
     window.localStorage.setItem(PUBLIC_THEME_STORAGE_KEY, theme);
   }, [theme]);
+
+  const toggleTheme = () => setTheme((currentTheme) => getNextPublicTheme(currentTheme));
+  const handleAuthenticate = (session: MockAuthSession, remember: boolean) => {
+    writeStoredMockAuth(session, remember);
+    setAuthSession(session);
+  };
+  const handleSignOut = () => {
+    clearStoredMockAuth();
+    setAuthSession(null);
+  };
 
   return (
     <PublicThemeContext.Provider value={theme}>
@@ -105,7 +125,7 @@ export default function App() {
           <Route
             path="/"
             element={
-              <PublicShell theme={theme} onToggleTheme={() => setTheme((currentTheme) => getNextPublicTheme(currentTheme))}>
+              <PublicShell theme={theme} onToggleTheme={toggleTheme} authSession={authSession}>
                 <Home />
               </PublicShell>
             }
@@ -113,7 +133,7 @@ export default function App() {
           <Route
             path="/snippets/:slug"
             element={
-              <PublicShell theme={theme} onToggleTheme={() => setTheme((currentTheme) => getNextPublicTheme(currentTheme))}>
+              <PublicShell theme={theme} onToggleTheme={toggleTheme} authSession={authSession}>
                 <SnippetDetail />
               </PublicShell>
             }
@@ -121,7 +141,7 @@ export default function App() {
           <Route
             path="/privacy-policy"
             element={
-              <PublicShell theme={theme} onToggleTheme={() => setTheme((currentTheme) => getNextPublicTheme(currentTheme))}>
+              <PublicShell theme={theme} onToggleTheme={toggleTheme} authSession={authSession}>
                 <PrivacyPolicy />
               </PublicShell>
             }
@@ -129,8 +149,30 @@ export default function App() {
           <Route
             path="/terms-of-service"
             element={
-              <PublicShell theme={theme} onToggleTheme={() => setTheme((currentTheme) => getNextPublicTheme(currentTheme))}>
+              <PublicShell theme={theme} onToggleTheme={toggleTheme} authSession={authSession}>
                 <TermsOfService />
+              </PublicShell>
+            }
+          />
+          <Route
+            path="/login"
+            element={
+              <PublicShell
+                theme={theme}
+                onToggleTheme={toggleTheme}
+                authSession={authSession}
+                showNavbar={false}
+                showFooter={false}
+              >
+                <LoginPage authSession={authSession} onAuthenticate={handleAuthenticate} />
+              </PublicShell>
+            }
+          />
+          <Route
+            path="/account"
+            element={
+              <PublicShell theme={theme} onToggleTheme={toggleTheme} authSession={authSession}>
+                <AccountPage authSession={authSession} onSignOut={handleSignOut} />
               </PublicShell>
             }
           />

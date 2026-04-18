@@ -3,11 +3,16 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import Navbar from "./Navbar";
 import type { PublicTheme } from "../lib/public-theme";
+import type { MockAuthSession } from "../lib/mock-auth";
 
-function renderNavbar(theme: PublicTheme = "dark", onToggleTheme = vi.fn()) {
+function renderNavbar(
+  theme: PublicTheme = "dark",
+  onToggleTheme = vi.fn(),
+  authSession: MockAuthSession | null = null,
+) {
   return render(
     <MemoryRouter>
-      <Navbar theme={theme} onToggleTheme={onToggleTheme} />
+      <Navbar theme={theme} onToggleTheme={onToggleTheme} authSession={authSession} />
     </MemoryRouter>,
   );
 }
@@ -20,7 +25,7 @@ describe("Navbar", () => {
     expect(screen.getByText("Just Do Swift")).toBeInTheDocument();
     expect(screen.getByRole("searchbox", { name: "Search snippets" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Switch to light site mode" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute("href", "/admin");
+    expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute("href", "/login");
   });
 
   it("calls the parent toggle handler and reflects the provided theme", () => {
@@ -41,5 +46,15 @@ describe("Navbar", () => {
     renderNavbar("light");
     expect(screen.getByTestId("public-navbar-shell").closest("nav")).toHaveAttribute("data-theme", "light");
     expect(screen.getByRole("button", { name: "Switch to dark site mode" })).toBeInTheDocument();
+  });
+
+  it("switches the auth action to the account page when a session exists", () => {
+    renderNavbar("dark", vi.fn(), {
+      email: "builder@example.com",
+      provider: "email",
+      createdAt: "2026-04-18T00:00:00.000Z",
+    });
+
+    expect(screen.getByRole("link", { name: "Account" })).toHaveAttribute("href", "/account");
   });
 });

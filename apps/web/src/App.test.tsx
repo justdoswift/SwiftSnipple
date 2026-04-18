@@ -55,6 +55,7 @@ describe("App public theme", () => {
     mockedGetSnippets.mockReset();
     mockedGetSnippets.mockResolvedValue([publishedSnippet]);
     window.localStorage.clear();
+    window.sessionStorage.clear();
     window.scrollTo = vi.fn();
     mockMatchMedia(true);
   });
@@ -98,7 +99,7 @@ describe("App public theme", () => {
     expect(screen.getByTestId("admin-theme-root")).toHaveAttribute("data-theme", "dark");
   });
 
-  it("keeps the admin workspace in sync with the selected public theme", async () => {
+  it("keeps the login route in sync with the selected public theme", async () => {
     renderAppAt("/");
 
     await waitFor(() => {
@@ -109,7 +110,25 @@ describe("App public theme", () => {
     fireEvent.click(screen.getByRole("link", { name: "Log in" }));
 
     await waitFor(() => {
-      expect(screen.getByTestId("admin-theme-root")).toHaveAttribute("data-theme", "light");
+      expect(screen.getByRole("heading", { name: "Log In" })).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId("public-theme-root")).toHaveAttribute("data-theme", "light");
+  });
+
+  it("routes a simulated login into the member center", async () => {
+    renderAppAt("/login");
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Log In" })).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText("Email Address"), { target: { value: "builder@example.com" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "secret12" } });
+    fireEvent.click(screen.getByRole("button", { name: "Log In" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Your snippet library staging area." })).toBeInTheDocument();
     });
   });
 });

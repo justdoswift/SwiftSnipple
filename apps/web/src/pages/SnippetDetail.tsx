@@ -18,6 +18,8 @@ type SnippetSection = {
   content: ReactNode;
 };
 
+const DESKTOP_SECTION_SCROLL_OFFSET = 104;
+
 function formatDate(value: string | null) {
   if (!value) return "Draft";
   return new Intl.DateTimeFormat(undefined, {
@@ -61,6 +63,8 @@ export default function SnippetDetail() {
   const [hasReachedDesktopReadingZoneEnd, setHasReachedDesktopReadingZoneEnd] = useState(false);
   const desktopReadingStartRef = useRef<HTMLDivElement | null>(null);
   const desktopReadingEndRef = useRef<HTMLDivElement | null>(null);
+  const activeSectionRef = useRef<HTMLElement | null>(null);
+  const pendingDesktopSectionScrollRef = useRef<SnippetSectionId | null>(null);
 
   useEffect(() => {
     if (!slug) return;
@@ -255,6 +259,37 @@ export default function SnippetDetail() {
     }
   }, [hasEnteredDesktopReadingZone, hasReachedDesktopReadingZoneEnd, isDesktop]);
 
+  useEffect(() => {
+    if (!isDesktop) {
+      pendingDesktopSectionScrollRef.current = null;
+      return;
+    }
+
+    const pendingSectionId = pendingDesktopSectionScrollRef.current;
+    if (!pendingSectionId || pendingSectionId !== activeSectionId || typeof window === "undefined") {
+      return;
+    }
+
+    const target = activeSectionRef.current;
+    if (!target) {
+      return;
+    }
+
+    pendingDesktopSectionScrollRef.current = null;
+
+    window.requestAnimationFrame(() => {
+      const top = Math.max(
+        0,
+        target.getBoundingClientRect().top + window.scrollY - DESKTOP_SECTION_SCROLL_OFFSET,
+      );
+
+      window.scrollTo({
+        top,
+        behavior: "smooth",
+      });
+    });
+  }, [activeSectionId, isDesktop]);
+
   const activeSection = sections.find((section) => section.id === activeSectionId) ?? sections[0];
   const isDesktopRailVisible = isDesktop && hasEnteredDesktopReadingZone && !hasReachedDesktopReadingZoneEnd;
   const canShowContentsPanel =
@@ -346,6 +381,7 @@ export default function SnippetDetail() {
                           }
                         }}
                         onClick={() => {
+                          pendingDesktopSectionScrollRef.current = section.id;
                           setActiveSectionId(section.id);
                           navigate(
                             {
@@ -421,6 +457,7 @@ export default function SnippetDetail() {
             <motion.section
               key={activeSection.id}
               id={activeSection.id}
+              ref={activeSectionRef}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className="public-section-content space-y-8 pb-12"

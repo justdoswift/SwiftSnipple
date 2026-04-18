@@ -62,6 +62,7 @@ function mockMatchMedia(matches: boolean) {
 }
 
 const intersectionCallbacks = new Map<Element, IntersectionObserverCallback>();
+const mockedScrollTo = vi.fn();
 
 function mockIntersectionObserver() {
   class MockIntersectionObserver implements IntersectionObserver {
@@ -157,6 +158,28 @@ describe("SnippetDetail", () => {
   beforeEach(() => {
     mockedGetSnippetBySlug.mockReset();
     Element.prototype.scrollIntoView = vi.fn();
+    Element.prototype.getBoundingClientRect = vi.fn(() => ({
+      x: 0,
+      y: 240,
+      width: 0,
+      height: 0,
+      top: 240,
+      right: 0,
+      bottom: 240,
+      left: 0,
+      toJSON: () => ({}),
+    })) as unknown as typeof Element.prototype.getBoundingClientRect;
+    Object.defineProperty(window, "scrollTo", {
+      writable: true,
+      configurable: true,
+      value: mockedScrollTo,
+    });
+    Object.defineProperty(window, "scrollY", {
+      writable: true,
+      configurable: true,
+      value: 0,
+    });
+    mockedScrollTo.mockReset();
     intersectionCallbacks.clear();
     mockIntersectionObserver();
   });
@@ -208,6 +231,25 @@ describe("SnippetDetail", () => {
     expect(screen.queryByRole("button", { name: "Copy code block" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Copy prompt logic" })).not.toBeInTheDocument();
     expect(screen.getByTestId("location-hash")).toHaveTextContent("#code");
+    await waitFor(() => {
+      expect(mockedScrollTo).toHaveBeenCalledWith({
+        top: 136,
+        behavior: "smooth",
+      });
+    });
+
+    mockedScrollTo.mockClear();
+    fireEvent.click(screen.getByRole("button", { name: "03 Prompt Logic" }));
+
+    expect(screen.getByRole("heading", { name: "Prompt Logic" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copy prompt logic" })).toBeInTheDocument();
+    expect(screen.getByTestId("location-hash")).toHaveTextContent("#prompts");
+    await waitFor(() => {
+      expect(mockedScrollTo).toHaveBeenCalledWith({
+        top: 136,
+        behavior: "smooth",
+      });
+    });
   });
 
   it("restores the requested section from the hash", async () => {

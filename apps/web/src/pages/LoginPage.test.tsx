@@ -1,8 +1,18 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import LoginPage from "./LoginPage";
 import { PublicThemeContext } from "../lib/public-theme";
+import { loginMember, signupMember } from "../services/member-auth";
+import { createMemberSession } from "../test/factories";
+
+vi.mock("../services/member-auth", () => ({
+  loginMember: vi.fn(),
+  signupMember: vi.fn(),
+}));
+
+const mockedLoginMember = vi.mocked(loginMember);
+const mockedSignupMember = vi.mocked(signupMember);
 
 function renderLoginPage() {
   const onAuthenticate = vi.fn();
@@ -22,6 +32,13 @@ function renderLoginPage() {
 }
 
 describe("LoginPage", () => {
+  beforeEach(() => {
+    mockedLoginMember.mockReset();
+    mockedLoginMember.mockResolvedValue(createMemberSession());
+    mockedSignupMember.mockReset();
+    mockedSignupMember.mockResolvedValue(createMemberSession({ email: "new-builder@example.com" }));
+  });
+
   it("renders the login mode by default", () => {
     renderLoginPage();
 
@@ -37,10 +54,10 @@ describe("LoginPage", () => {
     expect(screen.getByLabelText("Email Address")).toBeInTheDocument();
     expect(screen.getByLabelText("Password")).toBeInTheDocument();
     expect(screen.getByLabelText("Show password")).toBeInTheDocument();
-    expect(screen.getByLabelText("Remember me")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Forgot password?" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Continue with Google" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Continue with GitHub" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("Remember me")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Forgot password?" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Continue with Google" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Continue with GitHub" })).not.toBeInTheDocument();
   });
 
   it("switches to sign-up mode inside the same auth card", () => {
@@ -53,20 +70,48 @@ describe("LoginPage", () => {
     expect(screen.getByRole("button", { name: "Create Account" })).toBeInTheDocument();
   });
 
-  it("simulates a successful email login and routes to the member center", () => {
+  it("logs in with the member API and routes to the member center", async () => {
     const { onAuthenticate } = renderLoginPage();
 
     fireEvent.change(screen.getByLabelText("Email Address"), { target: { value: "builder@example.com" } });
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: "secret12" } });
     fireEvent.click(screen.getByRole("button", { name: "Log In" }));
 
+    await waitFor(() => {
+      expect(mockedLoginMember).toHaveBeenCalledWith({
+        email: "builder@example.com",
+        password: "secret12",
+      });
+    });
     expect(onAuthenticate).toHaveBeenCalledWith(
       expect.objectContaining({
         email: "builder@example.com",
-        provider: "email",
+        isAuthenticated: true,
       }),
-      true,
     );
-    expect(screen.getByText("member center route")).toBeInTheDocument();
+    expect(await screen.findByText("member center route")).toBeInTheDocument();
+  });
+
+  it("creates a member account in sign-up mode", async () => {
+    const { onAuthenticate } = renderLoginPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign Up" }));
+    fireEvent.change(screen.getByLabelText("Email Address"), { target: { value: "new-builder@example.com" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "secret12" } });
+    fireEvent.change(screen.getByLabelText("Confirm Password"), { target: { value: "secret12" } });
+    fireEvent.click(screen.getByRole("button", { name: "Create Account" }));
+
+    await waitFor(() => {
+      expect(mockedSignupMember).toHaveBeenCalledWith({
+        email: "new-builder@example.com",
+        password: "secret12",
+      });
+    });
+    expect(onAuthenticate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: "new-builder@example.com",
+        isAuthenticated: true,
+      }),
+    );
   });
 });

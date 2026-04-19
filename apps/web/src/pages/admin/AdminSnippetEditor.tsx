@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Button, Dropdown, Input, Modal, TextArea, Tooltip, useOverlayState } from "../../lib/heroui";
+import { Button, Description, Dropdown, Input, Label, Modal, Switch, TextArea, Tooltip, useOverlayState } from "../../lib/heroui";
 import { useNavigate, useParams } from "react-router-dom";
 import EditorSection from "../../components/admin/EditorSection";
 import HighlightedCodeEditor from "../../components/admin/HighlightedCodeEditor";
@@ -156,6 +156,10 @@ struct ExampleSnippetView: View {
     status: "Draft",
     updatedAt: new Date().toISOString(),
     publishedAt: null,
+    requiresSubscription: false,
+    viewerCanAccess: true,
+    locked: false,
+    accessLevel: "full",
   };
 }
 
@@ -168,6 +172,7 @@ function toFormState(snippet: Snippet): SnippetFormState {
     code: snippet.code,
     status: snippet.status,
     publishedAt: toDateTimeInputValue(snippet.publishedAt),
+    requiresSubscription: snippet.requiresSubscription,
     locales: {
       en: {
         title: english.title,
@@ -233,6 +238,7 @@ function fromFormState(baseSnippet: Snippet, form: SnippetFormState): Snippet {
     code: form.code,
     status: form.status,
     publishedAt,
+    requiresSubscription: form.requiresSubscription,
     updatedAt: new Date().toISOString(),
   };
 }
@@ -246,6 +252,7 @@ function toSnippetPayload(snippet: Snippet): SnippetPayload {
     code: snippet.code,
     status: snippet.status,
     publishedAt: snippet.publishedAt,
+    requiresSubscription: snippet.requiresSubscription,
     locales: {
       en: { ...english },
       zh: { ...chinese },
@@ -1024,8 +1031,39 @@ export default function AdminSnippetEditor() {
                                )}
                              </Dropdown.Menu>
                            </Dropdown.Popover>
-                         </Dropdown>
-                       </label>
+                           </Dropdown>
+                         </label>
+                      <Switch
+                        isSelected={form.requiresSubscription}
+                        onChange={(isSelected: boolean) => updateField("requiresSubscription", isSelected)}
+                        className="gap-4 rounded-[28px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] px-4 py-4"
+                      >
+                        {({ isSelected }: { isSelected: boolean }) => (
+                          <>
+                            <Switch.Control
+                              className={`mt-0.5 h-[30px] w-[52px] shrink-0 rounded-full border transition-colors ${
+                                isSelected
+                                  ? "border-white bg-white"
+                                  : "border-[rgba(255,255,255,0.14)] bg-[rgba(255,255,255,0.06)]"
+                              }`}
+                            >
+                              <Switch.Thumb
+                                className={`mt-[1px] size-[26px] rounded-full shadow-[0_10px_24px_rgba(0,0,0,0.28)] transition-[margin,background-color] duration-200 ${
+                                  isSelected
+                                    ? "ms-[24px] bg-[#0b0b0d]"
+                                    : "ms-[2px] bg-white"
+                                }`}
+                              />
+                            </Switch.Control>
+                            <Switch.Content className="gap-1">
+                              <Label className="type-body font-medium leading-none">{copy.paidSubscribersOnly}</Label>
+                              <Description className="type-body-sm text-[var(--admin-copy-muted)]">
+                                {copy.paidSubscribersOnlyCopy}
+                              </Description>
+                            </Switch.Content>
+                          </>
+                        )}
+                      </Switch>
                     </div>
                   </EditorSection>
 

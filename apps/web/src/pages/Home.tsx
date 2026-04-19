@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, type Variants } from "motion/react";
-import { Button, Card, Chip, Input } from "../lib/heroui";
+import { Button, Card, Chip } from "../lib/heroui";
 import SnippetCard from "../components/SnippetCard";
 import SnippetMiniCard from "../components/SnippetMiniCard";
 import { getMessages } from "../lib/messages";
-import { useAppLocale } from "../lib/locale";
+import { localizePublicPath, useAppLocale } from "../lib/locale";
 import { getSnippets } from "../services/snippets";
 import { Snippet } from "../types";
 
@@ -173,13 +173,13 @@ export default function Home() {
               {copy.updatesCopy}
             </p>
             <div className="flex w-full max-w-md flex-col gap-4 md:flex-row">
-              <Input
-                aria-label="Email"
-                className="public-input-inverse flex-grow"
-                placeholder={copy.subscribePlaceholder}
-                type="email"
-              />
-              <Button className="public-primary-button public-button-lg type-action" variant="solid">
+              <Button
+                className="public-primary-button public-button-lg type-action w-full"
+                variant="solid"
+                onPress={() => {
+                  window.location.href = localizePublicPath("/login");
+                }}
+              >
                 {copy.join}
               </Button>
             </div>

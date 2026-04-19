@@ -44,6 +44,7 @@ function getSearchableStrings(snippet: Snippet, locale: AppLocale) {
   const currentFields = getLocalizedSnippetFields(snippet, locale);
   const englishFields = snippet.locales?.en ? getLocalizedSnippetFields(snippet, "en") : currentFields;
   const chineseFields = snippet.locales?.zh ? getLocalizedSnippetFields(snippet, "zh") : currentFields;
+  const canSearchProtectedContent = !snippet.locked && snippet.accessLevel !== "teaser";
 
   return {
     title: [currentFields.title, englishFields.title, chineseFields.title].filter(Boolean),
@@ -56,9 +57,13 @@ function getSearchableStrings(snippet: Snippet, locale: AppLocale) {
       ...(chineseFields.tags ?? []),
       ...(snippet.tags ?? []),
     ].filter(Boolean),
-    content: [currentFields.content, englishFields.content, chineseFields.content, snippet.content].filter(Boolean),
-    prompts: [currentFields.prompts, englishFields.prompts, chineseFields.prompts, snippet.prompts].filter(Boolean),
-    code: [snippet.code].filter(Boolean),
+    content: canSearchProtectedContent
+      ? [currentFields.content, englishFields.content, chineseFields.content, snippet.content].filter(Boolean)
+      : [],
+    prompts: canSearchProtectedContent
+      ? [currentFields.prompts, englishFields.prompts, chineseFields.prompts, snippet.prompts].filter(Boolean)
+      : [],
+    code: canSearchProtectedContent ? [snippet.code].filter(Boolean) : [],
   };
 }
 

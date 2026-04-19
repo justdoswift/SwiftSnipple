@@ -5,7 +5,6 @@ import Footer from "./components/Footer";
 import AdminLayout from "./components/admin/AdminLayout";
 import { Spinner } from "./lib/heroui";
 import { type AdminAuthSession } from "./lib/admin-auth";
-import { clearStoredMockAuth, readStoredMockAuth, writeStoredMockAuth, type MockAuthSession } from "./lib/mock-auth";
 import {
   LocaleContext,
   isAppLocale,
@@ -26,7 +25,8 @@ import {
   type PublicTheme,
 } from "./lib/public-theme";
 import { getAdminSession, logoutAdmin } from "./services/admin-auth";
-import type { AppLocale } from "./types";
+import { getMemberSession, logoutMember } from "./services/member-auth";
+import type { AppLocale, MemberSession } from "./types";
 
 const Home = lazy(() => import("./pages/Home"));
 const SnippetDetail = lazy(() => import("./pages/SnippetDetail"));
@@ -165,11 +165,11 @@ function PublicShell({
   authSession,
   showNavbar = true,
   showFooter = true,
-}: {
+  }: {
   children: ReactNode;
   theme: PublicTheme;
   onToggleTheme: () => void;
-  authSession: MockAuthSession | null;
+  authSession: MemberSession | null;
   showNavbar?: boolean;
   showFooter?: boolean;
 }) {
@@ -187,7 +187,7 @@ function PublicShell({
 
 export default function App() {
   const [theme, setTheme] = useState<PublicTheme>(readStoredPublicTheme);
-  const [authSession, setAuthSession] = useState<MockAuthSession | null>(readStoredMockAuth);
+  const [authSession, setAuthSession] = useState<MemberSession | null>(null);
   const [adminAuthSession, setAdminAuthSession] = useState<AdminAuthSession | null>(null);
   const [isAdminAuthResolved, setIsAdminAuthResolved] = useState(false);
 
@@ -201,14 +201,31 @@ export default function App() {
   }, [theme]);
 
   const toggleTheme = () => setTheme((currentTheme) => getNextPublicTheme(currentTheme));
-  const handleAuthenticate = (session: MockAuthSession, remember: boolean) => {
-    writeStoredMockAuth(session, remember);
+  const handleAuthenticate = (session: MemberSession) => {
     setAuthSession(session);
   };
-  const handleSignOut = () => {
-    clearStoredMockAuth();
+  const handleSignOut = async () => {
+    await logoutMember();
     setAuthSession(null);
   };
+
+  useEffect(() => {
+    let active = true;
+
+    getMemberSession()
+      .then((session) => {
+        if (!active) return;
+        setAuthSession(session);
+      })
+      .catch(() => {
+        if (!active) return;
+        setAuthSession(null);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;

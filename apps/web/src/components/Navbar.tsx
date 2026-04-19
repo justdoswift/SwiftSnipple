@@ -3,15 +3,15 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { getMessages } from "../lib/messages";
 import { Dropdown, Tooltip } from "../lib/heroui";
-import type { MockAuthSession } from "../lib/mock-auth";
 import { APP_LOCALE_OPTIONS, localizePublicPath, useAppLocale } from "../lib/locale";
 import type { PublicTheme } from "../lib/public-theme";
+import type { MemberSession } from "../types";
 import PublicSearch from "./PublicSearch";
 
 interface NavbarProps {
   theme: PublicTheme;
   onToggleTheme: () => void;
-  authSession: MockAuthSession | null;
+  authSession: MemberSession | null;
 }
 
 export default function Navbar({ theme, onToggleTheme, authSession }: NavbarProps) {

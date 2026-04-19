@@ -8,7 +8,7 @@ import { Tooltip } from "../../lib/heroui";
 import { getMessages } from "../../lib/messages";
 import { localizeAdminPath, useAppLocale } from "../../lib/locale";
 import { isUnauthorizedError } from "../../services/api";
-import { getSnippets } from "../../services/snippets";
+import { getAdminSnippets } from "../../services/snippets";
 import { Snippet } from "../../types";
 
 export default function AdminDashboard() {
@@ -46,7 +46,7 @@ export default function AdminDashboard() {
     let active = true;
     setIsLoading(true);
 
-    getSnippets()
+    getAdminSnippets()
       .then((items) => {
         if (!active) return;
         setSnippets(items);

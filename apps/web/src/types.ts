@@ -1,5 +1,16 @@
 export type SnippetStatus = "Draft" | "Published";
 export type AppLocale = "en" | "zh";
+export type SnippetAccessLevel = "teaser" | "full";
+export type SubscriptionStatus =
+  | "inactive"
+  | "trialing"
+  | "active"
+  | "past_due"
+  | "canceled"
+  | "unpaid"
+  | "incomplete"
+  | "incomplete_expired"
+  | "paused";
 
 export interface SnippetLocalizedFields {
   title: string;
@@ -29,6 +40,10 @@ export interface Snippet {
   status: SnippetStatus;
   updatedAt: string;
   publishedAt: string | null;
+  requiresSubscription: boolean;
+  viewerCanAccess: boolean;
+  locked: boolean;
+  accessLevel: SnippetAccessLevel;
   locales?: SnippetLocales<SnippetLocalizedFields>;
   title?: string;
   slug?: string;
@@ -46,6 +61,7 @@ export interface SnippetPayload {
   code: string;
   status: SnippetStatus;
   publishedAt: string | null;
+  requiresSubscription: boolean;
   locales: SnippetLocales<SnippetLocalizedFields>;
 }
 
@@ -54,7 +70,18 @@ export interface SnippetFormState {
   code: string;
   status: SnippetStatus;
   publishedAt: string;
+  requiresSubscription: boolean;
   locales: SnippetLocales<SnippetLocalizedFieldsInput>;
+}
+
+export interface MemberSession {
+  email: string;
+  isAuthenticated: boolean;
+  subscriptionStatus: SubscriptionStatus;
+  isEntitled: boolean;
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
+  hasBillingPortal: boolean;
 }
 
 export type ArticleStatus = SnippetStatus;

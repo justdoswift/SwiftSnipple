@@ -4,6 +4,7 @@ import { MemoryRouter, useLocation } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import PublicSearch from "./PublicSearch";
 import type { Snippet } from "../types";
+import { createSnippet } from "../test/factories";
 
 vi.mock("../lib/heroui", async () => {
   const React = await vi.importActual<typeof import("react")>("react");
@@ -143,11 +144,9 @@ vi.mock("../lib/heroui", async () => {
   };
 });
 
-const publishedSnippet: Snippet = {
-  id: "snippet-1",
+const publishedSnippet: Snippet = createSnippet({
   coverImage: "/api/uploads/search.webp",
-  code: "Text(\"Glass\")",
-  status: "Published",
+  code: 'Text("Glass")',
   updatedAt: "2026-04-19T10:00:00.000Z",
   publishedAt: "2026-04-19T10:00:00.000Z",
   locales: {
@@ -174,7 +173,7 @@ const publishedSnippet: Snippet = {
       seoDescription: "SEO copy",
     },
   },
-};
+});
 
 function SearchHarness({
   initialOpen = true,

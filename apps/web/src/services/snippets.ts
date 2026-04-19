@@ -12,11 +12,15 @@ export function getSnippets() {
 }
 
 export function getSnippetById(id: string) {
-  return request<Snippet>(`${API_BASE}/api/snippets/${id}`);
+  return request<Snippet>(`${API_BASE}/api/admin/snippets/${id}`);
 }
 
 export function getSnippetBySlug(slug: string) {
   return request<Snippet>(`${API_BASE}/api/snippets/slug/${slug}`);
+}
+
+export function getAdminSnippets() {
+  return request<Snippet[]>(`${API_BASE}/api/admin/snippets`);
 }
 
 export function createSnippet(payload: SnippetPayload) {

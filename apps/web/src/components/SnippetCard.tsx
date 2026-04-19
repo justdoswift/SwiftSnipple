@@ -3,7 +3,9 @@ import { Card, Chip } from "../lib/heroui";
 import { Link } from "react-router-dom";
 import { resolveAssetUrl } from "../lib/asset-url";
 import { Snippet } from "../types";
+import { getMessages } from "../lib/messages";
 import { getLocalizedSnippetFields, localizePublicPath, useAppLocale } from "../lib/locale";
+import { LockKeyhole } from "lucide-react";
 
 interface SnippetCardProps {
   snippet: Snippet;
@@ -22,6 +24,7 @@ function formatPublishedDate(value: string | null, locale: "en" | "zh") {
 
 export default function SnippetCard({ snippet }: SnippetCardProps) {
   const { locale } = useAppLocale();
+  const common = getMessages(locale).common;
   const fields = getLocalizedSnippetFields(snippet, locale);
   const publishedDate = formatPublishedDate(snippet.publishedAt, locale);
 
@@ -46,6 +49,12 @@ export default function SnippetCard({ snippet }: SnippetCardProps) {
               <Chip size="sm" variant="flat" className="public-chip type-action">
                 {fields.category}
               </Chip>
+              {snippet.requiresSubscription ? (
+                <Chip size="sm" variant="flat" className="public-chip type-action">
+                  <LockKeyhole size={12} className="mr-1" />
+                  {common.membersOnly}
+                </Chip>
+              ) : null}
             </div>
             <div className="space-y-2">
               <h3 className="public-snippet-card-title type-card-title">{fields.title}</h3>

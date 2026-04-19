@@ -6,6 +6,7 @@ import type { AdminAuthSession } from "../../lib/admin-auth";
 import { LocaleContext } from "../../lib/locale";
 import AdminSnippetEditor from "./AdminSnippetEditor";
 import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, updateSnippet, uploadCoverImage } from "../../services/snippets";
+import { createSnippet as createSnippetFixture } from "../../test/factories";
 
 vi.mock("../../services/snippets", () => ({
   createSnippet: vi.fn(),
@@ -214,7 +215,7 @@ describe("AdminSnippetEditor", () => {
     mockedGetSnippetById.mockReset();
     mockedCreateSnippet.mockReset();
     mockedPublishSnippet.mockReset();
-    mockedGetSnippetById.mockResolvedValue({
+    mockedGetSnippetById.mockResolvedValue(createSnippetFixture({
       id: "snippet-1",
       title: "Smooth Feedback Loops",
       slug: "smooth-feedback-loops",
@@ -230,7 +231,31 @@ describe("AdminSnippetEditor", () => {
       status: "Draft",
       updatedAt: "2026-04-09T12:00:00.000Z",
       publishedAt: null,
-    });
+      locales: {
+        en: {
+          title: "Smooth Feedback Loops",
+          slug: "smooth-feedback-loops",
+          excerpt: "A polished snippet preview.",
+          category: "Workflow",
+          tags: ["SwiftUI"],
+          content: "# Smooth Feedback Loops",
+          prompts: "Build a previewable snippet.",
+          seoTitle: "Smooth Feedback Loops",
+          seoDescription: "SEO copy",
+        },
+        zh: {
+          title: "Smooth Feedback Loops",
+          slug: "smooth-feedback-loops",
+          excerpt: "A polished snippet preview.",
+          category: "Workflow",
+          tags: ["SwiftUI"],
+          content: "# Smooth Feedback Loops",
+          prompts: "Build a previewable snippet.",
+          seoTitle: "Smooth Feedback Loops",
+          seoDescription: "SEO copy",
+        },
+      },
+    }));
 
     render(
       <LocaleContext.Provider value={{ locale: "zh" }}>
@@ -274,7 +299,7 @@ describe("AdminSnippetEditor", () => {
     mockedGetSnippetById.mockReset();
     mockedCreateSnippet.mockReset();
     mockedPublishSnippet.mockReset();
-    mockedCreateSnippet.mockResolvedValue({
+    mockedCreateSnippet.mockResolvedValue(createSnippetFixture({
       id: "snippet-1",
       title: "Untitled Snippet",
       slug: "untitled-snippet",
@@ -290,8 +315,8 @@ describe("AdminSnippetEditor", () => {
       status: "Draft",
       updatedAt: "2026-04-18T00:00:00.000Z",
       publishedAt: null,
-    });
-    mockedPublishSnippet.mockResolvedValue({
+    }));
+    mockedPublishSnippet.mockResolvedValue(createSnippetFixture({
       id: "snippet-1",
       title: "Untitled Snippet",
       slug: "untitled-snippet",
@@ -307,7 +332,7 @@ describe("AdminSnippetEditor", () => {
       status: "Published",
       updatedAt: "2026-04-18T00:00:00.000Z",
       publishedAt: "2026-04-18T00:00:00.000Z",
-    });
+    }));
 
     render(
       <MemoryRouter initialEntries={["/admin/snippets/new"]}>
@@ -345,7 +370,7 @@ describe("AdminSnippetEditor", () => {
     mockedCreateSnippet.mockReset();
     mockedPublishSnippet.mockReset();
     mockedUpdateSnippet.mockReset();
-    mockedCreateSnippet.mockResolvedValue({
+    mockedCreateSnippet.mockResolvedValue(createSnippetFixture({
       id: "snippet-1",
       title: "Fresh Draft",
       slug: "fresh-draft",
@@ -361,7 +386,7 @@ describe("AdminSnippetEditor", () => {
       status: "Draft",
       updatedAt: "2026-04-18T00:00:00.000Z",
       publishedAt: null,
-    });
+    }));
 
     render(
       <MemoryRouter initialEntries={["/admin/snippets/new"]}>
@@ -391,7 +416,7 @@ describe("AdminSnippetEditor", () => {
     mockedPublishSnippet.mockReset();
     mockedUpdateSnippet.mockReset();
     mockedDeleteSnippet.mockReset();
-    mockedGetSnippetById.mockResolvedValue({
+    mockedGetSnippetById.mockResolvedValue(createSnippetFixture({
       id: "snippet-1",
       title: "Live Snippet",
       slug: "live-snippet",
@@ -407,7 +432,7 @@ describe("AdminSnippetEditor", () => {
       status: "Draft",
       updatedAt: "2026-04-18T00:00:00.000Z",
       publishedAt: null,
-    });
+    }));
     mockedDeleteSnippet.mockResolvedValue(undefined);
 
     render(
@@ -453,7 +478,7 @@ describe("AdminSnippetEditor", () => {
     mockedCreateSnippet.mockReset();
     mockedPublishSnippet.mockReset();
     mockedUpdateSnippet.mockReset();
-    mockedGetSnippetById.mockResolvedValue({
+    mockedGetSnippetById.mockResolvedValue(createSnippetFixture({
       id: "snippet-1",
       title: "Live Snippet",
       slug: "live-snippet",
@@ -469,7 +494,7 @@ describe("AdminSnippetEditor", () => {
       status: "Published",
       updatedAt: "2026-04-18T00:00:00.000Z",
       publishedAt: "2026-04-18T00:00:00.000Z",
-    });
+    }));
 
     render(
       <MemoryRouter initialEntries={["/admin/snippets/snippet-1"]}>
@@ -496,7 +521,7 @@ describe("AdminSnippetEditor", () => {
     mockedCreateSnippet.mockReset();
     mockedPublishSnippet.mockReset();
     mockedUpdateSnippet.mockReset();
-    mockedGetSnippetById.mockResolvedValue({
+    mockedGetSnippetById.mockResolvedValue(createSnippetFixture({
       id: "snippet-1",
       title: "Live Snippet",
       slug: "live-snippet",
@@ -512,8 +537,8 @@ describe("AdminSnippetEditor", () => {
       status: "Published",
       updatedAt: "2026-04-18T00:00:00.000Z",
       publishedAt: "2026-04-18T00:00:00.000Z",
-    });
-    mockedUpdateSnippet.mockResolvedValue({
+    }));
+    mockedUpdateSnippet.mockResolvedValue(createSnippetFixture({
       id: "snippet-1",
       title: "Live Snippet Updated",
       slug: "live-snippet",
@@ -529,8 +554,8 @@ describe("AdminSnippetEditor", () => {
       status: "Published",
       updatedAt: "2026-04-18T00:10:00.000Z",
       publishedAt: "2026-04-18T00:00:00.000Z",
-    });
-    mockedPublishSnippet.mockResolvedValue({
+    }));
+    mockedPublishSnippet.mockResolvedValue(createSnippetFixture({
       id: "snippet-1",
       title: "Live Snippet Updated",
       slug: "live-snippet",
@@ -546,7 +571,7 @@ describe("AdminSnippetEditor", () => {
       status: "Published",
       updatedAt: "2026-04-18T00:12:00.000Z",
       publishedAt: "2026-04-18T00:12:00.000Z",
-    });
+    }));
 
     render(
       <MemoryRouter initialEntries={["/admin/snippets/snippet-1"]}>
@@ -590,7 +615,7 @@ describe("AdminSnippetEditor", () => {
     mockedCreateSnippet.mockReset();
     mockedPublishSnippet.mockReset();
     mockedUpdateSnippet.mockReset();
-    mockedGetSnippetById.mockResolvedValue({
+    mockedGetSnippetById.mockResolvedValue(createSnippetFixture({
       id: "snippet-1",
       title: "Live Snippet",
       slug: "live-snippet",
@@ -606,8 +631,8 @@ describe("AdminSnippetEditor", () => {
       status: "Published",
       updatedAt: "2026-04-18T00:00:00.000Z",
       publishedAt: "2026-04-18T00:00:00.000Z",
-    });
-    mockedUpdateSnippet.mockResolvedValue({
+    }));
+    mockedUpdateSnippet.mockResolvedValue(createSnippetFixture({
       id: "snippet-1",
       title: "Live Snippet Updated",
       slug: "live-snippet",
@@ -623,8 +648,8 @@ describe("AdminSnippetEditor", () => {
       status: "Published",
       updatedAt: "2026-04-18T00:10:00.000Z",
       publishedAt: "2026-04-18T00:00:00.000Z",
-    });
-    mockedPublishSnippet.mockResolvedValue({
+    }));
+    mockedPublishSnippet.mockResolvedValue(createSnippetFixture({
       id: "snippet-1",
       title: "Live Snippet Updated",
       slug: "live-snippet",
@@ -640,7 +665,7 @@ describe("AdminSnippetEditor", () => {
       status: "Published",
       updatedAt: "2026-04-18T00:12:00.000Z",
       publishedAt: "2026-04-18T00:12:00.000Z",
-    });
+    }));
 
     render(
       <LocaleContext.Provider value={{ locale: "zh" }}>
@@ -700,7 +725,7 @@ describe("AdminSnippetEditor", () => {
     mockedGetSnippetById.mockReset();
     mockedCreateSnippet.mockReset();
     mockedPublishSnippet.mockReset();
-    mockedGetSnippetById.mockResolvedValue({
+    mockedGetSnippetById.mockResolvedValue(createSnippetFixture({
       id: "snippet-1",
       title: "Live Snippet",
       slug: "live-snippet",
@@ -716,7 +741,7 @@ describe("AdminSnippetEditor", () => {
       status: "Published",
       updatedAt: "2026-04-18T00:00:00.000Z",
       publishedAt: "2026-04-18T00:00:00.000Z",
-    });
+    }));
 
     render(
       <MemoryRouter initialEntries={["/admin/snippets/snippet-1"]}>

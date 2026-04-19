@@ -7,6 +7,7 @@ import (
 
 type AppLocale string
 type SnippetStatus string
+type SnippetAccessLevel string
 
 const (
 	LocaleEN AppLocale = "en"
@@ -14,6 +15,9 @@ const (
 
 	StatusDraft     SnippetStatus = "Draft"
 	StatusPublished SnippetStatus = "Published"
+
+	AccessLevelTeaser SnippetAccessLevel = "teaser"
+	AccessLevelFull   SnippetAccessLevel = "full"
 )
 
 type SnippetLocalizedFields struct {
@@ -34,21 +38,26 @@ type SnippetLocales struct {
 }
 
 type Snippet struct {
-	ID          string         `json:"id"`
-	CoverImage  string         `json:"coverImage"`
-	Code        string         `json:"code"`
-	Status      SnippetStatus  `json:"status"`
-	UpdatedAt   time.Time      `json:"updatedAt"`
-	PublishedAt *time.Time     `json:"publishedAt"`
-	Locales     SnippetLocales `json:"locales"`
+	ID                   string             `json:"id"`
+	CoverImage           string             `json:"coverImage"`
+	Code                 string             `json:"code"`
+	Status               SnippetStatus      `json:"status"`
+	UpdatedAt            time.Time          `json:"updatedAt"`
+	PublishedAt          *time.Time         `json:"publishedAt"`
+	RequiresSubscription bool               `json:"requiresSubscription"`
+	ViewerCanAccess      bool               `json:"viewerCanAccess"`
+	Locked               bool               `json:"locked"`
+	AccessLevel          SnippetAccessLevel `json:"accessLevel"`
+	Locales              SnippetLocales     `json:"locales"`
 }
 
 type SnippetPayload struct {
-	CoverImage  string         `json:"coverImage"`
-	Code        string         `json:"code"`
-	Status      SnippetStatus  `json:"status"`
-	PublishedAt *time.Time     `json:"publishedAt"`
-	Locales     SnippetLocales `json:"locales"`
+	CoverImage           string         `json:"coverImage"`
+	Code                 string         `json:"code"`
+	Status               SnippetStatus  `json:"status"`
+	PublishedAt          *time.Time     `json:"publishedAt"`
+	RequiresSubscription bool           `json:"requiresSubscription"`
+	Locales              SnippetLocales `json:"locales"`
 }
 
 func (p SnippetPayload) Normalize() SnippetPayload {

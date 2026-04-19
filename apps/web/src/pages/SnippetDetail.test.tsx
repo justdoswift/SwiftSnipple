@@ -1,24 +1,28 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { getMemberSession } from "../services/member-auth";
 import { getSnippetBySlug } from "../services/snippets";
-import type { Snippet } from "../types";
+import type { MemberSession, Snippet } from "../types";
+import { createMemberSession, createSnippet } from "../test/factories";
 import SnippetDetail from "./SnippetDetail";
 
 vi.mock("../services/snippets", () => ({
   getSnippetBySlug: vi.fn(),
 }));
 
-const mockedGetSnippetBySlug = vi.mocked(getSnippetBySlug);
+vi.mock("../services/member-auth", () => ({
+  getMemberSession: vi.fn(),
+}));
 
-const detailedSnippet: Snippet = {
-  id: "snippet-1",
+const mockedGetSnippetBySlug = vi.mocked(getSnippetBySlug);
+const mockedGetMemberSession = vi.mocked(getMemberSession);
+
+const detailedSnippet: Snippet = createSnippet({
   title: "Smooth Feedback Loops",
   slug: "smooth-feedback-loops",
   excerpt: "A polished snippet preview.",
   category: "Workflow",
-  tags: ["SwiftUI"],
-  coverImage: "https://example.com/cover.jpg",
   content: `# Notes
 
 ## Almost boring state first
@@ -38,12 +42,7 @@ Text("Hello")
 \`\`\``,
   code: "Text(\"Source\")",
   prompts: "Keep the action anchored while the state evolves.",
-  seoTitle: "Smooth Feedback Loops",
-  seoDescription: "SEO copy",
-  status: "Published",
-  updatedAt: "2026-04-09T12:00:00.000Z",
-  publishedAt: "2026-04-09T12:00:00.000Z",
-};
+});
 
 function mockMatchMedia(matches: boolean) {
   Object.defineProperty(window, "matchMedia", {
@@ -127,15 +126,22 @@ function HashProbe() {
   return <output data-testid="location-hash">{location.hash}</output>;
 }
 
-function renderSnippetDetail(options?: { initialEntries?: string[]; snippet?: Snippet; isDesktop?: boolean }) {
+function renderSnippetDetail(options?: {
+  initialEntries?: string[];
+  snippet?: Snippet;
+  isDesktop?: boolean;
+  memberSession?: MemberSession | null;
+}) {
   const {
     initialEntries = ["/snippets/smooth-feedback-loops"],
     snippet = detailedSnippet,
     isDesktop = true,
+    memberSession = null,
   } = options ?? {};
 
   mockMatchMedia(isDesktop);
   mockedGetSnippetBySlug.mockResolvedValue(snippet);
+  mockedGetMemberSession.mockResolvedValue(memberSession);
 
   return render(
     <MemoryRouter initialEntries={initialEntries}>
@@ -157,6 +163,8 @@ function renderSnippetDetail(options?: { initialEntries?: string[]; snippet?: Sn
 describe("SnippetDetail", () => {
   beforeEach(() => {
     mockedGetSnippetBySlug.mockReset();
+    mockedGetMemberSession.mockReset();
+    mockedGetMemberSession.mockResolvedValue(null);
     Element.prototype.scrollIntoView = vi.fn();
     Element.prototype.getBoundingClientRect = vi.fn(() => ({
       x: 0,
@@ -297,6 +305,16 @@ describe("SnippetDetail", () => {
         ...detailedSnippet,
         code: "",
         prompts: "",
+        locales: {
+          en: {
+            ...detailedSnippet.locales!.en,
+            prompts: "",
+          },
+          zh: {
+            ...detailedSnippet.locales!.zh,
+            prompts: "",
+          },
+        },
       },
     });
 
@@ -409,6 +427,45 @@ describe("SnippetDetail", () => {
     renderSnippetDetail();
 
     expect(screen.getByTestId("snippet-detail-shell")).toHaveClass("pt-32", "md:pt-36", "lg:pt-40");
+  });
+
+  it("renders paywall sections for locked snippets", async () => {
+    renderSnippetDetail({
+      snippet: createSnippet({
+        ...detailedSnippet,
+        requiresSubscription: true,
+        viewerCanAccess: false,
+        locked: true,
+        accessLevel: "teaser",
+        code: "",
+        content: "",
+        prompts: "",
+      }),
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Members only").length).toBeGreaterThanOrEqual(2);
+    });
+
+    expect(screen.getByRole("link", { name: "Log in to unlock" })).toBeInTheDocument();
+    expect(screen.getByText("This snippet is part of the subscriber library.")).toBeInTheDocument();
+    expect(screen.getByText("Smooth Feedback Loops")).toBeInTheDocument();
+  });
+
+  it("sends authenticated members to billing from the paywall", async () => {
+    renderSnippetDetail({
+      snippet: createSnippet({
+        ...detailedSnippet,
+        requiresSubscription: true,
+        viewerCanAccess: false,
+        locked: true,
+        accessLevel: "teaser",
+      }),
+      memberSession: createMemberSession(),
+    });
+
+    const unlockLinks = await screen.findAllByRole("link", { name: "Unlock with membership" });
+    expect(unlockLinks[0]).toHaveAttribute("href", "/account");
   });
 
   it("uses the same safer top spacing for not found states", async () => {

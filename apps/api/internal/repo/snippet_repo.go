@@ -30,6 +30,7 @@ const snippetSelectColumns = `
 	status,
 	updated_at,
 	published_at,
+	requires_subscription,
 	title_en,
 	slug_en,
 	excerpt_en,
@@ -114,9 +115,9 @@ func (r *SnippetRepository) Create(ctx context.Context, payload domain.SnippetPa
 	id := uuid.NewString()
 
 	row := r.pool.QueryRow(ctx, `
-		INSERT INTO snippets (
-			id,
-			title,
+			INSERT INTO snippets (
+				id,
+				title,
 			slug,
 			excerpt,
 			category,
@@ -143,13 +144,14 @@ func (r *SnippetRepository) Create(ctx context.Context, payload domain.SnippetPa
 			tags_zh,
 			content_zh,
 			prompts_zh,
-			seo_title_zh,
-			seo_description_zh,
-			status,
-			published_at,
-			created_at,
-			updated_at
-		) VALUES (
+				seo_title_zh,
+				seo_description_zh,
+				status,
+				published_at,
+				requires_subscription,
+				created_at,
+				updated_at
+			) VALUES (
 			$1,
 			$2,
 			$3,
@@ -179,13 +181,14 @@ func (r *SnippetRepository) Create(ctx context.Context, payload domain.SnippetPa
 			$27,
 			$28,
 			$29,
-			$30,
-			$31,
-			$32,
-			NOW(),
-			NOW()
-		)
-		RETURNING `+snippetSelectColumns,
+				$30,
+				$31,
+				$32,
+				$33,
+				NOW(),
+				NOW()
+			)
+			RETURNING `+snippetSelectColumns,
 		id,
 		payload.Locales.EN.Title,
 		payload.Locales.EN.Slug,
@@ -214,11 +217,12 @@ func (r *SnippetRepository) Create(ctx context.Context, payload domain.SnippetPa
 		payload.Locales.ZH.Tags,
 		payload.Locales.ZH.Content,
 		payload.Locales.ZH.Prompts,
-		payload.Locales.ZH.SEOTitle,
-		payload.Locales.ZH.SEODescription,
-		payload.Status,
-		payload.PublishedAt,
-	)
+			payload.Locales.ZH.SEOTitle,
+			payload.Locales.ZH.SEODescription,
+			payload.Status,
+			payload.PublishedAt,
+			payload.RequiresSubscription,
+		)
 
 	return scanSnippet(row)
 }
@@ -256,13 +260,14 @@ func (r *SnippetRepository) Update(ctx context.Context, id string, payload domai
 			tags_zh = $26,
 			content_zh = $27,
 			prompts_zh = $28,
-			seo_title_zh = $29,
-			seo_description_zh = $30,
-			status = $31,
-			published_at = $32,
-			updated_at = NOW()
-		WHERE id = $1
-		RETURNING `+snippetSelectColumns,
+				seo_title_zh = $29,
+				seo_description_zh = $30,
+				status = $31,
+				published_at = $32,
+				requires_subscription = $33,
+				updated_at = NOW()
+			WHERE id = $1
+			RETURNING `+snippetSelectColumns,
 		id,
 		payload.Locales.EN.Title,
 		payload.Locales.EN.Slug,
@@ -291,11 +296,12 @@ func (r *SnippetRepository) Update(ctx context.Context, id string, payload domai
 		payload.Locales.ZH.Tags,
 		payload.Locales.ZH.Content,
 		payload.Locales.ZH.Prompts,
-		payload.Locales.ZH.SEOTitle,
-		payload.Locales.ZH.SEODescription,
-		payload.Status,
-		payload.PublishedAt,
-	)
+			payload.Locales.ZH.SEOTitle,
+			payload.Locales.ZH.SEODescription,
+			payload.Status,
+			payload.PublishedAt,
+			payload.RequiresSubscription,
+		)
 
 	snippet, err := scanSnippet(row)
 	if err != nil {
@@ -375,6 +381,7 @@ func scanSnippet(row interface {
 		&snippet.Status,
 		&snippet.UpdatedAt,
 		&snippet.PublishedAt,
+		&snippet.RequiresSubscription,
 		&snippet.Locales.EN.Title,
 		&snippet.Locales.EN.Slug,
 		&snippet.Locales.EN.Excerpt,

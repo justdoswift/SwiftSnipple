@@ -2,40 +2,35 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import AdminSnippets from "./AdminSnippets";
-import { getSnippets } from "../../services/snippets";
-import { Snippet } from "../../types";
+import { getAdminSnippets } from "../../services/snippets";
+import { createSnippet } from "../../test/factories";
 
 vi.mock("../../services/snippets", () => ({
-  getSnippets: vi.fn(),
+  getAdminSnippets: vi.fn(),
 }));
 
-const mockedGetSnippets = vi.mocked(getSnippets);
+const mockedGetAdminSnippets = vi.mocked(getAdminSnippets);
 
-const baseSnippet: Snippet = {
-  id: "snippet-1",
+const baseSnippet = createSnippet({
   title: "Prompt Studio",
   slug: "prompt-studio",
   excerpt: "An editor-ready snippet.",
   category: "Workflow",
   tags: ["Prompting"],
-  coverImage: "https://example.com/cover.jpg",
   content: "# Prompt Studio",
-  code: "Text(\"Prompt Studio\")",
+  code: 'Text("Prompt Studio")',
   prompts: "Create an editor-ready snippet.",
-  seoTitle: "Prompt Studio",
-  seoDescription: "SEO copy",
   status: "Draft",
-  updatedAt: "2026-04-09T12:00:00.000Z",
   publishedAt: null,
-};
+});
 
 describe("AdminSnippets", () => {
   beforeEach(() => {
-    mockedGetSnippets.mockReset();
+    mockedGetAdminSnippets.mockReset();
   });
 
   it("shows the loading state before snippets resolve", () => {
-    mockedGetSnippets.mockImplementation(() => new Promise(() => {}));
+    mockedGetAdminSnippets.mockImplementation(() => new Promise(() => {}));
 
     render(
       <MemoryRouter>
@@ -47,7 +42,7 @@ describe("AdminSnippets", () => {
   });
 
   it("shows a friendly empty state when the library has no snippets", async () => {
-    mockedGetSnippets.mockResolvedValue([]);
+    mockedGetAdminSnippets.mockResolvedValue([]);
 
     render(
       <MemoryRouter>
@@ -61,7 +56,7 @@ describe("AdminSnippets", () => {
   });
 
   it("shows request errors explicitly", async () => {
-    mockedGetSnippets.mockRejectedValue(new Error("backend offline"));
+    mockedGetAdminSnippets.mockRejectedValue(new Error("backend offline"));
 
     render(
       <MemoryRouter>
@@ -75,7 +70,7 @@ describe("AdminSnippets", () => {
   });
 
   it("renders snippet rows after loading", async () => {
-    mockedGetSnippets.mockResolvedValue([baseSnippet]);
+    mockedGetAdminSnippets.mockResolvedValue([baseSnippet]);
 
     render(
       <MemoryRouter>
@@ -89,7 +84,7 @@ describe("AdminSnippets", () => {
   });
 
   it("keeps snippet dates on the dedicated meta text class instead of admin-copy-muted", async () => {
-    mockedGetSnippets.mockResolvedValue([baseSnippet]);
+    mockedGetAdminSnippets.mockResolvedValue([baseSnippet]);
 
     render(
       <MemoryRouter>
@@ -105,15 +100,17 @@ describe("AdminSnippets", () => {
   });
 
   it("filters snippet rows by search query", async () => {
-    mockedGetSnippets.mockResolvedValue([
+    mockedGetAdminSnippets.mockResolvedValue([
       baseSnippet,
-      {
-        ...baseSnippet,
+      createSnippet({
         id: "snippet-2",
         title: "Surface Lab",
         slug: "surface-lab",
+        excerpt: "Animation-focused snippet.",
         category: "Animation",
-      },
+        status: "Draft",
+        publishedAt: null,
+      }),
     ]);
 
     render(
@@ -123,7 +120,7 @@ describe("AdminSnippets", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("Prompt Studio")).toBeInTheDocument();
+      expect(screen.getAllByText("Prompt Studio").length).toBeGreaterThan(0);
       expect(screen.getByText("Surface Lab")).toBeInTheDocument();
     });
 
@@ -136,7 +133,7 @@ describe("AdminSnippets", () => {
   });
 
   it("uses the shared HeroUI dropdown classes for library filters", async () => {
-    mockedGetSnippets.mockResolvedValue([baseSnippet]);
+    mockedGetAdminSnippets.mockResolvedValue([baseSnippet]);
 
     render(
       <MemoryRouter>

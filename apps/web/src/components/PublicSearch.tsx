@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+import { LockKeyhole, Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { resolveAssetUrl } from "../lib/asset-url";
@@ -173,6 +173,12 @@ export default function PublicSearch({ isOpen, onOpenChange, loadSnippets = getS
                         <div className="public-search-result-copy">
                           <div className="public-search-result-meta">
                             <span className="public-search-result-category type-mono-micro">{fields.category}</span>
+                            {snippet.requiresSubscription ? (
+                              <span className="type-mono-micro inline-flex items-center gap-1">
+                                <LockKeyhole size={12} />
+                                {copy.membersOnly}
+                              </span>
+                            ) : null}
                             <span className="type-mono-micro">{formatUpdatedDate(snippet.updatedAt, locale)}</span>
                           </div>
                           <h3 className="public-search-result-title">{fields.title}</h3>

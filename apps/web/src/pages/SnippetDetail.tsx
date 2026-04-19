@@ -1,14 +1,16 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { LockKeyhole } from "lucide-react";
 import HighlightedCodeBlock from "../components/HighlightedCodeBlock";
 import MarkdownRenderer from "../components/MarkdownRenderer";
 import { resolveAssetUrl } from "../lib/asset-url";
 import { getMessages } from "../lib/messages";
 import { extractMarkdownOutline, type MarkdownOutlineItem } from "../lib/markdown-outline";
-import { getLocalizedSnippetFields, getLocalizedSnippetPath, useAppLocale } from "../lib/locale";
+import { getLocalizedSnippetFields, getLocalizedSnippetPath, localizePublicPath, useAppLocale } from "../lib/locale";
+import { getMemberSession } from "../services/member-auth";
 import { getSnippetBySlug } from "../services/snippets";
-import { Snippet } from "../types";
+import { MemberSession, Snippet } from "../types";
 
 type SnippetSectionId = "notes" | "code" | "prompts";
 
@@ -54,6 +56,7 @@ export default function SnippetDetail() {
   const location = useLocation();
   const navigate = useNavigate();
   const [snippet, setSnippet] = useState<Snippet | null>(null);
+  const [memberSession, setMemberSession] = useState<MemberSession | null>(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isDesktop, setIsDesktop] = useState(getInitialDesktopState);
@@ -66,6 +69,24 @@ export default function SnippetDetail() {
   const desktopReadingEndRef = useRef<HTMLDivElement | null>(null);
   const activeSectionRef = useRef<HTMLElement | null>(null);
   const pendingDesktopSectionScrollRef = useRef<SnippetSectionId | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    getMemberSession()
+      .then((session) => {
+        if (!active) return;
+        setMemberSession(session);
+      })
+      .catch(() => {
+        if (!active) return;
+        setMemberSession(null);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!slug) return;
@@ -123,13 +144,60 @@ export default function SnippetDetail() {
   }, [location.search]);
   const hasCode = snippet?.code.trim().length ? true : false;
   const hasPrompts = localizedFields?.prompts.trim().length ? true : false;
+  const isLocked = Boolean(snippet?.locked);
   const notesOutline = useMemo<MarkdownOutlineItem[]>(
-    () => (localizedFields ? extractMarkdownOutline(localizedFields.content) : []),
-    [localizedFields],
+    () => (localizedFields && !isLocked ? extractMarkdownOutline(localizedFields.content) : []),
+    [isLocked, localizedFields],
   );
+  const paywallCTAPath = memberSession ? localizePublicPath("/account") : localizePublicPath("/login");
+  const paywallCTALabel = memberSession ? copy.unlockNow : copy.loginToUnlock;
   const sections = useMemo<SnippetSection[]>(() => {
     if (!snippet) {
       return [];
+    }
+
+    if (snippet.locked) {
+      const lockedContent = (
+        <div className="public-content-panel mx-auto max-w-[800px] px-6 py-6 md:px-8 md:py-8">
+          <div className="rounded-[32px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-6 py-8 text-center md:px-10 md:py-10">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.08)] px-3 py-1 text-[var(--public-micro)]">
+              <LockKeyhole size={14} />
+              <span className="type-mono-micro">{copy.membersOnly}</span>
+            </div>
+            <h3 className="type-section-title mb-3">{copy.paywallTitle}</h3>
+            <p className="type-body mx-auto mb-6 max-w-[56ch]">{copy.paywallCopy}</p>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <Link to={paywallCTAPath} className="public-primary-button public-button-lg type-action inline-flex items-center justify-center">
+                {paywallCTALabel}
+              </Link>
+              <Link to={localizePublicPath("/account")} className="public-secondary-button public-button-lg type-action inline-flex items-center justify-center">
+                {copy.manageSubscription}
+              </Link>
+            </div>
+          </div>
+        </div>
+      );
+
+      return [
+        {
+          id: "notes",
+          number: "01",
+          label: copy.implementationNotes,
+          content: lockedContent,
+        },
+        {
+          id: "code",
+          number: "02",
+          label: copy.swiftuiSource,
+          content: lockedContent,
+        },
+        {
+          id: "prompts",
+          number: "03",
+          label: copy.promptLogic,
+          content: lockedContent,
+        },
+      ];
     }
 
     const availableSections: SnippetSection[] = [
@@ -180,7 +248,7 @@ export default function SnippetDetail() {
     }
 
     return availableSections;
-  }, [copy.copyPromptLogic, copy.copySwiftCode, copy.implementationNotes, copy.promptLogic, copy.swiftuiSource, hasCode, hasPrompts, localizedFields?.content, localizedFields?.prompts, snippet?.code]);
+  }, [copy.copyPromptLogic, copy.copySwiftCode, copy.implementationNotes, copy.loginToUnlock, copy.manageSubscription, copy.membersOnly, copy.paywallCopy, copy.paywallTitle, copy.promptLogic, copy.swiftuiSource, hasCode, hasPrompts, localizedFields?.content, localizedFields?.prompts, memberSession, paywallCTALabel, paywallCTAPath, snippet]);
 
   useEffect(() => {
     if (!snippet || !localizedFields || !slug) return;
@@ -330,9 +398,17 @@ export default function SnippetDetail() {
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col items-center gap-6"
           >
-            <span className="public-pill type-mono-label px-3 py-1">
-              {localizedFields?.category} / {formatDate(snippet.publishedAt)}
-            </span>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <span className="public-pill type-mono-label px-3 py-1">
+                {localizedFields?.category} / {formatDate(snippet.publishedAt)}
+              </span>
+              {snippet.requiresSubscription ? (
+                <span className="public-pill type-mono-label inline-flex items-center gap-2 px-3 py-1">
+                  <LockKeyhole size={14} />
+                  {copy.membersOnly}
+                </span>
+              ) : null}
+            </div>
             <h1 className="type-display">
               {localizedFields?.title}
             </h1>

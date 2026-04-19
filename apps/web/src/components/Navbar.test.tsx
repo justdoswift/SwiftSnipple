@@ -4,7 +4,8 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import Navbar from "./Navbar";
 import type { PublicTheme } from "../lib/public-theme";
-import type { MockAuthSession } from "../lib/mock-auth";
+import type { MemberSession } from "../types";
+import { createMemberSession } from "../test/factories";
 
 vi.mock("./PublicSearch", () => ({
   default: ({ isOpen }: { isOpen: boolean }) => (isOpen ? <div role="dialog">Public search</div> : null),
@@ -82,7 +83,7 @@ vi.mock("../lib/heroui", async () => {
 function renderNavbar(
   theme: PublicTheme = "dark",
   onToggleTheme = vi.fn(),
-  authSession: MockAuthSession | null = null,
+  authSession: MemberSession | null = null,
 ) {
   return render(
     <MemoryRouter>
@@ -165,11 +166,7 @@ describe("Navbar", () => {
   });
 
   it("switches the auth action to the account page when a session exists", () => {
-    renderNavbar("dark", vi.fn(), {
-      email: "builder@example.com",
-      provider: "email",
-      createdAt: "2026-04-18T00:00:00.000Z",
-    });
+    renderNavbar("dark", vi.fn(), createMemberSession());
 
     expect(screen.getByRole("link", { name: "Account" })).toHaveAttribute("href", "/account");
     expect(screen.getByRole("link", { name: "Account" })).toHaveClass("public-nav-icon-button", "public-nav-auth-button");

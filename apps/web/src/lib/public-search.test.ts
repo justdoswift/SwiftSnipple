@@ -1,12 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { searchPublicSnippets } from "./public-search";
 import type { Snippet } from "../types";
+import { createSnippet } from "../test/factories";
 
-const baseSnippet: Snippet = {
-  id: "snippet-1",
+const baseSnippet: Snippet = createSnippet({
   coverImage: "/cover.jpg",
   code: "withAnimation(.spring())",
-  status: "Published",
   updatedAt: "2026-04-19T10:00:00.000Z",
   publishedAt: "2026-04-19T10:00:00.000Z",
   locales: {
@@ -33,7 +32,7 @@ const baseSnippet: Snippet = {
       seoDescription: "SEO copy",
     },
   },
-};
+});
 
 describe("searchPublicSnippets", () => {
   it("returns no results for an empty query", () => {
@@ -107,5 +106,38 @@ describe("searchPublicSnippets", () => {
 
     const results = searchPublicSnippets([draftMatch, promptMatch], "search", "en");
     expect(results.map((result) => result.snippet.id)).toEqual(["snippet-3"]);
+  });
+
+  it("does not search locked code or prompts", () => {
+    const lockedSnippet = createSnippet({
+      id: "snippet-locked",
+      requiresSubscription: true,
+      viewerCanAccess: false,
+      locked: true,
+      accessLevel: "teaser",
+      code: "premiumSearchNeedle()",
+      prompts: "premium search phrase",
+      locales: {
+        en: {
+          ...baseSnippet.locales!.en,
+          title: "Premium Flow",
+          slug: "premium-flow",
+          excerpt: "Visible teaser copy.",
+          content: "",
+          prompts: "",
+        },
+        zh: {
+          ...baseSnippet.locales!.zh,
+          title: "订阅流程",
+          slug: "dingyue-liucheng",
+          excerpt: "可见的 teaser 文案。",
+          content: "",
+          prompts: "",
+        },
+      },
+    });
+
+    expect(searchPublicSnippets([lockedSnippet], "premium search phrase", "en")).toEqual([]);
+    expect(searchPublicSnippets([lockedSnippet], "premiumSearchNeedle", "en")).toEqual([]);
   });
 });

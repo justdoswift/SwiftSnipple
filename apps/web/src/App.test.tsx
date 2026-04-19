@@ -2,10 +2,12 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import { getAdminSession, logoutAdmin } from "./services/admin-auth";
-import { getSnippets } from "./services/snippets";
-import type { Snippet } from "./types";
+import { getMemberSession, loginMember, logoutMember } from "./services/member-auth";
+import { getAdminSnippets, getSnippets } from "./services/snippets";
+import { createMemberSession, createSnippet } from "./test/factories";
 
 vi.mock("./services/snippets", () => ({
+  getAdminSnippets: vi.fn(),
   getSnippets: vi.fn(),
   getSnippetBySlug: vi.fn(),
 }));
@@ -15,27 +17,27 @@ vi.mock("./services/admin-auth", () => ({
   logoutAdmin: vi.fn(),
 }));
 
+vi.mock("./services/member-auth", () => ({
+  getMemberSession: vi.fn(),
+  loginMember: vi.fn(),
+  logoutMember: vi.fn(),
+  signupMember: vi.fn(),
+}));
+
 const mockedGetSnippets = vi.mocked(getSnippets);
+const mockedGetAdminSnippets = vi.mocked(getAdminSnippets);
 const mockedGetAdminSession = vi.mocked(getAdminSession);
 const mockedLogoutAdmin = vi.mocked(logoutAdmin);
+const mockedGetMemberSession = vi.mocked(getMemberSession);
+const mockedLoginMember = vi.mocked(loginMember);
+const mockedLogoutMember = vi.mocked(logoutMember);
 
-const publishedSnippet: Snippet = {
-  id: "snippet-1",
+const publishedSnippet = createSnippet({
   title: "Glass Navigation",
   slug: "glass-navigation",
   excerpt: "A published snippet for the homepage.",
-  category: "Navigation",
-  tags: ["SwiftUI"],
-  coverImage: "https://example.com/cover.jpg",
   content: "# Title",
-  code: "Text(\"Hello\")",
-  prompts: "Build a polished navigation snippet.",
-  seoTitle: "Glass Navigation",
-  seoDescription: "SEO copy",
-  status: "Published",
-  updatedAt: "2026-04-09T12:00:00.000Z",
-  publishedAt: "2026-04-09T12:00:00.000Z",
-};
+});
 
 function mockMatchMedia(matches: boolean) {
   Object.defineProperty(window, "matchMedia", {
@@ -62,10 +64,18 @@ describe("App public theme", () => {
   beforeEach(() => {
     mockedGetSnippets.mockReset();
     mockedGetSnippets.mockResolvedValue([publishedSnippet]);
+    mockedGetAdminSnippets.mockReset();
+    mockedGetAdminSnippets.mockResolvedValue([publishedSnippet]);
     mockedGetAdminSession.mockReset();
     mockedGetAdminSession.mockResolvedValue(null);
     mockedLogoutAdmin.mockReset();
     mockedLogoutAdmin.mockResolvedValue(undefined);
+    mockedGetMemberSession.mockReset();
+    mockedGetMemberSession.mockResolvedValue(null);
+    mockedLoginMember.mockReset();
+    mockedLoginMember.mockResolvedValue(createMemberSession());
+    mockedLogoutMember.mockReset();
+    mockedLogoutMember.mockResolvedValue(undefined);
     window.localStorage.clear();
     window.sessionStorage.clear();
     window.scrollTo = vi.fn();
@@ -207,7 +217,11 @@ describe("App public theme", () => {
     fireEvent.click(screen.getByRole("button", { name: "Log In" }));
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Your snippet library staging area." })).toBeInTheDocument();
+      expect(screen.getByText("builder@example.com")).toBeInTheDocument();
+    });
+    expect(mockedLoginMember).toHaveBeenCalledWith({
+      email: "builder@example.com",
+      password: "secret12",
     });
   });
 });

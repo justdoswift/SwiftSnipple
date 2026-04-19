@@ -30,11 +30,28 @@ func main() {
 	}
 	defer pool.Close()
 
-	router := httpapi.NewRouter(pool, repo.NewSnippetRepository(pool), httpapi.AdminAuthConfig{
-		Email:         cfg.AdminEmail,
-		Password:      cfg.AdminPassword,
-		SessionSecret: cfg.AdminSessionSecret,
-	}, cfg.UploadsDir)
+	router := httpapi.NewRouter(
+		pool,
+		repo.NewSnippetRepository(pool),
+		repo.NewMemberRepository(pool),
+		httpapi.AdminAuthConfig{
+			Email:         cfg.AdminEmail,
+			Password:      cfg.AdminPassword,
+			SessionSecret: cfg.AdminSessionSecret,
+		},
+		httpapi.MemberAuthConfig{
+			SessionSecret: cfg.MemberSessionSecret,
+		},
+		httpapi.NewStripeBillingProvider(httpapi.BillingConfig{
+			SecretKey:       cfg.StripeSecretKey,
+			WebhookSecret:   cfg.StripeWebhookSecret,
+			PriceID:         cfg.StripePriceID,
+			SuccessURL:      cfg.StripeSuccessURL,
+			CancelURL:       cfg.StripeCancelURL,
+			PortalReturnURL: cfg.StripePortalReturnURL,
+		}),
+		cfg.UploadsDir,
+	)
 	server := &http.Server{
 		Addr:              ":" + cfg.APIPort,
 		Handler:           router,

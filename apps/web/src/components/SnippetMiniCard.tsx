@@ -3,7 +3,9 @@ import { Card, Chip } from "../lib/heroui";
 import { Link } from "react-router-dom";
 import { resolveAssetUrl } from "../lib/asset-url";
 import { Snippet } from "../types";
+import { getMessages } from "../lib/messages";
 import { getLocalizedSnippetFields, localizePublicPath, useAppLocale } from "../lib/locale";
+import { LockKeyhole } from "lucide-react";
 
 interface SnippetMiniCardProps {
   snippet: Snippet;
@@ -12,6 +14,7 @@ interface SnippetMiniCardProps {
 
 export default function SnippetMiniCard({ snippet }: SnippetMiniCardProps) {
   const { locale } = useAppLocale();
+  const common = getMessages(locale).common;
   const fields = getLocalizedSnippetFields(snippet, locale);
 
   return (
@@ -30,9 +33,17 @@ export default function SnippetMiniCard({ snippet }: SnippetMiniCardProps) {
             />
           </div>
             <Card.Content className="space-y-3 px-4 py-4 md:px-5 md:py-5">
-              <Chip size="sm" variant="flat" className="public-chip type-action w-fit">
-                {fields.category}
-              </Chip>
+              <div className="flex flex-wrap gap-2">
+                <Chip size="sm" variant="flat" className="public-chip type-action w-fit">
+                  {fields.category}
+                </Chip>
+                {snippet.requiresSubscription ? (
+                  <Chip size="sm" variant="flat" className="public-chip type-action w-fit">
+                    <LockKeyhole size={12} className="mr-1" />
+                    {common.membersOnly}
+                  </Chip>
+                ) : null}
+              </div>
             <h4 className="public-snippet-mini-card-title type-card-title">{fields.title}</h4>
             </Card.Content>
           </Card>

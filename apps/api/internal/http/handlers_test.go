@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"image"
 	"image/color"
 	"image/png"
@@ -27,6 +28,10 @@ var testAdminAuthConfig = AdminAuthConfig{
 	Email:         "creator@justdoswift.com",
 	Password:      "secret12",
 	SessionSecret: "test-admin-session-secret",
+}
+
+var testMemberAuthConfig = MemberAuthConfig{
+	SessionSecret: "test-member-session-secret",
 }
 
 type fakePinger struct {
@@ -99,13 +104,14 @@ func (f *fakeSnippetStore) Create(_ context.Context, payload domain.SnippetPaylo
 	}
 
 	snippet := domain.Snippet{
-		ID:          "new-id",
-		CoverImage:  normalized.CoverImage,
-		Code:        normalized.Code,
-		Status:      normalized.Status,
-		UpdatedAt:   time.Now().UTC(),
-		PublishedAt: normalized.PublishedAt,
-		Locales:     normalized.Locales,
+		ID:                   "new-id",
+		CoverImage:           normalized.CoverImage,
+		Code:                 normalized.Code,
+		Status:               normalized.Status,
+		UpdatedAt:            time.Now().UTC(),
+		PublishedAt:          normalized.PublishedAt,
+		RequiresSubscription: normalized.RequiresSubscription,
+		Locales:              normalized.Locales,
 	}
 
 	f.storeSnippet(snippet)
@@ -130,6 +136,7 @@ func (f *fakeSnippetStore) Update(_ context.Context, id string, payload domain.S
 	snippet.Code = normalized.Code
 	snippet.Status = normalized.Status
 	snippet.PublishedAt = normalized.PublishedAt
+	snippet.RequiresSubscription = normalized.RequiresSubscription
 	snippet.UpdatedAt = time.Now().UTC()
 	snippet.Locales = normalized.Locales
 
@@ -218,6 +225,219 @@ func loginCookie(t *testing.T, router http.Handler) *http.Cookie {
 	return cookies[0]
 }
 
+func memberSignupCookie(t *testing.T, router http.Handler, email, password string) *http.Cookie {
+	t.Helper()
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/api/member/signup",
+		strings.NewReader(fmt.Sprintf(`{"email":%q,"password":%q}`, email, password)),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("expected signup status 201, got %d with body %q", rec.Code, rec.Body.String())
+	}
+
+	cookies := rec.Result().Cookies()
+	if len(cookies) == 0 {
+		t.Fatal("expected signup to set a member session cookie")
+	}
+
+	return cookies[0]
+}
+
+func memberLoginCookie(t *testing.T, router http.Handler, email, password string) *http.Cookie {
+	t.Helper()
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/api/member/login",
+		strings.NewReader(fmt.Sprintf(`{"email":%q,"password":%q}`, email, password)),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected member login status 200, got %d with body %q", rec.Code, rec.Body.String())
+	}
+
+	cookies := rec.Result().Cookies()
+	if len(cookies) == 0 {
+		t.Fatal("expected login to set a member session cookie")
+	}
+
+	return cookies[0]
+}
+
+func decodeResponse[T any](t *testing.T, reader io.Reader) T {
+	t.Helper()
+
+	var value T
+	if err := json.NewDecoder(reader).Decode(&value); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+
+	return value
+}
+
+type fakeMemberStore struct {
+	users            map[string]domain.MemberUser
+	userIDsByEmail   map[string]string
+	subscriptions    map[string]domain.MemberSubscription
+}
+
+func newFakeMemberStore(users ...domain.MemberUser) *fakeMemberStore {
+	store := &fakeMemberStore{
+		users:          map[string]domain.MemberUser{},
+		userIDsByEmail: map[string]string{},
+		subscriptions:  map[string]domain.MemberSubscription{},
+	}
+
+	for _, user := range users {
+		store.users[user.ID] = user
+		store.userIDsByEmail[user.Email] = user.ID
+	}
+
+	return store
+}
+
+func (f *fakeMemberStore) CreateUser(_ context.Context, email, passwordHash string) (domain.MemberUser, error) {
+	email = strings.ToLower(strings.TrimSpace(email))
+	if _, exists := f.userIDsByEmail[email]; exists {
+		return domain.MemberUser{}, repo.ErrDuplicateEmail
+	}
+
+	user := domain.MemberUser{
+		ID:           fmt.Sprintf("member-%d", len(f.users)+1),
+		Email:        email,
+		PasswordHash: passwordHash,
+		CreatedAt:    time.Now().UTC(),
+		UpdatedAt:    time.Now().UTC(),
+	}
+	f.users[user.ID] = user
+	f.userIDsByEmail[user.Email] = user.ID
+	return user, nil
+}
+
+func (f *fakeMemberStore) GetUserByEmail(_ context.Context, email string) (domain.MemberUser, error) {
+	id, ok := f.userIDsByEmail[strings.ToLower(strings.TrimSpace(email))]
+	if !ok {
+		return domain.MemberUser{}, repo.ErrMemberNotFound
+	}
+
+	return f.users[id], nil
+}
+
+func (f *fakeMemberStore) GetUserByID(_ context.Context, id string) (domain.MemberUser, error) {
+	user, ok := f.users[id]
+	if !ok {
+		return domain.MemberUser{}, repo.ErrMemberNotFound
+	}
+
+	return user, nil
+}
+
+func (f *fakeMemberStore) GetSubscriptionByUserID(_ context.Context, userID string) (*domain.MemberSubscription, error) {
+	subscription, ok := f.subscriptions[userID]
+	if !ok {
+		return nil, nil
+	}
+
+	copy := subscription
+	return &copy, nil
+}
+
+func (f *fakeMemberStore) GetSubscriptionByStripeCustomerID(_ context.Context, customerID string) (*domain.MemberSubscription, error) {
+	for _, subscription := range f.subscriptions {
+		if subscription.StripeCustomerID == customerID {
+			copy := subscription
+			return &copy, nil
+		}
+	}
+
+	return nil, nil
+}
+
+func (f *fakeMemberStore) GetSubscriptionByStripeSubscriptionID(_ context.Context, subscriptionID string) (*domain.MemberSubscription, error) {
+	for _, subscription := range f.subscriptions {
+		if subscription.StripeSubscriptionID == subscriptionID {
+			copy := subscription
+			return &copy, nil
+		}
+	}
+
+	return nil, nil
+}
+
+func (f *fakeMemberStore) UpsertSubscription(_ context.Context, subscription domain.MemberSubscription) (domain.MemberSubscription, error) {
+	if subscription.Status == "" {
+		subscription.Status = domain.SubscriptionStatusInactive
+	}
+	if subscription.CreatedAt.IsZero() {
+		subscription.CreatedAt = time.Now().UTC()
+	}
+	subscription.UpdatedAt = time.Now().UTC()
+	f.subscriptions[subscription.UserID] = subscription
+	return subscription, nil
+}
+
+type fakeBillingProvider struct {
+	checkoutURL        string
+	portalURL          string
+	lastCheckoutParams CheckoutSessionParams
+	lastPortalCustomer string
+	webhookEvent       BillingWebhookEvent
+	webhookErr         error
+}
+
+func (f *fakeBillingProvider) CreateCheckoutSession(_ context.Context, params CheckoutSessionParams) (string, error) {
+	f.lastCheckoutParams = params
+	return f.checkoutURL, nil
+}
+
+func (f *fakeBillingProvider) CreateBillingPortalSession(_ context.Context, customerID string) (string, error) {
+	f.lastPortalCustomer = customerID
+	return f.portalURL, nil
+}
+
+func (f *fakeBillingProvider) ParseWebhook(_ []byte, _ string) (BillingWebhookEvent, error) {
+	if f.webhookErr != nil {
+		return BillingWebhookEvent{}, f.webhookErr
+	}
+	return f.webhookEvent, nil
+}
+
+func newTestRouter(t *testing.T, snippets *fakeSnippetStore, members *fakeMemberStore, billing *fakeBillingProvider) http.Handler {
+	t.Helper()
+
+	if snippets == nil {
+		snippets = newFakeSnippetStore()
+	}
+	if members == nil {
+		members = newFakeMemberStore()
+	}
+	if billing == nil {
+		billing = &fakeBillingProvider{
+			checkoutURL: "https://stripe.test/checkout",
+			portalURL:   "https://stripe.test/portal",
+		}
+	}
+
+	return NewRouter(
+		fakePinger{},
+		snippets,
+		members,
+		testAdminAuthConfig,
+		testMemberAuthConfig,
+		billing,
+		t.TempDir(),
+	)
+}
+
 func TestSnippetRoutesSuccess(t *testing.T) {
 	now := time.Now().UTC()
 	store := newFakeSnippetStore(domain.Snippet{
@@ -232,7 +452,7 @@ func TestSnippetRoutesSuccess(t *testing.T) {
 			ZH: localizedFields("玻璃抽屉导航", "bo-li-chou-ti-dao-hang", "Navigation"),
 		},
 	})
-	router := NewRouter(fakePinger{}, store, testAdminAuthConfig, t.TempDir())
+	router := newTestRouter(t, store, nil, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/snippets", nil)
 	rec := httptest.NewRecorder()
@@ -266,7 +486,7 @@ func TestSnippetRoutesSuccess(t *testing.T) {
 func TestCreateValidationAndDuplicateErrors(t *testing.T) {
 	store := newFakeSnippetStore()
 	store.duplicateSlug = "taken-slug"
-	router := NewRouter(fakePinger{}, store, testAdminAuthConfig, t.TempDir())
+	router := newTestRouter(t, store, nil, nil)
 	adminCookie := loginCookie(t, router)
 
 	testCases := []struct {
@@ -361,7 +581,7 @@ func TestPublishUnpublishDeleteAndMissingRoutes(t *testing.T) {
 			ZH: localizedFields("提示驱动布局", "ti-shi-qu-dong-bu-ju", "Workflow"),
 		},
 	})
-	router := NewRouter(fakePinger{}, store, testAdminAuthConfig, t.TempDir())
+	router := newTestRouter(t, store, nil, nil)
 	adminCookie := loginCookie(t, router)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/admin/snippets/snippet-1/publish", nil)
@@ -405,7 +625,7 @@ func TestPublishUnpublishDeleteAndMissingRoutes(t *testing.T) {
 }
 
 func TestHealthz(t *testing.T) {
-	router := NewRouter(fakePinger{}, newFakeSnippetStore(), testAdminAuthConfig, t.TempDir())
+	router := newTestRouter(t, newFakeSnippetStore(), nil, nil)
 	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
 	rec := httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
@@ -424,7 +644,7 @@ func TestHealthz(t *testing.T) {
 }
 
 func TestAdminLoginSessionAndLogout(t *testing.T) {
-	router := NewRouter(fakePinger{}, newFakeSnippetStore(), testAdminAuthConfig, t.TempDir())
+	router := newTestRouter(t, newFakeSnippetStore(), nil, nil)
 
 	adminCookie := loginCookie(t, router)
 
@@ -462,7 +682,7 @@ func TestAdminUnauthorizedAndProtectedRoutes(t *testing.T) {
 			ZH: localizedFields("后台鉴权", "hou-tai-jian-quan", "Workflow"),
 		},
 	})
-	router := NewRouter(fakePinger{}, store, testAdminAuthConfig, t.TempDir())
+	router := newTestRouter(t, store, nil, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/admin/login", strings.NewReader(`{"email":"creator@justdoswift.com","password":"wrong"}`))
 	req.Header.Set("Content-Type", "application/json")
@@ -505,9 +725,288 @@ func TestAdminUnauthorizedAndProtectedRoutes(t *testing.T) {
 	}
 }
 
+func TestMemberSignupLoginSessionAndLogout(t *testing.T) {
+	members := newFakeMemberStore()
+	router := newTestRouter(t, nil, members, nil)
+
+	signupReq := httptest.NewRequest(
+		http.MethodPost,
+		"/api/member/signup",
+		strings.NewReader(`{"email":"Builder@Example.com","password":"secret12"}`),
+	)
+	signupReq.Header.Set("Content-Type", "application/json")
+	signupRec := httptest.NewRecorder()
+	router.ServeHTTP(signupRec, signupReq)
+
+	if signupRec.Code != http.StatusCreated {
+		t.Fatalf("expected signup status 201, got %d", signupRec.Code)
+	}
+
+	signupSession := decodeResponse[domain.MemberSession](t, signupRec.Body)
+	if signupSession.Email != "builder@example.com" {
+		t.Fatalf("expected normalized member email, got %q", signupSession.Email)
+	}
+	if !signupSession.IsAuthenticated {
+		t.Fatal("expected signup session to be authenticated")
+	}
+	if signupSession.IsEntitled {
+		t.Fatal("expected new signup to be inactive")
+	}
+
+	signupCookie := signupRec.Result().Cookies()[0]
+	sessionReq := httptest.NewRequest(http.MethodGet, "/api/member/session", nil)
+	sessionReq.AddCookie(signupCookie)
+	sessionRec := httptest.NewRecorder()
+	router.ServeHTTP(sessionRec, sessionReq)
+	if sessionRec.Code != http.StatusOK {
+		t.Fatalf("expected member session status 200, got %d", sessionRec.Code)
+	}
+
+	loginCookie := memberLoginCookie(t, router, "builder@example.com", "secret12")
+	loginReq := httptest.NewRequest(http.MethodGet, "/api/member/session", nil)
+	loginReq.AddCookie(loginCookie)
+	loginRec := httptest.NewRecorder()
+	router.ServeHTTP(loginRec, loginReq)
+	if loginRec.Code != http.StatusOK {
+		t.Fatalf("expected member login session status 200, got %d", loginRec.Code)
+	}
+
+	logoutReq := httptest.NewRequest(http.MethodPost, "/api/member/logout", nil)
+	logoutReq.AddCookie(loginCookie)
+	logoutRec := httptest.NewRecorder()
+	router.ServeHTTP(logoutRec, logoutReq)
+	if logoutRec.Code != http.StatusNoContent {
+		t.Fatalf("expected member logout status 204, got %d", logoutRec.Code)
+	}
+
+	duplicateReq := httptest.NewRequest(
+		http.MethodPost,
+		"/api/member/signup",
+		strings.NewReader(`{"email":"builder@example.com","password":"secret12"}`),
+	)
+	duplicateReq.Header.Set("Content-Type", "application/json")
+	duplicateRec := httptest.NewRecorder()
+	router.ServeHTTP(duplicateRec, duplicateReq)
+	if duplicateRec.Code != http.StatusConflict {
+		t.Fatalf("expected duplicate signup status 409, got %d", duplicateRec.Code)
+	}
+}
+
+func TestPublicPaidSnippetTeaserAndEntitledDetail(t *testing.T) {
+	now := time.Now().UTC()
+	store := newFakeSnippetStore(domain.Snippet{
+		ID:                   "snippet-1",
+		CoverImage:           "https://example.com/cover.jpg",
+		Code:                 "Text(\"Premium\")",
+		Status:               domain.StatusPublished,
+		UpdatedAt:            now,
+		PublishedAt:          &now,
+		RequiresSubscription: true,
+		Locales: domain.SnippetLocales{
+			EN: localizedFields("Premium Snippet", "premium-snippet", "Workflow"),
+			ZH: localizedFields("订阅 Snippet", "ding-yue-snippet", "Workflow"),
+		},
+	})
+	members := newFakeMemberStore()
+	router := newTestRouter(t, store, members, nil)
+
+	listReq := httptest.NewRequest(http.MethodGet, "/api/snippets", nil)
+	listRec := httptest.NewRecorder()
+	router.ServeHTTP(listRec, listReq)
+	if listRec.Code != http.StatusOK {
+		t.Fatalf("expected public list status 200, got %d", listRec.Code)
+	}
+
+	listBody := decodeResponse[[]domain.Snippet](t, listRec.Body)
+	if len(listBody) != 1 {
+		t.Fatalf("expected one public snippet, got %d", len(listBody))
+	}
+	if !listBody[0].Locked || listBody[0].AccessLevel != domain.AccessLevelTeaser {
+		t.Fatalf("expected teaser response for paid snippet, got locked=%v access=%q", listBody[0].Locked, listBody[0].AccessLevel)
+	}
+	if listBody[0].Code != "" || listBody[0].Locales.EN.Content != "" || listBody[0].Locales.EN.Prompts != "" {
+		t.Fatalf("expected public list teaser to omit protected content, got %#v", listBody[0])
+	}
+
+	detailReq := httptest.NewRequest(http.MethodGet, "/api/snippets/slug/premium-snippet", nil)
+	detailRec := httptest.NewRecorder()
+	router.ServeHTTP(detailRec, detailReq)
+	if detailRec.Code != http.StatusOK {
+		t.Fatalf("expected paid public detail status 200, got %d", detailRec.Code)
+	}
+
+	detailBody := decodeResponse[domain.Snippet](t, detailRec.Body)
+	if !detailBody.Locked || detailBody.Code != "" || detailBody.Locales.EN.Content != "" {
+		t.Fatalf("expected locked teaser detail, got %#v", detailBody)
+	}
+
+	memberCookie := memberSignupCookie(t, router, "builder@example.com", "secret12")
+	members.subscriptions["member-1"] = domain.MemberSubscription{
+		UserID:           "member-1",
+		Status:           domain.SubscriptionStatusActive,
+		StripeCustomerID: "cus_member_123",
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+
+	entitledReq := httptest.NewRequest(http.MethodGet, "/api/snippets/slug/premium-snippet", nil)
+	entitledReq.AddCookie(memberCookie)
+	entitledRec := httptest.NewRecorder()
+	router.ServeHTTP(entitledRec, entitledReq)
+	if entitledRec.Code != http.StatusOK {
+		t.Fatalf("expected entitled detail status 200, got %d", entitledRec.Code)
+	}
+
+	entitledBody := decodeResponse[domain.Snippet](t, entitledRec.Body)
+	if entitledBody.Locked || entitledBody.AccessLevel != domain.AccessLevelFull || entitledBody.Code == "" || entitledBody.Locales.EN.Content == "" {
+		t.Fatalf("expected entitled member to receive full snippet, got %#v", entitledBody)
+	}
+}
+
+func TestAdminPreviewBypassesPaidDraftAccess(t *testing.T) {
+	now := time.Now().UTC()
+	store := newFakeSnippetStore(domain.Snippet{
+		ID:                   "snippet-1",
+		CoverImage:           "https://example.com/cover.jpg",
+		Code:                 "Text(\"Preview\")",
+		Status:               domain.StatusDraft,
+		UpdatedAt:            now,
+		PublishedAt:          nil,
+		RequiresSubscription: true,
+		Locales: domain.SnippetLocales{
+			EN: localizedFields("Preview Snippet", "preview-snippet", "Workflow"),
+			ZH: localizedFields("预览 Snippet", "yu-lan-snippet", "Workflow"),
+		},
+	})
+	router := newTestRouter(t, store, nil, nil)
+
+	anonymousReq := httptest.NewRequest(http.MethodGet, "/api/snippets/slug/preview-snippet?preview=admin", nil)
+	anonymousRec := httptest.NewRecorder()
+	router.ServeHTTP(anonymousRec, anonymousReq)
+	if anonymousRec.Code != http.StatusNotFound {
+		t.Fatalf("expected anonymous preview request to stay hidden, got %d", anonymousRec.Code)
+	}
+
+	adminCookie := loginCookie(t, router)
+	previewReq := httptest.NewRequest(http.MethodGet, "/api/snippets/slug/preview-snippet?preview=admin", nil)
+	previewReq.AddCookie(adminCookie)
+	previewRec := httptest.NewRecorder()
+	router.ServeHTTP(previewRec, previewReq)
+	if previewRec.Code != http.StatusOK {
+		t.Fatalf("expected admin preview status 200, got %d", previewRec.Code)
+	}
+
+	previewBody := decodeResponse[domain.Snippet](t, previewRec.Body)
+	if previewBody.Locked || previewBody.AccessLevel != domain.AccessLevelFull || previewBody.Code == "" || previewBody.Locales.EN.Content == "" {
+		t.Fatalf("expected admin preview to bypass paywall, got %#v", previewBody)
+	}
+}
+
+func TestMemberCheckoutBillingPortalAndWebhookSync(t *testing.T) {
+	members := newFakeMemberStore()
+	billing := &fakeBillingProvider{
+		checkoutURL: "https://stripe.test/checkout",
+		portalURL:   "https://stripe.test/portal",
+	}
+	router := newTestRouter(t, nil, members, billing)
+	memberCookie := memberSignupCookie(t, router, "builder@example.com", "secret12")
+
+	checkoutReq := httptest.NewRequest(http.MethodPost, "/api/member/checkout", nil)
+	checkoutReq.AddCookie(memberCookie)
+	checkoutRec := httptest.NewRecorder()
+	router.ServeHTTP(checkoutRec, checkoutReq)
+	if checkoutRec.Code != http.StatusOK {
+		t.Fatalf("expected checkout session status 200, got %d with body %q", checkoutRec.Code, checkoutRec.Body.String())
+	}
+
+	checkoutBody := decodeResponse[map[string]string](t, checkoutRec.Body)
+	if checkoutBody["url"] != "https://stripe.test/checkout" {
+		t.Fatalf("expected checkout url, got %#v", checkoutBody)
+	}
+	if billing.lastCheckoutParams.UserID != "member-1" || billing.lastCheckoutParams.Email != "builder@example.com" {
+		t.Fatalf("expected checkout to use member identity, got %#v", billing.lastCheckoutParams)
+	}
+
+	now := time.Now().UTC()
+	members.subscriptions["member-1"] = domain.MemberSubscription{
+		UserID:               "member-1",
+		StripeCustomerID:     "cus_member_123",
+		StripeSubscriptionID: "sub_member_123",
+		Status:               domain.SubscriptionStatusInactive,
+		CreatedAt:            now,
+		UpdatedAt:            now,
+	}
+
+	portalReq := httptest.NewRequest(http.MethodPost, "/api/member/billing-portal", nil)
+	portalReq.AddCookie(memberCookie)
+	portalRec := httptest.NewRecorder()
+	router.ServeHTTP(portalRec, portalReq)
+	if portalRec.Code != http.StatusOK {
+		t.Fatalf("expected billing portal status 200, got %d with body %q", portalRec.Code, portalRec.Body.String())
+	}
+	if billing.lastPortalCustomer != "cus_member_123" {
+		t.Fatalf("expected billing portal customer id, got %q", billing.lastPortalCustomer)
+	}
+
+	billing.webhookEvent = BillingWebhookEvent{
+		CheckoutCompleted: &BillingCheckoutCompleted{
+			UserID:         "member-1",
+			CustomerID:     "cus_member_123",
+			SubscriptionID: "sub_member_123",
+			PriceID:        "price_monthly_123",
+		},
+	}
+	webhookReq := httptest.NewRequest(http.MethodPost, "/api/stripe/webhook", strings.NewReader(`{}`))
+	webhookReq.Header.Set("Stripe-Signature", "test-signature")
+	webhookRec := httptest.NewRecorder()
+	router.ServeHTTP(webhookRec, webhookReq)
+	if webhookRec.Code != http.StatusOK {
+		t.Fatalf("expected checkout webhook status 200, got %d with body %q", webhookRec.Code, webhookRec.Body.String())
+	}
+
+	periodEnd := now.Add(30 * 24 * time.Hour)
+	billing.webhookEvent = BillingWebhookEvent{
+		SubscriptionState: &BillingSubscriptionState{
+			UserID:            "member-1",
+			CustomerID:        "cus_member_123",
+			SubscriptionID:    "sub_member_123",
+			Status:            "active",
+			CurrentPeriodEnd:  &periodEnd,
+			CancelAtPeriodEnd: false,
+			PriceID:           "price_monthly_123",
+		},
+	}
+	webhookReq = httptest.NewRequest(http.MethodPost, "/api/stripe/webhook", strings.NewReader(`{}`))
+	webhookReq.Header.Set("Stripe-Signature", "test-signature")
+	webhookRec = httptest.NewRecorder()
+	router.ServeHTTP(webhookRec, webhookReq)
+	if webhookRec.Code != http.StatusOK {
+		t.Fatalf("expected subscription webhook status 200, got %d with body %q", webhookRec.Code, webhookRec.Body.String())
+	}
+
+	subscription := members.subscriptions["member-1"]
+	if subscription.Status != domain.SubscriptionStatusActive {
+		t.Fatalf("expected active subscription after webhook, got %q", subscription.Status)
+	}
+	if subscription.CurrentPeriodEnd == nil || !subscription.CurrentPeriodEnd.Equal(periodEnd) {
+		t.Fatalf("expected current period end to sync, got %#v", subscription.CurrentPeriodEnd)
+	}
+	if subscription.PriceID != "price_monthly_123" {
+		t.Fatalf("expected price id to sync, got %q", subscription.PriceID)
+	}
+}
+
 func TestUploadCoverImageAndServeStatic(t *testing.T) {
 	uploadDir := t.TempDir()
-	router := NewRouter(fakePinger{}, newFakeSnippetStore(), testAdminAuthConfig, uploadDir)
+	router := NewRouter(
+		fakePinger{},
+		newFakeSnippetStore(),
+		newFakeMemberStore(),
+		testAdminAuthConfig,
+		testMemberAuthConfig,
+		&fakeBillingProvider{checkoutURL: "https://stripe.test/checkout", portalURL: "https://stripe.test/portal"},
+		uploadDir,
+	)
 	adminCookie := loginCookie(t, router)
 
 	body := &bytes.Buffer{}
@@ -581,7 +1080,7 @@ func TestUploadCoverImageAndServeStatic(t *testing.T) {
 }
 
 func TestUploadCoverImageRequiresAuthAndImage(t *testing.T) {
-	router := NewRouter(fakePinger{}, newFakeSnippetStore(), testAdminAuthConfig, t.TempDir())
+	router := newTestRouter(t, newFakeSnippetStore(), nil, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/admin/uploads/cover", nil)
 	rec := httptest.NewRecorder()
@@ -615,7 +1114,7 @@ func TestUploadCoverImageRequiresAuthAndImage(t *testing.T) {
 }
 
 func TestUploadCoverImageTooLarge(t *testing.T) {
-	router := NewRouter(fakePinger{}, newFakeSnippetStore(), testAdminAuthConfig, t.TempDir())
+	router := newTestRouter(t, newFakeSnippetStore(), nil, nil)
 	adminCookie := loginCookie(t, router)
 
 	body := &bytes.Buffer{}

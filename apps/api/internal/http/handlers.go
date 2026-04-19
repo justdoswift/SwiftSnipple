@@ -10,6 +10,7 @@ import (
 	"io"
 	"mime/multipart"
 	"math"
+	"net/mail"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -18,6 +19,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/skrashevich/go-webp"
+	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/image/draw"
 	"swiftsnipple/api/internal/domain"
 	"swiftsnipple/api/internal/repo"
@@ -43,11 +45,24 @@ type snippetStore interface {
 	Delete(ctx context.Context, id string) error
 }
 
+type memberStore interface {
+	CreateUser(ctx context.Context, email, passwordHash string) (domain.MemberUser, error)
+	GetUserByEmail(ctx context.Context, email string) (domain.MemberUser, error)
+	GetUserByID(ctx context.Context, id string) (domain.MemberUser, error)
+	GetSubscriptionByUserID(ctx context.Context, userID string) (*domain.MemberSubscription, error)
+	GetSubscriptionByStripeCustomerID(ctx context.Context, customerID string) (*domain.MemberSubscription, error)
+	GetSubscriptionByStripeSubscriptionID(ctx context.Context, subscriptionID string) (*domain.MemberSubscription, error)
+	UpsertSubscription(ctx context.Context, subscription domain.MemberSubscription) (domain.MemberSubscription, error)
+}
+
 type Handler struct {
-	db       dbPinger
-	snippets snippetStore
-	auth     adminAuth
-	uploads  localUploader
+	db         dbPinger
+	snippets   snippetStore
+	members    memberStore
+	auth       adminAuth
+	memberAuth memberAuth
+	uploads    localUploader
+	billing    billingProvider
 }
 
 type localUploader struct {
@@ -84,7 +99,22 @@ func (h *Handler) ListSnippets(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, snippets)
+	viewer, err := h.resolveViewerAccess(r)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to resolve access"})
+		return
+	}
+
+	publicSnippets := make([]domain.Snippet, 0, len(snippets))
+	for _, snippet := range snippets {
+		if snippet.Status != domain.StatusPublished {
+			continue
+		}
+
+		publicSnippets = append(publicSnippets, publicSnippetResponse(snippet, viewer.canAccess(snippet), false))
+	}
+
+	writeJSON(w, http.StatusOK, publicSnippets)
 }
 
 func (h *Handler) GetSnippet(w http.ResponseWriter, r *http.Request) {
@@ -98,11 +128,55 @@ func (h *Handler) GetSnippet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, snippet)
+	viewer, err := h.resolveViewerAccess(r)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to resolve access"})
+		return
+	}
+	if snippet.Status != domain.StatusPublished && !viewer.IsAdminPreview {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "snippet not found"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, publicSnippetResponse(snippet, viewer.canAccess(snippet), true))
 }
 
 func (h *Handler) GetSnippetBySlug(w http.ResponseWriter, r *http.Request) {
 	snippet, err := h.snippets.GetBySlug(r.Context(), chi.URLParam(r, "slug"))
+	if err != nil {
+		if errors.Is(err, repo.ErrNotFound) {
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "snippet not found"})
+			return
+		}
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to fetch snippet"})
+		return
+	}
+
+	viewer, err := h.resolveViewerAccess(r)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to resolve access"})
+		return
+	}
+	if snippet.Status != domain.StatusPublished && !viewer.IsAdminPreview {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "snippet not found"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, publicSnippetResponse(snippet, viewer.canAccess(snippet), true))
+}
+
+func (h *Handler) ListAdminSnippets(w http.ResponseWriter, r *http.Request) {
+	snippets, err := h.snippets.List(r.Context())
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to list snippets"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, snippets)
+}
+
+func (h *Handler) GetAdminSnippet(w http.ResponseWriter, r *http.Request) {
+	snippet, err := h.snippets.GetByID(r.Context(), chi.URLParam(r, "id"))
 	if err != nil {
 		if errors.Is(err, repo.ErrNotFound) {
 			writeJSON(w, http.StatusNotFound, map[string]string{"error": "snippet not found"})
@@ -269,6 +343,183 @@ func (h *Handler) AdminSession(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, sessionResponseFromPayload(*session))
 }
 
+func (h *Handler) MemberSignup(w http.ResponseWriter, r *http.Request) {
+	payload, ok := decodeMemberAuthRequest(w, r)
+	if !ok {
+		return
+	}
+
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to create account"})
+		return
+	}
+
+	user, err := h.members.CreateUser(r.Context(), payload.Email, string(passwordHash))
+	if err != nil {
+		if errors.Is(err, repo.ErrDuplicateEmail) {
+			writeJSON(w, http.StatusConflict, map[string]string{"error": "email already in use"})
+			return
+		}
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to create account"})
+		return
+	}
+
+	h.writeMemberSession(w, user, nil, http.StatusCreated)
+}
+
+func (h *Handler) MemberLogin(w http.ResponseWriter, r *http.Request) {
+	payload, ok := decodeMemberAuthRequest(w, r)
+	if !ok {
+		return
+	}
+
+	user, err := h.members.GetUserByEmail(r.Context(), payload.Email)
+	if err != nil {
+		if errors.Is(err, repo.ErrMemberNotFound) {
+			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid credentials"})
+			return
+		}
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to log in"})
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(payload.Password)); err != nil {
+		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid credentials"})
+		return
+	}
+
+	subscription, err := h.members.GetSubscriptionByUserID(r.Context(), user.ID)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to load session"})
+		return
+	}
+
+	h.writeMemberSession(w, user, subscription, http.StatusOK)
+}
+
+func (h *Handler) MemberLogout(w http.ResponseWriter, r *http.Request) {
+	clearMemberSessionCookie(w)
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *Handler) MemberSession(w http.ResponseWriter, r *http.Request) {
+	session, ok := h.readMemberSession(r)
+	if !ok {
+		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
+		return
+	}
+
+	user, err := h.members.GetUserByID(r.Context(), session.UserID)
+	if err != nil {
+		clearMemberSessionCookie(w)
+		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
+		return
+	}
+
+	subscription, err := h.members.GetSubscriptionByUserID(r.Context(), user.ID)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to load session"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, memberSessionResponse(user, subscription))
+}
+
+func (h *Handler) CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
+	session, ok := memberSessionFromContext(r.Context())
+	if !ok {
+		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
+		return
+	}
+
+	user, err := h.members.GetUserByID(r.Context(), session.UserID)
+	if err != nil {
+		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
+		return
+	}
+
+	subscription, err := h.members.GetSubscriptionByUserID(r.Context(), user.ID)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to load subscription"})
+		return
+	}
+	if subscription != nil && domain.IsEntitledSubscription(subscription.Status, subscription.CurrentPeriodEnd, time.Now()) {
+		writeJSON(w, http.StatusConflict, map[string]string{"error": "subscription already active"})
+		return
+	}
+
+	customerID := ""
+	if subscription != nil {
+		customerID = subscription.StripeCustomerID
+	}
+
+	url, err := h.billing.CreateCheckoutSession(r.Context(), CheckoutSessionParams{
+		UserID:     user.ID,
+		Email:      user.Email,
+		CustomerID: customerID,
+	})
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to create checkout session"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"url": url})
+}
+
+func (h *Handler) CreateBillingPortalSession(w http.ResponseWriter, r *http.Request) {
+	session, ok := memberSessionFromContext(r.Context())
+	if !ok {
+		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
+		return
+	}
+
+	subscription, err := h.members.GetSubscriptionByUserID(r.Context(), session.UserID)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to load subscription"})
+		return
+	}
+	if subscription == nil || strings.TrimSpace(subscription.StripeCustomerID) == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "no billing account found"})
+		return
+	}
+
+	url, err := h.billing.CreateBillingPortalSession(r.Context(), subscription.StripeCustomerID)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to create billing portal session"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"url": url})
+}
+
+func (h *Handler) StripeWebhook(w http.ResponseWriter, r *http.Request) {
+	payload, err := io.ReadAll(r.Body)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid webhook payload"})
+		return
+	}
+
+	event, err := h.billing.ParseWebhook(payload, r.Header.Get("Stripe-Signature"))
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid webhook signature"})
+		return
+	}
+
+	switch {
+	case event.CheckoutCompleted != nil:
+		err = h.applyCheckoutCompleted(r.Context(), *event.CheckoutCompleted)
+	case event.SubscriptionState != nil:
+		err = h.applySubscriptionState(r.Context(), *event.SubscriptionState)
+	}
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to process webhook"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]bool{"received": true})
+}
+
 func decodeSnippetPayload(w http.ResponseWriter, r *http.Request) (domain.SnippetPayload, bool) {
 	var payload domain.SnippetPayload
 	decoder := json.NewDecoder(r.Body)
@@ -290,6 +541,31 @@ func decodeSnippetPayload(w http.ResponseWriter, r *http.Request) (domain.Snippe
 	if !domain.IsValidStatus(payload.Status) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid status"})
 		return domain.SnippetPayload{}, false
+	}
+
+	return payload, true
+}
+
+func decodeMemberAuthRequest(w http.ResponseWriter, r *http.Request) (memberAuthRequest, bool) {
+	var payload memberAuthRequest
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+
+	if err := decoder.Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json payload"})
+		return memberAuthRequest{}, false
+	}
+
+	payload.Email = strings.ToLower(strings.TrimSpace(payload.Email))
+	payload.Password = strings.TrimSpace(payload.Password)
+
+	if !isValidEmail(payload.Email) {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid email"})
+		return memberAuthRequest{}, false
+	}
+	if len(payload.Password) < 6 {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "password must be at least 6 characters"})
+		return memberAuthRequest{}, false
 	}
 
 	return payload, true
@@ -317,6 +593,219 @@ func writeJSON(w http.ResponseWriter, status int, value any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(value)
+}
+
+type viewerAccess struct {
+	IsAdminPreview bool
+	IsEntitled     bool
+}
+
+func (h *Handler) resolveViewerAccess(r *http.Request) (viewerAccess, error) {
+	viewer := viewerAccess{
+		IsAdminPreview: h.isAdminPreview(r),
+	}
+
+	session, ok := h.readMemberSession(r)
+	if !ok {
+		return viewer, nil
+	}
+
+	user, err := h.members.GetUserByID(r.Context(), session.UserID)
+	if err != nil {
+		if errors.Is(err, repo.ErrMemberNotFound) {
+			return viewer, nil
+		}
+		return viewer, err
+	}
+
+	subscription, err := h.members.GetSubscriptionByUserID(r.Context(), user.ID)
+	if err != nil {
+		return viewer, err
+	}
+
+	viewer.IsEntitled = subscription != nil && domain.IsEntitledSubscription(subscription.Status, subscription.CurrentPeriodEnd, time.Now())
+	return viewer, nil
+}
+
+func (v viewerAccess) canAccess(snippet domain.Snippet) bool {
+	return v.IsAdminPreview || !snippet.RequiresSubscription || v.IsEntitled
+}
+
+func (h *Handler) isAdminPreview(r *http.Request) bool {
+	if r.URL.Query().Get("preview") != "admin" {
+		return false
+	}
+
+	_, ok := h.readAdminSession(r)
+	return ok
+}
+
+func publicSnippetResponse(snippet domain.Snippet, canAccess bool, includeProtectedContent bool) domain.Snippet {
+	response := snippet
+	response.ViewerCanAccess = canAccess
+	response.Locked = response.RequiresSubscription && !canAccess
+	if response.Locked {
+		response.AccessLevel = domain.AccessLevelTeaser
+	} else {
+		response.AccessLevel = domain.AccessLevelFull
+	}
+
+	if !includeProtectedContent || response.Locked {
+		response.Code = ""
+		response.Locales.EN.Content = ""
+		response.Locales.EN.Prompts = ""
+		response.Locales.ZH.Content = ""
+		response.Locales.ZH.Prompts = ""
+	}
+
+	return response
+}
+
+func (h *Handler) writeMemberSession(w http.ResponseWriter, user domain.MemberUser, subscription *domain.MemberSubscription, status int) {
+	now := time.Now().UTC()
+	expiresAt := now.Add(memberSessionDuration)
+	payload := memberSessionPayload{
+		UserID:    user.ID,
+		Email:     user.Email,
+		IssuedAt:  now.Format(time.RFC3339),
+		ExpiresAt: expiresAt.Format(time.RFC3339),
+	}
+
+	token, err := h.memberAuth.signSession(payload)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to create session"})
+		return
+	}
+
+	http.SetCookie(w, h.memberAuth.sessionCookie(token, expiresAt))
+	writeJSON(w, status, memberSessionResponse(user, subscription))
+}
+
+func memberSessionResponse(user domain.MemberUser, subscription *domain.MemberSubscription) domain.MemberSession {
+	response := domain.MemberSession{
+		Email:              user.Email,
+		IsAuthenticated:    true,
+		SubscriptionStatus: domain.SubscriptionStatusInactive,
+		IsEntitled:         false,
+		CurrentPeriodEnd:   nil,
+		CancelAtPeriodEnd:  false,
+		HasBillingPortal:   false,
+	}
+	if subscription == nil {
+		return response
+	}
+
+	response.SubscriptionStatus = subscription.Status
+	response.IsEntitled = domain.IsEntitledSubscription(subscription.Status, subscription.CurrentPeriodEnd, time.Now())
+	response.CurrentPeriodEnd = subscription.CurrentPeriodEnd
+	response.CancelAtPeriodEnd = subscription.CancelAtPeriodEnd
+	response.HasBillingPortal = strings.TrimSpace(subscription.StripeCustomerID) != ""
+	return response
+}
+
+func (h *Handler) applyCheckoutCompleted(ctx context.Context, completed BillingCheckoutCompleted) error {
+	if strings.TrimSpace(completed.UserID) == "" {
+		return errors.New("checkout session missing user id")
+	}
+	if _, err := h.members.GetUserByID(ctx, completed.UserID); err != nil {
+		return err
+	}
+
+	existing, err := h.members.GetSubscriptionByUserID(ctx, completed.UserID)
+	if err != nil {
+		return err
+	}
+
+	subscription := domain.MemberSubscription{
+		UserID:               completed.UserID,
+		Status:               domain.SubscriptionStatusInactive,
+		StripeCustomerID:     completed.CustomerID,
+		StripeSubscriptionID: completed.SubscriptionID,
+		PriceID:              completed.PriceID,
+	}
+	if existing != nil {
+		subscription = *existing
+		if completed.CustomerID != "" {
+			subscription.StripeCustomerID = completed.CustomerID
+		}
+		if completed.SubscriptionID != "" {
+			subscription.StripeSubscriptionID = completed.SubscriptionID
+		}
+		if completed.PriceID != "" {
+			subscription.PriceID = completed.PriceID
+		}
+	}
+
+	_, err = h.members.UpsertSubscription(ctx, subscription)
+	return err
+}
+
+func (h *Handler) applySubscriptionState(ctx context.Context, state BillingSubscriptionState) error {
+	var (
+		existing *domain.MemberSubscription
+		err      error
+	)
+
+	if state.SubscriptionID != "" {
+		existing, err = h.members.GetSubscriptionByStripeSubscriptionID(ctx, state.SubscriptionID)
+		if err != nil {
+			return err
+		}
+	}
+	if existing == nil && state.CustomerID != "" {
+		existing, err = h.members.GetSubscriptionByStripeCustomerID(ctx, state.CustomerID)
+		if err != nil {
+			return err
+		}
+	}
+
+	userID := strings.TrimSpace(state.UserID)
+	if userID == "" && existing != nil {
+		userID = existing.UserID
+	}
+	if userID == "" {
+		return errors.New("subscription event missing user id")
+	}
+	if _, err := h.members.GetUserByID(ctx, userID); err != nil {
+		return err
+	}
+
+	subscription := domain.MemberSubscription{
+		UserID:               userID,
+		StripeCustomerID:     state.CustomerID,
+		StripeSubscriptionID: state.SubscriptionID,
+		Status:               domain.NormalizeSubscriptionStatus(state.Status),
+		CurrentPeriodEnd:     state.CurrentPeriodEnd,
+		CancelAtPeriodEnd:    state.CancelAtPeriodEnd,
+		PriceID:              state.PriceID,
+	}
+	if existing != nil {
+		subscription = *existing
+		if state.CustomerID != "" {
+			subscription.StripeCustomerID = state.CustomerID
+		}
+		if state.SubscriptionID != "" {
+			subscription.StripeSubscriptionID = state.SubscriptionID
+		}
+		subscription.Status = domain.NormalizeSubscriptionStatus(state.Status)
+		subscription.CurrentPeriodEnd = state.CurrentPeriodEnd
+		subscription.CancelAtPeriodEnd = state.CancelAtPeriodEnd
+		if state.PriceID != "" {
+			subscription.PriceID = state.PriceID
+		}
+	}
+
+	_, err = h.members.UpsertSubscription(ctx, subscription)
+	return err
+}
+
+func isValidEmail(value string) bool {
+	if strings.TrimSpace(value) == "" {
+		return false
+	}
+
+	_, err := mail.ParseAddress(value)
+	return err == nil
 }
 
 func (u localUploader) saveImage(file multipart.File, _ *multipart.FileHeader) (string, error) {

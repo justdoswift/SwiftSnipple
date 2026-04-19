@@ -5,11 +5,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import AdminDashboard from "../../pages/admin/AdminDashboard";
 import AdminSnippetEditor from "../../pages/admin/AdminSnippetEditor";
 import AdminSnippets from "../../pages/admin/AdminSnippets";
-import { getSnippets } from "../../services/snippets";
-import { Snippet } from "../../types";
+import { getAdminSnippets } from "../../services/snippets";
 import AdminLayout from "./AdminLayout";
 import type { AdminAuthSession } from "../../lib/admin-auth";
 import { PublicThemeContext } from "../../lib/public-theme";
+import { createSnippet } from "../../test/factories";
 
 vi.mock("../../lib/heroui", async () => {
   const actual = await vi.importActual<typeof import("../../lib/heroui")>("../../lib/heroui");
@@ -87,31 +87,26 @@ vi.mock("../../services/snippets", () => ({
   createSnippet: vi.fn(),
   deleteSnippet: vi.fn(),
   getSnippetById: vi.fn(),
-  getSnippets: vi.fn(),
+  getAdminSnippets: vi.fn(),
   publishSnippet: vi.fn(),
   unpublishSnippet: vi.fn(),
   updateSnippet: vi.fn(),
 }));
 
-const mockedGetSnippets = vi.mocked(getSnippets);
+const mockedGetAdminSnippets = vi.mocked(getAdminSnippets);
 
-const baseSnippet: Snippet = {
-  id: "snippet-1",
+const baseSnippet = createSnippet({
   title: "Prompt Studio",
   slug: "prompt-studio",
   excerpt: "An editor-ready snippet.",
   category: "Workflow",
   tags: ["Prompting"],
-  coverImage: "https://example.com/cover.jpg",
   content: "# Prompt Studio",
-  code: "Text(\"Prompt Studio\")",
+  code: 'Text("Prompt Studio")',
   prompts: "Create an editor-ready snippet.",
-  seoTitle: "Prompt Studio",
-  seoDescription: "SEO copy",
   status: "Draft",
-  updatedAt: "2026-04-09T12:00:00.000Z",
   publishedAt: null,
-};
+});
 
 const adminAuthSession: AdminAuthSession = {
   email: "creator@example.com",
@@ -140,8 +135,8 @@ function renderAdminRoute(initialEntry: string, onToggleTheme = vi.fn(), theme: 
 
 describe("AdminLayout", () => {
   beforeEach(() => {
-    mockedGetSnippets.mockReset();
-    mockedGetSnippets.mockResolvedValue([baseSnippet]);
+    mockedGetAdminSnippets.mockReset();
+    mockedGetAdminSnippets.mockResolvedValue([baseSnippet]);
   });
 
   it("shows the unified dashboard command bar", async () => {

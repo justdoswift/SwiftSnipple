@@ -125,7 +125,7 @@ function renderAdminRoute(initialEntry: string, onToggleTheme = vi.fn(), theme: 
       <MemoryRouter initialEntries={[initialEntry]}>
         <Routes>
           <Route
-            path="/en/admin"
+            path="/admin"
             element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} onToggleTheme={onToggleTheme} />}
           >
             <Route index element={<AdminDashboard />} />
@@ -145,7 +145,7 @@ describe("AdminLayout", () => {
   });
 
   it("shows the unified dashboard command bar", async () => {
-    renderAdminRoute("/en/admin");
+    renderAdminRoute("/admin");
 
     await waitFor(() => {
       expect(screen.getByLabelText("Search title or slug")).toBeInTheDocument();
@@ -164,7 +164,7 @@ describe("AdminLayout", () => {
     const localeButton = within(header!).getByRole("button", { name: "Select language" });
     const frontSiteLink = within(header!).getByRole("link", { name: /View Front Site/i });
 
-    expect(newLink).toHaveAttribute("href", "/en/admin/snippets/new");
+    expect(newLink).toHaveAttribute("href", "/admin/snippets/new");
     expect(newLink).toHaveClass("admin-nav-action-icon");
     expect(themeButton).toHaveClass("admin-nav-action-icon");
     expect(logOutButton).toHaveClass("admin-nav-action-icon");
@@ -231,7 +231,7 @@ describe("AdminLayout", () => {
   });
 
   it("shows the unified snippets command bar", async () => {
-    renderAdminRoute("/en/admin/snippets");
+    renderAdminRoute("/admin/snippets");
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Snippet Library" })).toBeInTheDocument();
@@ -240,7 +240,7 @@ describe("AdminLayout", () => {
     const header = screen.getByTestId("admin-navbar-shell").closest("header");
 
     expect(header).not.toBeNull();
-    expect(within(header!).getByRole("link", { name: "New" })).toHaveAttribute("href", "/en/admin/snippets/new");
+    expect(within(header!).getByRole("link", { name: "New" })).toHaveAttribute("href", "/admin/snippets/new");
     expect(within(header!).getByRole("link", { name: "New" })).toHaveClass("admin-nav-action-icon");
     expect(within(header!).getByRole("button", { name: "Switch to light site mode" })).toHaveClass("admin-nav-action-icon");
     expect(within(header!).getByRole("button", { name: "Log out" })).toHaveClass("admin-nav-action-icon");
@@ -260,7 +260,7 @@ describe("AdminLayout", () => {
   });
 
   it("shows the unified editor command bar", async () => {
-    renderAdminRoute("/en/admin/snippets/new");
+    renderAdminRoute("/admin/snippets/new");
 
     await waitFor(() => {
       expect(screen.getByLabelText("Snippet Title")).toBeInTheDocument();
@@ -296,7 +296,7 @@ describe("AdminLayout", () => {
   });
 
   it("renders admin tooltips with the shared tooltip class", async () => {
-    renderAdminRoute("/en/admin");
+    renderAdminRoute("/admin");
 
     await waitFor(() => {
       expect(screen.getByLabelText("Search title or slug")).toBeInTheDocument();
@@ -318,7 +318,7 @@ describe("AdminLayout", () => {
 
   it("calls the parent theme toggle handler and reflects the provided light theme", async () => {
     const onToggleTheme = vi.fn();
-    renderAdminRoute("/en/admin", onToggleTheme, "light");
+    renderAdminRoute("/admin", onToggleTheme, "light");
 
     await waitFor(() => {
       expect(screen.getByLabelText("Search title or slug")).toBeInTheDocument();

@@ -42,9 +42,9 @@ describe("AdminSnippetEditor", () => {
     mockedUploadCoverImage.mockReset();
 
     render(
-      <MemoryRouter initialEntries={["/en/admin/snippets/new"]}>
+      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
         <Routes>
-          <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
             <Route path="snippets/new" element={<AdminSnippetEditor />} />
             <Route path="snippets/:id" element={<AdminSnippetEditor />} />
           </Route>
@@ -82,9 +82,9 @@ describe("AdminSnippetEditor", () => {
     mockedPublishSnippet.mockReset();
 
     render(
-      <MemoryRouter initialEntries={["/en/admin/snippets/new"]}>
+      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
         <Routes>
-          <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
             <Route path="snippets/new" element={<AdminSnippetEditor />} />
             <Route path="snippets/:id" element={<AdminSnippetEditor />} />
           </Route>
@@ -120,9 +120,9 @@ describe("AdminSnippetEditor", () => {
     URL.revokeObjectURL = vi.fn();
 
     render(
-      <MemoryRouter initialEntries={["/en/admin/snippets/new"]}>
+      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
         <Routes>
-          <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
             <Route path="snippets/new" element={<AdminSnippetEditor />} />
           </Route>
         </Routes>
@@ -159,9 +159,9 @@ describe("AdminSnippetEditor", () => {
     mockedPublishSnippet.mockReset();
 
     render(
-      <MemoryRouter initialEntries={["/en/admin/snippets/new"]}>
+      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
         <Routes>
-          <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
             <Route path="snippets" element={<div>snippet library route</div>} />
             <Route path="snippets/new" element={<AdminSnippetEditor />} />
           </Route>
@@ -180,9 +180,9 @@ describe("AdminSnippetEditor", () => {
     mockedPublishSnippet.mockReset();
 
     render(
-      <MemoryRouter initialEntries={["/en/admin/snippets/new"]}>
+      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
         <Routes>
-          <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
             <Route path="snippets/new" element={<AdminSnippetEditor />} />
           </Route>
         </Routes>
@@ -234,9 +234,9 @@ describe("AdminSnippetEditor", () => {
 
     render(
       <LocaleContext.Provider value={{ locale: "zh" }}>
-        <MemoryRouter initialEntries={["/zh/admin/snippets/snippet-1"]}>
+        <MemoryRouter initialEntries={["/admin/snippets/snippet-1"]}>
           <Routes>
-            <Route path="/zh/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+            <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
               <Route path="snippets/:id" element={<AdminSnippetEditor />} />
             </Route>
           </Routes>
@@ -310,9 +310,9 @@ describe("AdminSnippetEditor", () => {
     });
 
     render(
-      <MemoryRouter initialEntries={["/en/admin/snippets/new"]}>
+      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
         <Routes>
-          <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
             <Route path="snippets/new" element={<AdminSnippetEditor />} />
             <Route path="snippets/:id" element={<AdminSnippetEditor />} />
           </Route>
@@ -364,9 +364,9 @@ describe("AdminSnippetEditor", () => {
     });
 
     render(
-      <MemoryRouter initialEntries={["/en/admin/snippets/new"]}>
+      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
         <Routes>
-          <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
             <Route path="snippets/new" element={<AdminSnippetEditor />} />
             <Route path="snippets/:id" element={<AdminSnippetEditor />} />
           </Route>
@@ -411,9 +411,9 @@ describe("AdminSnippetEditor", () => {
     mockedDeleteSnippet.mockResolvedValue(undefined);
 
     render(
-      <MemoryRouter initialEntries={["/en/admin/snippets/snippet-1"]}>
+      <MemoryRouter initialEntries={["/admin/snippets/snippet-1"]}>
         <Routes>
-          <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
             <Route path="snippets" element={<div>Snippet Library</div>} />
             <Route path="snippets/:id" element={<AdminSnippetEditor />} />
           </Route>
@@ -472,9 +472,9 @@ describe("AdminSnippetEditor", () => {
     });
 
     render(
-      <MemoryRouter initialEntries={["/en/admin/snippets/snippet-1"]}>
+      <MemoryRouter initialEntries={["/admin/snippets/snippet-1"]}>
         <Routes>
-          <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
             <Route path="snippets/:id" element={<AdminSnippetEditor />} />
           </Route>
         </Routes>
@@ -549,9 +549,9 @@ describe("AdminSnippetEditor", () => {
     });
 
     render(
-      <MemoryRouter initialEntries={["/en/admin/snippets/snippet-1"]}>
+      <MemoryRouter initialEntries={["/admin/snippets/snippet-1"]}>
         <Routes>
-          <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
             <Route path="snippets/:id" element={<AdminSnippetEditor />} />
           </Route>
         </Routes>
@@ -644,9 +644,9 @@ describe("AdminSnippetEditor", () => {
 
     render(
       <LocaleContext.Provider value={{ locale: "zh" }}>
-        <MemoryRouter initialEntries={["/zh/admin/snippets/snippet-1"]}>
+        <MemoryRouter initialEntries={["/admin/snippets/snippet-1"]}>
           <Routes>
-            <Route path="/zh/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+            <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
               <Route path="snippets/:id" element={<AdminSnippetEditor />} />
             </Route>
           </Routes>
@@ -672,9 +672,9 @@ describe("AdminSnippetEditor", () => {
     mockedPublishSnippet.mockReset();
 
     render(
-      <MemoryRouter initialEntries={["/en/admin/snippets/new"]}>
+      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
         <Routes>
-          <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
             <Route path="snippets/new" element={<AdminSnippetEditor />} />
           </Route>
         </Routes>
@@ -719,9 +719,9 @@ describe("AdminSnippetEditor", () => {
     });
 
     render(
-      <MemoryRouter initialEntries={["/en/admin/snippets/snippet-1"]}>
+      <MemoryRouter initialEntries={["/admin/snippets/snippet-1"]}>
         <Routes>
-          <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
             <Route path="snippets/:id" element={<AdminSnippetEditor />} />
           </Route>
         </Routes>

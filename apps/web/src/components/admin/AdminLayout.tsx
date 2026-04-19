@@ -23,10 +23,10 @@ export default function AdminLayout({ adminAuthSession, onSignOut, onToggleTheme
   const location = useLocation();
   const [headerConfig, setHeaderConfig] = useState<AdminHeaderConfig | null>(null);
   const outletContext = useMemo<AdminHeaderOutletContext>(() => ({ setHeaderConfig }), []);
-  const isOverviewRoute = location.pathname === `/${locale}/admin`;
+  const isOverviewRoute = location.pathname === "/admin";
   const isEditorRoute =
-    location.pathname === `/${locale}/admin/snippets/new` ||
-    (location.pathname.startsWith(`/${locale}/admin/snippets/`) && location.pathname !== `/${locale}/admin/snippets`);
+    location.pathname === "/admin/snippets/new" ||
+    (location.pathname.startsWith("/admin/snippets/") && location.pathname !== "/admin/snippets");
   const activeHeader: AdminHeaderConfig = headerConfig ?? {};
 
   return (

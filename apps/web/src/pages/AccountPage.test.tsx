@@ -19,7 +19,7 @@ describe("AccountPage", () => {
     );
 
     expect(screen.getByText("builder@example.com")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /publishing workspace/i })).toHaveAttribute("href", "/en/admin");
+    expect(screen.getByRole("link", { name: /publishing workspace/i })).toHaveAttribute("href", "/admin");
     expect(screen.queryByText("Admin Console")).not.toBeInTheDocument();
   });
 

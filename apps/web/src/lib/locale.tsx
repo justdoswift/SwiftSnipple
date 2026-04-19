@@ -93,8 +93,9 @@ export function localizePublicPath(path = "/") {
 }
 
 export function localizeAdminPath(locale: AppLocale, path = "/admin") {
+  void locale;
   const normalizedPath = stripLocalePrefix(normalizePath(path));
-  return `/${locale}${normalizedPath}`;
+  return normalizedPath === "" ? "/admin" : normalizedPath;
 }
 
 export function stripLocalePrefix(pathname: string) {

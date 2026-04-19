@@ -79,9 +79,9 @@ function LegacySnippetRedirect() {
 }
 
 function LegacyAdminSnippetRedirect() {
-  const { locale, id } = useParams();
+  const { id } = useParams();
   return (
-    <Navigate to={localizeAdminPath((locale as AppLocale) || "en", id ? `/admin/snippets/${id}` : "/admin/snippets")} replace />
+    <Navigate to={localizeAdminPath("en", id ? `/admin/snippets/${id}` : "/admin/snippets")} replace />
   );
 }
 
@@ -90,7 +90,7 @@ function AdminLoginRedirect() {
   return <Navigate to={localizeAdminPath(locale, "/admin")} replace />;
 }
 
-function AdminPrefixRedirect() {
+function LegacyAdminRedirect() {
   const location = useLocation();
   const preferredLocale = readStoredLocale();
   return <Navigate to={localizeAdminPath(preferredLocale, stripLocalePrefix(location.pathname))} replace />;
@@ -302,9 +302,8 @@ export default function App() {
                 </PublicShell>
               }
             />
-            <Route path="/admin/*" element={<AdminPrefixRedirect />} />
             <Route
-              path="/:locale/admin/login"
+              path="/admin/login"
               element={
                 !isAdminAuthResolved ? (
                   <AdminRouteFallback />
@@ -319,7 +318,7 @@ export default function App() {
             />
             <Route path="/articles/:slug" element={<LegacySnippetRedirect />} />
             <Route
-              path="/:locale/admin"
+              path="/admin"
               element={
                 <AdminAuthGate authSession={adminAuthSession} isResolved={isAdminAuthResolved}>
                   <AdminLayout
@@ -366,6 +365,7 @@ export default function App() {
                 }
               />
             </Route>
+            <Route path="/:locale/admin/*" element={<LegacyAdminRedirect />} />
             <Route path="/:locale/*" element={<LegacyPublicRedirect />} />
             <Route path="*" element={<Navigate to={localizePublicPath("/")} replace />} />
           </Route>

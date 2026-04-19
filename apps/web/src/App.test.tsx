@@ -118,7 +118,7 @@ describe("App public theme", () => {
       createdAt: "2026-04-18T00:00:00.000Z",
     });
 
-    renderAppAt("/en/admin");
+    renderAppAt("/admin");
 
     await waitFor(() => {
       expect(screen.getByText("Entries")).toBeInTheDocument();
@@ -134,7 +134,7 @@ describe("App public theme", () => {
       createdAt: "2026-04-18T00:00:00.000Z",
     });
 
-    renderAppAt("/en/admin/login");
+    renderAppAt("/admin/login");
 
     await waitFor(() => {
       expect(screen.getByText("Entries")).toBeInTheDocument();
@@ -148,7 +148,7 @@ describe("App public theme", () => {
       createdAt: "2026-04-18T00:00:00.000Z",
     });
 
-    renderAppAt("/en/admin");
+    renderAppAt("/admin");
 
     await waitFor(() => {
       expect(screen.getByText("Entries")).toBeInTheDocument();
@@ -160,6 +160,22 @@ describe("App public theme", () => {
       expect(screen.getByRole("heading", { name: "Creator Log In" })).toBeInTheDocument();
     });
     expect(mockedLogoutAdmin).toHaveBeenCalled();
+  });
+
+  it("redirects legacy locale-prefixed admin routes to the unprefixed workspace", async () => {
+    mockedGetAdminSession.mockResolvedValue({
+      email: "creator@example.com",
+      provider: "email",
+      createdAt: "2026-04-18T00:00:00.000Z",
+    });
+
+    renderAppAt("/en/admin");
+
+    await waitFor(() => {
+      expect(screen.getByText("Entries")).toBeInTheDocument();
+    });
+
+    expect(window.location.pathname).toBe("/admin");
   });
 
   it("keeps the login route in sync with the selected public theme", async () => {

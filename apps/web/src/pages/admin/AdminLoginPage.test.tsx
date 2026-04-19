@@ -16,10 +16,10 @@ function renderAdminLoginPage() {
 
   render(
     <PublicThemeContext.Provider value="dark">
-      <MemoryRouter initialEntries={["/en/admin/login"]}>
+      <MemoryRouter initialEntries={["/admin/login"]}>
         <Routes>
-          <Route path="/en/admin/login" element={<AdminLoginPage authSession={null} onAuthenticate={onAuthenticate} />} />
-          <Route path="/en/admin" element={<div>creator workspace route</div>} />
+          <Route path="/admin/login" element={<AdminLoginPage authSession={null} onAuthenticate={onAuthenticate} />} />
+          <Route path="/admin" element={<div>creator workspace route</div>} />
         </Routes>
       </MemoryRouter>
     </PublicThemeContext.Provider>,
@@ -42,7 +42,7 @@ describe("AdminLoginPage", () => {
     expect(screen.getByRole("button", { name: "Enter Creator Workspace" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Continue with Google" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Continue with GitHub" })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Back to public collection" })).toHaveAttribute("href", "/en");
+    expect(screen.getByRole("link", { name: "Back to public collection" })).toHaveAttribute("href", "/");
   });
 
   it("submits email auth into the creator workspace", async () => {

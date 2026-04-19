@@ -2,11 +2,10 @@ import { ArrowUpRight, Languages, LogOut } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import type { AdminAuthSession } from "../../lib/admin-auth";
-import { Dropdown } from "../../lib/heroui";
+import { Dropdown, Tooltip } from "../../lib/heroui";
 import { getMessages } from "../../lib/messages";
 import { APP_LOCALE_OPTIONS, useAppLocale } from "../../lib/locale";
 import { usePublicTheme } from "../../lib/public-theme";
-import AdminHeaderTooltipAction from "./AdminHeaderTooltipAction";
 import AdminSidebar from "./AdminSidebar";
 import { type AdminHeaderConfig, type AdminHeaderOutletContext } from "./useAdminHeader";
 
@@ -52,29 +51,39 @@ export default function AdminLayout({ adminAuthSession, onSignOut }: AdminLayout
             <div className="admin-nav-actions flex items-center justify-end gap-2 md:gap-3">
               {activeHeader.end}
               {adminAuthSession ? (
-                <AdminHeaderTooltipAction content={copy.common.logOut}>
-                  <button
-                    type="button"
-                    aria-label={copy.common.logOut}
-                    className="admin-nav-action-icon type-action"
-                    onClick={onSignOut}
-                  >
-                    <LogOut className="h-5 w-5" />
-                  </button>
-                </AdminHeaderTooltipAction>
+                <Tooltip delay={0} closeDelay={0}>
+                  <Tooltip.Trigger>
+                    <button
+                      type="button"
+                      aria-label={copy.common.logOut}
+                      className="admin-nav-action-icon type-action"
+                      onClick={onSignOut}
+                    >
+                      <LogOut className="h-5 w-5" />
+                    </button>
+                  </Tooltip.Trigger>
+                  <Tooltip.Content>
+                    {copy.common.logOut}
+                  </Tooltip.Content>
+                </Tooltip>
               ) : null}
               <div className="admin-nav-locale-root">
                 <Dropdown>
-                  <AdminHeaderTooltipAction content={copy.nav.selectLanguage}>
-                    <Dropdown.Trigger
-                      aria-label={copy.nav.selectLanguage}
-                      className="admin-nav-action-icon admin-nav-locale-trigger type-action"
-                    >
-                      <span className="flex items-center justify-center" aria-hidden="true">
-                        <Languages className="h-5 w-5" />
-                      </span>
-                    </Dropdown.Trigger>
-                  </AdminHeaderTooltipAction>
+                  <Tooltip delay={0} closeDelay={0}>
+                    <Tooltip.Trigger>
+                      <Dropdown.Trigger
+                        aria-label={copy.nav.selectLanguage}
+                        className="admin-nav-action-icon admin-nav-locale-trigger type-action"
+                      >
+                        <span className="flex items-center justify-center" aria-hidden="true">
+                          <Languages className="h-5 w-5" />
+                        </span>
+                      </Dropdown.Trigger>
+                    </Tooltip.Trigger>
+                    <Tooltip.Content>
+                      {copy.nav.selectLanguage}
+                    </Tooltip.Content>
+                  </Tooltip>
                   <Dropdown.Popover>
                     <Dropdown.Menu
                       items={APP_LOCALE_OPTIONS}
@@ -93,15 +102,20 @@ export default function AdminLayout({ adminAuthSession, onSignOut }: AdminLayout
                   </Dropdown.Popover>
                 </Dropdown>
               </div>
-              <AdminHeaderTooltipAction content={copy.common.viewFrontSite}>
-                <Link
-                  to={`/${locale}`}
-                  aria-label={copy.common.viewFrontSite}
-                  className="admin-nav-action-icon"
-                >
-                  <ArrowUpRight className="h-5 w-5" />
-                </Link>
-              </AdminHeaderTooltipAction>
+              <Tooltip delay={0} closeDelay={0}>
+                <Tooltip.Trigger>
+                  <Link
+                    to={`/${locale}`}
+                    aria-label={copy.common.viewFrontSite}
+                    className="admin-nav-action-icon"
+                  >
+                    <ArrowUpRight className="h-5 w-5" />
+                  </Link>
+                </Tooltip.Trigger>
+                <Tooltip.Content>
+                  {copy.common.viewFrontSite}
+                </Tooltip.Content>
+              </Tooltip>
             </div>
           </div>
         </div>

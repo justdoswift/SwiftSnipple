@@ -1,10 +1,10 @@
 import { Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import AdminHeaderTooltipAction from "../../components/admin/AdminHeaderTooltipAction";
 import AdminSnippetLibraryContent from "../../components/admin/AdminSnippetLibraryContent";
 import StatCard from "../../components/admin/StatCard";
 import { useAdminHeader } from "../../components/admin/useAdminHeader";
+import { Tooltip } from "../../lib/heroui";
 import { getMessages } from "../../lib/messages";
 import { useAppLocale } from "../../lib/locale";
 import { getSnippets } from "../../services/snippets";
@@ -19,15 +19,20 @@ export default function AdminDashboard() {
   const headerConfig = useMemo(
     () => ({
       end: (
-        <AdminHeaderTooltipAction content={copy.newSnippet}>
-          <Link
-            to={`/${locale}/admin/snippets/new`}
-            aria-label={copy.newSnippet}
-            className="admin-nav-action-icon type-action"
-          >
-            <Plus className="h-5 w-5" />
-          </Link>
-        </AdminHeaderTooltipAction>
+        <Tooltip delay={0} closeDelay={0}>
+          <Tooltip.Trigger>
+            <Link
+              to={`/${locale}/admin/snippets/new`}
+              aria-label={copy.newSnippet}
+              className="admin-nav-action-icon type-action"
+            >
+              <Plus className="h-5 w-5" />
+            </Link>
+          </Tooltip.Trigger>
+          <Tooltip.Content>
+            {copy.newSnippet}
+          </Tooltip.Content>
+        </Tooltip>
       ),
     }),
     [copy.newSnippet, locale],

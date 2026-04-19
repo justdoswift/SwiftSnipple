@@ -17,8 +17,8 @@ vi.mock("../../lib/heroui", async () => {
     return <>{children}</>;
   }
 
-  function MockTooltipTrigger({ children, ...props }: { children: ReactNode } & Record<string, any>) {
-    return <div data-slot="tooltip-trigger" {...props}>{children}</div>;
+  function MockTooltipTrigger({ children }: { children: ReactNode }) {
+    return <>{children}</>;
   }
 
   function MockTooltipRoot({ children }: { children: ReactNode }) {
@@ -31,15 +31,16 @@ vi.mock("../../lib/heroui", async () => {
       return <>{children}</>;
     }
 
-    const element = triggerChild as ReactElement<Record<string, any>>;
-    const elementProps = element.props as Record<string, any>;
+    const triggerElement = triggerChild as ReactElement<{ children?: ReactNode }>;
+    const triggerNode = Children.only(triggerElement.props.children) as ReactElement<Record<string, any>>;
+    const elementProps = triggerNode.props as Record<string, any>;
     const tooltipContent = isValidElement(contentChild)
       ? (contentChild as ReactElement<{ children?: ReactNode }>).props.children
       : null;
 
     return (
       <>
-        {cloneElement(element, {
+        {cloneElement(triggerNode, {
           onMouseEnter: (event: MouseEvent<HTMLElement>) => {
             elementProps.onMouseEnter?.(event);
             setOpen(true);
@@ -66,18 +67,19 @@ vi.mock("../../lib/heroui", async () => {
     );
   }
 
-    return {
-      ...actual,
-      Tooltip: {
-        ...actual.Tooltip,
-        Root: MockTooltipRoot,
-        Trigger: MockTooltipTrigger,
-        Content: MockTooltipContent,
-      },
-      TooltipRoot: MockTooltipRoot,
-      TooltipTrigger: MockTooltipTrigger,
-      TooltipContent: MockTooltipContent,
-    };
+  const MockTooltip = Object.assign(MockTooltipRoot, {
+    Root: MockTooltipRoot,
+    Trigger: MockTooltipTrigger,
+    Content: MockTooltipContent,
+  });
+
+  return {
+    ...actual,
+    Tooltip: MockTooltip,
+    TooltipRoot: MockTooltipRoot,
+    TooltipTrigger: MockTooltipTrigger,
+    TooltipContent: MockTooltipContent,
+  };
 });
 
 vi.mock("../../services/snippets", () => ({
@@ -169,42 +171,32 @@ describe("AdminLayout", () => {
     expect(within(header!).queryByText("English")).not.toBeInTheDocument();
     expect(within(header!).queryByText("中文")).not.toBeInTheDocument();
 
-    const newTrigger = newLink.closest('[data-slot="tooltip-trigger"]');
-    const localeTrigger = localeButton.closest('[data-slot="tooltip-trigger"]');
-    const frontSiteTrigger = frontSiteLink.closest('[data-slot="tooltip-trigger"]');
-    const logOutTrigger = logOutButton.closest('[data-slot="tooltip-trigger"]');
-
-    expect(newTrigger).not.toBeNull();
-    expect(localeTrigger).not.toBeNull();
-    expect(frontSiteTrigger).not.toBeNull();
-    expect(logOutTrigger).not.toBeNull();
-
-    fireEvent.pointerEnter(newTrigger!);
-    fireEvent.mouseEnter(newTrigger!);
-    fireEvent.focus(newTrigger!);
+    fireEvent.pointerEnter(newLink);
+    fireEvent.mouseEnter(newLink);
+    fireEvent.focus(newLink);
     expect(await screen.findByText("New")).toBeInTheDocument();
-    fireEvent.mouseLeave(newTrigger!);
+    fireEvent.mouseLeave(newLink);
 
-    fireEvent.pointerEnter(localeTrigger!);
-    fireEvent.mouseEnter(localeTrigger!);
-    fireEvent.focus(localeTrigger!);
+    fireEvent.pointerEnter(localeButton);
+    fireEvent.mouseEnter(localeButton);
+    fireEvent.focus(localeButton);
     expect(await screen.findByText("Select language")).toBeInTheDocument();
-    fireEvent.mouseLeave(localeTrigger!);
+    fireEvent.mouseLeave(localeButton);
     fireEvent.click(localeButton);
     expect(await screen.findByText("English")).toBeInTheDocument();
     expect(screen.getByText("中文")).toBeInTheDocument();
 
-    fireEvent.pointerEnter(frontSiteTrigger!);
-    fireEvent.mouseEnter(frontSiteTrigger!);
-    fireEvent.focus(frontSiteTrigger!);
+    fireEvent.pointerEnter(frontSiteLink);
+    fireEvent.mouseEnter(frontSiteLink);
+    fireEvent.focus(frontSiteLink);
     expect(await screen.findByText("View Front Site")).toBeInTheDocument();
-    fireEvent.mouseLeave(frontSiteTrigger!);
+    fireEvent.mouseLeave(frontSiteLink);
 
-    fireEvent.pointerEnter(logOutTrigger!);
-    fireEvent.mouseEnter(logOutTrigger!);
-    fireEvent.focus(logOutTrigger!);
+    fireEvent.pointerEnter(logOutButton);
+    fireEvent.mouseEnter(logOutButton);
+    fireEvent.focus(logOutButton);
     expect(await screen.findByText("Log out")).toBeInTheDocument();
-    fireEvent.mouseLeave(logOutTrigger!);
+    fireEvent.mouseLeave(logOutButton);
 
     expect(screen.queryByRole("navigation", { name: "Admin sections" })).not.toBeInTheDocument();
     expect(screen.queryByText("Ship SwiftUI snippets with the same care you use to build them.")).not.toBeInTheDocument();

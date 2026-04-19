@@ -11,9 +11,6 @@ import {
   Tabs as HeroTabs,
   Tab as HeroTab,
   Tooltip as HeroTooltip,
-  TooltipContent as HeroTooltipContent,
-  TooltipRoot as HeroTooltipRoot,
-  TooltipTrigger as HeroTooltipTrigger,
   useOverlayState as heroUseOverlayState,
 } from "@heroui/react";
 
@@ -29,7 +26,4 @@ export const TextArea = HeroTextArea as any;
 export const Tabs = HeroTabs as any;
 export const Tab = HeroTab as any;
 export const Tooltip = HeroTooltip as any;
-export const TooltipRoot = HeroTooltipRoot as any;
-export const TooltipTrigger = HeroTooltipTrigger as any;
-export const TooltipContent = HeroTooltipContent as any;
 export const useOverlayState = heroUseOverlayState as any;

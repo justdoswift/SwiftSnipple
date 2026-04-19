@@ -1,4 +1,4 @@
-import { Languages, LogIn, Monitor, Moon, Search, Sun, User } from "lucide-react";
+import { Languages, LogIn, Moon, Search, Sun, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import { getMessages } from "../lib/messages";
 import { Dropdown, Tooltip } from "../lib/heroui";
@@ -40,19 +40,20 @@ export default function Navbar({ theme, onToggleTheme, authSession }: NavbarProp
         </Link>
 
         <div className="flex min-w-0 items-center justify-end gap-2 md:gap-3">
-          <label className="public-nav-search">
-            <Search size={16} strokeWidth={2} aria-hidden="true" />
-            <input
-              type="search"
-              aria-label={copy.nav.searchSnippets}
-              placeholder={copy.nav.searchSnippets}
-              autoComplete="off"
-            />
-            <span className="public-nav-search-shortcut" aria-hidden="true">
-              <Monitor size={12} strokeWidth={1.9} />
-              <span>K</span>
-            </span>
-          </label>
+          <Tooltip delay={0} closeDelay={0}>
+            <Tooltip.Trigger>
+              <button
+                type="button"
+                className="public-nav-icon-button"
+                aria-label={copy.nav.searchSnippets}
+              >
+                <Search size={18} strokeWidth={2} aria-hidden="true" />
+              </button>
+            </Tooltip.Trigger>
+            <Tooltip.Content>
+              {copy.nav.searchSnippets}
+            </Tooltip.Content>
+          </Tooltip>
 
           <Tooltip delay={0} closeDelay={0}>
             <Tooltip.Trigger>

@@ -95,11 +95,12 @@ describe("Navbar", () => {
     expect(screen.getByTestId("public-navbar-shell")).not.toHaveClass("mx-auto", "max-w-[1400px]");
     expect(screen.getByRole("link", { name: "Just Do Swift homepage" })).toBeInTheDocument();
     expect(screen.getByText("Just Do Swift")).toBeInTheDocument();
-    expect(screen.getByRole("searchbox", { name: "Search snippets" })).toBeInTheDocument();
+    const searchButton = screen.getByRole("button", { name: "Search snippets" });
     const themeButton = screen.getByRole("button", { name: "Switch to light site mode" });
     const localeButton = screen.getByRole("button", { name: "Select language" });
     const authLink = screen.getByRole("link", { name: "Log in" });
 
+    expect(searchButton).toHaveClass("public-nav-icon-button");
     expect(themeButton).toHaveClass("public-nav-icon-button");
     expect(localeButton).toHaveClass("public-nav-icon-button", "public-nav-locale-trigger");
     expect(authLink).toHaveAttribute("href", "/en/login");
@@ -107,6 +108,13 @@ describe("Navbar", () => {
     expect(screen.queryByText("English")).not.toBeInTheDocument();
     expect(screen.queryByText("中文")).not.toBeInTheDocument();
     expect(screen.queryByText("Log in")).not.toBeInTheDocument();
+    expect(screen.queryByRole("searchbox", { name: "Search snippets" })).not.toBeInTheDocument();
+
+    fireEvent.pointerEnter(searchButton);
+    fireEvent.mouseEnter(searchButton);
+    fireEvent.focus(searchButton);
+    expect(screen.getByText("Search snippets")).toBeInTheDocument();
+    fireEvent.mouseLeave(searchButton);
 
     fireEvent.pointerEnter(themeButton);
     fireEvent.mouseEnter(themeButton);
@@ -115,8 +123,11 @@ describe("Navbar", () => {
     fireEvent.mouseLeave(themeButton);
 
     fireEvent.click(localeButton);
-    expect(screen.getByText("English")).toBeInTheDocument();
-    expect(screen.getByText("中文")).toBeInTheDocument();
+    const menu = screen.getByRole("menu");
+    expect(menu).toHaveClass("dropdown__menu");
+    expect(menu.closest(".dropdown__popover")).not.toBeNull();
+    expect(screen.getByText("English").closest(".menu-item")).not.toBeNull();
+    expect(screen.getByText("中文").closest(".menu-item")).not.toBeNull();
   });
 
   it("calls the parent toggle handler and reflects the provided theme", () => {

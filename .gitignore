@@ -7,3 +7,5 @@ coverage/
 *.pid
 .env*
 !.env.example
+# heroui-agents-md
+.heroui-docs/

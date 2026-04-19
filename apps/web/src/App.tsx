@@ -189,6 +189,11 @@ export default function App() {
     window.localStorage.setItem(PUBLIC_THEME_STORAGE_KEY, theme);
   }, [theme]);
 
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    document.body.setAttribute("data-theme", theme);
+  }, [theme]);
+
   const toggleTheme = () => setTheme((currentTheme) => getNextPublicTheme(currentTheme));
   const handleAuthenticate = (session: MockAuthSession, remember: boolean) => {
     writeStoredMockAuth(session, remember);

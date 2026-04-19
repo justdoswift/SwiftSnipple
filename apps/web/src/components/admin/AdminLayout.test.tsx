@@ -183,8 +183,11 @@ describe("AdminLayout", () => {
     expect(await screen.findByText("Select language")).toBeInTheDocument();
     fireEvent.mouseLeave(localeButton);
     fireEvent.click(localeButton);
-    expect(await screen.findByText("English")).toBeInTheDocument();
-    expect(screen.getByText("中文")).toBeInTheDocument();
+    const localeMenu = await screen.findByRole("menu");
+    expect(localeMenu).toHaveClass("dropdown__menu");
+    expect(localeMenu.closest(".dropdown__popover")).not.toBeNull();
+    expect(screen.getByText("English").closest(".menu-item")).not.toBeNull();
+    expect(screen.getByText("中文").closest(".menu-item")).not.toBeNull();
 
     fireEvent.pointerEnter(frontSiteLink);
     fireEvent.mouseEnter(frontSiteLink);

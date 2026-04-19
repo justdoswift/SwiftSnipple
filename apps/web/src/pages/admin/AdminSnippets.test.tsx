@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import AdminSnippets from "./AdminSnippets";
@@ -117,5 +117,28 @@ describe("AdminSnippets", () => {
 
     expect(screen.queryByText("Prompt Studio")).not.toBeInTheDocument();
     expect(screen.getByText("Surface Lab")).toBeInTheDocument();
+  });
+
+  it("uses the shared HeroUI dropdown classes for library filters", async () => {
+    mockedGetSnippets.mockResolvedValue([baseSnippet]);
+
+    render(
+      <MemoryRouter>
+        <AdminSnippets />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Prompt Studio")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Status: All" }));
+
+    const menu = await screen.findByRole("menu");
+    expect(menu).toHaveClass("dropdown__menu");
+    expect(menu.closest(".dropdown__popover")).not.toBeNull();
+    const selectedItem = within(menu).getByText("Status: All").closest(".menu-item");
+    expect(selectedItem).not.toBeNull();
+    expect(selectedItem?.querySelector(".menu-item__indicator")).not.toBeNull();
   });
 });

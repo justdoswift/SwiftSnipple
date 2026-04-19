@@ -102,6 +102,42 @@ describe("AdminSnippetEditor", () => {
     expect(screen.queryByRole("button", { name: "Done" })).not.toBeInTheDocument();
   });
 
+  it("uses the shared HeroUI dropdown classes for the editor status menu", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+
+    render(
+      <MemoryRouter initialEntries={["/en/admin/snippets/new"]}>
+        <Routes>
+          <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+            <Route path="snippets/new" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Snippet Title")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("tab", { name: "Surface" }));
+
+    const statusValue = document.querySelector(".admin-form-select-value");
+    expect(statusValue).toBeTruthy();
+    const statusTriggerElement = statusValue?.closest("button, [data-slot='dropdown-trigger']") as HTMLElement | null;
+    expect(statusTriggerElement).toBeTruthy();
+
+    fireEvent.click(statusTriggerElement!);
+
+    const menu = await screen.findByRole("menu");
+    expect(menu).toHaveClass("dropdown__menu");
+    expect(menu.closest(".dropdown__popover")).not.toBeNull();
+    const selectedItem = within(menu).getByText("Draft").closest(".menu-item");
+    expect(selectedItem).not.toBeNull();
+    expect(selectedItem?.querySelector(".menu-item__indicator")).not.toBeNull();
+  });
+
   it("opens preview mode with device controls for saved snippets", async () => {
     mockedGetSnippetById.mockReset();
     mockedCreateSnippet.mockReset();
@@ -195,7 +231,7 @@ describe("AdminSnippetEditor", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "预览" })).toBeInTheDocument();
+      expect(screen.getByLabelText("Snippet 标题")).toHaveValue("Smooth Feedback Loops");
     });
 
     fireEvent.click(screen.getByRole("button", { name: "预览" }));

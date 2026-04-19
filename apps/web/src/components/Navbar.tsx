@@ -31,8 +31,7 @@ export default function Navbar({ theme, onToggleTheme, authSession }: NavbarProp
       >
         <Link to={localizePublicPath("/")} className="public-nav-brand min-w-0" aria-label="Just Do Swift homepage">
           <span className="public-nav-logo" aria-hidden="true">
-            <span className="public-nav-logo-bar public-nav-logo-bar-primary" />
-            <span className="public-nav-logo-bar public-nav-logo-bar-secondary" />
+            <img src="/favicon.svg" alt="" className="public-nav-logo-image" />
           </span>
           <span className="site-brand-title truncate">
             Just Do Swift

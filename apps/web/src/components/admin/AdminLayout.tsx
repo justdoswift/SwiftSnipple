@@ -41,8 +41,7 @@ export default function AdminLayout({ adminAuthSession, onSignOut, onToggleTheme
             ) : (
               <Link to={localizeAdminPath(locale, "/admin")} className="admin-nav-brand min-w-0" aria-label="Just Do Swift admin">
                 <span className="admin-nav-logo" aria-hidden="true">
-                  <span className="admin-nav-logo-bar admin-nav-logo-bar-primary" />
-                  <span className="admin-nav-logo-bar admin-nav-logo-bar-secondary" />
+                  <img src="/favicon.svg" alt="" className="admin-nav-logo-image" />
                 </span>
                 <span className="admin-brand-title truncate">
                   Just Do Swift

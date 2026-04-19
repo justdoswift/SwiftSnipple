@@ -18,9 +18,9 @@ describe("AccountPage", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText("builder@example.com")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /publishing workspace/i })).toHaveAttribute("href", "/admin");
-    expect(screen.queryByText("Admin Console")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /sign out/i })).toBeInTheDocument();
+    expect(screen.queryByText("builder@example.com")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /publishing workspace/i })).not.toBeInTheDocument();
   });
 
   it("renders the empty member shell when there is no staged session", () => {

@@ -412,6 +412,14 @@
     @apply relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl border;
   }
 
+  .public-nav-logo-image,
+  .admin-nav-logo-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
   .public-nav-root[data-theme="dark"] .public-nav-logo {
     background-color: rgba(255, 255, 255, 0.04);
     border-color: rgba(255, 255, 255, 0.12);
@@ -1166,72 +1174,6 @@
     justify-content: flex-start;
   }
 
-  .account-page {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-  }
-
-  .account-hero {
-    display: grid;
-    gap: 1rem;
-  }
-
-  .account-identity-card {
-    display: grid;
-    gap: 1.5rem;
-    border: 1px solid var(--public-border-soft);
-    border-radius: var(--radius-panel);
-    background: var(--public-surface-bg);
-    box-shadow: var(--public-shadow);
-    padding: 1.75rem;
-  }
-
-  .account-identity-copy,
-  .account-identity-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .account-badge {
-    display: inline-flex;
-    width: fit-content;
-    align-items: center;
-    gap: 0.55rem;
-    border: 1px solid var(--public-border-soft);
-    border-radius: var(--radius-pill);
-    background: var(--public-surface-subtle-bg);
-    padding: 0.55rem 0.85rem;
-    color: var(--public-body);
-    font-size: 0.92rem;
-  }
-
-  .account-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-  }
-
-  .account-grid {
-    display: grid;
-    gap: 1rem;
-  }
-
-  .account-panel {
-    min-height: 17rem;
-  }
-
-  .account-panel-icon {
-    display: inline-flex;
-    width: fit-content;
-    border: 1px solid var(--public-border-soft);
-    border-radius: var(--radius-pill);
-    background: var(--public-surface-subtle-bg);
-    padding: 0.75rem;
-    color: var(--public-heading);
-  }
-
   .public-theme[data-theme="light"] .auth-page-overlay {
     background:
       linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.72)),
@@ -1312,22 +1254,6 @@
 
   .public-theme[data-theme="light"] .auth-error {
     color: #b42318;
-  }
-
-  @media (min-width: 900px) {
-    .account-hero {
-      grid-template-columns: minmax(0, 1fr) auto;
-      align-items: end;
-    }
-
-    .account-identity-card {
-      grid-template-columns: minmax(0, 1.6fr) minmax(18rem, 0.9fr);
-      align-items: end;
-    }
-
-    .account-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
   }
 
   @media (max-width: 899px) {

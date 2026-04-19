@@ -110,28 +110,7 @@ export const messages = {
         "The account shell is UI-only for now. Use the login surface to stage a mock session and preview the member center flow.",
       openLogin: "Open Login",
       returnHome: "Return Home",
-      heroTitle: "Your snippet library staging area.",
-      heroCopy:
-        "This member surface is intentionally lightweight for now: a place to land after sign-in, track future access surfaces, and keep account UI connected to the core snippet library.",
-      emailAccess: "Email access",
-      accessSuffix: "access",
-      stagedOn: "Mock session staged on",
-      publishingWorkspace: "Publishing Workspace",
       signOut: "Sign Out",
-      panels: {
-        libraryEyebrow: "Library Access",
-        libraryTitle: "Saved browsing shell",
-        libraryCopy:
-          "This member area can later hold saved snippets, follow lists, and release alerts without pretending those systems already ship.",
-        membershipEyebrow: "Membership",
-        membershipTitle: "Stripe-ready roadmap",
-        membershipCopy:
-          "Membership and gated access stay future-facing here. The UI makes room for them without claiming billing or entitlements exist today.",
-        signalsEyebrow: "Signals",
-        signalsTitle: "Launch notes and remixes",
-        signalsCopy:
-          "A future home for snippet bookmarks, personal prompts, and adaptation notes once real account persistence lands.",
-      },
     },
     adminAuth: {
       kicker: "Creator Workspace",
@@ -362,24 +341,7 @@ export const messages = {
       noSessionCopy: "这个账户页目前仍是 UI 预览。请先从登录页进入，体验会员中心流程。",
       openLogin: "打开登录页",
       returnHome: "返回首页",
-      heroTitle: "你的 snippet library 账户入口。",
-      heroCopy: "这个账户页目前刻意保持轻量：它是登录后的落点，也为未来访问权限、收藏与提醒预留空间，同时仍然围绕 snippet library 本身。",
-      emailAccess: "邮箱登录",
-      accessSuffix: "登录",
-      stagedOn: "模拟会话创建于",
-      publishingWorkspace: "创作者后台",
       signOut: "退出登录",
-      panels: {
-        libraryEyebrow: "访问层",
-        libraryTitle: "保存的浏览外壳",
-        libraryCopy: "未来这里可以承载收藏 snippet、关注列表与更新提醒，而不会假装这些系统已经上线。",
-        membershipEyebrow: "会员",
-        membershipTitle: "面向 Stripe 的预留位",
-        membershipCopy: "会员与 gated access 仍然是未来路线。这里会为它们预留空间，但不会假装账单或权益已经实现。",
-        signalsEyebrow: "信号",
-        signalsTitle: "发布笔记与二次创作",
-        signalsCopy: "未来可以承载 snippet 书签、个人 prompt 与改编记录，等真正的账户持久化落地后再接入。",
-      },
     },
     adminAuth: {
       kicker: "创作者后台",

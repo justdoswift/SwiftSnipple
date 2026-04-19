@@ -1,9 +1,9 @@
 import { ReactNode } from "react";
 
 interface EditorSectionProps {
-  eyebrow: string;
-  title: string;
-  description: string;
+  eyebrow?: string;
+  title?: string;
+  description?: string;
   children: ReactNode;
 }
 
@@ -17,9 +17,9 @@ export default function EditorSection({
     <section className="admin-section-card overflow-hidden border">
       <div className="px-6 pt-6 pb-4 md:px-8">
         <div>
-          <p className="admin-label">{eyebrow}</p>
-          <h2 className="admin-section-title mt-2">{title}</h2>
-          <p className="admin-section-description max-w-2xl">{description}</p>
+          {eyebrow ? <p className="admin-label">{eyebrow}</p> : null}
+          {title ? <h2 className="admin-section-title mt-2">{title}</h2> : null}
+          {description ? <p className="admin-section-description max-w-2xl">{description}</p> : null}
         </div>
       </div>
       <div className="px-6 py-6 md:px-8">{children}</div>

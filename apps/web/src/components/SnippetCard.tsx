@@ -1,8 +1,9 @@
 import { motion } from "motion/react";
 import { Card, Chip } from "../lib/heroui";
 import { Link } from "react-router-dom";
+import { resolveAssetUrl } from "../lib/asset-url";
 import { Snippet } from "../types";
-import { getLocalizedSnippetFields, useAppLocale } from "../lib/locale";
+import { getLocalizedSnippetFields, localizePublicPath, useAppLocale } from "../lib/locale";
 
 interface SnippetCardProps {
   snippet: Snippet;
@@ -25,7 +26,7 @@ export default function SnippetCard({ snippet }: SnippetCardProps) {
   const publishedDate = formatPublishedDate(snippet.publishedAt, locale);
 
   return (
-    <Link to={`/${locale}/snippets/${fields.slug}`} className="public-snippet-card group block">
+    <Link to={localizePublicPath(`/snippets/${fields.slug}`)} className="public-snippet-card group block">
       <motion.div 
         whileHover={{ scale: 1.01, y: -4 }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
@@ -33,7 +34,7 @@ export default function SnippetCard({ snippet }: SnippetCardProps) {
         <Card className="public-surface overflow-hidden">
           <div className="relative aspect-[16/10] overflow-hidden">
             <img
-              src={snippet.coverImage}
+              src={resolveAssetUrl(snippet.coverImage)}
               alt={fields.title}
               className="h-full w-full object-cover transition-all duration-700 group-hover:scale-[1.05] group-hover:brightness-110"
               referrerPolicy="no-referrer"

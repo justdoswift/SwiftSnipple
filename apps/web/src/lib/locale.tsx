@@ -81,12 +81,19 @@ export function writeStoredLocale(locale: AppLocale) {
   window.localStorage.setItem(LOCALE_STORAGE_KEY, locale);
 }
 
-export function localizePath(locale: AppLocale, path = "/") {
+function normalizePath(path = "/") {
   const normalizedPath = path === "" ? "/" : path.startsWith("/") ? path : `/${path}`;
-  if (normalizedPath === "/") {
-    return `/${locale}`;
-  }
+  return normalizedPath;
+}
 
+export function localizePublicPath(path = "/") {
+  const normalizedPath = normalizePath(path);
+  const strippedPath = stripLocalePrefix(normalizedPath);
+  return strippedPath === "" ? "/" : strippedPath;
+}
+
+export function localizeAdminPath(locale: AppLocale, path = "/admin") {
+  const normalizedPath = stripLocalePrefix(normalizePath(path));
   return `/${locale}${normalizedPath}`;
 }
 
@@ -105,7 +112,10 @@ export function stripLocalePrefix(pathname: string) {
 }
 
 export function switchLocalePath(pathname: string, locale: AppLocale) {
-  return localizePath(locale, stripLocalePrefix(pathname));
+  const strippedPath = stripLocalePrefix(pathname);
+  return strippedPath.startsWith("/admin")
+    ? localizeAdminPath(locale, strippedPath)
+    : localizePublicPath(strippedPath);
 }
 
 export function getLocalizedSnippetFields(snippet: Snippet, locale: AppLocale): SnippetLocalizedFields {
@@ -118,7 +128,7 @@ export function getLocalizedSnippetFields(snippet: Snippet, locale: AppLocale): 
 }
 
 export function getLocalizedSnippetPath(locale: AppLocale, snippet: Snippet) {
-  return localizePath(locale, `/snippets/${getLocalizedSnippetFields(snippet, locale).slug}`);
+  return localizePublicPath(`/snippets/${getLocalizedSnippetFields(snippet, locale).slug}`);
 }
 
 export function useAppLocale() {

@@ -4,7 +4,7 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 import type { AdminAuthSession } from "../../lib/admin-auth";
 import { Dropdown, Tooltip } from "../../lib/heroui";
 import { getMessages } from "../../lib/messages";
-import { APP_LOCALE_OPTIONS, useAppLocale } from "../../lib/locale";
+import { APP_LOCALE_OPTIONS, localizeAdminPath, localizePublicPath, useAppLocale } from "../../lib/locale";
 import { usePublicTheme } from "../../lib/public-theme";
 import AdminSidebar from "./AdminSidebar";
 import { type AdminHeaderConfig, type AdminHeaderOutletContext } from "./useAdminHeader";
@@ -39,7 +39,7 @@ export default function AdminLayout({ adminAuthSession, onSignOut, onToggleTheme
                 {activeHeader.start}
               </div>
             ) : (
-              <Link to={`/${locale}/admin`} className="admin-nav-brand min-w-0" aria-label="Just Do Swift admin">
+              <Link to={localizeAdminPath(locale, "/admin")} className="admin-nav-brand min-w-0" aria-label="Just Do Swift admin">
                 <span className="admin-nav-logo" aria-hidden="true">
                   <span className="admin-nav-logo-bar admin-nav-logo-bar-primary" />
                   <span className="admin-nav-logo-bar admin-nav-logo-bar-secondary" />
@@ -112,7 +112,7 @@ export default function AdminLayout({ adminAuthSession, onSignOut, onToggleTheme
               <Tooltip delay={0} closeDelay={0}>
                 <Tooltip.Trigger>
                   <Link
-                    to={`/${locale}`}
+                    to={localizePublicPath("/")}
                     aria-label={copy.common.viewFrontSite}
                     className="admin-nav-action-icon"
                   >

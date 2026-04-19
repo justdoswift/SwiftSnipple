@@ -13,12 +13,16 @@ export function isUnauthorizedError(error: unknown): error is APIError {
 }
 
 export async function request<T>(path: string, init?: RequestInit) {
+  const headers = new Headers(init?.headers ?? {});
+  const isFormDataBody = typeof FormData !== "undefined" && init?.body instanceof FormData;
+
+  if (!isFormDataBody && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
   const response = await fetch(path, {
     credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
-    },
+    headers,
     ...init,
   });
 

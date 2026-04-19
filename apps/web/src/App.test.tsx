@@ -180,7 +180,7 @@ describe("App public theme", () => {
   });
 
   it("routes a simulated login into the member center", async () => {
-    renderAppAt("/en/login");
+    renderAppAt("/login");
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Log In" })).toBeInTheDocument();

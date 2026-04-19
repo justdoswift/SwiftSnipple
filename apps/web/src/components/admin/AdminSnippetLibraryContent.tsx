@@ -3,8 +3,9 @@ import { Dropdown, Input } from "../../lib/heroui";
 import { Link } from "react-router-dom";
 import { useMemo, useState } from "react";
 import type { Snippet, SnippetStatus } from "../../types";
+import { resolveAssetUrl } from "../../lib/asset-url";
 import { getMessages } from "../../lib/messages";
-import { getLocalizedSnippetFields, useAppLocale } from "../../lib/locale";
+import { getLocalizedSnippetFields, localizeAdminPath, useAppLocale } from "../../lib/locale";
 import StatusBadge from "./StatusBadge";
 
 const STATUS_OPTIONS: Array<SnippetStatus | "All"> = ["All", "Draft", "Published"];
@@ -167,14 +168,14 @@ export default function AdminSnippetLibraryContent({
 
               return <Link
                 key={snippet.id}
-                to={`/${locale}/admin/snippets/${snippet.id}`}
+                to={localizeAdminPath(locale, `/admin/snippets/${snippet.id}`)}
                 className="admin-list-link block"
               >
                 <div className="admin-section-card transition-all hover:-translate-y-0.5">
                   <div className="grid gap-6 p-5 md:grid-cols-[220px_minmax(0,1fr)] md:p-6">
                     <div className="admin-image-stage aspect-[4/3] overflow-hidden">
                       <img
-                        src={snippet.coverImage}
+                        src={resolveAssetUrl(snippet.coverImage)}
                         alt={fields.title}
                         className="h-full w-full object-cover grayscale transition-all duration-500 hover:scale-[1.03] hover:grayscale-0"
                         referrerPolicy="no-referrer"
@@ -185,16 +186,6 @@ export default function AdminSnippetLibraryContent({
                         <p className="admin-copy-faint type-mono-micro">{fields.category}</p>
                         <h2 className="type-card-title mt-3">{fields.title}</h2>
                         <p className="type-body-sm mt-3 max-w-3xl">{fields.excerpt}</p>
-                        <div className="mt-5 flex flex-wrap gap-2">
-                          {fields.tags.map((tag) => (
-                            <span
-                              key={tag}
-                              className="admin-tag-chip type-mono-micro inline-flex items-center px-3 py-1.5"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
                       </div>
                       <div className="flex flex-col justify-between gap-5 xl:items-end">
                         <StatusBadge status={snippet.status} />

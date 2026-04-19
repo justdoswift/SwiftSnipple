@@ -3,7 +3,7 @@ import { Eye, EyeOff, Github, Mail } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../lib/heroui";
 import { getMessages } from "../lib/messages";
-import { useAppLocale } from "../lib/locale";
+import { localizePublicPath, useAppLocale } from "../lib/locale";
 import type { MockAuthProvider, MockAuthSession } from "../lib/mock-auth";
 
 type AuthMode = "login" | "signup";
@@ -79,7 +79,7 @@ export default function LoginPage({ authSession, onAuthenticate }: LoginPageProp
     };
 
     onAuthenticate(session, provider === "email" ? rememberMe : true);
-    navigate(`/${locale}/account`);
+    navigate(localizePublicPath("/account"));
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -115,7 +115,7 @@ export default function LoginPage({ authSession, onAuthenticate }: LoginPageProp
       <div className="auth-page-overlay" aria-hidden="true" />
 
       <header className="auth-page-brand-shell public-nav-shell flex w-full items-center justify-between gap-3 px-4 py-3 md:px-6 lg:px-8">
-        <Link to={`/${locale}`} className="auth-page-brand public-nav-brand min-w-0" aria-label="Return to Just Do Swift home">
+        <Link to={localizePublicPath("/")} className="auth-page-brand public-nav-brand min-w-0" aria-label="Return to Just Do Swift home">
           <span className="public-nav-logo" aria-hidden="true">
             <span className="public-nav-logo-bar public-nav-logo-bar-primary" />
             <span className="public-nav-logo-bar public-nav-logo-bar-secondary" />
@@ -137,7 +137,7 @@ export default function LoginPage({ authSession, onAuthenticate }: LoginPageProp
               <p className="auth-body-copy">
                 {copy.sessionBanner} <strong>{authSession.email}</strong>.
               </p>
-              <Button className="auth-primary-button" onPress={() => navigate(`/${locale}/account`)}>
+              <Button className="auth-primary-button" onPress={() => navigate(localizePublicPath("/account"))}>
                 {copy.openMemberCenter}
               </Button>
             </div>

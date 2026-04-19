@@ -34,7 +34,7 @@ func main() {
 		Email:         cfg.AdminEmail,
 		Password:      cfg.AdminPassword,
 		SessionSecret: cfg.AdminSessionSecret,
-	})
+	}, cfg.UploadsDir)
 	server := &http.Server{
 		Addr:              ":" + cfg.APIPort,
 		Handler:           router,

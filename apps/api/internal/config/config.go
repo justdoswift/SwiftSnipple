@@ -13,6 +13,7 @@ type Config struct {
 	AdminEmail         string
 	AdminPassword      string
 	AdminSessionSecret string
+	UploadsDir         string
 }
 
 func Load() Config {
@@ -35,6 +36,7 @@ func Load() Config {
 	if adminSessionSecret == "" {
 		log.Fatal("ADMIN_SESSION_SECRET is required")
 	}
+	uploadsDir := envOrDefault("UPLOADS_DIR", "uploads")
 
 	return Config{
 		APIPort:            apiPort,
@@ -42,6 +44,7 @@ func Load() Config {
 		AdminEmail:         adminEmail,
 		AdminPassword:      adminPassword,
 		AdminSessionSecret: adminSessionSecret,
+		UploadsDir:         uploadsDir,
 	}
 }
 

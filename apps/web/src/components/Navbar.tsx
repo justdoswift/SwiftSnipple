@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { getMessages } from "../lib/messages";
 import { Dropdown, Tooltip } from "../lib/heroui";
 import type { MockAuthSession } from "../lib/mock-auth";
-import { APP_LOCALE_OPTIONS, useAppLocale } from "../lib/locale";
+import { APP_LOCALE_OPTIONS, localizePublicPath, useAppLocale } from "../lib/locale";
 import type { PublicTheme } from "../lib/public-theme";
 
 interface NavbarProps {
@@ -17,7 +17,7 @@ export default function Navbar({ theme, onToggleTheme, authSession }: NavbarProp
   const copy = getMessages(locale);
   const themeToggleLabel = theme === "dark" ? copy.nav.switchToLightMode : copy.nav.switchToDarkMode;
   const authLabel = authSession ? copy.nav.account : copy.nav.login;
-  const authHref = authSession ? `/${locale}/account` : `/${locale}/login`;
+  const authHref = authSession ? localizePublicPath("/account") : localizePublicPath("/login");
 
   return (
     <nav
@@ -29,7 +29,7 @@ export default function Navbar({ theme, onToggleTheme, authSession }: NavbarProp
         className="public-nav-shell flex w-full items-center justify-between gap-3 px-4 py-3 md:px-6 lg:px-8"
         data-testid="public-navbar-shell"
       >
-        <Link to={`/${locale}`} className="public-nav-brand min-w-0" aria-label="Just Do Swift homepage">
+        <Link to={localizePublicPath("/")} className="public-nav-brand min-w-0" aria-label="Just Do Swift homepage">
           <span className="public-nav-logo" aria-hidden="true">
             <span className="public-nav-logo-bar public-nav-logo-bar-primary" />
             <span className="public-nav-logo-bar public-nav-logo-bar-secondary" />

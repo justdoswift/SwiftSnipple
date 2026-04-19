@@ -5,8 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -224,7 +227,7 @@ func TestSnippetRoutesSuccess(t *testing.T) {
 			ZH: localizedFields("玻璃抽屉导航", "bo-li-chou-ti-dao-hang", "Navigation"),
 		},
 	})
-	router := NewRouter(fakePinger{}, store, testAdminAuthConfig)
+	router := NewRouter(fakePinger{}, store, testAdminAuthConfig, t.TempDir())
 
 	req := httptest.NewRequest(http.MethodGet, "/api/snippets", nil)
 	rec := httptest.NewRecorder()
@@ -258,7 +261,7 @@ func TestSnippetRoutesSuccess(t *testing.T) {
 func TestCreateValidationAndDuplicateErrors(t *testing.T) {
 	store := newFakeSnippetStore()
 	store.duplicateSlug = "taken-slug"
-	router := NewRouter(fakePinger{}, store, testAdminAuthConfig)
+	router := NewRouter(fakePinger{}, store, testAdminAuthConfig, t.TempDir())
 	adminCookie := loginCookie(t, router)
 
 	testCases := []struct {
@@ -353,7 +356,7 @@ func TestPublishUnpublishDeleteAndMissingRoutes(t *testing.T) {
 			ZH: localizedFields("提示驱动布局", "ti-shi-qu-dong-bu-ju", "Workflow"),
 		},
 	})
-	router := NewRouter(fakePinger{}, store, testAdminAuthConfig)
+	router := NewRouter(fakePinger{}, store, testAdminAuthConfig, t.TempDir())
 	adminCookie := loginCookie(t, router)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/admin/snippets/snippet-1/publish", nil)
@@ -397,7 +400,7 @@ func TestPublishUnpublishDeleteAndMissingRoutes(t *testing.T) {
 }
 
 func TestHealthz(t *testing.T) {
-	router := NewRouter(fakePinger{}, newFakeSnippetStore(), testAdminAuthConfig)
+	router := NewRouter(fakePinger{}, newFakeSnippetStore(), testAdminAuthConfig, t.TempDir())
 	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
 	rec := httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
@@ -416,7 +419,7 @@ func TestHealthz(t *testing.T) {
 }
 
 func TestAdminLoginSessionAndLogout(t *testing.T) {
-	router := NewRouter(fakePinger{}, newFakeSnippetStore(), testAdminAuthConfig)
+	router := NewRouter(fakePinger{}, newFakeSnippetStore(), testAdminAuthConfig, t.TempDir())
 
 	adminCookie := loginCookie(t, router)
 
@@ -454,7 +457,7 @@ func TestAdminUnauthorizedAndProtectedRoutes(t *testing.T) {
 			ZH: localizedFields("后台鉴权", "hou-tai-jian-quan", "Workflow"),
 		},
 	})
-	router := NewRouter(fakePinger{}, store, testAdminAuthConfig)
+	router := NewRouter(fakePinger{}, store, testAdminAuthConfig, t.TempDir())
 
 	req := httptest.NewRequest(http.MethodPost, "/api/admin/login", strings.NewReader(`{"email":"creator@justdoswift.com","password":"wrong"}`))
 	req.Header.Set("Content-Type", "application/json")
@@ -494,5 +497,138 @@ func TestAdminUnauthorizedAndProtectedRoutes(t *testing.T) {
 	router.ServeHTTP(invalidCookieRec, invalidCookieReq)
 	if invalidCookieRec.Code != http.StatusUnauthorized {
 		t.Fatalf("expected invalid cookie session status 401, got %d", invalidCookieRec.Code)
+	}
+}
+
+func TestUploadCoverImageAndServeStatic(t *testing.T) {
+	uploadDir := t.TempDir()
+	router := NewRouter(fakePinger{}, newFakeSnippetStore(), testAdminAuthConfig, uploadDir)
+	adminCookie := loginCookie(t, router)
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	fileWriter, err := writer.CreateFormFile("file", "cover.png")
+	if err != nil {
+		t.Fatalf("create form file: %v", err)
+	}
+	if _, err := fileWriter.Write([]byte{
+		0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+		0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
+	}); err != nil {
+		t.Fatalf("write png bytes: %v", err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("close multipart writer: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/api/admin/uploads/cover", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.AddCookie(adminCookie)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("expected upload status 201, got %d", rec.Code)
+	}
+
+	var response map[string]string
+	if err := json.NewDecoder(rec.Body).Decode(&response); err != nil {
+		t.Fatalf("decode upload response: %v", err)
+	}
+
+	uploadedURL := response["url"]
+	if !strings.HasPrefix(uploadedURL, "/api/uploads/") {
+		t.Fatalf("expected upload url to start with /api/uploads/, got %q", uploadedURL)
+	}
+
+	entries, err := os.ReadDir(uploadDir)
+	if err != nil {
+		t.Fatalf("read upload dir: %v", err)
+	}
+	if len(entries) != 1 {
+		t.Fatalf("expected one uploaded file, got %d", len(entries))
+	}
+
+	staticReq := httptest.NewRequest(http.MethodGet, uploadedURL, nil)
+	staticRec := httptest.NewRecorder()
+	router.ServeHTTP(staticRec, staticReq)
+	if staticRec.Code != http.StatusOK {
+		t.Fatalf("expected static file status 200, got %d", staticRec.Code)
+	}
+	if !strings.HasPrefix(staticRec.Header().Get("Content-Type"), "image/png") {
+		t.Fatalf("expected static file content type image/png, got %q", staticRec.Header().Get("Content-Type"))
+	}
+}
+
+func TestUploadCoverImageRequiresAuthAndImage(t *testing.T) {
+	router := NewRouter(fakePinger{}, newFakeSnippetStore(), testAdminAuthConfig, t.TempDir())
+
+	req := httptest.NewRequest(http.MethodPost, "/api/admin/uploads/cover", nil)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected anonymous upload status 401, got %d", rec.Code)
+	}
+
+	adminCookie := loginCookie(t, router)
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	fileWriter, err := writer.CreateFormFile("file", "cover.txt")
+	if err != nil {
+		t.Fatalf("create form file: %v", err)
+	}
+	if _, err := io.WriteString(fileWriter, "not-an-image"); err != nil {
+		t.Fatalf("write text bytes: %v", err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("close multipart writer: %v", err)
+	}
+
+	req = httptest.NewRequest(http.MethodPost, "/api/admin/uploads/cover", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.AddCookie(adminCookie)
+	rec = httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected invalid image upload status 400, got %d", rec.Code)
+	}
+}
+
+func TestUploadCoverImageTooLarge(t *testing.T) {
+	router := NewRouter(fakePinger{}, newFakeSnippetStore(), testAdminAuthConfig, t.TempDir())
+	adminCookie := loginCookie(t, router)
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	fileWriter, err := writer.CreateFormFile("file", "cover.png")
+	if err != nil {
+		t.Fatalf("create form file: %v", err)
+	}
+
+	// Keep the content PNG-prefixed so the failure comes from size, not MIME sniffing.
+	if _, err := fileWriter.Write([]byte{
+		0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+	}); err != nil {
+		t.Fatalf("write png signature: %v", err)
+	}
+
+	oversizedPayload := bytes.Repeat([]byte{0x00}, 26<<20)
+	if _, err := fileWriter.Write(oversizedPayload); err != nil {
+		t.Fatalf("write oversized payload: %v", err)
+	}
+
+	if err := writer.Close(); err != nil {
+		t.Fatalf("close multipart writer: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/api/admin/uploads/cover", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.AddCookie(adminCookie)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusRequestEntityTooLarge {
+		t.Fatalf("expected oversized upload status 413, got %d", rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), "25 MB or smaller") {
+		t.Fatalf("expected oversized upload error message, got %q", rec.Body.String())
 	}
 }

@@ -2,7 +2,7 @@ import { ArrowUpRight, CheckCircle2, Crown, LayoutGrid, LogOut, Sparkles } from 
 import { Link } from "react-router-dom";
 import { Button, Card } from "../lib/heroui";
 import { getMessages } from "../lib/messages";
-import { useAppLocale } from "../lib/locale";
+import { localizeAdminPath, localizePublicPath, useAppLocale } from "../lib/locale";
 import type { MockAuthSession } from "../lib/mock-auth";
 
 interface AccountPageProps {
@@ -44,10 +44,10 @@ export default function AccountPage({ authSession, onSignOut }: AccountPageProps
               {copy.noSessionCopy}
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link to={`/${locale}/login`} className="public-primary-button public-button-lg type-action inline-flex items-center justify-center">
+              <Link to={localizePublicPath("/login")} className="public-primary-button public-button-lg type-action inline-flex items-center justify-center">
                 {copy.openLogin}
               </Link>
-              <Link to={`/${locale}`} className="public-secondary-button public-button-lg type-action inline-flex items-center justify-center">
+              <Link to={localizePublicPath("/")} className="public-secondary-button public-button-lg type-action inline-flex items-center justify-center">
                 {copy.returnHome}
               </Link>
             </div>
@@ -79,7 +79,7 @@ export default function AccountPage({ authSession, onSignOut }: AccountPageProps
         </div>
 
         <div className="account-actions">
-          <Link to={`/${locale}/admin`} className="public-secondary-button public-button-lg type-action inline-flex items-center justify-center gap-2">
+          <Link to={localizeAdminPath(locale, "/admin")} className="public-secondary-button public-button-lg type-action inline-flex items-center justify-center gap-2">
             {copy.publishingWorkspace}
             <ArrowUpRight size={15} strokeWidth={2.2} />
           </Link>

@@ -9,10 +9,12 @@ import { clearStoredMockAuth, readStoredMockAuth, writeStoredMockAuth, type Mock
 import {
   LocaleContext,
   isAppLocale,
-  localizePath,
+  localizeAdminPath,
+  localizePublicPath,
   readStoredLocale,
   stripLocalePrefix,
   switchLocalePath,
+  useAppLocale,
   writeStoredLocale,
 } from "./lib/locale";
 import { getMessages } from "./lib/messages";
@@ -48,7 +50,7 @@ function ScrollToTop() {
 }
 
 function PublicRouteFallback() {
-  const { locale } = useAppLocaleShell();
+  const { locale } = useAppLocale();
   const copy = getMessages(locale).app;
 
   return (
@@ -71,48 +73,51 @@ function AdminRouteFallback() {
   );
 }
 
-function useAppLocaleShell() {
-  const params = useParams();
-  const locale = isAppLocale(params.locale) ? params.locale : readStoredLocale();
-  return { locale };
-}
-
 function LegacySnippetRedirect() {
-  const { locale, slug } = useParams();
-  return <Navigate to={localizePath((locale as AppLocale) || "en", slug ? `/snippets/${slug}` : "/")} replace />;
+  const { slug } = useParams();
+  return <Navigate to={localizePublicPath(slug ? `/snippets/${slug}` : "/")} replace />;
 }
 
 function LegacyAdminSnippetRedirect() {
   const { locale, id } = useParams();
   return (
-    <Navigate to={localizePath((locale as AppLocale) || "en", id ? `/admin/snippets/${id}` : "/admin/snippets")} replace />
+    <Navigate to={localizeAdminPath((locale as AppLocale) || "en", id ? `/admin/snippets/${id}` : "/admin/snippets")} replace />
   );
 }
 
 function AdminLoginRedirect() {
-  const { locale } = useAppLocaleShell();
-  return <Navigate to={localizePath(locale, "/admin")} replace />;
+  const locale = readStoredLocale();
+  return <Navigate to={localizeAdminPath(locale, "/admin")} replace />;
 }
 
-function LocalePrefixRedirect() {
+function AdminPrefixRedirect() {
   const location = useLocation();
   const preferredLocale = readStoredLocale();
-  return <Navigate to={localizePath(preferredLocale, stripLocalePrefix(location.pathname))} replace />;
+  return <Navigate to={localizeAdminPath(preferredLocale, stripLocalePrefix(location.pathname))} replace />;
 }
 
-function LocaleGate() {
-  const { locale } = useParams();
+function LegacyPublicRedirect() {
+  const location = useLocation();
+  const strippedPath = stripLocalePrefix(location.pathname);
+  const normalizedPath = strippedPath.startsWith("/articles/")
+    ? strippedPath.replace(/^\/articles\//, "/snippets/")
+    : strippedPath;
+
+  return <Navigate to={`${localizePublicPath(normalizedPath)}${location.search}${location.hash}`} replace />;
+}
+
+function AppLocaleGate() {
+  const params = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const resolvedLocale = isAppLocale(locale) ? locale : readStoredLocale();
+  const routeLocale = params.locale;
+  const resolvedLocale = isAppLocale(routeLocale) ? routeLocale : readStoredLocale();
 
   useEffect(() => {
-    if (!isAppLocale(locale)) {
-      navigate(localizePath(resolvedLocale, stripLocalePrefix(location.pathname)), { replace: true });
-      return;
+    if (isAppLocale(routeLocale)) {
+      writeStoredLocale(routeLocale);
     }
-    writeStoredLocale(locale);
-  }, [locale, location.pathname, navigate, resolvedLocale]);
+  }, [routeLocale]);
 
   const contextValue = useMemo(
     () => ({
@@ -141,12 +146,13 @@ function AdminAuthGate({
   isResolved: boolean;
   children: ReactNode;
 }) {
-  const { locale } = useAppLocaleShell();
+  const { locale } = useParams();
+  const resolvedLocale = isAppLocale(locale) ? locale : readStoredLocale();
   if (!isResolved) {
     return <AdminRouteFallback />;
   }
   if (!authSession) {
-    return <Navigate to={localizePath(locale, "/admin/login")} replace />;
+    return <Navigate to={localizeAdminPath(resolvedLocale, "/admin/login")} replace />;
   }
 
   return <>{children}</>;
@@ -241,10 +247,9 @@ export default function App() {
       <Router>
         <ScrollToTop />
         <Routes>
-          <Route path="/" element={<LocalePrefixRedirect />} />
-          <Route path="/:locale" element={<LocaleGate />}>
+          <Route element={<AppLocaleGate />}>
             <Route
-              index
+              path="/"
               element={
                 <PublicShell theme={theme} onToggleTheme={toggleTheme} authSession={authSession}>
                   <Home />
@@ -252,7 +257,7 @@ export default function App() {
               }
             />
             <Route
-              path="snippets/:slug"
+              path="/snippets/:slug"
               element={
                 <PublicShell theme={theme} onToggleTheme={toggleTheme} authSession={authSession}>
                   <SnippetDetail />
@@ -260,7 +265,7 @@ export default function App() {
               }
             />
             <Route
-              path="privacy-policy"
+              path="/privacy-policy"
               element={
                 <PublicShell theme={theme} onToggleTheme={toggleTheme} authSession={authSession}>
                   <PrivacyPolicy />
@@ -268,7 +273,7 @@ export default function App() {
               }
             />
             <Route
-              path="terms-of-service"
+              path="/terms-of-service"
               element={
                 <PublicShell theme={theme} onToggleTheme={toggleTheme} authSession={authSession}>
                   <TermsOfService />
@@ -276,7 +281,7 @@ export default function App() {
               }
             />
             <Route
-              path="login"
+              path="/login"
               element={
                 <PublicShell
                   theme={theme}
@@ -290,15 +295,16 @@ export default function App() {
               }
             />
             <Route
-              path="account"
+              path="/account"
               element={
                 <PublicShell theme={theme} onToggleTheme={toggleTheme} authSession={authSession}>
                   <AccountPage authSession={authSession} onSignOut={handleSignOut} />
                 </PublicShell>
               }
             />
+            <Route path="/admin/*" element={<AdminPrefixRedirect />} />
             <Route
-              path="admin/login"
+              path="/:locale/admin/login"
               element={
                 !isAdminAuthResolved ? (
                   <AdminRouteFallback />
@@ -311,9 +317,9 @@ export default function App() {
                 )
               }
             />
-            <Route path="articles/:slug" element={<LegacySnippetRedirect />} />
+            <Route path="/articles/:slug" element={<LegacySnippetRedirect />} />
             <Route
-              path="admin"
+              path="/:locale/admin"
               element={
                 <AdminAuthGate authSession={adminAuthSession} isResolved={isAdminAuthResolved}>
                   <AdminLayout
@@ -360,9 +366,9 @@ export default function App() {
                 }
               />
             </Route>
-            <Route path="*" element={<LocalePrefixRedirect />} />
+            <Route path="/:locale/*" element={<LegacyPublicRedirect />} />
+            <Route path="*" element={<Navigate to={localizePublicPath("/")} replace />} />
           </Route>
-          <Route path="*" element={<LocalePrefixRedirect />} />
         </Routes>
       </Router>
     </PublicThemeContext.Provider>

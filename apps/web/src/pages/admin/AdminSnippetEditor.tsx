@@ -6,13 +6,14 @@ import EditorSection from "../../components/admin/EditorSection";
 import HighlightedCodeEditor from "../../components/admin/HighlightedCodeEditor";
 import StatusBadge from "../../components/admin/StatusBadge";
 import { useAdminHeader } from "../../components/admin/useAdminHeader";
+import { resolveAssetUrl } from "../../lib/asset-url";
 import { getMessages } from "../../lib/messages";
-import { getLocalizedSnippetFields, localizePath, useAppLocale } from "../../lib/locale";
+import { getLocalizedSnippetFields, localizeAdminPath, localizePublicPath, useAppLocale } from "../../lib/locale";
 import { createEmptyLocalizedFields, getFormLocale, getSnippetLocale } from "../../lib/snippet-localization";
 import { isUnauthorizedError } from "../../services/api";
-import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, unpublishSnippet, updateSnippet } from "../../services/snippets";
+import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, unpublishSnippet, updateSnippet, uploadCoverImage } from "../../services/snippets";
 import { Snippet, SnippetFormState, SnippetPayload, SnippetStatus } from "../../types";
-import { ChevronDown, ChevronLeft, Code2, Eye, Layout, Monitor, MessageSquareQuote, Send, Smartphone, Settings2, Trash2, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, Code2, Eye, ImageUp, Layout, Monitor, MessageSquareQuote, Send, Smartphone, Settings2, Trash2, X } from "lucide-react";
 
 const EDITABLE_STATUS_OPTIONS: SnippetStatus[] = ["Draft"];
 type EditorTabKey = "content" | "code" | "prompt" | "meta";
@@ -264,6 +265,7 @@ export default function AdminSnippetEditor() {
   const [form, setForm] = useState<SnippetFormState>(() => toFormState(createEmptySnippet()));
   const [isLoading, setIsLoading] = useState(!isNew);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUploadingCoverImage, setIsUploadingCoverImage] = useState(false);
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
   const [activeTab, setActiveTab] = useState<EditorTabKey>("content");
@@ -275,6 +277,7 @@ export default function AdminSnippetEditor() {
   const [primaryActionState, setPrimaryActionState] = useState<PrimaryActionState>("idle");
   const hydratedSnippetRef = useRef<Snippet | null>(null);
   const formRef = useRef(form);
+  const coverImageInputRef = useRef<HTMLInputElement | null>(null);
   const previewIframeRef = useRef<HTMLIFrameElement | null>(null);
   const previewScrollResetTimeoutRef = useRef<number | null>(null);
   const deleteConfirmState = useOverlayState({
@@ -287,7 +290,7 @@ export default function AdminSnippetEditor() {
   }, [form]);
 
   const redirectToAdminLogin = useCallback(() => {
-    navigate(localizePath(locale, "/admin/login"), { replace: true });
+    navigate(localizeAdminPath(locale, "/admin/login"), { replace: true });
   }, [locale, navigate]);
 
   useEffect(() => {
@@ -421,7 +424,7 @@ export default function AdminSnippetEditor() {
   const localizedPreview = useMemo(() => getLocalizedSnippetFields(previewSnippet, locale), [locale, previewSnippet]);
   const localizedBase = useMemo(() => getLocalizedSnippetFields(baseSnippet, locale), [baseSnippet, locale]);
   const untitledSnippetLabel = copy.untitledSnippet;
-  const previewPath = baseSnippet.id && localizedBase.slug ? localizePath(locale, `/snippets/${localizedBase.slug}`) : "";
+  const previewPath = baseSnippet.id && localizedBase.slug ? localizePublicPath(`/snippets/${localizedBase.slug}`) : "";
   const previewIframePath = previewPath ? `${previewPath}?preview=admin` : "";
   const hasSavedPreview = Boolean(baseSnippet.id && localizedBase.slug);
   const previewPayloadSignature = useMemo(() => JSON.stringify(toSnippetPayload(previewSnippet)), [previewSnippet]);
@@ -548,7 +551,7 @@ export default function AdminSnippetEditor() {
 
         if (isNew) {
           hydratedSnippetRef.current = savedSnippet;
-          navigate(localizePath(locale, `/admin/snippets/${savedSnippet.id}`), { replace: true });
+          navigate(localizeAdminPath(locale, `/admin/snippets/${savedSnippet.id}`), { replace: true });
         }
       } catch (err) {
         if (isUnauthorizedError(err)) {
@@ -585,7 +588,7 @@ export default function AdminSnippetEditor() {
 
       if (isNew) {
         hydratedSnippetRef.current = finalSnippet;
-        navigate(localizePath(locale, `/admin/snippets/${finalSnippet.id}`), { replace: true });
+        navigate(localizeAdminPath(locale, `/admin/snippets/${finalSnippet.id}`), { replace: true });
       }
     } catch (err) {
       if (isUnauthorizedError(err)) {
@@ -626,7 +629,7 @@ export default function AdminSnippetEditor() {
       setError("");
       setIsDeleteConfirmOpen(false);
       await deleteSnippet(baseSnippet.id);
-      navigate(localizePath(locale, "/admin/snippets"));
+      navigate(localizeAdminPath(locale, "/admin/snippets"));
     } catch (err) {
       if (isUnauthorizedError(err)) {
         redirectToAdminLogin();
@@ -638,10 +641,36 @@ export default function AdminSnippetEditor() {
     }
   };
 
+  const handleCoverImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file || !file.type.startsWith("image/")) {
+      setError(copy.invalidCoverImage);
+      return;
+    }
+
+    try {
+      setError("");
+      setFeedback("");
+      setIsUploadingCoverImage(true);
+      const result = await uploadCoverImage(file);
+      updateField("coverImage", result.url);
+    } catch (err) {
+      if (isUnauthorizedError(err)) {
+        redirectToAdminLogin();
+        return;
+      }
+      setError(err instanceof Error ? err.message : copy.failedCoverImageUpload);
+    } finally {
+      setIsUploadingCoverImage(false);
+    }
+  }, [copy.failedCoverImageUpload, copy.invalidCoverImage, redirectToAdminLogin]);
+
   const handlePreview = useCallback(() => {
     if (!hasSavedPreview || !previewPath) {
       setError("");
-      setFeedback(`${copy.saveDraftFirst} ${localizePath(locale, `/snippets/${localizedForm.slug || "untitled"}`)}.`);
+      setFeedback(`${copy.saveDraftFirst} ${localizePublicPath(`/snippets/${localizedForm.slug || "untitled"}`)}.`);
       return;
     }
 
@@ -661,7 +690,7 @@ export default function AdminSnippetEditor() {
             type="button"
             aria-label={copy.backToSnippetLibrary}
             className="admin-editor-back-button"
-            onClick={() => navigate(localizePath(locale, "/admin/snippets"))}
+            onClick={() => navigate(localizeAdminPath(locale, "/admin/snippets"))}
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -872,9 +901,6 @@ export default function AdminSnippetEditor() {
                   className="space-y-8"
                 >
                   <EditorSection
-                    eyebrow={copy.identity}
-                    title={copy.snippetFrame}
-                    description={copy.snippetFrameCopy}
                   >
                     <div className="grid gap-6 md:grid-cols-2">
                       <label className="grid gap-2">
@@ -883,16 +909,6 @@ export default function AdminSnippetEditor() {
                           aria-label={copy.category}
                           value={localizedForm.category}
                           onChange={(event) => updateLocalizedField("category", event.target.value)}
-                          className="admin-input w-full"
-                        />
-                      </label>
-                      <label className="grid gap-2">
-                        <span className="admin-eyebrow type-mono-micro">{copy.tags}</span>
-                        <Input
-                          aria-label={copy.tags}
-                          value={localizedForm.tags}
-                          onChange={(event) => updateLocalizedField("tags", event.target.value)}
-                          placeholder="SwiftUI, Motion"
                           className="admin-input w-full"
                         />
                       </label>
@@ -906,13 +922,46 @@ export default function AdminSnippetEditor() {
                          />
                       </label>
                       <label className="grid gap-2 md:col-span-2">
-                        <span className="admin-eyebrow type-mono-micro">{copy.coverImageUrl}</span>
-                        <Input
-                          aria-label={copy.coverImageUrl}
-                          value={form.coverImage}
-                          onChange={(event) => updateField("coverImage", event.target.value)}
-                          className="admin-input w-full"
-                        />
+                        <span className="admin-eyebrow type-mono-micro">{copy.coverImage}</span>
+                        <div className="admin-cover-upload-shell grid gap-4">
+                          {form.coverImage ? (
+                            <div className="admin-cover-upload-preview aspect-[16/10] overflow-hidden">
+                              <img
+                                src={resolveAssetUrl(form.coverImage)}
+                                alt={localizedForm.title || copy.untitledSnippet}
+                                className="h-full w-full object-cover"
+                                referrerPolicy="no-referrer"
+                              />
+                            </div>
+                          ) : null}
+                          <div className="flex flex-wrap items-center gap-3">
+                            <input
+                              ref={coverImageInputRef}
+                              type="file"
+                              accept="image/png,image/jpeg,image/webp,image/gif"
+                              className="sr-only"
+                              onChange={handleCoverImageUpload}
+                            />
+                            <Button
+                              type="button"
+                              className="admin-button-secondary admin-button-md"
+                              isDisabled={isUploadingCoverImage}
+                              onPress={() => coverImageInputRef.current?.click()}
+                            >
+                              <ImageUp size={16} className="mr-2" />
+                              {isUploadingCoverImage
+                                ? copy.uploadingCoverImage
+                                : form.coverImage
+                                  ? copy.replaceCoverImage
+                                  : copy.uploadCoverImage}
+                            </Button>
+                            {!form.coverImage ? (
+                              <span className="admin-copy-faint type-mono-micro min-w-0 truncate">
+                                {copy.coverImageUploadHint}
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
                       </label>
                     </div>
                   </EditorSection>

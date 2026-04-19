@@ -5,7 +5,7 @@ import AdminSnippetLibraryContent from "../../components/admin/AdminSnippetLibra
 import { useAdminHeader } from "../../components/admin/useAdminHeader";
 import { Tooltip } from "../../lib/heroui";
 import { getMessages } from "../../lib/messages";
-import { localizePath, useAppLocale } from "../../lib/locale";
+import { localizeAdminPath, useAppLocale } from "../../lib/locale";
 import { isUnauthorizedError } from "../../services/api";
 import { getSnippets } from "../../services/snippets";
 import { Snippet } from "../../types";
@@ -28,7 +28,7 @@ export default function AdminSnippets() {
         <Tooltip delay={0} closeDelay={0}>
           <Tooltip.Trigger>
             <Link
-              to={`/${locale}/admin/snippets/new`}
+              to={localizeAdminPath(locale, "/admin/snippets/new")}
               aria-label={copy.newSnippet}
               className="admin-nav-action-icon type-action"
             >
@@ -59,7 +59,7 @@ export default function AdminSnippets() {
       .catch((err: Error) => {
         if (!active) return;
         if (isUnauthorizedError(err)) {
-          navigate(localizePath(locale, "/admin/login"), { replace: true });
+          navigate(localizeAdminPath(locale, "/admin/login"), { replace: true });
           return;
         }
         setError(err.message);

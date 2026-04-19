@@ -6,7 +6,7 @@ import AccountPage from "./AccountPage";
 describe("AccountPage", () => {
   it("renders a member center surface for a staged session", () => {
     render(
-      <MemoryRouter initialEntries={["/en/account"]}>
+      <MemoryRouter initialEntries={["/account"]}>
         <AccountPage
           authSession={{
             email: "builder@example.com",
@@ -25,20 +25,20 @@ describe("AccountPage", () => {
 
   it("renders the empty member shell when there is no staged session", () => {
     render(
-      <MemoryRouter initialEntries={["/en/account"]}>
+      <MemoryRouter initialEntries={["/account"]}>
         <AccountPage authSession={null} onSignOut={vi.fn()} />
       </MemoryRouter>,
     );
 
     expect(screen.getByText("No staged member session yet.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Open Login" })).toHaveAttribute("href", "/en/login");
+    expect(screen.getByRole("link", { name: "Open Login" })).toHaveAttribute("href", "/login");
   });
 
   it("lets the member sign out from the account page", () => {
     const onSignOut = vi.fn();
 
     render(
-      <MemoryRouter initialEntries={["/en/account"]}>
+      <MemoryRouter initialEntries={["/account"]}>
         <AccountPage
           authSession={{
             email: "builder@example.com",

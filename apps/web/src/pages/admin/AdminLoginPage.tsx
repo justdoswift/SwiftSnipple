@@ -3,7 +3,7 @@ import { Mail } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../../lib/heroui";
 import { getMessages } from "../../lib/messages";
-import { useAppLocale } from "../../lib/locale";
+import { localizeAdminPath, localizePublicPath, useAppLocale } from "../../lib/locale";
 import type { AdminAuthSession } from "../../lib/admin-auth";
 import { loginAdmin } from "../../services/admin-auth";
 
@@ -33,7 +33,7 @@ export default function AdminLoginPage({ authSession, onAuthenticate }: AdminLog
         password,
       });
       onAuthenticate(session);
-      navigate(`/${locale}/admin`);
+      navigate(localizeAdminPath(locale, "/admin"));
     } catch (err) {
       setError(err instanceof Error ? err.message : copy.invalidEmail);
     } finally {
@@ -47,7 +47,7 @@ export default function AdminLoginPage({ authSession, onAuthenticate }: AdminLog
       <div className="auth-page-overlay" aria-hidden="true" />
 
       <header className="auth-page-brand-shell public-nav-shell flex w-full items-center justify-between gap-3 px-4 py-3 md:px-6 lg:px-8">
-        <Link to={`/${locale}`} className="auth-page-brand public-nav-brand min-w-0" aria-label="Return to Just Do Swift home">
+        <Link to={localizePublicPath("/")} className="auth-page-brand public-nav-brand min-w-0" aria-label="Return to Just Do Swift home">
           <span className="public-nav-logo" aria-hidden="true">
             <span className="public-nav-logo-bar public-nav-logo-bar-primary" />
             <span className="public-nav-logo-bar public-nav-logo-bar-secondary" />
@@ -102,7 +102,7 @@ export default function AdminLoginPage({ authSession, onAuthenticate }: AdminLog
           </form>
 
           <div className="auth-admin-footer">
-            <Link to={`/${locale}`} className="auth-text-button">
+            <Link to={localizePublicPath("/")} className="auth-text-button">
               {copy.backToPublicCollection}
             </Link>
           </div>

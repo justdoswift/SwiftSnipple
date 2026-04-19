@@ -8,11 +8,12 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func NewRouter(pool dbPinger, snippets snippetStore, authConfig AdminAuthConfig) http.Handler {
+func NewRouter(pool dbPinger, snippets snippetStore, authConfig AdminAuthConfig, uploadsDir string) http.Handler {
 	handler := &Handler{
 		db:       pool,
 		snippets: snippets,
 		auth:     newAdminAuth(authConfig),
+		uploads:  newLocalUploader(uploadsDir),
 	}
 
 	router := chi.NewRouter()
@@ -23,8 +24,10 @@ func NewRouter(pool dbPinger, snippets snippetStore, authConfig AdminAuthConfig)
 	router.Use(middleware.Timeout(15 * time.Second))
 
 	router.Get("/healthz", handler.Healthz)
+	router.Handle("/uploads/*", http.StripPrefix("/uploads/", http.FileServer(http.Dir(handler.uploads.dir))))
 
 	router.Route("/api", func(r chi.Router) {
+		r.Handle("/uploads/*", http.StripPrefix("/api/uploads/", http.FileServer(http.Dir(handler.uploads.dir))))
 		r.Get("/snippets", handler.ListSnippets)
 		r.Get("/snippets/{id}", handler.GetSnippet)
 		r.Get("/snippets/slug/{slug}", handler.GetSnippetBySlug)
@@ -39,6 +42,7 @@ func NewRouter(pool dbPinger, snippets snippetStore, authConfig AdminAuthConfig)
 
 			admin.Group(func(protected chi.Router) {
 				protected.Use(handler.requireAdminSession)
+				protected.Post("/uploads/cover", handler.UploadCoverImage)
 				protected.Post("/snippets", handler.CreateSnippet)
 				protected.Put("/snippets/{id}", handler.UpdateSnippet)
 				protected.Post("/snippets/{id}/publish", handler.PublishSnippet)

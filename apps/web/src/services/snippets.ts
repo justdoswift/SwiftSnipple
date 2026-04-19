@@ -3,6 +3,10 @@ import { request } from "./api";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
+type CoverImageUploadResponse = {
+  url: string;
+};
+
 export function getSnippets() {
   return request<Snippet[]>(`${API_BASE}/api/snippets`);
 }
@@ -44,5 +48,15 @@ export function unpublishSnippet(id: string) {
 export function deleteSnippet(id: string) {
   return request<void>(`${API_BASE}/api/admin/snippets/${id}`, {
     method: "DELETE",
+  });
+}
+
+export function uploadCoverImage(file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return request<CoverImageUploadResponse>(`${API_BASE}/api/admin/uploads/cover`, {
+    method: "POST",
+    body: formData,
   });
 }

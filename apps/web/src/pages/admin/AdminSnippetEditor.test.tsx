@@ -5,7 +5,7 @@ import AdminLayout from "../../components/admin/AdminLayout";
 import type { AdminAuthSession } from "../../lib/admin-auth";
 import { LocaleContext } from "../../lib/locale";
 import AdminSnippetEditor from "./AdminSnippetEditor";
-import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, updateSnippet } from "../../services/snippets";
+import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, updateSnippet, uploadCoverImage } from "../../services/snippets";
 
 vi.mock("../../services/snippets", () => ({
   createSnippet: vi.fn(),
@@ -14,6 +14,7 @@ vi.mock("../../services/snippets", () => ({
   publishSnippet: vi.fn(),
   unpublishSnippet: vi.fn(),
   updateSnippet: vi.fn(),
+  uploadCoverImage: vi.fn(),
 }));
 
 const mockedGetSnippetById = vi.mocked(getSnippetById);
@@ -21,6 +22,7 @@ const mockedCreateSnippet = vi.mocked(createSnippet);
 const mockedDeleteSnippet = vi.mocked(deleteSnippet);
 const mockedPublishSnippet = vi.mocked(publishSnippet);
 const mockedUpdateSnippet = vi.mocked(updateSnippet);
+const mockedUploadCoverImage = vi.mocked(uploadCoverImage);
 
 const adminAuthSession: AdminAuthSession = {
   email: "creator@example.com",
@@ -37,6 +39,7 @@ describe("AdminSnippetEditor", () => {
     mockedGetSnippetById.mockReset();
     mockedCreateSnippet.mockReset();
     mockedPublishSnippet.mockReset();
+    mockedUploadCoverImage.mockReset();
 
     render(
       <MemoryRouter initialEntries={["/en/admin/snippets/new"]}>
@@ -102,8 +105,43 @@ describe("AdminSnippetEditor", () => {
     expect(screen.getByRole("link", { name: /view front site/i })).toBeInTheDocument();
     expect(screen.getByLabelText("Implementation notes")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Preview" }));
-    expect(screen.getByText("Save this draft first to open the public preview at /en/snippets/untitled.")).toBeInTheDocument();
+    expect(screen.getByText("Save this draft first to open the public preview at /snippets/untitled.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Done" })).not.toBeInTheDocument();
+  });
+
+  it("uploads a local cover image and stores the returned url", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+    mockedUploadCoverImage.mockResolvedValue({ url: "/api/uploads/cover-test.png" });
+
+    render(
+      <MemoryRouter initialEntries={["/en/admin/snippets/new"]}>
+        <Routes>
+          <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+            <Route path="snippets/new" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: "Surface" }));
+
+    const file = new File(["cover"], "cover.png", { type: "image/png" });
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement | null;
+    expect(fileInput).not.toBeNull();
+
+    fireEvent.change(fileInput!, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(mockedUploadCoverImage).toHaveBeenCalledWith(file);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByAltText("Untitled Snippet")).toHaveAttribute("src", "/api/uploads/cover-test.png");
+    });
+
+    expect(screen.queryByText("/api/uploads/cover-test.png")).not.toBeInTheDocument();
   });
 
   it("returns to the snippet library from the editor header back button", () => {
@@ -219,7 +257,7 @@ describe("AdminSnippetEditor", () => {
     expect(screen.queryByRole("link", { name: "新标签打开" })).not.toBeInTheDocument();
     expect(screen.getByTitle("Snippet public preview")).toHaveAttribute(
       "src",
-      "/zh/snippets/smooth-feedback-loops?preview=admin",
+      "/snippets/smooth-feedback-loops?preview=admin",
     );
   });
 

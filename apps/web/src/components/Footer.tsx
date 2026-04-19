@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { getMessages } from "../lib/messages";
-import { useAppLocale } from "../lib/locale";
+import { localizePublicPath, useAppLocale } from "../lib/locale";
 
 export default function Footer() {
   const { locale } = useAppLocale();
@@ -20,13 +20,13 @@ export default function Footer() {
           <div className="grid grid-cols-2 gap-12 md:grid-cols-3">
             <div className="flex flex-col gap-4">
               <span className="type-mono-micro">{copy.product}</span>
-              <a href={`/${locale}#library-index`} className="type-action transition-colors">{copy.library}</a>
-              <a href={`/${locale}#latest-additions`} className="type-action transition-colors">{copy.snippets}</a>
+              <a href={`${localizePublicPath("/")}#library-index`} className="type-action transition-colors">{copy.library}</a>
+              <a href={`${localizePublicPath("/")}#latest-additions`} className="type-action transition-colors">{copy.snippets}</a>
             </div>
             <div className="flex flex-col gap-4">
               <span className="type-mono-micro">{copy.resources}</span>
-              <Link to={`/${locale}/privacy-policy`} className="type-action transition-colors">{copy.privacy}</Link>
-              <Link to={`/${locale}/terms-of-service`} className="type-action transition-colors">{copy.terms}</Link>
+              <Link to={localizePublicPath("/privacy-policy")} className="type-action transition-colors">{copy.privacy}</Link>
+              <Link to={localizePublicPath("/terms-of-service")} className="type-action transition-colors">{copy.terms}</Link>
             </div>
             <div className="flex flex-col gap-4">
               <span className="type-mono-micro">{copy.connect}</span>

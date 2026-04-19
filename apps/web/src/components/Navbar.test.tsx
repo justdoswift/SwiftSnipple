@@ -103,7 +103,7 @@ describe("Navbar", () => {
     expect(searchButton).toHaveClass("public-nav-icon-button");
     expect(themeButton).toHaveClass("public-nav-icon-button");
     expect(localeButton).toHaveClass("public-nav-icon-button", "public-nav-locale-trigger");
-    expect(authLink).toHaveAttribute("href", "/en/login");
+    expect(authLink).toHaveAttribute("href", "/login");
     expect(authLink).toHaveClass("public-nav-icon-button", "public-nav-auth-button");
     expect(screen.queryByText("English")).not.toBeInTheDocument();
     expect(screen.queryByText("中文")).not.toBeInTheDocument();
@@ -171,7 +171,7 @@ describe("Navbar", () => {
       createdAt: "2026-04-18T00:00:00.000Z",
     });
 
-    expect(screen.getByRole("link", { name: "Account" })).toHaveAttribute("href", "/en/account");
+    expect(screen.getByRole("link", { name: "Account" })).toHaveAttribute("href", "/account");
     expect(screen.getByRole("link", { name: "Account" })).toHaveClass("public-nav-icon-button", "public-nav-auth-button");
     expect(screen.queryByText("Account")).not.toBeInTheDocument();
   });

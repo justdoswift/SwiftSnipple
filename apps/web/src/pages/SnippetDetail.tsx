@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import HighlightedCodeBlock from "../components/HighlightedCodeBlock";
 import MarkdownRenderer from "../components/MarkdownRenderer";
+import { resolveAssetUrl } from "../lib/asset-url";
 import { getMessages } from "../lib/messages";
 import { extractMarkdownOutline, type MarkdownOutlineItem } from "../lib/markdown-outline";
 import { getLocalizedSnippetFields, getLocalizedSnippetPath, useAppLocale } from "../lib/locale";
@@ -346,7 +347,7 @@ export default function SnippetDetail() {
         <div className="public-content-frame vibe-glass mx-auto max-w-[1120px] p-2">
           <div className="public-media-shell aspect-[16/9] overflow-hidden">
             <img
-              src={snippet.coverImage}
+              src={resolveAssetUrl(snippet.coverImage)}
               alt={localizedFields?.title}
               className="h-full w-full object-cover"
               referrerPolicy="no-referrer"

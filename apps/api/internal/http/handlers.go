@@ -1,10 +1,16 @@
 package http
 
 import (
+	"crypto/rand"
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -32,6 +38,20 @@ type Handler struct {
 	db       dbPinger
 	snippets snippetStore
 	auth     adminAuth
+	uploads  localUploader
+}
+
+type localUploader struct {
+	dir string
+}
+
+func newLocalUploader(dir string) localUploader {
+	cleanDir := strings.TrimSpace(dir)
+	if cleanDir == "" {
+		cleanDir = "uploads"
+	}
+
+	return localUploader{dir: filepath.Clean(cleanDir)}
 }
 
 func (h *Handler) Healthz(w http.ResponseWriter, r *http.Request) {
@@ -156,6 +176,37 @@ func (h *Handler) DeleteSnippet(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func (h *Handler) UploadCoverImage(w http.ResponseWriter, r *http.Request) {
+	const maxCoverUploadBytes = 25 << 20
+
+	r.Body = http.MaxBytesReader(w, r.Body, maxCoverUploadBytes)
+	if err := r.ParseMultipartForm(maxCoverUploadBytes); err != nil {
+		var maxBytesError *http.MaxBytesError
+		if errors.As(err, &maxBytesError) {
+			writeJSON(w, http.StatusRequestEntityTooLarge, map[string]string{"error": "cover image must be 25 MB or smaller"})
+			return
+		}
+
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid multipart upload payload"})
+		return
+	}
+
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "cover image file is required"})
+		return
+	}
+	defer file.Close()
+
+	urlPath, err := h.uploads.saveImage(file, header)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, map[string]string{"url": urlPath})
+}
+
 func (h *Handler) AdminLogin(w http.ResponseWriter, r *http.Request) {
 	var payload adminLoginRequest
 	decoder := json.NewDecoder(r.Body)
@@ -252,4 +303,69 @@ func writeJSON(w http.ResponseWriter, status int, value any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(value)
+}
+
+func (u localUploader) saveImage(file multipart.File, _ *multipart.FileHeader) (string, error) {
+	if err := os.MkdirAll(u.dir, 0o755); err != nil {
+		return "", errors.New("failed to prepare upload directory")
+	}
+
+	sniffBuffer := make([]byte, 512)
+	bytesRead, err := file.Read(sniffBuffer)
+	if err != nil && !errors.Is(err, io.EOF) {
+		return "", errors.New("failed to read cover image")
+	}
+
+	if _, err := file.Seek(0, io.SeekStart); err != nil {
+		return "", errors.New("failed to reset cover image")
+	}
+
+	contentType := http.DetectContentType(sniffBuffer[:bytesRead])
+	extension, ok := allowedImageExtension(contentType)
+	if !ok {
+		return "", errors.New("cover image must be PNG, JPEG, WEBP, or GIF")
+	}
+
+	randomName, err := randomUploadName()
+	if err != nil {
+		return "", errors.New("failed to create upload name")
+	}
+
+	fileName := randomName + extension
+	destinationPath := filepath.Join(u.dir, fileName)
+	destinationFile, err := os.Create(destinationPath)
+	if err != nil {
+		return "", errors.New("failed to store cover image")
+	}
+	defer destinationFile.Close()
+
+	if _, err := io.Copy(destinationFile, file); err != nil {
+		return "", errors.New("failed to store cover image")
+	}
+
+	return "/api/uploads/" + fileName, nil
+}
+
+func allowedImageExtension(contentType string) (string, bool) {
+	switch contentType {
+	case "image/png":
+		return ".png", true
+	case "image/jpeg":
+		return ".jpg", true
+	case "image/webp":
+		return ".webp", true
+	case "image/gif":
+		return ".gif", true
+	default:
+		return "", false
+	}
+}
+
+func randomUploadName() (string, error) {
+	randomBytes := make([]byte, 16)
+	if _, err := rand.Read(randomBytes); err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%x", randomBytes), nil
 }

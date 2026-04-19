@@ -44,6 +44,7 @@ export default defineConfig(() => {
       proxy: {
         '/api': proxyTarget,
         '/healthz': proxyTarget,
+        '/uploads': proxyTarget,
       },
     },
   };

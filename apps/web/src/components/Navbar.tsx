@@ -1,10 +1,12 @@
 import { Languages, LogIn, Moon, Search, Sun, User } from "lucide-react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { getMessages } from "../lib/messages";
 import { Dropdown, Tooltip } from "../lib/heroui";
 import type { MockAuthSession } from "../lib/mock-auth";
 import { APP_LOCALE_OPTIONS, localizePublicPath, useAppLocale } from "../lib/locale";
 import type { PublicTheme } from "../lib/public-theme";
+import PublicSearch from "./PublicSearch";
 
 interface NavbarProps {
   theme: PublicTheme;
@@ -18,6 +20,7 @@ export default function Navbar({ theme, onToggleTheme, authSession }: NavbarProp
   const themeToggleLabel = theme === "dark" ? copy.nav.switchToLightMode : copy.nav.switchToDarkMode;
   const authLabel = authSession ? copy.nav.account : copy.nav.login;
   const authHref = authSession ? localizePublicPath("/account") : localizePublicPath("/login");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   return (
     <nav
@@ -39,20 +42,14 @@ export default function Navbar({ theme, onToggleTheme, authSession }: NavbarProp
         </Link>
 
         <div className="flex min-w-0 items-center justify-end gap-2 md:gap-3">
-          <Tooltip delay={0} closeDelay={0}>
-            <Tooltip.Trigger>
-              <button
-                type="button"
-                className="public-nav-icon-button"
-                aria-label={copy.nav.searchSnippets}
-              >
-                <Search size={18} strokeWidth={2} aria-hidden="true" />
-              </button>
-            </Tooltip.Trigger>
-            <Tooltip.Content>
-              {copy.nav.searchSnippets}
-            </Tooltip.Content>
-          </Tooltip>
+          <button
+            type="button"
+            className="public-nav-icon-button"
+            aria-label={copy.nav.searchSnippets}
+            onClick={() => setIsSearchOpen(true)}
+          >
+            <Search size={18} strokeWidth={2} aria-hidden="true" />
+          </button>
 
           <Tooltip delay={0} closeDelay={0}>
             <Tooltip.Trigger>
@@ -121,6 +118,7 @@ export default function Navbar({ theme, onToggleTheme, authSession }: NavbarProp
           </Tooltip>
         </div>
       </div>
+      <PublicSearch isOpen={isSearchOpen} onOpenChange={setIsSearchOpen} />
     </nav>
   );
 }

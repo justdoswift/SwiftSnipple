@@ -6,6 +6,10 @@ import Navbar from "./Navbar";
 import type { PublicTheme } from "../lib/public-theme";
 import type { MockAuthSession } from "../lib/mock-auth";
 
+vi.mock("./PublicSearch", () => ({
+  default: ({ isOpen }: { isOpen: boolean }) => (isOpen ? <div role="dialog">Public search</div> : null),
+}));
+
 vi.mock("../lib/heroui", async () => {
   const actual = await vi.importActual<typeof import("../lib/heroui")>("../lib/heroui");
 
@@ -108,13 +112,9 @@ describe("Navbar", () => {
     expect(screen.queryByText("English")).not.toBeInTheDocument();
     expect(screen.queryByText("中文")).not.toBeInTheDocument();
     expect(screen.queryByText("Log in")).not.toBeInTheDocument();
-    expect(screen.queryByRole("searchbox", { name: "Search snippets" })).not.toBeInTheDocument();
-
-    fireEvent.pointerEnter(searchButton);
-    fireEvent.mouseEnter(searchButton);
-    fireEvent.focus(searchButton);
-    expect(screen.getByText("Search snippets")).toBeInTheDocument();
-    fireEvent.mouseLeave(searchButton);
+    expect(screen.queryByRole("dialog", { name: /search/i })).not.toBeInTheDocument();
+    fireEvent.click(searchButton);
+    expect(screen.getByRole("dialog")).toHaveTextContent("Public search");
 
     fireEvent.pointerEnter(themeButton);
     fireEvent.mouseEnter(themeButton);

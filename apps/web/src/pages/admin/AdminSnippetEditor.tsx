@@ -9,6 +9,7 @@ import { useAdminHeader } from "../../components/admin/useAdminHeader";
 import { getMessages } from "../../lib/messages";
 import { getLocalizedSnippetFields, localizePath, useAppLocale } from "../../lib/locale";
 import { createEmptyLocalizedFields, getFormLocale, getSnippetLocale } from "../../lib/snippet-localization";
+import { isUnauthorizedError } from "../../services/api";
 import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, unpublishSnippet, updateSnippet } from "../../services/snippets";
 import { Snippet, SnippetFormState, SnippetPayload, SnippetStatus } from "../../types";
 import { ChevronDown, Code2, Eye, Layout, Monitor, MessageSquareQuote, Send, Smartphone, Settings2, Trash2, X } from "lucide-react";
@@ -281,6 +282,10 @@ export default function AdminSnippetEditor() {
     formRef.current = form;
   }, [form]);
 
+  const redirectToAdminLogin = useCallback(() => {
+    navigate(localizePath(locale, "/admin/login"), { replace: true });
+  }, [locale, navigate]);
+
   useEffect(() => {
     if (isNew || !id) {
       const emptySnippet = createEmptySnippet();
@@ -317,6 +322,10 @@ export default function AdminSnippetEditor() {
       })
       .catch((err: Error) => {
         if (!active) return;
+        if (isUnauthorizedError(err)) {
+          redirectToAdminLogin();
+          return;
+        }
         setError(err.message);
       })
       .finally(() => {
@@ -327,7 +336,7 @@ export default function AdminSnippetEditor() {
     return () => {
       active = false;
     };
-  }, [id, isNew]);
+  }, [id, isNew, redirectToAdminLogin]);
 
   useEffect(() => {
     if (!isPreviewOpen && !isPublishConfirmOpen) return;
@@ -450,7 +459,6 @@ export default function AdminSnippetEditor() {
           : copy.confirmPublish;
   const autosaveFeedbackLabel =
     autosaveState === "saving" ? copy.saving : autosaveState === "saved" ? copy.saved : "";
-
   useEffect(() => {
     if (!isPreviewOpen) {
       if (previewScrollResetTimeoutRef.current !== null) {
@@ -535,13 +543,17 @@ export default function AdminSnippetEditor() {
           navigate(localizePath(locale, `/admin/snippets/${savedSnippet.id}`), { replace: true });
         }
       } catch (err) {
+        if (isUnauthorizedError(err)) {
+          redirectToAdminLogin();
+          return;
+        }
         setAutosaveState("idle");
         setError(err instanceof Error ? err.message : copy.failedSave);
       }
     }, 900);
 
     return () => window.clearTimeout(timeoutId);
-  }, [hasUnsavedChanges, isDeleting, isLoading, isNew, isPublishedEntry, navigate, persistSnippet, primaryActionState]);
+  }, [copy.failedSave, hasUnsavedChanges, isDeleting, isLoading, isNew, isPublishedEntry, navigate, persistSnippet, primaryActionState, redirectToAdminLogin]);
 
   const handleConfirmPublish = useCallback(async () => {
     const nextActionState: PrimaryActionState = isPublishedEntry ? "updating" : "publishing";
@@ -568,11 +580,15 @@ export default function AdminSnippetEditor() {
         navigate(localizePath(locale, `/admin/snippets/${finalSnippet.id}`), { replace: true });
       }
     } catch (err) {
+      if (isUnauthorizedError(err)) {
+        redirectToAdminLogin();
+        return;
+      }
       setError(err instanceof Error ? err.message : copy.failedPublish);
     } finally {
       setPrimaryActionState("idle");
     }
-  }, [copy.failedPublish, copy.publishSuccess, copy.updateSuccess, isNew, isPublishedEntry, navigate, persistSnippet]);
+  }, [copy.failedPublish, copy.publishSuccess, copy.updateSuccess, isNew, isPublishedEntry, navigate, persistSnippet, redirectToAdminLogin]);
 
   const handleUnpublish = async () => {
     if (!baseSnippet.id) return;
@@ -586,6 +602,10 @@ export default function AdminSnippetEditor() {
       setForm(toFormState(snippet));
       setFeedback(copy.unpublishSuccess);
     } catch (err) {
+      if (isUnauthorizedError(err)) {
+        redirectToAdminLogin();
+        return;
+      }
       setError(err instanceof Error ? err.message : copy.failedPublish);
     }
   };
@@ -600,6 +620,10 @@ export default function AdminSnippetEditor() {
       await deleteSnippet(baseSnippet.id);
       navigate(localizePath(locale, "/admin/snippets"));
     } catch (err) {
+      if (isUnauthorizedError(err)) {
+        redirectToAdminLogin();
+        return;
+      }
       setError(err instanceof Error ? err.message : copy.failedDelete);
     } finally {
       setIsDeleting(false);

@@ -8,10 +8,11 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func NewRouter(pool dbPinger, snippets snippetStore) http.Handler {
+func NewRouter(pool dbPinger, snippets snippetStore, authConfig AdminAuthConfig) http.Handler {
 	handler := &Handler{
 		db:       pool,
 		snippets: snippets,
+		auth:     newAdminAuth(authConfig),
 	}
 
 	router := chi.NewRouter()
@@ -32,16 +33,23 @@ func NewRouter(pool dbPinger, snippets snippetStore) http.Handler {
 		r.Get("/articles/slug/{slug}", handler.GetSnippetBySlug)
 
 		r.Route("/admin", func(admin chi.Router) {
-			admin.Post("/snippets", handler.CreateSnippet)
-			admin.Put("/snippets/{id}", handler.UpdateSnippet)
-			admin.Post("/snippets/{id}/publish", handler.PublishSnippet)
-			admin.Post("/snippets/{id}/unpublish", handler.UnpublishSnippet)
-			admin.Delete("/snippets/{id}", handler.DeleteSnippet)
-			admin.Post("/articles", handler.CreateSnippet)
-			admin.Put("/articles/{id}", handler.UpdateSnippet)
-			admin.Post("/articles/{id}/publish", handler.PublishSnippet)
-			admin.Post("/articles/{id}/unpublish", handler.UnpublishSnippet)
-			admin.Delete("/articles/{id}", handler.DeleteSnippet)
+			admin.Post("/login", handler.AdminLogin)
+			admin.Post("/logout", handler.AdminLogout)
+			admin.Get("/session", handler.AdminSession)
+
+			admin.Group(func(protected chi.Router) {
+				protected.Use(handler.requireAdminSession)
+				protected.Post("/snippets", handler.CreateSnippet)
+				protected.Put("/snippets/{id}", handler.UpdateSnippet)
+				protected.Post("/snippets/{id}/publish", handler.PublishSnippet)
+				protected.Post("/snippets/{id}/unpublish", handler.UnpublishSnippet)
+				protected.Delete("/snippets/{id}", handler.DeleteSnippet)
+				protected.Post("/articles", handler.CreateSnippet)
+				protected.Put("/articles/{id}", handler.UpdateSnippet)
+				protected.Post("/articles/{id}/publish", handler.PublishSnippet)
+				protected.Post("/articles/{id}/unpublish", handler.UnpublishSnippet)
+				protected.Delete("/articles/{id}", handler.DeleteSnippet)
+			})
 		})
 	})
 

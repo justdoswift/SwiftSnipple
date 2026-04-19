@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"swiftsnipple/api/internal/domain"
@@ -30,6 +31,7 @@ type snippetStore interface {
 type Handler struct {
 	db       dbPinger
 	snippets snippetStore
+	auth     adminAuth
 }
 
 func (h *Handler) Healthz(w http.ResponseWriter, r *http.Request) {
@@ -152,6 +154,54 @@ func (h *Handler) DeleteSnippet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *Handler) AdminLogin(w http.ResponseWriter, r *http.Request) {
+	var payload adminLoginRequest
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+
+	if err := decoder.Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json payload"})
+		return
+	}
+
+	if !h.auth.authenticate(payload.Email, payload.Password) {
+		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid credentials"})
+		return
+	}
+
+	now := time.Now().UTC()
+	expiresAt := now.Add(adminSessionDuration)
+	sessionPayload := adminSessionPayload{
+		Email:     strings.ToLower(strings.TrimSpace(payload.Email)),
+		IssuedAt:  now.Format(time.RFC3339),
+		ExpiresAt: expiresAt.Format(time.RFC3339),
+	}
+
+	token, err := h.auth.signSession(sessionPayload)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to create session"})
+		return
+	}
+
+	http.SetCookie(w, h.auth.sessionCookie(token, expiresAt))
+	writeJSON(w, http.StatusOK, sessionResponseFromPayload(sessionPayload))
+}
+
+func (h *Handler) AdminLogout(w http.ResponseWriter, r *http.Request) {
+	clearAdminSessionCookie(w)
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *Handler) AdminSession(w http.ResponseWriter, r *http.Request) {
+	session, ok := h.readAdminSession(r)
+	if !ok {
+		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, sessionResponseFromPayload(*session))
 }
 
 func decodeSnippetPayload(w http.ResponseWriter, r *http.Request) (domain.SnippetPayload, bool) {

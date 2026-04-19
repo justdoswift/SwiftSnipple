@@ -1,8 +1,15 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import { PublicThemeContext } from "../../lib/public-theme";
+import { loginAdmin } from "../../services/admin-auth";
 import AdminLoginPage from "./AdminLoginPage";
+
+vi.mock("../../services/admin-auth", () => ({
+  loginAdmin: vi.fn(),
+}));
+
+const mockedLoginAdmin = vi.mocked(loginAdmin);
 
 function renderAdminLoginPage() {
   const onAuthenticate = vi.fn();
@@ -33,24 +40,48 @@ describe("AdminLoginPage", () => {
     expect(screen.getByLabelText("Email Address")).toBeInTheDocument();
     expect(screen.getByLabelText("Password")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Enter Creator Workspace" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Continue with Google" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Continue with GitHub" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Continue with Google" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Continue with GitHub" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Back to public collection" })).toHaveAttribute("href", "/en");
   });
 
-  it("submits email auth into the creator workspace", () => {
+  it("submits email auth into the creator workspace", async () => {
     const { onAuthenticate } = renderAdminLoginPage();
+    mockedLoginAdmin.mockResolvedValue({
+      email: "creator@example.com",
+      provider: "email",
+      createdAt: "2026-04-19T00:00:00.000Z",
+    });
 
     fireEvent.change(screen.getByLabelText("Email Address"), { target: { value: "creator@example.com" } });
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: "secret12" } });
     fireEvent.click(screen.getByRole("button", { name: "Enter Creator Workspace" }));
 
-    expect(onAuthenticate).toHaveBeenCalledWith(
-      expect.objectContaining({
+    await waitFor(() => {
+      expect(mockedLoginAdmin).toHaveBeenCalledWith({
         email: "creator@example.com",
-        provider: "email",
-      }),
-    );
-    expect(screen.getByText("creator workspace route")).toBeInTheDocument();
+        password: "secret12",
+      });
+    });
+    await waitFor(() => {
+      expect(onAuthenticate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: "creator@example.com",
+          provider: "email",
+        }),
+      );
+    });
+    expect(await screen.findByText("creator workspace route")).toBeInTheDocument();
+  });
+
+  it("shows API login errors", async () => {
+    renderAdminLoginPage();
+    mockedLoginAdmin.mockRejectedValue(new Error("invalid credentials"));
+
+    fireEvent.change(screen.getByLabelText("Email Address"), { target: { value: "creator@example.com" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "wrong-pass" } });
+    fireEvent.click(screen.getByRole("button", { name: "Enter Creator Workspace" }));
+
+    expect(await screen.findByText("invalid credentials")).toBeInTheDocument();
   });
 });

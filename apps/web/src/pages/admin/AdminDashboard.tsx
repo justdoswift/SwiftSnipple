@@ -1,17 +1,19 @@
 import { Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AdminSnippetLibraryContent from "../../components/admin/AdminSnippetLibraryContent";
 import StatCard from "../../components/admin/StatCard";
 import { useAdminHeader } from "../../components/admin/useAdminHeader";
 import { Tooltip } from "../../lib/heroui";
 import { getMessages } from "../../lib/messages";
-import { useAppLocale } from "../../lib/locale";
+import { localizePath, useAppLocale } from "../../lib/locale";
+import { isUnauthorizedError } from "../../services/api";
 import { getSnippets } from "../../services/snippets";
 import { Snippet } from "../../types";
 
 export default function AdminDashboard() {
   const { locale } = useAppLocale();
+  const navigate = useNavigate();
   const copy = getMessages(locale).admin;
   const [snippets, setSnippets] = useState<Snippet[]>([]);
   const [error, setError] = useState("");
@@ -52,6 +54,10 @@ export default function AdminDashboard() {
       })
       .catch((err: Error) => {
         if (!active) return;
+        if (isUnauthorizedError(err)) {
+          navigate(localizePath(locale, "/admin/login"), { replace: true });
+          return;
+        }
         setError(err.message);
       })
       .finally(() => {
@@ -62,7 +68,7 @@ export default function AdminDashboard() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [locale, navigate]);
 
   const draftCount = snippets.filter((snippet) => snippet.status === "Draft").length;
   const publishedCount = snippets.filter((snippet) => snippet.status === "Published").length;

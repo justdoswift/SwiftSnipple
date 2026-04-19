@@ -8,8 +8,11 @@ import (
 )
 
 type Config struct {
-	APIPort     string
-	DatabaseURL string
+	APIPort            string
+	DatabaseURL        string
+	AdminEmail         string
+	AdminPassword      string
+	AdminSessionSecret string
 }
 
 func Load() Config {
@@ -20,10 +23,25 @@ func Load() Config {
 	if databaseURL == "" {
 		log.Fatal("DATABASE_URL is required")
 	}
+	adminEmail := os.Getenv("ADMIN_EMAIL")
+	if adminEmail == "" {
+		log.Fatal("ADMIN_EMAIL is required")
+	}
+	adminPassword := os.Getenv("ADMIN_PASSWORD")
+	if adminPassword == "" {
+		log.Fatal("ADMIN_PASSWORD is required")
+	}
+	adminSessionSecret := os.Getenv("ADMIN_SESSION_SECRET")
+	if adminSessionSecret == "" {
+		log.Fatal("ADMIN_SESSION_SECRET is required")
+	}
 
 	return Config{
-		APIPort:     apiPort,
-		DatabaseURL: databaseURL,
+		APIPort:            apiPort,
+		DatabaseURL:        databaseURL,
+		AdminEmail:         adminEmail,
+		AdminPassword:      adminPassword,
+		AdminSessionSecret: adminSessionSecret,
 	}
 }
 

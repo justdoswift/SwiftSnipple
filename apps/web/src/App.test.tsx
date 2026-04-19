@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
-import { ADMIN_AUTH_STORAGE_KEY } from "./lib/admin-auth";
+import { getAdminSession, logoutAdmin } from "./services/admin-auth";
 import { getSnippets } from "./services/snippets";
 import type { Snippet } from "./types";
 
@@ -10,7 +10,14 @@ vi.mock("./services/snippets", () => ({
   getSnippetBySlug: vi.fn(),
 }));
 
+vi.mock("./services/admin-auth", () => ({
+  getAdminSession: vi.fn(),
+  logoutAdmin: vi.fn(),
+}));
+
 const mockedGetSnippets = vi.mocked(getSnippets);
+const mockedGetAdminSession = vi.mocked(getAdminSession);
+const mockedLogoutAdmin = vi.mocked(logoutAdmin);
 
 const publishedSnippet: Snippet = {
   id: "snippet-1",
@@ -55,6 +62,10 @@ describe("App public theme", () => {
   beforeEach(() => {
     mockedGetSnippets.mockReset();
     mockedGetSnippets.mockResolvedValue([publishedSnippet]);
+    mockedGetAdminSession.mockReset();
+    mockedGetAdminSession.mockResolvedValue(null);
+    mockedLogoutAdmin.mockReset();
+    mockedLogoutAdmin.mockResolvedValue(undefined);
     window.localStorage.clear();
     window.sessionStorage.clear();
     window.scrollTo = vi.fn();
@@ -101,14 +112,11 @@ describe("App public theme", () => {
   });
 
   it("allows authenticated creators into the admin workspace", async () => {
-    window.localStorage.setItem(
-      ADMIN_AUTH_STORAGE_KEY,
-      JSON.stringify({
-        email: "creator@example.com",
-        provider: "email",
-        createdAt: "2026-04-18T00:00:00.000Z",
-      }),
-    );
+    mockedGetAdminSession.mockResolvedValue({
+      email: "creator@example.com",
+      provider: "email",
+      createdAt: "2026-04-18T00:00:00.000Z",
+    });
 
     renderAppAt("/en/admin");
 
@@ -120,14 +128,11 @@ describe("App public theme", () => {
   });
 
   it("redirects authenticated creators away from admin login", async () => {
-    window.localStorage.setItem(
-      ADMIN_AUTH_STORAGE_KEY,
-      JSON.stringify({
-        email: "creator@example.com",
-        provider: "email",
-        createdAt: "2026-04-18T00:00:00.000Z",
-      }),
-    );
+    mockedGetAdminSession.mockResolvedValue({
+      email: "creator@example.com",
+      provider: "email",
+      createdAt: "2026-04-18T00:00:00.000Z",
+    });
 
     renderAppAt("/en/admin/login");
 
@@ -137,14 +142,11 @@ describe("App public theme", () => {
   });
 
   it("returns creators to the admin login page after sign out", async () => {
-    window.localStorage.setItem(
-      ADMIN_AUTH_STORAGE_KEY,
-      JSON.stringify({
-        email: "creator@example.com",
-        provider: "email",
-        createdAt: "2026-04-18T00:00:00.000Z",
-      }),
-    );
+    mockedGetAdminSession.mockResolvedValue({
+      email: "creator@example.com",
+      provider: "email",
+      createdAt: "2026-04-18T00:00:00.000Z",
+    });
 
     renderAppAt("/en/admin");
 
@@ -157,6 +159,7 @@ describe("App public theme", () => {
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Creator Log In" })).toBeInTheDocument();
     });
+    expect(mockedLogoutAdmin).toHaveBeenCalled();
   });
 
   it("keeps the login route in sync with the selected public theme", async () => {

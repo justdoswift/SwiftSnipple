@@ -15,6 +15,12 @@ import (
 	"swiftsnipple/api/internal/repo"
 )
 
+var testAdminAuthConfig = AdminAuthConfig{
+	Email:         "creator@justdoswift.com",
+	Password:      "secret12",
+	SessionSecret: "test-admin-session-secret",
+}
+
 type fakePinger struct {
 	err error
 }
@@ -180,6 +186,30 @@ func snippetPayloadJSON(t *testing.T, payload domain.SnippetPayload) string {
 	return string(body)
 }
 
+func loginCookie(t *testing.T, router http.Handler) *http.Cookie {
+	t.Helper()
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/api/admin/login",
+		strings.NewReader(`{"email":"creator@justdoswift.com","password":"secret12"}`),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected login status 200, got %d", rec.Code)
+	}
+
+	cookies := rec.Result().Cookies()
+	if len(cookies) == 0 {
+		t.Fatal("expected login to set a session cookie")
+	}
+
+	return cookies[0]
+}
+
 func TestSnippetRoutesSuccess(t *testing.T) {
 	now := time.Now().UTC()
 	store := newFakeSnippetStore(domain.Snippet{
@@ -194,7 +224,7 @@ func TestSnippetRoutesSuccess(t *testing.T) {
 			ZH: localizedFields("玻璃抽屉导航", "bo-li-chou-ti-dao-hang", "Navigation"),
 		},
 	})
-	router := NewRouter(fakePinger{}, store)
+	router := NewRouter(fakePinger{}, store, testAdminAuthConfig)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/snippets", nil)
 	rec := httptest.NewRecorder()
@@ -228,7 +258,8 @@ func TestSnippetRoutesSuccess(t *testing.T) {
 func TestCreateValidationAndDuplicateErrors(t *testing.T) {
 	store := newFakeSnippetStore()
 	store.duplicateSlug = "taken-slug"
-	router := NewRouter(fakePinger{}, store)
+	router := NewRouter(fakePinger{}, store, testAdminAuthConfig)
+	adminCookie := loginCookie(t, router)
 
 	testCases := []struct {
 		name       string
@@ -278,6 +309,7 @@ func TestCreateValidationAndDuplicateErrors(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, "/api/admin/snippets", strings.NewReader(snippetPayloadJSON(t, tc.payload)))
 			req.Header.Set("Content-Type", "application/json")
+			req.AddCookie(adminCookie)
 			rec := httptest.NewRecorder()
 			router.ServeHTTP(rec, req)
 
@@ -296,6 +328,7 @@ func TestCreateValidationAndDuplicateErrors(t *testing.T) {
 		strings.NewReader(`{"status":"Scheduled","publishedAt":"tomorrowish","locales":{"en":{"title":"A","slug":"valid-slug"},"zh":{"title":"中文","slug":"valid-zh-slug"}}}`),
 	)
 	req.Header.Set("Content-Type", "application/json")
+	req.AddCookie(adminCookie)
 	rec := httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
 	if rec.Code != http.StatusBadRequest {
@@ -320,9 +353,11 @@ func TestPublishUnpublishDeleteAndMissingRoutes(t *testing.T) {
 			ZH: localizedFields("提示驱动布局", "ti-shi-qu-dong-bu-ju", "Workflow"),
 		},
 	})
-	router := NewRouter(fakePinger{}, store)
+	router := NewRouter(fakePinger{}, store, testAdminAuthConfig)
+	adminCookie := loginCookie(t, router)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/admin/snippets/snippet-1/publish", nil)
+	req.AddCookie(adminCookie)
 	rec := httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
 	if rec.Code != http.StatusOK {
@@ -330,6 +365,7 @@ func TestPublishUnpublishDeleteAndMissingRoutes(t *testing.T) {
 	}
 
 	req = httptest.NewRequest(http.MethodPost, "/api/admin/snippets/snippet-1/unpublish", nil)
+	req.AddCookie(adminCookie)
 	rec = httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
 	if rec.Code != http.StatusOK {
@@ -337,6 +373,7 @@ func TestPublishUnpublishDeleteAndMissingRoutes(t *testing.T) {
 	}
 
 	req = httptest.NewRequest(http.MethodDelete, "/api/admin/snippets/snippet-1", nil)
+	req.AddCookie(adminCookie)
 	rec = httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
 	if rec.Code != http.StatusNoContent {
@@ -351,6 +388,7 @@ func TestPublishUnpublishDeleteAndMissingRoutes(t *testing.T) {
 	}
 
 	req = httptest.NewRequest(http.MethodDelete, "/api/admin/snippets/missing", nil)
+	req.AddCookie(adminCookie)
 	rec = httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
 	if rec.Code != http.StatusNotFound {
@@ -359,7 +397,7 @@ func TestPublishUnpublishDeleteAndMissingRoutes(t *testing.T) {
 }
 
 func TestHealthz(t *testing.T) {
-	router := NewRouter(fakePinger{}, newFakeSnippetStore())
+	router := NewRouter(fakePinger{}, newFakeSnippetStore(), testAdminAuthConfig)
 	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
 	rec := httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
@@ -374,5 +412,87 @@ func TestHealthz(t *testing.T) {
 	}
 	if body["status"] != "ok" {
 		t.Fatalf("expected status ok, got %#v", body)
+	}
+}
+
+func TestAdminLoginSessionAndLogout(t *testing.T) {
+	router := NewRouter(fakePinger{}, newFakeSnippetStore(), testAdminAuthConfig)
+
+	adminCookie := loginCookie(t, router)
+
+	sessionReq := httptest.NewRequest(http.MethodGet, "/api/admin/session", nil)
+	sessionReq.AddCookie(adminCookie)
+	sessionRec := httptest.NewRecorder()
+	router.ServeHTTP(sessionRec, sessionReq)
+	if sessionRec.Code != http.StatusOK {
+		t.Fatalf("expected session status 200, got %d", sessionRec.Code)
+	}
+	if !strings.Contains(sessionRec.Body.String(), "creator@justdoswift.com") {
+		t.Fatalf("expected session body to include admin email, got %q", sessionRec.Body.String())
+	}
+
+	logoutReq := httptest.NewRequest(http.MethodPost, "/api/admin/logout", nil)
+	logoutReq.AddCookie(adminCookie)
+	logoutRec := httptest.NewRecorder()
+	router.ServeHTTP(logoutRec, logoutReq)
+	if logoutRec.Code != http.StatusNoContent {
+		t.Fatalf("expected logout status 204, got %d", logoutRec.Code)
+	}
+}
+
+func TestAdminUnauthorizedAndProtectedRoutes(t *testing.T) {
+	now := time.Now().UTC()
+	store := newFakeSnippetStore(domain.Snippet{
+		ID:          "snippet-1",
+		CoverImage:  "https://example.com/cover.jpg",
+		Code:        "Text(\"Hello\")",
+		Status:      domain.StatusDraft,
+		UpdatedAt:   now,
+		PublishedAt: nil,
+		Locales: domain.SnippetLocales{
+			EN: localizedFields("Admin Auth", "admin-auth", "Workflow"),
+			ZH: localizedFields("后台鉴权", "hou-tai-jian-quan", "Workflow"),
+		},
+	})
+	router := NewRouter(fakePinger{}, store, testAdminAuthConfig)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/admin/login", strings.NewReader(`{"email":"creator@justdoswift.com","password":"wrong"}`))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected invalid login status 401, got %d", rec.Code)
+	}
+
+	req = httptest.NewRequest(http.MethodGet, "/api/admin/session", nil)
+	rec = httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected anonymous session status 401, got %d", rec.Code)
+	}
+
+	req = httptest.NewRequest(http.MethodPost, "/api/admin/snippets/snippet-1/publish", nil)
+	rec = httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected protected publish status 401, got %d", rec.Code)
+	}
+
+	adminCookie := loginCookie(t, router)
+
+	protectedReq := httptest.NewRequest(http.MethodPost, "/api/admin/snippets/snippet-1/publish", nil)
+	protectedReq.AddCookie(adminCookie)
+	protectedRec := httptest.NewRecorder()
+	router.ServeHTTP(protectedRec, protectedReq)
+	if protectedRec.Code != http.StatusOK {
+		t.Fatalf("expected protected publish status 200, got %d", protectedRec.Code)
+	}
+
+	invalidCookieReq := httptest.NewRequest(http.MethodGet, "/api/admin/session", nil)
+	invalidCookieReq.AddCookie(&http.Cookie{Name: adminSessionCookieName, Value: "invalid"})
+	invalidCookieRec := httptest.NewRecorder()
+	router.ServeHTTP(invalidCookieRec, invalidCookieReq)
+	if invalidCookieRec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected invalid cookie session status 401, got %d", invalidCookieRec.Code)
 	}
 }

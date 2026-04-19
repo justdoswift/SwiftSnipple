@@ -30,7 +30,11 @@ func main() {
 	}
 	defer pool.Close()
 
-	router := httpapi.NewRouter(pool, repo.NewSnippetRepository(pool))
+	router := httpapi.NewRouter(pool, repo.NewSnippetRepository(pool), httpapi.AdminAuthConfig{
+		Email:         cfg.AdminEmail,
+		Password:      cfg.AdminPassword,
+		SessionSecret: cfg.AdminSessionSecret,
+	})
 	server := &http.Server{
 		Addr:              ":" + cfg.APIPort,
 		Handler:           router,

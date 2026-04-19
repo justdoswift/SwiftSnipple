@@ -4,12 +4,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import AdminLayout from "./components/admin/AdminLayout";
 import { Spinner } from "./lib/heroui";
-import {
-  clearStoredAdminAuth,
-  readStoredAdminAuth,
-  writeStoredAdminAuth,
-  type AdminAuthSession,
-} from "./lib/admin-auth";
+import { type AdminAuthSession } from "./lib/admin-auth";
 import { clearStoredMockAuth, readStoredMockAuth, writeStoredMockAuth, type MockAuthSession } from "./lib/mock-auth";
 import {
   LocaleContext,
@@ -28,6 +23,7 @@ import {
   readStoredPublicTheme,
   type PublicTheme,
 } from "./lib/public-theme";
+import { getAdminSession, logoutAdmin } from "./services/admin-auth";
 import type { AppLocale } from "./types";
 
 const Home = lazy(() => import("./pages/Home"));
@@ -138,12 +134,17 @@ function LocaleGate() {
 
 function AdminAuthGate({
   authSession,
+  isResolved,
   children,
 }: {
   authSession: AdminAuthSession | null;
+  isResolved: boolean;
   children: ReactNode;
 }) {
   const { locale } = useAppLocaleShell();
+  if (!isResolved) {
+    return <AdminRouteFallback />;
+  }
   if (!authSession) {
     return <Navigate to={localizePath(locale, "/admin/login")} replace />;
   }
@@ -181,7 +182,8 @@ function PublicShell({
 export default function App() {
   const [theme, setTheme] = useState<PublicTheme>(readStoredPublicTheme);
   const [authSession, setAuthSession] = useState<MockAuthSession | null>(readStoredMockAuth);
-  const [adminAuthSession, setAdminAuthSession] = useState<AdminAuthSession | null>(readStoredAdminAuth);
+  const [adminAuthSession, setAdminAuthSession] = useState<AdminAuthSession | null>(null);
+  const [isAdminAuthResolved, setIsAdminAuthResolved] = useState(false);
 
   useEffect(() => {
     window.localStorage.setItem(PUBLIC_THEME_STORAGE_KEY, theme);
@@ -201,13 +203,37 @@ export default function App() {
     clearStoredMockAuth();
     setAuthSession(null);
   };
+
+  useEffect(() => {
+    let active = true;
+
+    getAdminSession()
+      .then((session) => {
+        if (!active) return;
+        setAdminAuthSession(session);
+      })
+      .catch(() => {
+        if (!active) return;
+        setAdminAuthSession(null);
+      })
+      .finally(() => {
+        if (!active) return;
+        setIsAdminAuthResolved(true);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const handleAdminAuthenticate = (session: AdminAuthSession) => {
-    writeStoredAdminAuth(session);
     setAdminAuthSession(session);
+    setIsAdminAuthResolved(true);
   };
-  const handleAdminSignOut = () => {
-    clearStoredAdminAuth();
+  const handleAdminSignOut = async () => {
+    await logoutAdmin();
     setAdminAuthSession(null);
+    setIsAdminAuthResolved(true);
   };
 
   return (
@@ -274,7 +300,9 @@ export default function App() {
             <Route
               path="admin/login"
               element={
-                adminAuthSession ? (
+                !isAdminAuthResolved ? (
+                  <AdminRouteFallback />
+                ) : adminAuthSession ? (
                   <AdminLoginRedirect />
                 ) : (
                   <Suspense fallback={<AdminRouteFallback />}>
@@ -287,7 +315,7 @@ export default function App() {
             <Route
               path="admin"
               element={
-                <AdminAuthGate authSession={adminAuthSession}>
+                <AdminAuthGate authSession={adminAuthSession} isResolved={isAdminAuthResolved}>
                   <AdminLayout
                     adminAuthSession={adminAuthSession}
                     onSignOut={handleAdminSignOut}

@@ -1,16 +1,18 @@
 import { Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AdminSnippetLibraryContent from "../../components/admin/AdminSnippetLibraryContent";
 import { useAdminHeader } from "../../components/admin/useAdminHeader";
 import { Tooltip } from "../../lib/heroui";
 import { getMessages } from "../../lib/messages";
-import { useAppLocale } from "../../lib/locale";
+import { localizePath, useAppLocale } from "../../lib/locale";
+import { isUnauthorizedError } from "../../services/api";
 import { getSnippets } from "../../services/snippets";
 import { Snippet } from "../../types";
 
 export default function AdminSnippets() {
   const { locale } = useAppLocale();
+  const navigate = useNavigate();
   const copy = getMessages(locale).admin;
   const [snippets, setSnippets] = useState<Snippet[]>([]);
   const [error, setError] = useState("");
@@ -56,6 +58,10 @@ export default function AdminSnippets() {
       })
       .catch((err: Error) => {
         if (!active) return;
+        if (isUnauthorizedError(err)) {
+          navigate(localizePath(locale, "/admin/login"), { replace: true });
+          return;
+        }
         setError(err.message);
       })
       .finally(() => {
@@ -66,7 +72,7 @@ export default function AdminSnippets() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [locale, navigate]);
 
   return (
     <div className="px-6 py-8 md:px-8 md:py-10 xl:px-10">

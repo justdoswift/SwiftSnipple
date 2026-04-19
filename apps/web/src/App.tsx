@@ -61,8 +61,6 @@ function PublicRouteFallback() {
         <div className="flex flex-col items-center gap-4">
           <Spinner size="lg" />
           <p className="type-mono-micro public-loading-label">{copy.loading}</p>
-          <h2 className="type-card-title public-loading-title">{copy.loadingTitle}</h2>
-          <p className="type-body-sm public-loading-copy max-w-md">{copy.loadingCopy}</p>
         </div>
       </div>
     </div>

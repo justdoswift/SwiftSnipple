@@ -181,7 +181,7 @@ describe("AdminSnippetEditor", () => {
     fireEvent.click(screen.getByRole("button", { name: "预览" }));
 
     await waitFor(() => {
-      expect(screen.getByText("预览模式")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "完成" })).toBeInTheDocument();
     });
 
     expect(screen.getByRole("tab", { name: "桌面" })).toHaveAttribute("aria-selected", "true");
@@ -191,6 +191,8 @@ describe("AdminSnippetEditor", () => {
     expect(screen.getByRole("tab", { name: "手机" })).toHaveClass("admin-preview-toolbar-button");
     expect(screen.getByRole("tab", { name: "桌面" })).toHaveClass("admin-preview-toolbar-button");
     expect(screen.getByText("前台路由")).toBeInTheDocument();
+    expect(screen.queryByText("预览模式")).not.toBeInTheDocument();
+    expect(screen.queryByText("Smooth Feedback Loops for macOS Apps")).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "新标签打开" })).not.toBeInTheDocument();
     expect(screen.getByTitle("Snippet public preview")).toHaveAttribute(
       "src",

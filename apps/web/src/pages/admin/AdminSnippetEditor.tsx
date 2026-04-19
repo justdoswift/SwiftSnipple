@@ -961,9 +961,8 @@ export default function AdminSnippetEditor() {
           />
           <div className="relative z-10 flex h-full w-full flex-col p-4 md:p-6">
             <div className="admin-header admin-preview-shell flex h-full w-full flex-col overflow-hidden">
-              <div className="admin-preview-toolbar flex flex-col gap-4 px-5 py-4 md:px-8 md:py-5">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
+              <div className="admin-preview-toolbar flex flex-wrap items-center justify-between gap-3 px-5 py-4 md:px-8 md:py-5">
+                <div className="flex flex-wrap items-center gap-3">
                   <Button
                     isIconOnly
                     aria-label={common.cancel}
@@ -972,12 +971,42 @@ export default function AdminSnippetEditor() {
                   >
                     <X size={16} />
                   </Button>
-                  <div>
-                    <p className="admin-copy-faint type-mono-micro">{copy.previewMode}</p>
-                    <h2 className="admin-section-title mt-1">
-                      {localizedForm.title || untitledSnippetLabel}
-                    </h2>
+                  <div
+                  className="admin-preview-device-tabs inline-flex items-center border p-1"
+                  role="tablist"
+                  aria-label={copy.previewDevices}
+                  >
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={previewDevice === "mobile"}
+                      className={`admin-preview-toolbar-button admin-preview-device-button inline-flex h-10 items-center gap-2 px-4 transition-colors ${
+                        previewDevice === "mobile" ? "admin-preview-device-button-active" : "admin-preview-device-button-inactive"
+                      }`}
+                      onClick={() => setPreviewDevice("mobile")}
+                    >
+                      <Smartphone size={15} />
+                      <span>{common.mobile}</span>
+                    </button>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={previewDevice === "desktop"}
+                      className={`admin-preview-toolbar-button admin-preview-device-button inline-flex h-10 items-center gap-2 px-4 transition-colors ${
+                        previewDevice === "desktop" ? "admin-preview-device-button-active" : "admin-preview-device-button-inactive"
+                      }`}
+                      onClick={() => setPreviewDevice("desktop")}
+                    >
+                      <Monitor size={15} />
+                      <span>{common.desktop}</span>
+                    </button>
                   </div>
+                </div>
+                <div className="hidden min-w-0 flex-1 items-center justify-center gap-3 md:flex">
+                  <span className="admin-copy-faint type-mono-micro">{copy.publicRoute}</span>
+                  <span className="admin-preview-route-chip max-w-full truncate border px-3 py-1.5">
+                    {previewPath}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button className="admin-button-primary admin-preview-toolbar-button h-10" onPress={closePreview}>
@@ -985,48 +1014,12 @@ export default function AdminSnippetEditor() {
                   </Button>
                 </div>
               </div>
-
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div
-                  className="admin-preview-device-tabs inline-flex items-center border p-1"
-                  role="tablist"
-                  aria-label={copy.previewDevices}
-                >
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={previewDevice === "mobile"}
-                    className={`admin-preview-toolbar-button admin-preview-device-button inline-flex h-10 items-center gap-2 px-4 transition-colors ${
-                      previewDevice === "mobile" ? "admin-preview-device-button-active" : "admin-preview-device-button-inactive"
-                    }`}
-                    onClick={() => setPreviewDevice("mobile")}
-                  >
-                    <Smartphone size={15} />
-                    <span>{common.mobile}</span>
-                  </button>
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={previewDevice === "desktop"}
-                    className={`admin-preview-toolbar-button admin-preview-device-button inline-flex h-10 items-center gap-2 px-4 transition-colors ${
-                      previewDevice === "desktop" ? "admin-preview-device-button-active" : "admin-preview-device-button-inactive"
-                    }`}
-                    onClick={() => setPreviewDevice("desktop")}
-                  >
-                    <Monitor size={15} />
-                    <span>{common.desktop}</span>
-                  </button>
-                </div>
-                <div className="hidden items-center gap-3 md:flex">
-                  <span className="admin-copy-faint type-mono-micro">{copy.publicRoute}</span>
-                  <span className="admin-preview-route-chip border px-3 py-1.5">
-                    {previewPath}
-                  </span>
-                </div>
-              </div>
-              </div>
               <div className="admin-preview-canvas flex flex-1 min-h-0 px-3 py-3 md:px-6 md:py-6">
-                <div className="admin-preview-stage flex h-full min-h-0 w-full items-center justify-center overflow-auto border p-4 md:p-7">
+                <div
+                  className={`admin-preview-stage flex h-full min-h-0 w-full justify-center overflow-auto border p-4 md:p-7 ${
+                    previewDevice === "mobile" ? "items-start" : "items-center"
+                  }`}
+                >
                 <div
                   className={`admin-preview-frame w-full border transition-all duration-300 ${
                     previewDevice === "desktop"
@@ -1039,9 +1032,6 @@ export default function AdminSnippetEditor() {
                     <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
                     <span className="h-3 w-3 rounded-full bg-[#ffbd2e]" />
                     <span className="h-3 w-3 rounded-full bg-[#28c840]" />
-                    <div className="admin-preview-address ml-4 flex-1 border px-4 py-2 text-center">
-                      {previewPath}
-                    </div>
                   </div>
                   <div
                     className={`admin-preview-iframe-shell overflow-hidden ${

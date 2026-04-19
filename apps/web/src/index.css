@@ -1786,9 +1786,6 @@
     --admin-preview-stage-border: rgba(255, 255, 255, 0.06);
     --admin-preview-frame-bg: #0e0e0e;
     --admin-preview-frame-border: rgba(255, 255, 255, 0.08);
-    --admin-preview-address-bg: rgba(255, 255, 255, 0.04);
-    --admin-preview-address-border: rgba(255, 255, 255, 0.07);
-    --admin-preview-address-text: rgba(255, 255, 255, 0.35);
     --admin-preview-tabs-bg: rgba(255, 255, 255, 0.03);
     --admin-preview-tab-active-bg: #ffffff;
     --admin-preview-tab-active-text: #000000;
@@ -1873,9 +1870,6 @@
     --admin-preview-stage-border: rgba(0, 0, 0, 0.08);
     --admin-preview-frame-bg: #ffffff;
     --admin-preview-frame-border: rgba(0, 0, 0, 0.1);
-    --admin-preview-address-bg: rgba(0, 0, 0, 0.03);
-    --admin-preview-address-border: rgba(0, 0, 0, 0.08);
-    --admin-preview-address-text: rgba(0, 0, 0, 0.38);
     --admin-preview-tabs-bg: rgba(0, 0, 0, 0.03);
     --admin-preview-tab-active-bg: #000000;
     --admin-preview-tab-active-text: #ffffff;
@@ -2760,21 +2754,16 @@
     }
   }
 
-  .admin-preview-route-chip,
-  .admin-preview-address {
-    border-color: var(--admin-preview-address-border);
-    background-color: var(--admin-preview-address-bg);
-    color: var(--admin-preview-address-text);
+  .admin-preview-route-chip {
+    border-color: var(--field-border);
+    background-color: var(--field-background);
+    color: var(--field-text);
     font-family: var(--font-mono);
     font-size: 0.875rem;
     line-height: 1.3;
   }
 
   .admin-preview-route-chip {
-    border-radius: var(--radius-pill);
-  }
-
-  .admin-preview-address {
     border-radius: var(--radius-pill);
   }
 

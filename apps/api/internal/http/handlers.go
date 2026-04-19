@@ -6,17 +6,26 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"image"
 	"io"
 	"mime/multipart"
+	"math"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/chai2010/webp"
 	"github.com/go-chi/chi/v5"
+	"golang.org/x/image/draw"
 	"swiftsnipple/api/internal/domain"
 	"swiftsnipple/api/internal/repo"
+
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
+	_ "golang.org/x/image/webp"
 )
 
 type dbPinger interface {
@@ -44,6 +53,11 @@ type Handler struct {
 type localUploader struct {
 	dir string
 }
+
+const (
+	maxCoverImageDimension = 2200
+	coverImageWebPQuality  = 84
+)
 
 func newLocalUploader(dir string) localUploader {
 	cleanDir := strings.TrimSpace(dir)
@@ -321,17 +335,27 @@ func (u localUploader) saveImage(file multipart.File, _ *multipart.FileHeader) (
 	}
 
 	contentType := http.DetectContentType(sniffBuffer[:bytesRead])
-	extension, ok := allowedImageExtension(contentType)
-	if !ok {
+	if !isAllowedCoverContentType(contentType) {
 		return "", errors.New("cover image must be PNG, JPEG, WEBP, or GIF")
 	}
+
+	if _, err := file.Seek(0, io.SeekStart); err != nil {
+		return "", errors.New("failed to reset cover image")
+	}
+
+	decodedImage, _, err := image.Decode(file)
+	if err != nil {
+		return "", errors.New("failed to decode cover image")
+	}
+
+	optimizedImage := optimizeCoverImage(decodedImage)
 
 	randomName, err := randomUploadName()
 	if err != nil {
 		return "", errors.New("failed to create upload name")
 	}
 
-	fileName := randomName + extension
+	fileName := randomName + ".webp"
 	destinationPath := filepath.Join(u.dir, fileName)
 	destinationFile, err := os.Create(destinationPath)
 	if err != nil {
@@ -339,26 +363,57 @@ func (u localUploader) saveImage(file multipart.File, _ *multipart.FileHeader) (
 	}
 	defer destinationFile.Close()
 
-	if _, err := io.Copy(destinationFile, file); err != nil {
-		return "", errors.New("failed to store cover image")
+	if err := webp.Encode(destinationFile, optimizedImage, &webp.Options{Lossless: false, Quality: float32(coverImageWebPQuality)}); err != nil {
+		return "", errors.New("failed to compress cover image")
 	}
 
 	return "/api/uploads/" + fileName, nil
 }
 
-func allowedImageExtension(contentType string) (string, bool) {
+func isAllowedCoverContentType(contentType string) bool {
 	switch contentType {
 	case "image/png":
-		return ".png", true
+		return true
 	case "image/jpeg":
-		return ".jpg", true
+		return true
 	case "image/webp":
-		return ".webp", true
+		return true
 	case "image/gif":
-		return ".gif", true
+		return true
 	default:
-		return "", false
+		return false
 	}
+}
+
+func optimizeCoverImage(src image.Image) image.Image {
+	bounds := src.Bounds()
+	width := bounds.Dx()
+	height := bounds.Dy()
+	if width <= 0 || height <= 0 {
+		return src
+	}
+
+	if width <= maxCoverImageDimension && height <= maxCoverImageDimension {
+		return cloneToNRGBA(src)
+	}
+
+	scale := math.Min(
+		float64(maxCoverImageDimension)/float64(width),
+		float64(maxCoverImageDimension)/float64(height),
+	)
+	targetWidth := max(1, int(math.Round(float64(width)*scale)))
+	targetHeight := max(1, int(math.Round(float64(height)*scale)))
+
+	destination := image.NewNRGBA(image.Rect(0, 0, targetWidth, targetHeight))
+	draw.CatmullRom.Scale(destination, destination.Bounds(), src, bounds, draw.Over, nil)
+	return destination
+}
+
+func cloneToNRGBA(src image.Image) image.Image {
+	bounds := src.Bounds()
+	destination := image.NewNRGBA(image.Rect(0, 0, bounds.Dx(), bounds.Dy()))
+	draw.Draw(destination, destination.Bounds(), src, bounds.Min, draw.Src)
+	return destination
 }
 
 func randomUploadName() (string, error) {

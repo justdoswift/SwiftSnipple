@@ -78,9 +78,9 @@ export default function Home() {
     >
       {/* Hero Section */}
       <section className="mb-24 lg:mb-28">
-        <div className="mx-auto max-w-[960px] text-center">
+        <div className="mx-auto max-w-[1240px] text-center">
           <motion.div variants={itemVariants} className="flex flex-col items-center gap-5 md:gap-6">
-            <h1 className="type-display max-w-[14ch]">
+            <h1 className="type-display max-w-[20ch]">
               {copy.heroTitle}
             </h1>
             <p className="type-body-lg mx-auto max-w-[620px]">

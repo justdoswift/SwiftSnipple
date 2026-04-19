@@ -113,7 +113,7 @@ describe("AdminSnippetEditor", () => {
     mockedGetSnippetById.mockReset();
     mockedCreateSnippet.mockReset();
     mockedPublishSnippet.mockReset();
-    mockedUploadCoverImage.mockResolvedValue({ url: "/api/uploads/cover-test.png" });
+    mockedUploadCoverImage.mockResolvedValue({ url: "/api/uploads/cover-test.webp" });
 
     render(
       <MemoryRouter initialEntries={["/en/admin/snippets/new"]}>
@@ -138,10 +138,10 @@ describe("AdminSnippetEditor", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByAltText("Untitled Snippet")).toHaveAttribute("src", "/api/uploads/cover-test.png");
+      expect(screen.getByAltText("Untitled Snippet")).toHaveAttribute("src", "/api/uploads/cover-test.webp");
     });
 
-    expect(screen.queryByText("/api/uploads/cover-test.png")).not.toBeInTheDocument();
+    expect(screen.queryByText("/api/uploads/cover-test.webp")).not.toBeInTheDocument();
   });
 
   it("returns to the snippet library from the editor header back button", () => {

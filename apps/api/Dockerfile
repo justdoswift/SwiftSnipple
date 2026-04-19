@@ -5,8 +5,11 @@ ARG GOSUMDB=sum.golang.org
 
 ENV GOPROXY=${GOPROXY}
 ENV GOSUMDB=${GOSUMDB}
+ENV CGO_ENABLED=1
 
 WORKDIR /app
+
+RUN apk add --no-cache build-base
 
 COPY apps/api/go.mod ./apps/api/go.mod
 WORKDIR /app/apps/api

@@ -5,6 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"image"
+	"image/color"
+	"image/png"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -16,6 +19,8 @@ import (
 
 	"swiftsnipple/api/internal/domain"
 	"swiftsnipple/api/internal/repo"
+
+	_ "golang.org/x/image/webp"
 )
 
 var testAdminAuthConfig = AdminAuthConfig{
@@ -511,11 +516,19 @@ func TestUploadCoverImageAndServeStatic(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create form file: %v", err)
 	}
-	if _, err := fileWriter.Write([]byte{
-		0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
-		0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
-	}); err != nil {
-		t.Fatalf("write png bytes: %v", err)
+	largeImage := image.NewNRGBA(image.Rect(0, 0, 3200, 1600))
+	for y := 0; y < 1600; y++ {
+		for x := 0; x < 3200; x++ {
+			largeImage.Set(x, y, color.NRGBA{
+				R: uint8(x % 255),
+				G: uint8(y % 255),
+				B: uint8((x + y) % 255),
+				A: 255,
+			})
+		}
+	}
+	if err := png.Encode(fileWriter, largeImage); err != nil {
+		t.Fatalf("encode png bytes: %v", err)
 	}
 	if err := writer.Close(); err != nil {
 		t.Fatalf("close multipart writer: %v", err)
@@ -536,7 +549,7 @@ func TestUploadCoverImageAndServeStatic(t *testing.T) {
 	}
 
 	uploadedURL := response["url"]
-	if !strings.HasPrefix(uploadedURL, "/api/uploads/") {
+	if !strings.HasPrefix(uploadedURL, "/api/uploads/") || !strings.HasSuffix(uploadedURL, ".webp") {
 		t.Fatalf("expected upload url to start with /api/uploads/, got %q", uploadedURL)
 	}
 
@@ -554,8 +567,16 @@ func TestUploadCoverImageAndServeStatic(t *testing.T) {
 	if staticRec.Code != http.StatusOK {
 		t.Fatalf("expected static file status 200, got %d", staticRec.Code)
 	}
-	if !strings.HasPrefix(staticRec.Header().Get("Content-Type"), "image/png") {
-		t.Fatalf("expected static file content type image/png, got %q", staticRec.Header().Get("Content-Type"))
+	if !strings.HasPrefix(staticRec.Header().Get("Content-Type"), "image/webp") {
+		t.Fatalf("expected static file content type image/webp, got %q", staticRec.Header().Get("Content-Type"))
+	}
+
+	decodedImage, _, err := image.Decode(bytes.NewReader(staticRec.Body.Bytes()))
+	if err != nil {
+		t.Fatalf("decode optimized image: %v", err)
+	}
+	if decodedImage.Bounds().Dx() != maxCoverImageDimension || decodedImage.Bounds().Dy() != 1100 {
+		t.Fatalf("expected optimized image bounds %dx%d, got %dx%d", maxCoverImageDimension, 1100, decodedImage.Bounds().Dx(), decodedImage.Bounds().Dy())
 	}
 }
 

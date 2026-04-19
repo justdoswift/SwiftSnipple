@@ -6,6 +6,7 @@ import { Dropdown } from "../../lib/heroui";
 import { getMessages } from "../../lib/messages";
 import { APP_LOCALE_OPTIONS, useAppLocale } from "../../lib/locale";
 import { usePublicTheme } from "../../lib/public-theme";
+import AdminHeaderTooltipAction from "./AdminHeaderTooltipAction";
 import AdminSidebar from "./AdminSidebar";
 import { type AdminHeaderConfig, type AdminHeaderOutletContext } from "./useAdminHeader";
 
@@ -51,26 +52,29 @@ export default function AdminLayout({ adminAuthSession, onSignOut }: AdminLayout
             <div className="admin-nav-actions flex items-center justify-end gap-2 md:gap-3">
               {activeHeader.end}
               {adminAuthSession ? (
-                <button
-                  type="button"
-                  aria-label={copy.common.logOut}
-                  title={copy.common.logOut}
-                  className="admin-nav-action-icon type-action"
-                  onClick={onSignOut}
-                >
-                  <LogOut className="h-4 w-4" />
-                </button>
+                <AdminHeaderTooltipAction content={copy.common.logOut}>
+                  <button
+                    type="button"
+                    aria-label={copy.common.logOut}
+                    className="admin-nav-action-icon type-action"
+                    onClick={onSignOut}
+                  >
+                    <LogOut className="h-5 w-5" />
+                  </button>
+                </AdminHeaderTooltipAction>
               ) : null}
               <div className="admin-nav-locale-root">
                 <Dropdown>
-                  <Dropdown.Trigger
-                    aria-label={copy.nav.selectLanguage}
-                    className="admin-nav-action-icon admin-nav-locale-trigger type-action"
-                  >
-                    <span className="flex items-center justify-center" aria-hidden="true" title={copy.nav.selectLanguage}>
-                      <Languages className="h-4 w-4" />
-                    </span>
-                  </Dropdown.Trigger>
+                  <AdminHeaderTooltipAction content={copy.nav.selectLanguage}>
+                    <Dropdown.Trigger
+                      aria-label={copy.nav.selectLanguage}
+                      className="admin-nav-action-icon admin-nav-locale-trigger type-action"
+                    >
+                      <span className="flex items-center justify-center" aria-hidden="true">
+                        <Languages className="h-5 w-5" />
+                      </span>
+                    </Dropdown.Trigger>
+                  </AdminHeaderTooltipAction>
                   <Dropdown.Popover>
                     <Dropdown.Menu
                       items={APP_LOCALE_OPTIONS}
@@ -89,14 +93,15 @@ export default function AdminLayout({ adminAuthSession, onSignOut }: AdminLayout
                   </Dropdown.Popover>
                 </Dropdown>
               </div>
-              <Link
-                to={`/${locale}`}
-                aria-label={copy.common.viewFrontSite}
-                title={copy.common.viewFrontSite}
-                className="admin-nav-action-icon"
-              >
-                <ArrowUpRight className="h-4 w-4" />
-              </Link>
+              <AdminHeaderTooltipAction content={copy.common.viewFrontSite}>
+                <Link
+                  to={`/${locale}`}
+                  aria-label={copy.common.viewFrontSite}
+                  className="admin-nav-action-icon"
+                >
+                  <ArrowUpRight className="h-5 w-5" />
+                </Link>
+              </AdminHeaderTooltipAction>
             </div>
           </div>
         </div>

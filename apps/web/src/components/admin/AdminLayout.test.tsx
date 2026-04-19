@@ -1,4 +1,5 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { Children, cloneElement, isValidElement, useState, type FocusEvent, type MouseEvent, type PointerEvent, type ReactElement, type ReactNode } from "react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import AdminDashboard from "../../pages/admin/AdminDashboard";
@@ -8,6 +9,76 @@ import { getSnippets } from "../../services/snippets";
 import { Snippet } from "../../types";
 import AdminLayout from "./AdminLayout";
 import type { AdminAuthSession } from "../../lib/admin-auth";
+
+vi.mock("../../lib/heroui", async () => {
+  const actual = await vi.importActual<typeof import("../../lib/heroui")>("../../lib/heroui");
+
+  function MockTooltipContent({ children }: { children: ReactNode }) {
+    return <>{children}</>;
+  }
+
+  function MockTooltipTrigger({ children, ...props }: { children: ReactNode } & Record<string, any>) {
+    return <div data-slot="tooltip-trigger" {...props}>{children}</div>;
+  }
+
+  function MockTooltipRoot({ children }: { children: ReactNode }) {
+    const [open, setOpen] = useState(false);
+    const childArray = Children.toArray(children);
+    const contentChild = childArray.find((child) => isValidElement(child) && child.type === MockTooltipContent);
+    const triggerChild = childArray.find((child) => isValidElement(child) && child.type === MockTooltipTrigger);
+
+    if (!isValidElement(triggerChild)) {
+      return <>{children}</>;
+    }
+
+    const element = triggerChild as ReactElement<Record<string, any>>;
+    const elementProps = element.props as Record<string, any>;
+    const tooltipContent = isValidElement(contentChild)
+      ? (contentChild as ReactElement<{ children?: ReactNode }>).props.children
+      : null;
+
+    return (
+      <>
+        {cloneElement(element, {
+          onMouseEnter: (event: MouseEvent<HTMLElement>) => {
+            elementProps.onMouseEnter?.(event);
+            setOpen(true);
+          },
+          onMouseLeave: (event: MouseEvent<HTMLElement>) => {
+            elementProps.onMouseLeave?.(event);
+            setOpen(false);
+          },
+          onPointerEnter: (event: PointerEvent<HTMLElement>) => {
+            elementProps.onPointerEnter?.(event);
+            setOpen(true);
+          },
+          onFocus: (event: FocusEvent<HTMLElement>) => {
+            elementProps.onFocus?.(event);
+            setOpen(true);
+          },
+          onBlur: (event: FocusEvent<HTMLElement>) => {
+            elementProps.onBlur?.(event);
+            setOpen(false);
+          },
+        })}
+        {open ? <div role="tooltip">{tooltipContent}</div> : null}
+      </>
+    );
+  }
+
+    return {
+      ...actual,
+      Tooltip: {
+        ...actual.Tooltip,
+        Root: MockTooltipRoot,
+        Trigger: MockTooltipTrigger,
+        Content: MockTooltipContent,
+      },
+      TooltipRoot: MockTooltipRoot,
+      TooltipTrigger: MockTooltipTrigger,
+      TooltipContent: MockTooltipContent,
+    };
+});
 
 vi.mock("../../services/snippets", () => ({
   createSnippet: vi.fn(),
@@ -79,19 +150,62 @@ describe("AdminLayout", () => {
     expect(navShell).not.toHaveClass("mx-auto", "max-w-[1400px]");
     expect(screen.getByRole("link", { name: "Just Do Swift admin" })).toBeInTheDocument();
     expect(header).not.toBeNull();
-    expect(within(header!).getByRole("link", { name: "New" })).toHaveAttribute("href", "/en/admin/snippets/new");
-    expect(within(header!).getByRole("link", { name: "New" })).toHaveClass("admin-nav-action-icon");
-    expect(within(header!).getByRole("link", { name: "New" })).toHaveAttribute("title", "New");
-    expect(within(header!).getByRole("button", { name: "Log out" })).toHaveClass("admin-nav-action-icon");
-    expect(within(header!).getByRole("button", { name: "Log out" })).toHaveAttribute("title", "Log out");
-    expect(within(header!).getByRole("button", { name: "Select language" })).toHaveClass("admin-nav-action-icon");
-    expect(within(header!).getByTitle("Select language")).toBeInTheDocument();
-    expect(within(header!).getByRole("link", { name: /View Front Site/i })).toHaveClass("admin-nav-action-icon");
-    expect(within(header!).getByRole("link", { name: /View Front Site/i })).toHaveAttribute("title", "View Front Site");
+    const newLink = within(header!).getByRole("link", { name: "New" });
+    const logOutButton = within(header!).getByRole("button", { name: "Log out" });
+    const localeButton = within(header!).getByRole("button", { name: "Select language" });
+    const frontSiteLink = within(header!).getByRole("link", { name: /View Front Site/i });
+
+    expect(newLink).toHaveAttribute("href", "/en/admin/snippets/new");
+    expect(newLink).toHaveClass("admin-nav-action-icon");
+    expect(logOutButton).toHaveClass("admin-nav-action-icon");
+    expect(localeButton).toHaveClass("admin-nav-action-icon");
+    expect(frontSiteLink).toHaveClass("admin-nav-action-icon");
+    const newIcon = newLink.querySelector("svg");
+    expect(newIcon).not.toBeNull();
+    expect(newIcon).toHaveClass("h-5", "w-5");
+    expect(newIcon).not.toHaveClass("h-4", "w-4");
     expect(within(header!).queryByText("New")).not.toBeInTheDocument();
     expect(within(header!).queryByText("Log out")).not.toBeInTheDocument();
     expect(within(header!).queryByText("English")).not.toBeInTheDocument();
     expect(within(header!).queryByText("中文")).not.toBeInTheDocument();
+
+    const newTrigger = newLink.closest('[data-slot="tooltip-trigger"]');
+    const localeTrigger = localeButton.closest('[data-slot="tooltip-trigger"]');
+    const frontSiteTrigger = frontSiteLink.closest('[data-slot="tooltip-trigger"]');
+    const logOutTrigger = logOutButton.closest('[data-slot="tooltip-trigger"]');
+
+    expect(newTrigger).not.toBeNull();
+    expect(localeTrigger).not.toBeNull();
+    expect(frontSiteTrigger).not.toBeNull();
+    expect(logOutTrigger).not.toBeNull();
+
+    fireEvent.pointerEnter(newTrigger!);
+    fireEvent.mouseEnter(newTrigger!);
+    fireEvent.focus(newTrigger!);
+    expect(await screen.findByText("New")).toBeInTheDocument();
+    fireEvent.mouseLeave(newTrigger!);
+
+    fireEvent.pointerEnter(localeTrigger!);
+    fireEvent.mouseEnter(localeTrigger!);
+    fireEvent.focus(localeTrigger!);
+    expect(await screen.findByText("Select language")).toBeInTheDocument();
+    fireEvent.mouseLeave(localeTrigger!);
+    fireEvent.click(localeButton);
+    expect(await screen.findByText("English")).toBeInTheDocument();
+    expect(screen.getByText("中文")).toBeInTheDocument();
+
+    fireEvent.pointerEnter(frontSiteTrigger!);
+    fireEvent.mouseEnter(frontSiteTrigger!);
+    fireEvent.focus(frontSiteTrigger!);
+    expect(await screen.findByText("View Front Site")).toBeInTheDocument();
+    fireEvent.mouseLeave(frontSiteTrigger!);
+
+    fireEvent.pointerEnter(logOutTrigger!);
+    fireEvent.mouseEnter(logOutTrigger!);
+    fireEvent.focus(logOutTrigger!);
+    expect(await screen.findByText("Log out")).toBeInTheDocument();
+    fireEvent.mouseLeave(logOutTrigger!);
+
     expect(screen.queryByRole("navigation", { name: "Admin sections" })).not.toBeInTheDocument();
     expect(screen.queryByText("Ship SwiftUI snippets with the same care you use to build them.")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Search title or slug")).toBeInTheDocument();

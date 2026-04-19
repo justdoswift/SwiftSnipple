@@ -83,7 +83,7 @@ export default function Home() {
             <h1 className="type-display max-w-[20ch]">
               {copy.heroTitle}
             </h1>
-            <p className="type-body-lg mx-auto max-w-[620px]">
+            <p className="type-body-lg mx-auto max-w-[760px] lg:max-w-[1200px] lg:whitespace-nowrap">
               {copy.heroBody}
             </p>
             <div className="mt-2 flex flex-wrap items-center justify-center gap-3">

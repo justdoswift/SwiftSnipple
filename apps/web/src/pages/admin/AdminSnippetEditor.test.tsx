@@ -114,6 +114,10 @@ describe("AdminSnippetEditor", () => {
     mockedCreateSnippet.mockReset();
     mockedPublishSnippet.mockReset();
     mockedUploadCoverImage.mockResolvedValue({ url: "/api/uploads/cover-test.webp" });
+    const originalCreateObjectURL = URL.createObjectURL;
+    const originalRevokeObjectURL = URL.revokeObjectURL;
+    URL.createObjectURL = vi.fn(() => "blob:cover-preview");
+    URL.revokeObjectURL = vi.fn();
 
     render(
       <MemoryRouter initialEntries={["/en/admin/snippets/new"]}>
@@ -138,10 +142,15 @@ describe("AdminSnippetEditor", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByAltText("Untitled Snippet")).toHaveAttribute("src", "/api/uploads/cover-test.webp");
+      expect(screen.getByAltText("Untitled Snippet")).toHaveAttribute("src", "blob:cover-preview");
     });
 
     expect(screen.queryByText("/api/uploads/cover-test.webp")).not.toBeInTheDocument();
+    expect(URL.createObjectURL).toHaveBeenCalledWith(file);
+    expect(URL.revokeObjectURL).not.toHaveBeenCalled();
+
+    URL.createObjectURL = originalCreateObjectURL;
+    URL.revokeObjectURL = originalRevokeObjectURL;
   });
 
   it("returns to the snippet library from the editor header back button", () => {

@@ -516,9 +516,9 @@ func TestUploadCoverImageAndServeStatic(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create form file: %v", err)
 	}
-	largeImage := image.NewNRGBA(image.Rect(0, 0, 3200, 1600))
-	for y := 0; y < 1600; y++ {
-		for x := 0; x < 3200; x++ {
+	largeImage := image.NewNRGBA(image.Rect(0, 0, 2400, 1200))
+	for y := 0; y < 1200; y++ {
+		for x := 0; x < 2400; x++ {
 			largeImage.Set(x, y, color.NRGBA{
 				R: uint8(x % 255),
 				G: uint8(y % 255),

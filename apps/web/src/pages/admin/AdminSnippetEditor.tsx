@@ -266,6 +266,7 @@ export default function AdminSnippetEditor() {
   const [isLoading, setIsLoading] = useState(!isNew);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUploadingCoverImage, setIsUploadingCoverImage] = useState(false);
+  const [localCoverPreviewUrl, setLocalCoverPreviewUrl] = useState("");
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
   const [activeTab, setActiveTab] = useState<EditorTabKey>("content");
@@ -650,13 +651,27 @@ export default function AdminSnippetEditor() {
       return;
     }
 
+    const nextPreviewUrl = typeof URL !== "undefined" && typeof URL.createObjectURL === "function"
+      ? URL.createObjectURL(file)
+      : "";
+
     try {
       setError("");
       setFeedback("");
       setIsUploadingCoverImage(true);
+      setLocalCoverPreviewUrl((currentPreviewUrl) => {
+        if (currentPreviewUrl && typeof URL !== "undefined" && typeof URL.revokeObjectURL === "function") {
+          URL.revokeObjectURL(currentPreviewUrl);
+        }
+        return nextPreviewUrl;
+      });
       const result = await uploadCoverImage(file);
       updateField("coverImage", result.url);
     } catch (err) {
+      if (nextPreviewUrl && typeof URL !== "undefined" && typeof URL.revokeObjectURL === "function") {
+        URL.revokeObjectURL(nextPreviewUrl);
+      }
+      setLocalCoverPreviewUrl("");
       if (isUnauthorizedError(err)) {
         redirectToAdminLogin();
         return;
@@ -666,6 +681,14 @@ export default function AdminSnippetEditor() {
       setIsUploadingCoverImage(false);
     }
   }, [copy.failedCoverImageUpload, copy.invalidCoverImage, redirectToAdminLogin]);
+
+  useEffect(() => {
+    return () => {
+      if (localCoverPreviewUrl && typeof URL !== "undefined" && typeof URL.revokeObjectURL === "function") {
+        URL.revokeObjectURL(localCoverPreviewUrl);
+      }
+    };
+  }, [localCoverPreviewUrl]);
 
   const handlePreview = useCallback(() => {
     if (!hasSavedPreview || !previewPath) {
@@ -924,13 +947,12 @@ export default function AdminSnippetEditor() {
                       <label className="grid gap-2 md:col-span-2">
                         <span className="admin-eyebrow type-mono-micro">{copy.coverImage}</span>
                         <div className="admin-cover-upload-shell grid gap-4">
-                          {form.coverImage ? (
+                          {form.coverImage || localCoverPreviewUrl ? (
                             <div className="admin-cover-upload-preview aspect-[16/10] overflow-hidden">
                               <img
-                                src={resolveAssetUrl(form.coverImage)}
+                                src={localCoverPreviewUrl || resolveAssetUrl(form.coverImage)}
                                 alt={localizedForm.title || copy.untitledSnippet}
                                 className="h-full w-full object-cover"
-                                referrerPolicy="no-referrer"
                               />
                             </div>
                           ) : null}

@@ -18,7 +18,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   api:
-    image: golang:1.24.4
+    image: golang:1.26.2
     working_dir: /app/apps/api
     command: sh -c "go run ./cmd/server"
     environment:

@@ -16,8 +16,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/chai2010/webp"
 	"github.com/go-chi/chi/v5"
+	"github.com/skrashevich/go-webp"
 	"golang.org/x/image/draw"
 	"swiftsnipple/api/internal/domain"
 	"swiftsnipple/api/internal/repo"
@@ -56,7 +56,7 @@ type localUploader struct {
 
 const (
 	maxCoverImageDimension = 2200
-	coverImageWebPQuality  = 84
+	coverImageWebPQuality  = 92
 )
 
 func newLocalUploader(dir string) localUploader {
@@ -363,7 +363,10 @@ func (u localUploader) saveImage(file multipart.File, _ *multipart.FileHeader) (
 	}
 	defer destinationFile.Close()
 
-	if err := webp.Encode(destinationFile, optimizedImage, &webp.Options{Lossless: false, Quality: float32(coverImageWebPQuality)}); err != nil {
+	if err := webp.Encode(destinationFile, optimizedImage, &webp.Options{
+		Lossy:   true,
+		Quality: float32(coverImageWebPQuality),
+	}); err != nil {
 		return "", errors.New("failed to compress cover image")
 	}
 

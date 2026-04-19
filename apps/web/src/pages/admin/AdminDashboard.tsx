@@ -72,16 +72,13 @@ export default function AdminDashboard() {
 
   const draftCount = snippets.filter((snippet) => snippet.status === "Draft").length;
   const publishedCount = snippets.filter((snippet) => snippet.status === "Published").length;
-  const reviewCount = snippets.filter((snippet) => snippet.status === "In Review").length;
-  const scheduledCount = snippets.filter((snippet) => snippet.status === "Scheduled").length;
 
   return (
     <div className="px-6 py-8 md:px-8 md:py-10 xl:px-10">
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 md:grid-cols-3">
         <StatCard label={copy.entries} value={snippets.length} />
         <StatCard label={copy.drafts} value={draftCount} />
         <StatCard label={copy.published} value={publishedCount} />
-        <StatCard label={copy.pipeline} value={reviewCount + scheduledCount} />
       </section>
 
       <AdminSnippetLibraryContent snippets={snippets} isLoading={isLoading} error={error} />

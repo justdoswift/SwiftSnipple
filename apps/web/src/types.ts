@@ -1,4 +1,4 @@
-export type SnippetStatus = "Draft" | "In Review" | "Scheduled" | "Published";
+export type SnippetStatus = "Draft" | "Published";
 export type AppLocale = "en" | "zh";
 
 export interface SnippetLocalizedFields {

@@ -269,7 +269,9 @@ describe("AdminLayout", () => {
     const header = screen.getByTestId("admin-navbar-shell").closest("header");
 
     expect(header).not.toBeNull();
-    expect(within(header!).getByRole("link", { name: "Just Do Swift admin" })).toBeInTheDocument();
+    expect(within(header!).queryByRole("link", { name: "Just Do Swift admin" })).not.toBeInTheDocument();
+    expect(within(header!).getByRole("button", { name: "Back to snippets" })).toBeInTheDocument();
+    expect(within(header!).getByText("Saved")).toBeInTheDocument();
     expect(within(header!).getByRole("button", { name: "Switch to light site mode" })).toHaveClass("admin-nav-action-icon");
     expect(within(header!).getByRole("button", { name: "Log out" })).toHaveClass("admin-nav-action-icon");
     expect(within(header!).getByRole("button", { name: "Select language" })).toHaveClass("admin-nav-action-icon");
@@ -283,7 +285,6 @@ describe("AdminLayout", () => {
     expect(screen.getByTestId("admin-content-shell")).not.toHaveClass("md:pl-24");
     expect(screen.getByTestId("admin-content-shell")).not.toHaveClass("xl:pl-28");
     expect(screen.getByTestId("admin-page-width-shell")).toHaveClass("admin-editor-shell-width");
-    expect(within(header!).queryByRole("button", { name: "Back to snippets" })).not.toBeInTheDocument();
     expect(within(header!).queryByText("New entry")).not.toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Narrative" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Code" })).toBeInTheDocument();

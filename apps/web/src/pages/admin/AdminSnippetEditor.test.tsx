@@ -50,7 +50,8 @@ describe("AdminSnippetEditor", () => {
     );
 
     expect(screen.getByLabelText("Snippet Title")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Back to snippets" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Back to snippets" })).toBeInTheDocument();
+    expect(screen.getByText("Saved")).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Narrative" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Code" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Prompt" })).toBeInTheDocument();
@@ -89,7 +90,8 @@ describe("AdminSnippetEditor", () => {
     );
 
     expect(screen.getByLabelText("Snippet Title")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Back to snippets" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Back to snippets" })).toBeInTheDocument();
+    expect(screen.getByText("Saved")).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Narrative" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Code" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Prompt" })).toBeInTheDocument();
@@ -102,6 +104,27 @@ describe("AdminSnippetEditor", () => {
     fireEvent.click(screen.getByRole("button", { name: "Preview" }));
     expect(screen.getByText("Save this draft first to open the public preview at /en/snippets/untitled.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Done" })).not.toBeInTheDocument();
+  });
+
+  it("returns to the snippet library from the editor header back button", () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+
+    render(
+      <MemoryRouter initialEntries={["/en/admin/snippets/new"]}>
+        <Routes>
+          <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+            <Route path="snippets" element={<div>snippet library route</div>} />
+            <Route path="snippets/new" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Back to snippets" }));
+
+    expect(screen.getByText("snippet library route")).toBeInTheDocument();
   });
 
   it("uses the shared HeroUI dropdown classes for the editor status menu", async () => {
@@ -613,7 +636,17 @@ describe("AdminSnippetEditor", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "Surface" }));
 
+    const statusValue = document.querySelector(".admin-form-select-value");
+    const statusTriggerElement = statusValue?.closest("button, [data-slot='dropdown-trigger']") as HTMLElement | null;
+    expect(statusTriggerElement).toBeTruthy();
+
+    fireEvent.click(statusTriggerElement!);
+
+    const menu = screen.getByRole("menu");
+    expect(within(menu).getByText("Draft")).toBeInTheDocument();
     expect(screen.queryByRole("option", { name: "Published" })).not.toBeInTheDocument();
+    expect(within(menu).queryByText("In Review")).not.toBeInTheDocument();
+    expect(within(menu).queryByText("Scheduled")).not.toBeInTheDocument();
   });
 
   it("shows Published as a disabled status for already published snippets", async () => {

@@ -4,8 +4,6 @@ import { SnippetStatus } from "../../types";
 
 const STATUS_CLASSNAMES: Record<SnippetStatus, string> = {
   Draft: "admin-status-badge-draft",
-  "In Review": "admin-status-badge-review",
-  Scheduled: "admin-status-badge-scheduled",
   Published: "admin-status-badge-published",
 };
 

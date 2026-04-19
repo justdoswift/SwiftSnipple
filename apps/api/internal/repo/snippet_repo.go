@@ -397,6 +397,10 @@ func scanSnippet(row interface {
 		return domain.Snippet{}, err
 	}
 
+	snippet.Status = domain.NormalizeStoredStatus(snippet.Status)
+	if snippet.Status != domain.StatusPublished {
+		snippet.PublishedAt = nil
+	}
 	snippet.Locales.EN.Tags = sanitizeTags(snippet.Locales.EN.Tags)
 	snippet.Locales.ZH.Tags = sanitizeTags(snippet.Locales.ZH.Tags)
 	return snippet, nil

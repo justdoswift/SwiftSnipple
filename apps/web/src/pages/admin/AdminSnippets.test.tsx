@@ -88,6 +88,22 @@ describe("AdminSnippets", () => {
     });
   });
 
+  it("keeps snippet dates on the dedicated meta text class instead of admin-copy-muted", async () => {
+    mockedGetSnippets.mockResolvedValue([baseSnippet]);
+
+    render(
+      <MemoryRouter>
+        <AdminSnippets />
+      </MemoryRouter>,
+    );
+
+    const updatedLabel = await screen.findByText((content) => content.includes("Updated") && content.includes("Apr 9, 2026"));
+    const metaBlock = updatedLabel.closest(".admin-snippet-meta");
+
+    expect(metaBlock).not.toBeNull();
+    expect(metaBlock).not.toHaveClass("admin-copy-muted");
+  });
+
   it("filters snippet rows by search query", async () => {
     mockedGetSnippets.mockResolvedValue([
       baseSnippet,
@@ -140,5 +156,9 @@ describe("AdminSnippets", () => {
     const selectedItem = within(menu).getByText("Status: All").closest(".menu-item");
     expect(selectedItem).not.toBeNull();
     expect(selectedItem?.querySelector(".menu-item__indicator")).not.toBeNull();
+    expect(within(menu).getByText("Status: Draft")).toBeInTheDocument();
+    expect(within(menu).getByText("Status: Published")).toBeInTheDocument();
+    expect(within(menu).queryByText("Status: In Review")).not.toBeInTheDocument();
+    expect(within(menu).queryByText("Status: Scheduled")).not.toBeInTheDocument();
   });
 });

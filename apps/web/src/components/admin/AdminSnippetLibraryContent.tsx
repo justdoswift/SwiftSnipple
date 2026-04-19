@@ -7,7 +7,7 @@ import { getMessages } from "../../lib/messages";
 import { getLocalizedSnippetFields, useAppLocale } from "../../lib/locale";
 import StatusBadge from "./StatusBadge";
 
-const STATUS_OPTIONS: Array<SnippetStatus | "All"> = ["All", "Draft", "In Review", "Scheduled", "Published"];
+const STATUS_OPTIONS: Array<SnippetStatus | "All"> = ["All", "Draft", "Published"];
 type LibrarySelectOption = {
   id: string;
   label: string;
@@ -198,7 +198,7 @@ export default function AdminSnippetLibraryContent({
                       </div>
                       <div className="flex flex-col justify-between gap-5 xl:items-end">
                         <StatusBadge status={snippet.status} />
-                        <div className="admin-copy-muted admin-snippet-meta space-y-2 xl:text-right">
+                        <div className="admin-snippet-meta space-y-2 xl:text-right">
                           <p>{copy.updated} {formatDate(snippet.updatedAt)}</p>
                           <p>{snippet.status === "Published" ? `${copy.live} ${formatDate(snippet.publishedAt)}` : fields.slug}</p>
                         </div>

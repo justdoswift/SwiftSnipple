@@ -1777,9 +1777,9 @@
     --admin-secondary-hover-bg: rgba(255, 255, 255, 0.1);
     --admin-header-action-bg: transparent;
     --admin-header-action-border: transparent;
-    --admin-header-action-text: rgba(255, 255, 255, 0.78);
+    --admin-header-action-text: #ffffff;
     --admin-header-action-hover-bg: rgba(255, 255, 255, 0.06);
-    --admin-header-action-hover-text: rgba(255, 255, 255, 0.96);
+    --admin-header-action-hover-text: #ffffff;
     --admin-overlay: rgba(0, 0, 0, 0.88);
     --admin-preview-canvas: #050505;
     --admin-preview-stage-bg: #0b0b0b;
@@ -1861,7 +1861,7 @@
     --admin-secondary-hover-bg: rgba(255, 255, 255, 1);
     --admin-header-action-bg: transparent;
     --admin-header-action-border: transparent;
-    --admin-header-action-text: rgba(0, 0, 0, 0.72);
+    --admin-header-action-text: #000000;
     --admin-header-action-hover-bg: rgba(0, 0, 0, 0.06);
     --admin-header-action-hover-text: #000000;
     --admin-overlay: rgba(241, 242, 244, 0.9);
@@ -1979,8 +1979,12 @@
     @apply flex min-w-0 items-center gap-3;
   }
 
+  .admin-nav-start {
+    @apply flex min-w-0 items-center;
+  }
+
   .admin-snippet-meta {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     line-height: 1.3;
   }
 
@@ -2067,6 +2071,73 @@
     @apply w-12 rounded-full;
     border-radius: var(--radius-pill);
     text-decoration: none;
+  }
+
+  .admin-editor-header-start {
+    color: var(--admin-title);
+  }
+
+  .admin-editor-back-button {
+    @apply inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border transition-colors duration-200;
+    border-color: var(--admin-header-action-border);
+    background-color: var(--admin-header-action-bg);
+    color: var(--admin-header-action-text);
+  }
+
+  .admin-editor-back-button:hover {
+    background-color: var(--admin-header-action-hover-bg);
+    color: var(--admin-header-action-hover-text);
+  }
+
+  .admin-editor-back-button:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+
+  .admin-editor-save-chip {
+    @apply inline-flex h-10 shrink-0 items-center gap-2 rounded-[12px] border px-4;
+    border-color: transparent;
+    background-color: color-mix(in srgb, var(--admin-header-bg) 88%, var(--admin-surface) 12%);
+    color: var(--admin-title);
+    transition:
+      border-color 180ms ease,
+      background-color 180ms ease,
+      color 180ms ease,
+      box-shadow 220ms ease;
+    will-change: transform;
+  }
+
+  .admin-editor-save-chip[data-state="syncing"] {
+    border-color: transparent;
+    background-color: color-mix(in srgb, var(--admin-header-bg) 76%, var(--admin-surface) 24%);
+  }
+
+  .admin-editor-save-chip[data-state="saving"] {
+    border-color: transparent;
+    background-color: color-mix(in srgb, var(--admin-header-bg) 70%, var(--admin-surface) 30%);
+    box-shadow: 0 10px 24px -16px rgba(0, 0, 0, 0.55);
+  }
+
+  .admin-editor-save-indicator {
+    @apply h-2.5 w-2.5 rounded-full;
+    background-color: var(--admin-status-success);
+  }
+
+  .admin-editor-save-chip[data-state="syncing"] .admin-editor-save-indicator {
+    background-color: color-mix(in srgb, var(--admin-status-success) 34%, var(--admin-title) 66%);
+  }
+
+  .admin-editor-save-chip[data-state="saving"] .admin-editor-save-indicator {
+    background-color: #f4c84a;
+  }
+
+  .admin-editor-save-label-wrap {
+    @apply relative inline-flex min-w-[4.5rem] items-center overflow-hidden;
+    line-height: 1;
+  }
+
+  .admin-editor-save-label {
+    @apply inline-flex items-center whitespace-nowrap;
   }
 
   .admin-nav-locale-root {
@@ -3008,6 +3079,7 @@
   }
 
   .dropdown__popover {
+    @apply rounded-lg;
     border: 1px solid var(--border);
     background-color: var(--overlay);
     color: var(--overlay-foreground);
@@ -3024,6 +3096,7 @@
   }
 
   .menu-item {
+    @apply rounded-lg;
     color: var(--overlay-foreground);
   }
 

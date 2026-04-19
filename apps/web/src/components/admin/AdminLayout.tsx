@@ -34,15 +34,21 @@ export default function AdminLayout({ adminAuthSession, onSignOut, onToggleTheme
       <header className="admin-nav-root sticky top-0 z-40 w-full" aria-label="Admin header">
         <div className="admin-nav-shell w-full px-4 py-3 md:px-6 lg:px-8" data-testid="admin-navbar-shell">
           <div className="admin-nav-main relative flex items-center justify-between gap-4">
-            <Link to={`/${locale}/admin`} className="admin-nav-brand min-w-0" aria-label="Just Do Swift admin">
-              <span className="admin-nav-logo" aria-hidden="true">
-                <span className="admin-nav-logo-bar admin-nav-logo-bar-primary" />
-                <span className="admin-nav-logo-bar admin-nav-logo-bar-secondary" />
-              </span>
-              <span className="admin-brand-title truncate">
-                Just Do Swift
-              </span>
-            </Link>
+            {activeHeader.start ? (
+              <div className="admin-nav-start min-w-0">
+                {activeHeader.start}
+              </div>
+            ) : (
+              <Link to={`/${locale}/admin`} className="admin-nav-brand min-w-0" aria-label="Just Do Swift admin">
+                <span className="admin-nav-logo" aria-hidden="true">
+                  <span className="admin-nav-logo-bar admin-nav-logo-bar-primary" />
+                  <span className="admin-nav-logo-bar admin-nav-logo-bar-secondary" />
+                </span>
+                <span className="admin-brand-title truncate">
+                  Just Do Swift
+                </span>
+              </Link>
+            )}
 
             {activeHeader.center ? (
               <div className="admin-nav-context pointer-events-none absolute left-1/2 top-1/2 hidden min-w-0 max-w-[min(42vw,520px)] -translate-x-1/2 -translate-y-1/2 items-center justify-center text-center md:flex">

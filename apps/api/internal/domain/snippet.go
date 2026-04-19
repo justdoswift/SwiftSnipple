@@ -13,8 +13,6 @@ const (
 	LocaleZH AppLocale = "zh"
 
 	StatusDraft     SnippetStatus = "Draft"
-	StatusInReview  SnippetStatus = "In Review"
-	StatusScheduled SnippetStatus = "Scheduled"
 	StatusPublished SnippetStatus = "Published"
 )
 
@@ -36,12 +34,12 @@ type SnippetLocales struct {
 }
 
 type Snippet struct {
-	ID          string        `json:"id"`
-	CoverImage  string        `json:"coverImage"`
-	Code        string        `json:"code"`
-	Status      SnippetStatus `json:"status"`
-	UpdatedAt   time.Time     `json:"updatedAt"`
-	PublishedAt *time.Time    `json:"publishedAt"`
+	ID          string         `json:"id"`
+	CoverImage  string         `json:"coverImage"`
+	Code        string         `json:"code"`
+	Status      SnippetStatus  `json:"status"`
+	UpdatedAt   time.Time      `json:"updatedAt"`
+	PublishedAt *time.Time     `json:"publishedAt"`
 	Locales     SnippetLocales `json:"locales"`
 }
 
@@ -100,10 +98,19 @@ func (l SnippetLocales) ForLocale(locale AppLocale) SnippetLocalizedFields {
 
 func IsValidStatus(status SnippetStatus) bool {
 	switch status {
-	case StatusDraft, StatusInReview, StatusScheduled, StatusPublished:
+	case StatusDraft, StatusPublished:
 		return true
 	default:
 		return false
+	}
+}
+
+func NormalizeStoredStatus(status SnippetStatus) SnippetStatus {
+	switch status {
+	case StatusPublished:
+		return StatusPublished
+	default:
+		return StatusDraft
 	}
 }
 

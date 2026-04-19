@@ -325,7 +325,7 @@ func TestCreateValidationAndDuplicateErrors(t *testing.T) {
 	req := httptest.NewRequest(
 		http.MethodPost,
 		"/api/admin/snippets",
-		strings.NewReader(`{"status":"Scheduled","publishedAt":"tomorrowish","locales":{"en":{"title":"A","slug":"valid-slug"},"zh":{"title":"中文","slug":"valid-zh-slug"}}}`),
+		strings.NewReader(`{"status":"Draft","publishedAt":"tomorrowish","locales":{"en":{"title":"A","slug":"valid-slug"},"zh":{"title":"中文","slug":"valid-zh-slug"}}}`),
 	)
 	req.Header.Set("Content-Type", "application/json")
 	req.AddCookie(adminCookie)
@@ -345,7 +345,7 @@ func TestPublishUnpublishDeleteAndMissingRoutes(t *testing.T) {
 		ID:          "snippet-1",
 		CoverImage:  "https://example.com/cover.jpg",
 		Code:        "Text(\"Hello\")",
-		Status:      domain.StatusScheduled,
+		Status:      domain.StatusDraft,
 		UpdatedAt:   now,
 		PublishedAt: &now,
 		Locales: domain.SnippetLocales{

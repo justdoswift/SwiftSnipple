@@ -1,4 +1,4 @@
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Dropdown, Input, Modal, TextArea, Tooltip, useOverlayState } from "../../lib/heroui";
 import { useNavigate, useParams } from "react-router-dom";
@@ -12,9 +12,9 @@ import { createEmptyLocalizedFields, getFormLocale, getSnippetLocale } from "../
 import { isUnauthorizedError } from "../../services/api";
 import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, unpublishSnippet, updateSnippet } from "../../services/snippets";
 import { Snippet, SnippetFormState, SnippetPayload, SnippetStatus } from "../../types";
-import { ChevronDown, Code2, Eye, Layout, Monitor, MessageSquareQuote, Send, Smartphone, Settings2, Trash2, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, Code2, Eye, Layout, Monitor, MessageSquareQuote, Send, Smartphone, Settings2, Trash2, X } from "lucide-react";
 
-const EDITABLE_STATUS_OPTIONS: SnippetStatus[] = ["Draft", "In Review", "Scheduled"];
+const EDITABLE_STATUS_OPTIONS: SnippetStatus[] = ["Draft"];
 type EditorTabKey = "content" | "code" | "prompt" | "meta";
 type PreviewDevice = "desktop" | "mobile";
 type AutosaveState = "idle" | "saving" | "saved";
@@ -28,6 +28,10 @@ type EditorTabOption = {
   label: string;
   icon: typeof Layout;
 };
+
+const AUTOSAVE_DEBOUNCE_MS = 900;
+const AUTOSAVE_MIN_SAVING_MS = 650;
+const AUTOSAVE_SAVED_VISIBLE_MS = 2400;
 
 function EditorSectionRail({
   activeTab,
@@ -192,7 +196,7 @@ function toFormState(snippet: Snippet): SnippetFormState {
 
 function fromFormState(baseSnippet: Snippet, form: SnippetFormState): Snippet {
   const publishedAt =
-    form.status === "Published" || form.status === "Scheduled"
+    form.status === "Published"
       ? form.publishedAt
         ? new Date(form.publishedAt).toISOString()
         : new Date().toISOString()
@@ -457,6 +461,8 @@ export default function AdminSnippetEditor() {
         : isPublishedEntry
           ? copy.confirmUpdate
           : copy.confirmPublish;
+  const saveState = isLoading ? "syncing" : autosaveState === "saving" ? "saving" : "saved";
+  const saveStateLabel = saveState === "syncing" ? copy.syncing : saveState === "saving" ? copy.saving : copy.saved;
   const autosaveFeedbackLabel =
     autosaveState === "saving" ? copy.saving : autosaveState === "saved" ? copy.saved : "";
   useEffect(() => {
@@ -512,7 +518,7 @@ export default function AdminSnippetEditor() {
 
     const timeoutId = window.setTimeout(() => {
       setAutosaveState("idle");
-    }, 1400);
+    }, AUTOSAVE_SAVED_VISIBLE_MS);
 
     return () => window.clearTimeout(timeoutId);
   }, [autosaveState]);
@@ -523,19 +529,21 @@ export default function AdminSnippetEditor() {
     }
 
     const timeoutId = window.setTimeout(async () => {
+      const savingStartedAt = Date.now();
       setAutosaveState("saving");
 
       try {
         setError("");
         const currentForm = formRef.current;
         const savedSnippet = await persistSnippet(currentForm);
+        const savingElapsedMs = Date.now() - savingStartedAt;
+
+        if (savingElapsedMs < AUTOSAVE_MIN_SAVING_MS) {
+          await new Promise((resolve) => window.setTimeout(resolve, AUTOSAVE_MIN_SAVING_MS - savingElapsedMs));
+        }
 
         setBaseSnippet(savedSnippet);
-        setFeedback(
-          savedSnippet.status === "Scheduled"
-            ? copy.savedScheduled
-            : copy.autoSavedDraft,
-        );
+        setFeedback(copy.autoSavedDraft);
         setAutosaveState("saved");
 
         if (isNew) {
@@ -550,7 +558,7 @@ export default function AdminSnippetEditor() {
         setAutosaveState("idle");
         setError(err instanceof Error ? err.message : copy.failedSave);
       }
-    }, 900);
+    }, AUTOSAVE_DEBOUNCE_MS);
 
     return () => window.clearTimeout(timeoutId);
   }, [copy.failedSave, hasUnsavedChanges, isDeleting, isLoading, isNew, isPublishedEntry, navigate, persistSnippet, primaryActionState, redirectToAdminLogin]);
@@ -647,26 +655,69 @@ export default function AdminSnippetEditor() {
 
   const headerConfig = useMemo(
     () => ({
+      start: (
+        <div className="admin-editor-header-start flex min-w-0 items-center gap-3">
+          <button
+            type="button"
+            aria-label={copy.backToSnippetLibrary}
+            className="admin-editor-back-button"
+            onClick={() => navigate(localizePath(locale, "/admin/snippets"))}
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <motion.div
+            className="admin-editor-save-chip type-action"
+            data-state={saveState}
+            animate={
+              saveState === "saving"
+                ? { y: -1, scale: 1.012 }
+                : saveState === "syncing"
+                  ? { y: -0.5, scale: 1.006 }
+                  : { y: 0, scale: 1 }
+            }
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <motion.span
+              className="admin-editor-save-indicator"
+              aria-hidden="true"
+              animate={
+                saveState === "saving"
+                  ? { scale: [1, 1.18, 1], opacity: [0.72, 1, 0.72] }
+                  : saveState === "syncing"
+                    ? { scale: [1, 1.12, 1], opacity: [0.66, 0.94, 0.66] }
+                    : { scale: 1, opacity: 1 }
+              }
+              transition={
+                saveState === "saved"
+                  ? { duration: 0.18, ease: [0.22, 1, 0.36, 1] }
+                  : { duration: 1.05, ease: "easeInOut", repeat: Number.POSITIVE_INFINITY }
+              }
+            />
+            <span className="admin-editor-save-label-wrap">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={saveState}
+                  className="admin-editor-save-label"
+                  initial={{ opacity: 0, y: 5, filter: "blur(3px)" }}
+                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, y: -5, filter: "blur(2px)" }}
+                  transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  {saveStateLabel}
+                </motion.span>
+              </AnimatePresence>
+            </span>
+          </motion.div>
+        </div>
+      ),
       end: (
         <>
-          {isLoading ? (
-            <div className="flex shrink-0 items-center gap-3 xl:mr-1">
-              <div className="admin-spinner h-4 w-4 animate-spin rounded-full border-2" />
-              <span className="admin-copy-muted type-mono-micro">{copy.syncing}</span>
-            </div>
-          ) : (
-            <div className="hidden shrink-0 2xl:block xl:mr-1">
-              <StatusBadge status={previewSnippet.status} />
-            </div>
-          )}
           {feedback ? (
             <span className="admin-feedback-success type-mono-micro hidden animate-in fade-in duration-500 2xl:block">{feedback}</span>
           ) : null}
-          {autosaveFeedbackLabel ? (
-            <span className="admin-copy-muted type-mono-micro hidden animate-in fade-in duration-500 xl:block">
-              {autosaveFeedbackLabel}
-            </span>
-          ) : null}
+          <div className="hidden shrink-0 2xl:block xl:mr-1">
+            <StatusBadge status={previewSnippet.status} />
+          </div>
           <Tooltip delay={0} closeDelay={0}>
             <Tooltip.Trigger>
               <button
@@ -706,14 +757,19 @@ export default function AdminSnippetEditor() {
       ),
     }),
     [
+      autosaveState,
       copy.preview,
+      copy.backToSnippetLibrary,
       copy.syncing,
-      autosaveFeedbackLabel,
+      copy.saving,
+      copy.saved,
       feedback,
       handlePreview,
       isDeleting,
       isLoading,
       isPrimaryActionDisabled,
+      locale,
+      navigate,
       primaryActionLabel,
       primaryActionState,
       previewSnippet.status,
@@ -866,7 +922,7 @@ export default function AdminSnippetEditor() {
                     title={copy.releaseControls}
                     description={copy.releaseControlsCopy}
                   >
-                    <div className="grid gap-6 md:grid-cols-2">
+                    <div className="grid gap-6">
                        <label className="grid gap-2">
                          <span className="admin-eyebrow type-mono-micro">{copy.status}</span>
                          <Dropdown>
@@ -898,15 +954,6 @@ export default function AdminSnippetEditor() {
                              </Dropdown.Menu>
                            </Dropdown.Popover>
                          </Dropdown>
-                       </label>
-                       <label className="grid gap-2">
-                         <span className="admin-eyebrow type-mono-micro">{copy.publishedAt}</span>
-                         <input
-                           type="datetime-local"
-                           value={form.publishedAt}
-                           onChange={(event) => updateField("publishedAt", event.target.value)}
-                           className="admin-native-input w-full"
-                         />
                        </label>
                     </div>
                   </EditorSection>

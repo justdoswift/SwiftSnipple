@@ -1,9 +1,9 @@
-import { ChevronDown, Monitor, Moon, Search, Sun } from "lucide-react";
+import { Languages, LogIn, Monitor, Moon, Search, Sun, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import { getMessages } from "../lib/messages";
-import { Dropdown } from "../lib/heroui";
+import { Dropdown, Tooltip } from "../lib/heroui";
 import type { MockAuthSession } from "../lib/mock-auth";
-import { APP_LOCALE_OPTIONS, getLocaleOption, useAppLocale } from "../lib/locale";
+import { APP_LOCALE_OPTIONS, useAppLocale } from "../lib/locale";
 import { getNextPublicTheme, type PublicTheme } from "../lib/public-theme";
 
 interface NavbarProps {
@@ -16,7 +16,8 @@ export default function Navbar({ theme, onToggleTheme, authSession }: NavbarProp
   const { locale, setLocale } = useAppLocale();
   const copy = getMessages(locale);
   const nextTheme = getNextPublicTheme(theme);
-  const currentLocaleLabel = getLocaleOption(locale).nativeLabel;
+  const authLabel = authSession ? copy.nav.account : copy.nav.login;
+  const authHref = authSession ? `/${locale}/account` : `/${locale}/login`;
 
   return (
     <nav
@@ -53,25 +54,38 @@ export default function Navbar({ theme, onToggleTheme, authSession }: NavbarProp
             </span>
           </label>
 
-          <button
-            type="button"
-            className="public-nav-icon-button"
-            aria-label={`Switch to ${nextTheme} site mode`}
-            aria-pressed={theme === "light"}
-            onClick={onToggleTheme}
-          >
-            {theme === "dark" ? <Sun size={16} strokeWidth={2} /> : <Moon size={16} strokeWidth={2} />}
-          </button>
+          <Tooltip delay={0} closeDelay={0}>
+            <Tooltip.Trigger>
+              <button
+                type="button"
+                className="public-nav-icon-button"
+                aria-label={`Switch to ${nextTheme} site mode`}
+                aria-pressed={theme === "light"}
+                onClick={onToggleTheme}
+              >
+                {theme === "dark" ? <Sun size={16} strokeWidth={2} /> : <Moon size={16} strokeWidth={2} />}
+              </button>
+            </Tooltip.Trigger>
+            <Tooltip.Content>
+              {`Switch to ${nextTheme} site mode`}
+            </Tooltip.Content>
+          </Tooltip>
 
           <div className="public-nav-locale-root">
             <Dropdown>
-              <Dropdown.Trigger
-                aria-label={copy.nav.selectLanguage}
-                className="public-nav-locale-trigger type-action"
-              >
-                <span className="public-nav-locale-value">{currentLocaleLabel}</span>
-                <ChevronDown className="public-nav-locale-indicator" />
-              </Dropdown.Trigger>
+              <Tooltip delay={0} closeDelay={0}>
+                <Tooltip.Trigger>
+                  <Dropdown.Trigger
+                    aria-label={copy.nav.selectLanguage}
+                    className="public-nav-icon-button public-nav-locale-trigger type-action"
+                  >
+                    <Languages size={18} strokeWidth={2} aria-hidden="true" />
+                  </Dropdown.Trigger>
+                </Tooltip.Trigger>
+                <Tooltip.Content>
+                  {copy.nav.selectLanguage}
+                </Tooltip.Content>
+              </Tooltip>
               <Dropdown.Popover>
                 <Dropdown.Menu
                   items={APP_LOCALE_OPTIONS}
@@ -91,12 +105,20 @@ export default function Navbar({ theme, onToggleTheme, authSession }: NavbarProp
             </Dropdown>
           </div>
 
-          <Link
-            to={authSession ? `/${locale}/account` : `/${locale}/login`}
-            className="public-nav-login-button public-nav-auth-button type-action"
-          >
-            {authSession ? copy.nav.account : copy.nav.login}
-          </Link>
+          <Tooltip delay={0} closeDelay={0}>
+            <Tooltip.Trigger>
+              <Link
+                to={authHref}
+                aria-label={authLabel}
+                className="public-nav-icon-button public-nav-auth-button type-action"
+              >
+                {authSession ? <User size={18} strokeWidth={2} aria-hidden="true" /> : <LogIn size={18} strokeWidth={2} aria-hidden="true" />}
+              </Link>
+            </Tooltip.Trigger>
+            <Tooltip.Content>
+              {authLabel}
+            </Tooltip.Content>
+          </Tooltip>
         </div>
       </div>
     </nav>

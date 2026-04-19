@@ -466,9 +466,10 @@
     border-radius: var(--radius-pill);
   }
 
-  .public-nav-icon-button,
-  .public-nav-login-button {
+  .public-nav-icon-button {
     @apply inline-flex h-10 shrink-0 items-center justify-center transition-colors duration-200;
+    color: inherit;
+    text-decoration: none;
   }
 
   .public-nav-icon-button {
@@ -476,38 +477,17 @@
     border-radius: var(--radius-pill);
   }
 
-  .public-nav-login-button {
-    @apply rounded-[12px] border border-transparent px-3 md:px-4;
-    border-radius: var(--radius-control);
-    color: inherit;
-    text-decoration: none;
-  }
-
   .public-nav-locale-root {
     @apply block shrink-0 self-center;
-    min-width: 4.75rem;
   }
 
   .public-nav-locale-trigger {
-    @apply inline-flex h-10 w-full items-center justify-center gap-1 rounded-[12px] border border-transparent bg-transparent px-3 py-0 text-center shadow-none outline-none transition-colors duration-200 md:px-4;
-    border-radius: var(--radius-control);
-    color: inherit;
+    @apply p-0 text-center shadow-none outline-none;
     appearance: none;
     -webkit-appearance: none;
     display: flex !important;
-    flex-direction: row !important;
     align-items: center !important;
     justify-content: center !important;
-    row-gap: 0 !important;
-  }
-
-  .public-nav-locale-value {
-    @apply min-w-0 flex-1 truncate text-center;
-    line-height: 1;
-  }
-
-  .public-nav-locale-indicator {
-    @apply flex h-3.5 w-3.5 shrink-0 items-center justify-center;
   }
 
   .public-nav-select-popover {
@@ -536,12 +516,6 @@
     @apply ml-3 shrink-0;
   }
 
-  .public-nav-auth-button {
-    min-width: 6.5rem;
-    justify-content: center;
-    text-align: center;
-  }
-
   .public-nav-root[data-theme="dark"] .public-nav-locale-trigger {
     color: inherit;
   }
@@ -554,7 +528,6 @@
   }
 
   .public-nav-root[data-theme="dark"] .public-nav-icon-button,
-  .public-nav-root[data-theme="dark"] .public-nav-login-button,
   .public-nav-root[data-theme="dark"] .public-nav-locale-trigger {
     color: rgba(255, 255, 255, 0.78);
   }
@@ -568,7 +541,6 @@
   }
 
   .public-nav-root[data-theme="dark"] .public-nav-icon-button:hover,
-  .public-nav-root[data-theme="dark"] .public-nav-login-button:hover,
   .public-nav-root[data-theme="dark"] .public-nav-locale-trigger:hover,
   .public-nav-root[data-theme="dark"] .public-nav-locale-trigger[data-hovered="true"],
   .public-nav-root[data-theme="dark"] .public-nav-locale-trigger[data-pressed="true"] {
@@ -610,7 +582,6 @@
   }
 
   .public-nav-root[data-theme="light"] .public-nav-icon-button,
-  .public-nav-root[data-theme="light"] .public-nav-login-button,
   .public-nav-root[data-theme="light"] .public-nav-locale-trigger {
     color: rgba(0, 0, 0, 0.72);
   }
@@ -624,7 +595,6 @@
   }
 
   .public-nav-root[data-theme="light"] .public-nav-icon-button:hover,
-  .public-nav-root[data-theme="light"] .public-nav-login-button:hover,
   .public-nav-root[data-theme="light"] .public-nav-locale-trigger:hover,
   .public-nav-root[data-theme="light"] .public-nav-locale-trigger[data-hovered="true"],
   .public-nav-root[data-theme="light"] .public-nav-locale-trigger[data-pressed="true"] {
@@ -659,8 +629,7 @@
   }
 
   .public-nav-brand:focus-visible,
-  .public-nav-icon-button:focus-visible,
-  .public-nav-login-button:focus-visible {
+  .public-nav-icon-button:focus-visible {
     outline: 2px solid currentColor;
     outline-offset: 2px;
   }
@@ -692,20 +661,6 @@
       border-radius: 1rem;
     }
 
-    .public-nav-login-button {
-      padding-left: 0.85rem;
-      padding-right: 0.85rem;
-    }
-
-    .public-nav-locale-button {
-      min-width: 4.1rem;
-      padding-left: 0.65rem;
-      padding-right: 0.65rem;
-    }
-
-    .public-nav-auth-button {
-      min-width: 5.9rem;
-    }
   }
 
   @media (min-width: 1024px) {

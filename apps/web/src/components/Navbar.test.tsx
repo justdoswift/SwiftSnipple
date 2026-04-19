@@ -1,9 +1,79 @@
+import { Children, cloneElement, isValidElement, useState, type FocusEvent, type MouseEvent, type PointerEvent, type ReactElement, type ReactNode } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import Navbar from "./Navbar";
 import type { PublicTheme } from "../lib/public-theme";
 import type { MockAuthSession } from "../lib/mock-auth";
+
+vi.mock("../lib/heroui", async () => {
+  const actual = await vi.importActual<typeof import("../lib/heroui")>("../lib/heroui");
+
+  function MockTooltipContent({ children }: { children: ReactNode }) {
+    return <>{children}</>;
+  }
+
+  function MockTooltipTrigger({ children }: { children: ReactNode }) {
+    return <>{children}</>;
+  }
+
+  function MockTooltipRoot({ children }: { children: ReactNode }) {
+    const [open, setOpen] = useState(false);
+    const childArray = Children.toArray(children);
+    const contentChild = childArray.find((child) => isValidElement(child) && child.type === MockTooltipContent);
+    const triggerChild = childArray.find((child) => isValidElement(child) && child.type === MockTooltipTrigger);
+
+    if (!isValidElement(triggerChild)) {
+      return <>{children}</>;
+    }
+
+    const triggerElement = triggerChild as ReactElement<{ children?: ReactNode }>;
+    const triggerNode = Children.only(triggerElement.props.children) as ReactElement<Record<string, any>>;
+    const elementProps = triggerNode.props as Record<string, any>;
+    const tooltipContent = isValidElement(contentChild)
+      ? (contentChild as ReactElement<{ children?: ReactNode }>).props.children
+      : null;
+
+    return (
+      <>
+        {cloneElement(triggerNode, {
+          onMouseEnter: (event: MouseEvent<HTMLElement>) => {
+            elementProps.onMouseEnter?.(event);
+            setOpen(true);
+          },
+          onMouseLeave: (event: MouseEvent<HTMLElement>) => {
+            elementProps.onMouseLeave?.(event);
+            setOpen(false);
+          },
+          onPointerEnter: (event: PointerEvent<HTMLElement>) => {
+            elementProps.onPointerEnter?.(event);
+            setOpen(true);
+          },
+          onFocus: (event: FocusEvent<HTMLElement>) => {
+            elementProps.onFocus?.(event);
+            setOpen(true);
+          },
+          onBlur: (event: FocusEvent<HTMLElement>) => {
+            elementProps.onBlur?.(event);
+            setOpen(false);
+          },
+        })}
+        {open ? <div role="tooltip">{tooltipContent}</div> : null}
+      </>
+    );
+  }
+
+  const MockTooltip = Object.assign(MockTooltipRoot, {
+    Root: MockTooltipRoot,
+    Trigger: MockTooltipTrigger,
+    Content: MockTooltipContent,
+  });
+
+  return {
+    ...actual,
+    Tooltip: MockTooltip,
+  };
+});
 
 function renderNavbar(
   theme: PublicTheme = "dark",
@@ -26,10 +96,27 @@ describe("Navbar", () => {
     expect(screen.getByRole("link", { name: "Just Do Swift homepage" })).toBeInTheDocument();
     expect(screen.getByText("Just Do Swift")).toBeInTheDocument();
     expect(screen.getByRole("searchbox", { name: "Search snippets" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Switch to light site mode" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Select language" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute("href", "/en/login");
-    expect(screen.getByRole("link", { name: "Log in" })).toHaveClass("public-nav-auth-button");
+    const themeButton = screen.getByRole("button", { name: "Switch to light site mode" });
+    const localeButton = screen.getByRole("button", { name: "Select language" });
+    const authLink = screen.getByRole("link", { name: "Log in" });
+
+    expect(themeButton).toHaveClass("public-nav-icon-button");
+    expect(localeButton).toHaveClass("public-nav-icon-button", "public-nav-locale-trigger");
+    expect(authLink).toHaveAttribute("href", "/en/login");
+    expect(authLink).toHaveClass("public-nav-icon-button", "public-nav-auth-button");
+    expect(screen.queryByText("English")).not.toBeInTheDocument();
+    expect(screen.queryByText("中文")).not.toBeInTheDocument();
+    expect(screen.queryByText("Log in")).not.toBeInTheDocument();
+
+    fireEvent.pointerEnter(themeButton);
+    fireEvent.mouseEnter(themeButton);
+    fireEvent.focus(themeButton);
+    expect(screen.getByText("Switch to light site mode")).toBeInTheDocument();
+    fireEvent.mouseLeave(themeButton);
+
+    fireEvent.click(localeButton);
+    expect(screen.getByText("English")).toBeInTheDocument();
+    expect(screen.getByText("中文")).toBeInTheDocument();
   });
 
   it("calls the parent toggle handler and reflects the provided theme", () => {
@@ -60,6 +147,7 @@ describe("Navbar", () => {
     });
 
     expect(screen.getByRole("link", { name: "Account" })).toHaveAttribute("href", "/en/account");
-    expect(screen.getByRole("link", { name: "Account" })).toHaveClass("public-nav-auth-button");
+    expect(screen.getByRole("link", { name: "Account" })).toHaveClass("public-nav-icon-button", "public-nav-auth-button");
+    expect(screen.queryByText("Account")).not.toBeInTheDocument();
   });
 });

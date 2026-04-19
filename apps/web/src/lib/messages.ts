@@ -8,6 +8,8 @@ export const messages = {
       account: "Account",
       localeSwitch: "中文",
       selectLanguage: "Select language",
+      switchToLightMode: "Switch to light site mode",
+      switchToDarkMode: "Switch to dark site mode",
     },
     footer: {
       brandCopy: "A curated collection of exceptional SwiftUI builds, deconstructed and ready for reuse.",
@@ -262,6 +264,8 @@ export const messages = {
       account: "账户",
       localeSwitch: "EN",
       selectLanguage: "选择语言",
+      switchToLightMode: "切换到浅色模式",
+      switchToDarkMode: "切换到深色模式",
     },
     footer: {
       brandCopy: "一个精选的 SwiftUI 实现库，强调质量、拆解与复用。",

@@ -5,7 +5,7 @@ import type { AdminAuthSession } from "../../lib/admin-auth";
 import { Dropdown, Tooltip } from "../../lib/heroui";
 import { getMessages } from "../../lib/messages";
 import { APP_LOCALE_OPTIONS, useAppLocale } from "../../lib/locale";
-import { getNextPublicTheme, usePublicTheme } from "../../lib/public-theme";
+import { usePublicTheme } from "../../lib/public-theme";
 import AdminSidebar from "./AdminSidebar";
 import { type AdminHeaderConfig, type AdminHeaderOutletContext } from "./useAdminHeader";
 
@@ -17,9 +17,9 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ adminAuthSession, onSignOut, onToggleTheme = () => {} }: AdminLayoutProps) {
   const theme = usePublicTheme();
-  const nextTheme = getNextPublicTheme(theme);
   const { locale, setLocale } = useAppLocale();
   const copy = getMessages(locale);
+  const themeToggleLabel = theme === "dark" ? copy.nav.switchToLightMode : copy.nav.switchToDarkMode;
   const location = useLocation();
   const [headerConfig, setHeaderConfig] = useState<AdminHeaderConfig | null>(null);
   const outletContext = useMemo<AdminHeaderOutletContext>(() => ({ setHeaderConfig }), []);
@@ -57,7 +57,7 @@ export default function AdminLayout({ adminAuthSession, onSignOut, onToggleTheme
                   <button
                     type="button"
                     className="admin-nav-action-icon type-action"
-                    aria-label={`Switch to ${nextTheme} site mode`}
+                    aria-label={themeToggleLabel}
                     aria-pressed={theme === "light"}
                     onClick={onToggleTheme}
                   >
@@ -65,26 +65,9 @@ export default function AdminLayout({ adminAuthSession, onSignOut, onToggleTheme
                   </button>
                 </Tooltip.Trigger>
                 <Tooltip.Content>
-                  {`Switch to ${nextTheme} site mode`}
+                  {themeToggleLabel}
                 </Tooltip.Content>
               </Tooltip>
-              {adminAuthSession ? (
-                <Tooltip delay={0} closeDelay={0}>
-                  <Tooltip.Trigger>
-                    <button
-                      type="button"
-                      aria-label={copy.common.logOut}
-                      className="admin-nav-action-icon type-action"
-                      onClick={onSignOut}
-                    >
-                      <LogOut className="h-5 w-5" />
-                    </button>
-                  </Tooltip.Trigger>
-                  <Tooltip.Content>
-                    {copy.common.logOut}
-                  </Tooltip.Content>
-                </Tooltip>
-              ) : null}
               <div className="admin-nav-locale-root">
                 <Dropdown>
                   <Tooltip delay={0} closeDelay={0}>
@@ -134,6 +117,23 @@ export default function AdminLayout({ adminAuthSession, onSignOut, onToggleTheme
                   {copy.common.viewFrontSite}
                 </Tooltip.Content>
               </Tooltip>
+              {adminAuthSession ? (
+                <Tooltip delay={0} closeDelay={0}>
+                  <Tooltip.Trigger>
+                    <button
+                      type="button"
+                      aria-label={copy.common.logOut}
+                      className="admin-nav-action-icon type-action"
+                      onClick={onSignOut}
+                    >
+                      <LogOut className="h-5 w-5" />
+                    </button>
+                  </Tooltip.Trigger>
+                  <Tooltip.Content>
+                    {copy.common.logOut}
+                  </Tooltip.Content>
+                </Tooltip>
+              ) : null}
             </div>
           </div>
         </div>

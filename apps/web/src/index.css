@@ -1986,8 +1986,8 @@
   }
 
   .admin-snippet-meta {
-    font-size: 0.9375rem;
-    line-height: 1.35;
+    font-size: 0.875rem;
+    line-height: 1.3;
   }
 
   .admin-nav-subrow {
@@ -2676,6 +2676,7 @@
     border: 1px solid var(--admin-border);
     border-radius: var(--radius-panel-lg);
     background-color: color-mix(in srgb, var(--admin-header-bg) 92%, var(--admin-surface) 8%);
+    color: var(--admin-foreground);
     box-shadow: 0 32px 120px rgba(0, 0, 0, 0.24);
   }
 
@@ -2711,6 +2712,12 @@
     border-color: var(--admin-border);
     background-color: var(--admin-preview-tabs-bg);
     border-radius: var(--radius-menu);
+  }
+
+  .admin-preview-toolbar-button {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.15;
   }
 
   .admin-preview-device-button {
@@ -2978,6 +2985,18 @@
     --overlay: var(--white);
     --overlay-foreground: var(--eclipse);
     --overlay-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.06), 0 -6px 12px 0 rgba(0, 0, 0, 0.03), 0 14px 28px 0 rgba(0, 0, 0, 0.08);
+    --admin-foreground: rgba(0, 0, 0, 0.88);
+    --admin-title: rgba(0, 0, 0, 0.9);
+    --admin-muted: rgba(0, 0, 0, 0.64);
+    --admin-eyebrow: rgba(0, 0, 0, 0.42);
+    --admin-border: rgba(0, 0, 0, 0.1);
+    --admin-surface: rgba(255, 255, 255, 0.82);
+    --admin-header-bg: rgba(255, 255, 255, 0.88);
+    --admin-overlay: rgba(241, 242, 244, 0.9);
+    --admin-secondary-bg: rgba(255, 255, 255, 0.78);
+    --admin-secondary-border: rgba(0, 0, 0, 0.1);
+    --admin-secondary-text: rgba(0, 0, 0, 0.86);
+    --admin-secondary-hover-bg: rgba(255, 255, 255, 1);
   }
 
   html[data-theme="dark"],
@@ -2985,6 +3004,18 @@
     --overlay: oklch(0.2103 0.0059 285.89);
     --overlay-foreground: var(--snow);
     --overlay-shadow: 0 0 1px 0 rgba(255, 255, 255, 0.3) inset;
+    --admin-foreground: rgba(255, 255, 255, 0.82);
+    --admin-title: rgba(255, 255, 255, 0.94);
+    --admin-muted: rgba(255, 255, 255, 0.62);
+    --admin-eyebrow: rgba(255, 255, 255, 0.3);
+    --admin-border: rgba(255, 255, 255, 0.1);
+    --admin-surface: rgba(255, 255, 255, 0.82);
+    --admin-header-bg: rgba(0, 0, 0, 0.84);
+    --admin-overlay: rgba(0, 0, 0, 0.88);
+    --admin-secondary-bg: rgba(255, 255, 255, 0.05);
+    --admin-secondary-border: rgba(255, 255, 255, 0.1);
+    --admin-secondary-text: rgba(255, 255, 255, 0.9);
+    --admin-secondary-hover-bg: rgba(255, 255, 255, 0.1);
   }
 
   .dropdown__popover {

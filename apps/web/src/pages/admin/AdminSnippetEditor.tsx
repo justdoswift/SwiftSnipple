@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Button, Dropdown, Input, Modal, TextArea, useOverlayState } from "../../lib/heroui";
+import { Button, Dropdown, Input, Modal, TextArea, Tooltip, useOverlayState } from "../../lib/heroui";
 import { useNavigate, useParams } from "react-router-dom";
 import EditorSection from "../../components/admin/EditorSection";
 import HighlightedCodeEditor from "../../components/admin/HighlightedCodeEditor";
@@ -11,7 +11,7 @@ import { getLocalizedSnippetFields, localizePath, useAppLocale } from "../../lib
 import { createEmptyLocalizedFields, getFormLocale, getSnippetLocale } from "../../lib/snippet-localization";
 import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, unpublishSnippet, updateSnippet } from "../../services/snippets";
 import { Snippet, SnippetFormState, SnippetPayload, SnippetStatus } from "../../types";
-import { ChevronDown, Code2, Layout, Monitor, MessageSquareQuote, Smartphone, Settings2, Trash2, X } from "lucide-react";
+import { ChevronDown, Code2, Eye, Layout, Monitor, MessageSquareQuote, Send, Smartphone, Settings2, Trash2, X } from "lucide-react";
 
 const EDITABLE_STATUS_OPTIONS: SnippetStatus[] = ["Draft", "In Review", "Scheduled"];
 type EditorTabKey = "content" | "code" | "prompt" | "meta";
@@ -270,6 +270,8 @@ export default function AdminSnippetEditor() {
   const [primaryActionState, setPrimaryActionState] = useState<PrimaryActionState>("idle");
   const hydratedSnippetRef = useRef<Snippet | null>(null);
   const formRef = useRef(form);
+  const previewIframeRef = useRef<HTMLIFrameElement | null>(null);
+  const previewScrollResetTimeoutRef = useRef<number | null>(null);
   const deleteConfirmState = useOverlayState({
     isOpen: isDeleteConfirmOpen,
     onOpenChange: setIsDeleteConfirmOpen,
@@ -351,6 +353,47 @@ export default function AdminSnippetEditor() {
     };
   }, [isPreviewOpen, isPublishConfirmOpen]);
 
+  const resetPreviewIframeScroll = useCallback(() => {
+    const iframe = previewIframeRef.current;
+    if (!iframe) {
+      return;
+    }
+
+    const syncScrollToTop = () => {
+      const iframeWindow = iframe.contentWindow;
+      const iframeDocument = iframeWindow?.document;
+      const isJsdomWindow = iframeWindow?.navigator.userAgent.includes("jsdom");
+
+      if (!isJsdomWindow) {
+        try {
+          iframeWindow?.scrollTo?.(0, 0);
+        } catch {
+          // Some embedded contexts may reject programmatic scrolling.
+        }
+      }
+
+      if (iframeDocument) {
+        if (iframeDocument.documentElement) {
+          iframeDocument.documentElement.scrollTop = 0;
+        }
+        if (iframeDocument.body) {
+          iframeDocument.body.scrollTop = 0;
+        }
+      }
+    };
+
+    syncScrollToTop();
+
+    if (previewScrollResetTimeoutRef.current !== null) {
+      window.clearTimeout(previewScrollResetTimeoutRef.current);
+    }
+
+    previewScrollResetTimeoutRef.current = window.setTimeout(() => {
+      syncScrollToTop();
+      previewScrollResetTimeoutRef.current = null;
+    }, 90);
+  }, []);
+
   const previewSnippet = useMemo(() => fromFormState(baseSnippet, form), [baseSnippet, form]);
   const editorTabs = useMemo<EditorTabOption[]>(
     () => [
@@ -366,6 +409,7 @@ export default function AdminSnippetEditor() {
   const localizedBase = useMemo(() => getLocalizedSnippetFields(baseSnippet, locale), [baseSnippet, locale]);
   const untitledSnippetLabel = copy.untitledSnippet;
   const previewPath = baseSnippet.id && localizedBase.slug ? localizePath(locale, `/snippets/${localizedBase.slug}`) : "";
+  const previewIframePath = previewPath ? `${previewPath}?preview=admin` : "";
   const hasSavedPreview = Boolean(baseSnippet.id && localizedBase.slug);
   const previewPayloadSignature = useMemo(() => JSON.stringify(toSnippetPayload(previewSnippet)), [previewSnippet]);
   const basePayloadSignature = useMemo(() => JSON.stringify(toSnippetPayload(baseSnippet)), [baseSnippet]);
@@ -406,6 +450,18 @@ export default function AdminSnippetEditor() {
           : copy.confirmPublish;
   const autosaveFeedbackLabel =
     autosaveState === "saving" ? copy.saving : autosaveState === "saved" ? copy.saved : "";
+
+  useEffect(() => {
+    if (!isPreviewOpen) {
+      if (previewScrollResetTimeoutRef.current !== null) {
+        window.clearTimeout(previewScrollResetTimeoutRef.current);
+        previewScrollResetTimeoutRef.current = null;
+      }
+      return;
+    }
+
+    resetPreviewIframeScroll();
+  }, [isPreviewOpen, previewDevice, previewIframePath, resetPreviewIframeScroll]);
 
   const updateField = <K extends keyof SnippetFormState>(field: K, value: SnippetFormState[K]) => {
     setForm((current) => {
@@ -587,25 +643,41 @@ export default function AdminSnippetEditor() {
               {autosaveFeedbackLabel}
             </span>
           ) : null}
-          <button
-            type="button"
-            aria-label={copy.preview}
-            className="admin-nav-action-button admin-auth-button type-action"
-            onClick={handlePreview}
-          >
-            {copy.preview}
-          </button>
-          <Button
-            isDisabled={isPrimaryActionDisabled}
-            className="admin-button-primary admin-button-lg shrink-0 px-3 min-[1500px]:px-3 2xl:px-4"
-            onPress={() => {
-              setError("");
-              setFeedback("");
-              setIsPublishConfirmOpen(true);
-            }}
-          >
-            {primaryActionLabel}
-          </Button>
+          <Tooltip delay={0} closeDelay={0}>
+            <Tooltip.Trigger>
+              <button
+                type="button"
+                aria-label={copy.preview}
+                className="admin-nav-action-icon type-action"
+                onClick={handlePreview}
+              >
+                <Eye className="h-5 w-5" />
+              </button>
+            </Tooltip.Trigger>
+            <Tooltip.Content>
+              {copy.preview}
+            </Tooltip.Content>
+          </Tooltip>
+          <Tooltip delay={0} closeDelay={0}>
+            <Tooltip.Trigger>
+              <button
+                type="button"
+                aria-label={primaryActionLabel}
+                className="admin-nav-action-icon type-action"
+                disabled={isPrimaryActionDisabled}
+                onClick={() => {
+                  setError("");
+                  setFeedback("");
+                  setIsPublishConfirmOpen(true);
+                }}
+              >
+                <Send className="h-5 w-5" />
+              </button>
+            </Tooltip.Trigger>
+            <Tooltip.Content>
+              {primaryActionLabel}
+            </Tooltip.Content>
+          </Tooltip>
         </>
       ),
     }),
@@ -908,15 +980,7 @@ export default function AdminSnippetEditor() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <a
-                    href={previewPath}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="admin-button-secondary flex h-10 items-center"
-                  >
-                    {common.openInTab}
-                  </a>
-                  <Button className="admin-button-primary h-10" onPress={closePreview}>
+                  <Button className="admin-button-primary admin-preview-toolbar-button h-10" onPress={closePreview}>
                     {common.done}
                   </Button>
                 </div>
@@ -932,7 +996,7 @@ export default function AdminSnippetEditor() {
                     type="button"
                     role="tab"
                     aria-selected={previewDevice === "mobile"}
-                    className={`admin-preview-device-button inline-flex h-10 items-center gap-2 px-4 transition-colors ${
+                    className={`admin-preview-toolbar-button admin-preview-device-button inline-flex h-10 items-center gap-2 px-4 transition-colors ${
                       previewDevice === "mobile" ? "admin-preview-device-button-active" : "admin-preview-device-button-inactive"
                     }`}
                     onClick={() => setPreviewDevice("mobile")}
@@ -944,7 +1008,7 @@ export default function AdminSnippetEditor() {
                     type="button"
                     role="tab"
                     aria-selected={previewDevice === "desktop"}
-                    className={`admin-preview-device-button inline-flex h-10 items-center gap-2 px-4 transition-colors ${
+                    className={`admin-preview-toolbar-button admin-preview-device-button inline-flex h-10 items-center gap-2 px-4 transition-colors ${
                       previewDevice === "desktop" ? "admin-preview-device-button-active" : "admin-preview-device-button-inactive"
                     }`}
                     onClick={() => setPreviewDevice("desktop")}
@@ -967,7 +1031,7 @@ export default function AdminSnippetEditor() {
                   className={`admin-preview-frame w-full border transition-all duration-300 ${
                     previewDevice === "desktop"
                       ? "max-w-[min(1440px,92vw)]"
-                      : "max-w-[430px]"
+                      : "max-w-[460px]"
                   }`}
                   data-preview-device={previewDevice}
                 >
@@ -985,9 +1049,11 @@ export default function AdminSnippetEditor() {
                     }`}
                   >
                     <iframe
+                      ref={previewIframeRef}
                       title="Snippet public preview"
-                      src={previewPath}
+                      src={previewIframePath}
                       className="admin-preview-iframe h-full w-full border-0"
+                      onLoad={resetPreviewIframeScroll}
                     />
                   </div>
                 </div>

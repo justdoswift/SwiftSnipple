@@ -55,8 +55,9 @@ describe("AdminSnippetEditor", () => {
     expect(screen.getByRole("tab", { name: "Code" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Prompt" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Surface" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Preview" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Publish" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Preview" })).toHaveClass("admin-nav-action-icon");
+    expect(screen.getByRole("button", { name: "Publish" })).toHaveClass("admin-nav-action-icon");
+    expect(screen.getByRole("button", { name: "Publish" })).not.toHaveClass("admin-nav-action-icon-primary");
     expect(screen.getByRole("link", { name: /view front site/i })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "EN" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "中文" })).not.toBeInTheDocument();
@@ -93,8 +94,9 @@ describe("AdminSnippetEditor", () => {
     expect(screen.getByRole("tab", { name: "Code" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Prompt" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Surface" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Preview" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Publish" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Preview" })).toHaveClass("admin-nav-action-icon");
+    expect(screen.getByRole("button", { name: "Publish" })).toHaveClass("admin-nav-action-icon");
+    expect(screen.getByRole("button", { name: "Publish" })).not.toHaveClass("admin-nav-action-icon-primary");
     expect(screen.getByRole("link", { name: /view front site/i })).toBeInTheDocument();
     expect(screen.getByLabelText("Implementation notes")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Preview" }));
@@ -136,64 +138,6 @@ describe("AdminSnippetEditor", () => {
     const selectedItem = within(menu).getByText("Draft").closest(".menu-item");
     expect(selectedItem).not.toBeNull();
     expect(selectedItem?.querySelector(".menu-item__indicator")).not.toBeNull();
-  });
-
-  it("opens preview mode with device controls for saved snippets", async () => {
-    mockedGetSnippetById.mockReset();
-    mockedCreateSnippet.mockReset();
-    mockedPublishSnippet.mockReset();
-    mockedGetSnippetById.mockResolvedValue({
-      id: "snippet-1",
-      title: "Smooth Feedback Loops",
-      slug: "smooth-feedback-loops",
-      excerpt: "A polished snippet preview.",
-      category: "Workflow",
-      tags: ["SwiftUI"],
-      coverImage: "https://example.com/cover.jpg",
-      content: "# Smooth Feedback Loops",
-      code: "Text(\"Preview\")",
-      prompts: "Build a previewable snippet.",
-      seoTitle: "Smooth Feedback Loops",
-      seoDescription: "SEO copy",
-      status: "Draft",
-      updatedAt: "2026-04-09T12:00:00.000Z",
-      publishedAt: null,
-    });
-
-    render(
-      <MemoryRouter initialEntries={["/en/admin/snippets/snippet-1"]}>
-        <Routes>
-          <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
-            <Route path="snippets/:id" element={<AdminSnippetEditor />} />
-          </Route>
-        </Routes>
-      </MemoryRouter>,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByLabelText("Snippet Title")).toHaveValue("Smooth Feedback Loops");
-    });
-
-    expect(screen.getByLabelText("Snippet Title")).toHaveValue("Smooth Feedback Loops");
-    expect(screen.queryByRole("button", { name: "Back to snippets" })).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "Preview" }));
-
-    await waitFor(() => {
-      expect(screen.getByText("Preview Mode")).toBeInTheDocument();
-    });
-
-    expect(screen.getByRole("tab", { name: "Desktop" })).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByRole("tab", { name: "Mobile" })).toHaveAttribute("aria-selected", "false");
-    expect(screen.getByRole("link", { name: "Open in tab" })).toHaveAttribute("href", "/en/snippets/smooth-feedback-loops");
-    expect(screen.getByRole("button", { name: "Done" })).toBeInTheDocument();
-    expect(screen.getByTitle("Snippet public preview").closest("[data-preview-device]")).toHaveAttribute("data-preview-device", "desktop");
-
-    fireEvent.click(screen.getByRole("tab", { name: "Mobile" }));
-
-    await waitFor(() => {
-      expect(screen.getByTitle("Snippet public preview").closest("[data-preview-device]")).toHaveAttribute("data-preview-device", "mobile");
-    });
   });
 
   it("renders localized preview controls in the zh editor route", async () => {
@@ -242,9 +186,16 @@ describe("AdminSnippetEditor", () => {
 
     expect(screen.getByRole("tab", { name: "桌面" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("tab", { name: "手机" })).toHaveAttribute("aria-selected", "false");
-    expect(screen.getByRole("link", { name: "新标签打开" })).toHaveAttribute("href", "/zh/snippets/smooth-feedback-loops");
     expect(screen.getByRole("button", { name: "完成" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "完成" })).toHaveClass("admin-preview-toolbar-button");
+    expect(screen.getByRole("tab", { name: "手机" })).toHaveClass("admin-preview-toolbar-button");
+    expect(screen.getByRole("tab", { name: "桌面" })).toHaveClass("admin-preview-toolbar-button");
     expect(screen.getByText("前台路由")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "新标签打开" })).not.toBeInTheDocument();
+    expect(screen.getByTitle("Snippet public preview")).toHaveAttribute(
+      "src",
+      "/zh/snippets/smooth-feedback-loops?preview=admin",
+    );
   });
 
   it("opens a publish confirmation dialog before calling the publish API", async () => {

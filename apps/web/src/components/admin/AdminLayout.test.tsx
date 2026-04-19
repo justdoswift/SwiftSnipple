@@ -289,8 +289,9 @@ describe("AdminLayout", () => {
     expect(screen.getByRole("tab", { name: "Code" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Prompt" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Surface" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Preview" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Publish" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Preview" })).toHaveClass("admin-nav-action-icon");
+    expect(screen.getByRole("button", { name: "Publish" })).toHaveClass("admin-nav-action-icon");
+    expect(screen.getByRole("button", { name: "Publish" })).not.toHaveClass("admin-nav-action-icon-primary");
   });
 
   it("renders admin tooltips with the shared tooltip class", async () => {

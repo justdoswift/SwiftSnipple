@@ -4,7 +4,7 @@ import { getMessages } from "../lib/messages";
 import { Dropdown, Tooltip } from "../lib/heroui";
 import type { MockAuthSession } from "../lib/mock-auth";
 import { APP_LOCALE_OPTIONS, useAppLocale } from "../lib/locale";
-import { getNextPublicTheme, type PublicTheme } from "../lib/public-theme";
+import type { PublicTheme } from "../lib/public-theme";
 
 interface NavbarProps {
   theme: PublicTheme;
@@ -15,7 +15,7 @@ interface NavbarProps {
 export default function Navbar({ theme, onToggleTheme, authSession }: NavbarProps) {
   const { locale, setLocale } = useAppLocale();
   const copy = getMessages(locale);
-  const nextTheme = getNextPublicTheme(theme);
+  const themeToggleLabel = theme === "dark" ? copy.nav.switchToLightMode : copy.nav.switchToDarkMode;
   const authLabel = authSession ? copy.nav.account : copy.nav.login;
   const authHref = authSession ? `/${locale}/account` : `/${locale}/login`;
 
@@ -60,7 +60,7 @@ export default function Navbar({ theme, onToggleTheme, authSession }: NavbarProp
               <button
                 type="button"
                 className="public-nav-icon-button"
-                aria-label={`Switch to ${nextTheme} site mode`}
+                aria-label={themeToggleLabel}
                 aria-pressed={theme === "light"}
                 onClick={onToggleTheme}
               >
@@ -68,7 +68,7 @@ export default function Navbar({ theme, onToggleTheme, authSession }: NavbarProp
               </button>
             </Tooltip.Trigger>
             <Tooltip.Content>
-              {`Switch to ${nextTheme} site mode`}
+              {themeToggleLabel}
             </Tooltip.Content>
           </Tooltip>
 

@@ -72,10 +72,10 @@ export default function AdminDashboard() {
   return (
     <div className="px-6 py-8 md:px-8 md:py-10 xl:px-10">
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard label={copy.entries} value={snippets.length} note={copy.entriesNote} />
-        <StatCard label={copy.drafts} value={draftCount} note={copy.draftsNote} />
-        <StatCard label={copy.published} value={publishedCount} note={copy.publishedNote} />
-        <StatCard label={copy.pipeline} value={reviewCount + scheduledCount} note={copy.pipelineNote} />
+        <StatCard label={copy.entries} value={snippets.length} />
+        <StatCard label={copy.drafts} value={draftCount} />
+        <StatCard label={copy.published} value={publishedCount} />
+        <StatCard label={copy.pipeline} value={reviewCount + scheduledCount} />
       </section>
 
       <AdminSnippetLibraryContent snippets={snippets} isLoading={isLoading} error={error} />

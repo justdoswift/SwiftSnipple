@@ -197,7 +197,8 @@ describe("SnippetDetail", () => {
     expect(screen.queryByRole("button", { name: "01 Implementation Notes" })).not.toBeInTheDocument();
     expect(screen.queryByText("Contents")).not.toBeInTheDocument();
 
-    triggerReadingZone(screen.getByTestId("desktop-reading-start"), true);
+    const readingStart = await screen.findByTestId("desktop-reading-start");
+    triggerReadingZone(readingStart, true);
 
     const notesButton = await screen.findByRole("button", { name: "01 Implementation Notes" });
     expect(notesButton).toHaveAttribute("aria-pressed", "true");
@@ -207,11 +208,24 @@ describe("SnippetDetail", () => {
     expect(screen.getByRole("button", { name: "Copy code block" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Copy Swift code" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Copy prompt logic" })).not.toBeInTheDocument();
+    expect(screen.getByTestId("snippet-detail-shell")).toHaveClass("pt-32", "md:pt-36", "lg:pt-40");
 
     fireEvent.mouseEnter(notesButton);
 
     expect(screen.getByText("Contents")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Almost boring state first" })).toBeInTheDocument();
+  });
+
+  it("shows the desktop rail immediately in admin preview mode", async () => {
+    renderSnippetDetail({ initialEntries: ["/snippets/smooth-feedback-loops?preview=admin"] });
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Smooth Feedback Loops" })).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole("button", { name: "01 Implementation Notes" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "02 SwiftUI Source" })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("button", { name: "03 Prompt Logic" })).toHaveAttribute("aria-pressed", "false");
   });
 
   it("switches desktop panels and syncs the hash", async () => {
@@ -272,7 +286,8 @@ describe("SnippetDetail", () => {
       expect(screen.getByRole("heading", { name: "Implementation Notes" })).toBeInTheDocument();
     });
 
-    triggerReadingZone(screen.getByTestId("desktop-reading-start"), true);
+    const readingStart = await screen.findByTestId("desktop-reading-start");
+    triggerReadingZone(readingStart, true);
     expect(screen.getByRole("button", { name: "01 Implementation Notes" })).toHaveAttribute("aria-pressed", "true");
   });
 
@@ -357,6 +372,21 @@ describe("SnippetDetail", () => {
     });
   });
 
+  it("still hides the preview rail after reaching the reading zone end", async () => {
+    renderSnippetDetail({ initialEntries: ["/snippets/smooth-feedback-loops?preview=admin"] });
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "01 Implementation Notes" })).toBeInTheDocument();
+    });
+
+    const readingEnd = await screen.findByTestId("desktop-reading-end");
+    triggerReadingZone(readingEnd, true);
+
+    await waitFor(() => {
+      expect(screen.queryByRole("button", { name: "01 Implementation Notes" })).not.toBeInTheDocument();
+    });
+  });
+
   it("keeps all sections visible on mobile", async () => {
     renderSnippetDetail({ isDesktop: false });
 
@@ -371,5 +401,41 @@ describe("SnippetDetail", () => {
     expect(screen.getByRole("button", { name: "Copy Swift code" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Copy prompt logic" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Copy code block" })).toBeInTheDocument();
+  });
+
+  it("uses the same safer top spacing while loading", () => {
+    mockedGetSnippetBySlug.mockImplementation(() => new Promise(() => undefined));
+
+    renderSnippetDetail();
+
+    expect(screen.getByTestId("snippet-detail-shell")).toHaveClass("pt-32", "md:pt-36", "lg:pt-40");
+  });
+
+  it("uses the same safer top spacing for not found states", async () => {
+    mockedGetSnippetBySlug.mockRejectedValue(new Error("Missing snippet"));
+
+    mockMatchMedia(true);
+
+    render(
+      <MemoryRouter initialEntries={["/snippets/missing-snippet"]}>
+        <Routes>
+          <Route
+            path="/snippets/:slug"
+            element={
+              <>
+                <SnippetDetail />
+                <HashProbe />
+              </>
+            }
+          />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: /snippet not found/i })).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId("snippet-detail-shell")).toHaveClass("pt-32", "md:pt-36", "lg:pt-40");
   });
 });

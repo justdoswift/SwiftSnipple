@@ -71,7 +71,7 @@ export default function SnippetDetail() {
 
     let active = true;
     setIsLoading(true);
-    getSnippetBySlug(slug)
+    Promise.resolve(getSnippetBySlug(slug))
       .then((value) => {
         if (!active) return;
         setSnippet(value);
@@ -113,6 +113,13 @@ export default function SnippetDetail() {
     () => (snippet ? getLocalizedSnippetFields(snippet, locale) : null),
     [locale, snippet],
   );
+  const isAdminPreview = useMemo(() => {
+    if (!location.search) {
+      return false;
+    }
+
+    return new URLSearchParams(location.search).get("preview") === "admin";
+  }, [location.search]);
   const hasCode = snippet?.code.trim().length ? true : false;
   const hasPrompts = localizedFields?.prompts.trim().length ? true : false;
   const notesOutline = useMemo<MarkdownOutlineItem[]>(
@@ -291,19 +298,21 @@ export default function SnippetDetail() {
   }, [activeSectionId, isDesktop]);
 
   const activeSection = sections.find((section) => section.id === activeSectionId) ?? sections[0];
-  const isDesktopRailVisible = isDesktop && hasEnteredDesktopReadingZone && !hasReachedDesktopReadingZoneEnd;
+  const isDesktopRailVisible =
+    isDesktop && (isAdminPreview || hasEnteredDesktopReadingZone) && !hasReachedDesktopReadingZoneEnd;
   const canShowContentsPanel =
     isDesktop && isDesktopRailVisible && activeSection?.id === "notes" && notesOutline.length > 0;
   const showContentsPanel = canShowContentsPanel && isNotesContentsHovered;
   const desktopContentWrapperClass = activeSection?.id === "notes" ? "mx-auto max-w-[800px]" : "mx-auto max-w-[800px]";
+  const detailShellClass = "public-page public-snippet-detail mx-auto max-w-[1400px] px-8 pt-32 md:px-12 md:pt-36 lg:px-16 lg:pt-40";
 
   if (isLoading) {
-    return <div className="public-page public-snippet-detail mx-auto max-w-[1400px] px-8 pb-20 pt-28 md:px-12 lg:px-16 lg:pt-32 public-status-copy">{copy.loadingSnippet}</div>;
+    return <div data-testid="snippet-detail-shell" className={`${detailShellClass} pb-20 public-status-copy`}>{copy.loadingSnippet}</div>;
   }
 
   if (!snippet || error) {
     return (
-      <div className="public-page public-snippet-detail mx-auto max-w-[1400px] px-8 pb-20 pt-28 text-center md:px-12 lg:px-16 lg:pt-32">
+      <div data-testid="snippet-detail-shell" className={`${detailShellClass} pb-20 text-center`}>
         <h1 className="type-section-title mb-4">{copy.snippetNotFound}</h1>
         <p className="type-body mb-6 public-status-copy">{error || copy.snippetNotFoundCopy}</p>
         <a href={`/${locale}#library-index`} className="public-inline-link">{copy.backToLibrary}</a>
@@ -312,7 +321,7 @@ export default function SnippetDetail() {
   }
 
   return (
-    <div className="public-page public-snippet-detail mx-auto max-w-[1400px] px-8 pb-24 pt-24 md:px-12 md:pt-28 lg:px-16 lg:pt-32">
+    <div data-testid="snippet-detail-shell" className={`${detailShellClass} pb-24`}>
       <header className="mb-16 md:mb-20">
         <div className="mx-auto max-w-[800px] text-center">
           <motion.div

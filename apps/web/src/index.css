@@ -844,7 +844,7 @@
   }
 
   .auth-page-backdrop {
-    background-image: url("/auth-midnight-bg.png");
+    background-image: url("/auth-midnight-bg.avif");
     background-position: center;
     background-size: cover;
     filter: saturate(0.8);

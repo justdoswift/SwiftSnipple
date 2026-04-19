@@ -58,7 +58,7 @@ vi.mock("../lib/heroui", async () => {
             setOpen(false);
           },
         })}
-        {open ? <div role="tooltip">{tooltipContent}</div> : null}
+        {open ? <div role="tooltip" className="tooltip">{tooltipContent}</div> : null}
       </>
     );
   }
@@ -148,6 +148,20 @@ describe("Navbar", () => {
     renderNavbar("light");
     expect(screen.getByTestId("public-navbar-shell").closest("nav")).toHaveAttribute("data-theme", "light");
     expect(screen.getByRole("button", { name: "Switch to dark site mode" })).toBeInTheDocument();
+  });
+
+  it("renders tooltips with the shared tooltip class in light theme", () => {
+    renderNavbar("light");
+
+    const themeButton = screen.getByRole("button", { name: "Switch to dark site mode" });
+
+    fireEvent.pointerEnter(themeButton);
+    fireEvent.mouseEnter(themeButton);
+    fireEvent.focus(themeButton);
+
+    const tooltip = screen.getByRole("tooltip");
+    expect(tooltip).toHaveClass("tooltip");
+    expect(tooltip).toHaveTextContent("Switch to dark site mode");
   });
 
   it("switches the auth action to the account page when a session exists", () => {

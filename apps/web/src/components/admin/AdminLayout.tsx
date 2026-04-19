@@ -1,21 +1,23 @@
-import { ArrowUpRight, Languages, LogOut } from "lucide-react";
+import { ArrowUpRight, Languages, LogOut, Moon, Sun } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import type { AdminAuthSession } from "../../lib/admin-auth";
 import { Dropdown, Tooltip } from "../../lib/heroui";
 import { getMessages } from "../../lib/messages";
 import { APP_LOCALE_OPTIONS, useAppLocale } from "../../lib/locale";
-import { usePublicTheme } from "../../lib/public-theme";
+import { getNextPublicTheme, usePublicTheme } from "../../lib/public-theme";
 import AdminSidebar from "./AdminSidebar";
 import { type AdminHeaderConfig, type AdminHeaderOutletContext } from "./useAdminHeader";
 
 interface AdminLayoutProps {
   adminAuthSession: AdminAuthSession | null;
   onSignOut: () => void;
+  onToggleTheme?: () => void;
 }
 
-export default function AdminLayout({ adminAuthSession, onSignOut }: AdminLayoutProps) {
+export default function AdminLayout({ adminAuthSession, onSignOut, onToggleTheme = () => {} }: AdminLayoutProps) {
   const theme = usePublicTheme();
+  const nextTheme = getNextPublicTheme(theme);
   const { locale, setLocale } = useAppLocale();
   const copy = getMessages(locale);
   const location = useLocation();
@@ -50,6 +52,22 @@ export default function AdminLayout({ adminAuthSession, onSignOut }: AdminLayout
 
             <div className="admin-nav-actions flex items-center justify-end gap-2 md:gap-3">
               {activeHeader.end}
+              <Tooltip delay={0} closeDelay={0}>
+                <Tooltip.Trigger>
+                  <button
+                    type="button"
+                    className="admin-nav-action-icon type-action"
+                    aria-label={`Switch to ${nextTheme} site mode`}
+                    aria-pressed={theme === "light"}
+                    onClick={onToggleTheme}
+                  >
+                    {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                  </button>
+                </Tooltip.Trigger>
+                <Tooltip.Content>
+                  {`Switch to ${nextTheme} site mode`}
+                </Tooltip.Content>
+              </Tooltip>
               {adminAuthSession ? (
                 <Tooltip delay={0} closeDelay={0}>
                   <Tooltip.Trigger>

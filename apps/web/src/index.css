@@ -1985,6 +1985,11 @@
     @apply flex min-w-0 items-center gap-3;
   }
 
+  .admin-snippet-meta {
+    font-size: 0.9375rem;
+    line-height: 1.35;
+  }
+
   .admin-nav-subrow {
     border-color: var(--admin-border);
   }
@@ -2985,6 +2990,11 @@
   .dropdown__popover {
     border: 1px solid var(--border);
     background-color: var(--overlay);
+    color: var(--overlay-foreground);
+    box-shadow: var(--overlay-shadow);
+  }
+
+  .tooltip {
     color: var(--overlay-foreground);
     box-shadow: var(--overlay-shadow);
   }

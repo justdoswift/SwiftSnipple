@@ -198,7 +198,7 @@ export default function AdminSnippetLibraryContent({
                       </div>
                       <div className="flex flex-col justify-between gap-5 xl:items-end">
                         <StatusBadge status={snippet.status} />
-                        <div className="admin-copy-muted space-y-2 type-body-sm xl:text-right">
+                        <div className="admin-copy-muted admin-snippet-meta space-y-2 xl:text-right">
                           <p>{copy.updated} {formatDate(snippet.updatedAt)}</p>
                           <p>{snippet.status === "Published" ? `${copy.live} ${formatDate(snippet.publishedAt)}` : fields.slug}</p>
                         </div>

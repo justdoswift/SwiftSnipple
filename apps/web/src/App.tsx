@@ -290,7 +290,11 @@ export default function App() {
               path="admin"
               element={
                 <AdminAuthGate authSession={adminAuthSession}>
-                  <AdminLayout adminAuthSession={adminAuthSession} onSignOut={handleAdminSignOut} />
+                  <AdminLayout
+                    adminAuthSession={adminAuthSession}
+                    onSignOut={handleAdminSignOut}
+                    onToggleTheme={toggleTheme}
+                  />
                 </AdminAuthGate>
               }
             >

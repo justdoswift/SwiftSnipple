@@ -9,6 +9,7 @@ import { getSnippets } from "../../services/snippets";
 import { Snippet } from "../../types";
 import AdminLayout from "./AdminLayout";
 import type { AdminAuthSession } from "../../lib/admin-auth";
+import { PublicThemeContext } from "../../lib/public-theme";
 
 vi.mock("../../lib/heroui", async () => {
   const actual = await vi.importActual<typeof import("../../lib/heroui")>("../../lib/heroui");
@@ -62,7 +63,7 @@ vi.mock("../../lib/heroui", async () => {
             setOpen(false);
           },
         })}
-        {open ? <div role="tooltip">{tooltipContent}</div> : null}
+        {open ? <div role="tooltip" className="tooltip">{tooltipContent}</div> : null}
       </>
     );
   }
@@ -118,17 +119,22 @@ const adminAuthSession: AdminAuthSession = {
   createdAt: "2026-04-18T00:00:00.000Z",
 };
 
-function renderAdminRoute(initialEntry: string) {
+function renderAdminRoute(initialEntry: string, onToggleTheme = vi.fn(), theme: "dark" | "light" = "dark") {
   return render(
-    <MemoryRouter initialEntries={[initialEntry]}>
-      <Routes>
-        <Route path="/en/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
-          <Route index element={<AdminDashboard />} />
-          <Route path="snippets" element={<AdminSnippets />} />
-          <Route path="snippets/new" element={<AdminSnippetEditor />} />
-        </Route>
-      </Routes>
-    </MemoryRouter>,
+    <PublicThemeContext.Provider value={theme}>
+      <MemoryRouter initialEntries={[initialEntry]}>
+        <Routes>
+          <Route
+            path="/en/admin"
+            element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} onToggleTheme={onToggleTheme} />}
+          >
+            <Route index element={<AdminDashboard />} />
+            <Route path="snippets" element={<AdminSnippets />} />
+            <Route path="snippets/new" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>
+    </PublicThemeContext.Provider>,
   );
 }
 
@@ -153,12 +159,14 @@ describe("AdminLayout", () => {
     expect(screen.getByRole("link", { name: "Just Do Swift admin" })).toBeInTheDocument();
     expect(header).not.toBeNull();
     const newLink = within(header!).getByRole("link", { name: "New" });
+    const themeButton = within(header!).getByRole("button", { name: "Switch to light site mode" });
     const logOutButton = within(header!).getByRole("button", { name: "Log out" });
     const localeButton = within(header!).getByRole("button", { name: "Select language" });
     const frontSiteLink = within(header!).getByRole("link", { name: /View Front Site/i });
 
     expect(newLink).toHaveAttribute("href", "/en/admin/snippets/new");
     expect(newLink).toHaveClass("admin-nav-action-icon");
+    expect(themeButton).toHaveClass("admin-nav-action-icon");
     expect(logOutButton).toHaveClass("admin-nav-action-icon");
     expect(localeButton).toHaveClass("admin-nav-action-icon");
     expect(frontSiteLink).toHaveClass("admin-nav-action-icon");
@@ -188,6 +196,12 @@ describe("AdminLayout", () => {
     expect(localeMenu.closest(".dropdown__popover")).not.toBeNull();
     expect(screen.getByText("English").closest(".menu-item")).not.toBeNull();
     expect(screen.getByText("中文").closest(".menu-item")).not.toBeNull();
+
+    fireEvent.pointerEnter(themeButton);
+    fireEvent.mouseEnter(themeButton);
+    fireEvent.focus(themeButton);
+    expect(await screen.findByText("Switch to light site mode")).toBeInTheDocument();
+    fireEvent.mouseLeave(themeButton);
 
     fireEvent.pointerEnter(frontSiteLink);
     fireEvent.mouseEnter(frontSiteLink);
@@ -228,6 +242,7 @@ describe("AdminLayout", () => {
     expect(header).not.toBeNull();
     expect(within(header!).getByRole("link", { name: "New" })).toHaveAttribute("href", "/en/admin/snippets/new");
     expect(within(header!).getByRole("link", { name: "New" })).toHaveClass("admin-nav-action-icon");
+    expect(within(header!).getByRole("button", { name: "Switch to light site mode" })).toHaveClass("admin-nav-action-icon");
     expect(within(header!).getByRole("button", { name: "Log out" })).toHaveClass("admin-nav-action-icon");
     expect(within(header!).getByRole("button", { name: "Select language" })).toHaveClass("admin-nav-action-icon");
     expect(within(header!).getByRole("link", { name: /View Front Site/i })).toHaveClass("admin-nav-action-icon");
@@ -255,6 +270,7 @@ describe("AdminLayout", () => {
 
     expect(header).not.toBeNull();
     expect(within(header!).getByRole("link", { name: "Just Do Swift admin" })).toBeInTheDocument();
+    expect(within(header!).getByRole("button", { name: "Switch to light site mode" })).toHaveClass("admin-nav-action-icon");
     expect(within(header!).getByRole("button", { name: "Log out" })).toHaveClass("admin-nav-action-icon");
     expect(within(header!).getByRole("button", { name: "Select language" })).toHaveClass("admin-nav-action-icon");
     expect(within(header!).getByRole("link", { name: /View Front Site/i })).toHaveClass("admin-nav-action-icon");
@@ -275,5 +291,46 @@ describe("AdminLayout", () => {
     expect(screen.getByRole("tab", { name: "Surface" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Preview" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Publish" })).toBeInTheDocument();
+  });
+
+  it("renders admin tooltips with the shared tooltip class", async () => {
+    renderAdminRoute("/en/admin");
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Search title or slug")).toBeInTheDocument();
+    });
+
+    const header = screen.getByTestId("admin-navbar-shell").closest("header");
+    expect(header).not.toBeNull();
+
+    const logOutButton = within(header!).getByRole("button", { name: "Log out" });
+
+    fireEvent.pointerEnter(logOutButton);
+    fireEvent.mouseEnter(logOutButton);
+    fireEvent.focus(logOutButton);
+
+    const tooltip = await screen.findByRole("tooltip");
+    expect(tooltip).toHaveClass("tooltip");
+    expect(tooltip).toHaveTextContent("Log out");
+  });
+
+  it("calls the parent theme toggle handler and reflects the provided light theme", async () => {
+    const onToggleTheme = vi.fn();
+    renderAdminRoute("/en/admin", onToggleTheme, "light");
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Search title or slug")).toBeInTheDocument();
+    });
+
+    const themeRoot = screen.getByTestId("admin-theme-root");
+    const themeButton = within(screen.getByTestId("admin-navbar-shell").closest("header")!).getByRole("button", {
+      name: "Switch to dark site mode",
+    });
+
+    expect(themeRoot).toHaveAttribute("data-theme", "light");
+
+    fireEvent.click(themeButton);
+
+    expect(onToggleTheme).toHaveBeenCalledTimes(1);
   });
 });

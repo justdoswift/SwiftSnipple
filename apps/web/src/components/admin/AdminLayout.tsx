@@ -1,10 +1,10 @@
-import { ArrowUpRight, ChevronDown } from "lucide-react";
+import { ArrowUpRight, Languages, LogOut } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import type { AdminAuthSession } from "../../lib/admin-auth";
 import { Dropdown } from "../../lib/heroui";
 import { getMessages } from "../../lib/messages";
-import { APP_LOCALE_OPTIONS, getLocaleOption, useAppLocale } from "../../lib/locale";
+import { APP_LOCALE_OPTIONS, useAppLocale } from "../../lib/locale";
 import { usePublicTheme } from "../../lib/public-theme";
 import AdminSidebar from "./AdminSidebar";
 import { type AdminHeaderConfig, type AdminHeaderOutletContext } from "./useAdminHeader";
@@ -18,7 +18,6 @@ export default function AdminLayout({ adminAuthSession, onSignOut }: AdminLayout
   const theme = usePublicTheme();
   const { locale, setLocale } = useAppLocale();
   const copy = getMessages(locale);
-  const currentLocaleLabel = getLocaleOption(locale).nativeLabel;
   const location = useLocation();
   const [headerConfig, setHeaderConfig] = useState<AdminHeaderConfig | null>(null);
   const outletContext = useMemo<AdminHeaderOutletContext>(() => ({ setHeaderConfig }), []);
@@ -54,20 +53,23 @@ export default function AdminLayout({ adminAuthSession, onSignOut }: AdminLayout
               {adminAuthSession ? (
                 <button
                   type="button"
-                  className="admin-nav-action-button admin-auth-button type-action"
+                  aria-label={copy.common.logOut}
+                  title={copy.common.logOut}
+                  className="admin-nav-action-icon type-action"
                   onClick={onSignOut}
                 >
-                  {copy.common.logOut}
+                  <LogOut className="h-4 w-4" />
                 </button>
               ) : null}
               <div className="admin-nav-locale-root">
                 <Dropdown>
                   <Dropdown.Trigger
                     aria-label={copy.nav.selectLanguage}
-                    className="admin-nav-locale-trigger type-action"
+                    className="admin-nav-action-icon admin-nav-locale-trigger type-action"
                   >
-                    <span className="admin-nav-locale-value">{currentLocaleLabel}</span>
-                    <ChevronDown className="admin-nav-locale-indicator" />
+                    <span className="flex items-center justify-center" aria-hidden="true" title={copy.nav.selectLanguage}>
+                      <Languages className="h-4 w-4" />
+                    </span>
                   </Dropdown.Trigger>
                   <Dropdown.Popover>
                     <Dropdown.Menu
@@ -90,6 +92,7 @@ export default function AdminLayout({ adminAuthSession, onSignOut }: AdminLayout
               <Link
                 to={`/${locale}`}
                 aria-label={copy.common.viewFrontSite}
+                title={copy.common.viewFrontSite}
                 className="admin-nav-action-icon"
               >
                 <ArrowUpRight className="h-4 w-4" />

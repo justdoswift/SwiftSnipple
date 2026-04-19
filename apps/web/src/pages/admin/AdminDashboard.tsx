@@ -1,4 +1,6 @@
+import { Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import AdminSnippetLibraryContent from "../../components/admin/AdminSnippetLibraryContent";
 import StatCard from "../../components/admin/StatCard";
 import { useAdminHeader } from "../../components/admin/useAdminHeader";
@@ -16,12 +18,14 @@ export default function AdminDashboard() {
   const headerConfig = useMemo(
     () => ({
       end: (
-        <a
-          href={`/${locale}/admin/snippets/new`}
-          className="admin-nav-action-button admin-create-button type-action inline-flex shrink-0 items-center"
+        <Link
+          to={`/${locale}/admin/snippets/new`}
+          aria-label={copy.newSnippet}
+          title={copy.newSnippet}
+          className="admin-nav-action-icon type-action"
         >
-          {copy.newSnippet}
-        </a>
+          <Plus className="h-4 w-4" />
+        </Link>
       ),
     }),
     [copy.newSnippet, locale],

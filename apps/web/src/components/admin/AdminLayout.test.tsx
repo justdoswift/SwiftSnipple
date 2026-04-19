@@ -80,10 +80,18 @@ describe("AdminLayout", () => {
     expect(screen.getByRole("link", { name: "Just Do Swift admin" })).toBeInTheDocument();
     expect(header).not.toBeNull();
     expect(within(header!).getByRole("link", { name: "New" })).toHaveAttribute("href", "/en/admin/snippets/new");
-    expect(within(header!).getByRole("link", { name: "New" })).toHaveClass("admin-create-button");
-    expect(within(header!).getByRole("button", { name: "Log out" })).toHaveClass("admin-auth-button");
-    expect(within(header!).getByRole("button", { name: "Select language" })).toBeInTheDocument();
-    expect(within(header!).getByRole("link", { name: /View Front Site/i })).toBeInTheDocument();
+    expect(within(header!).getByRole("link", { name: "New" })).toHaveClass("admin-nav-action-icon");
+    expect(within(header!).getByRole("link", { name: "New" })).toHaveAttribute("title", "New");
+    expect(within(header!).getByRole("button", { name: "Log out" })).toHaveClass("admin-nav-action-icon");
+    expect(within(header!).getByRole("button", { name: "Log out" })).toHaveAttribute("title", "Log out");
+    expect(within(header!).getByRole("button", { name: "Select language" })).toHaveClass("admin-nav-action-icon");
+    expect(within(header!).getByTitle("Select language")).toBeInTheDocument();
+    expect(within(header!).getByRole("link", { name: /View Front Site/i })).toHaveClass("admin-nav-action-icon");
+    expect(within(header!).getByRole("link", { name: /View Front Site/i })).toHaveAttribute("title", "View Front Site");
+    expect(within(header!).queryByText("New")).not.toBeInTheDocument();
+    expect(within(header!).queryByText("Log out")).not.toBeInTheDocument();
+    expect(within(header!).queryByText("English")).not.toBeInTheDocument();
+    expect(within(header!).queryByText("中文")).not.toBeInTheDocument();
     expect(screen.queryByRole("navigation", { name: "Admin sections" })).not.toBeInTheDocument();
     expect(screen.queryByText("Ship SwiftUI snippets with the same care you use to build them.")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Search title or slug")).toBeInTheDocument();
@@ -110,9 +118,14 @@ describe("AdminLayout", () => {
 
     expect(header).not.toBeNull();
     expect(within(header!).getByRole("link", { name: "New" })).toHaveAttribute("href", "/en/admin/snippets/new");
-    expect(within(header!).getByRole("link", { name: "New" })).toHaveClass("admin-create-button");
-    expect(within(header!).getByRole("button", { name: "Log out" })).toHaveClass("admin-auth-button");
-    expect(within(header!).getByRole("link", { name: /View Front Site/i })).toBeInTheDocument();
+    expect(within(header!).getByRole("link", { name: "New" })).toHaveClass("admin-nav-action-icon");
+    expect(within(header!).getByRole("button", { name: "Log out" })).toHaveClass("admin-nav-action-icon");
+    expect(within(header!).getByRole("button", { name: "Select language" })).toHaveClass("admin-nav-action-icon");
+    expect(within(header!).getByRole("link", { name: /View Front Site/i })).toHaveClass("admin-nav-action-icon");
+    expect(within(header!).queryByText("New")).not.toBeInTheDocument();
+    expect(within(header!).queryByText("Log out")).not.toBeInTheDocument();
+    expect(within(header!).queryByText("English")).not.toBeInTheDocument();
+    expect(within(header!).queryByText("中文")).not.toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Admin sections" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /overview/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /snippets/i })).toBeInTheDocument();
@@ -133,7 +146,12 @@ describe("AdminLayout", () => {
 
     expect(header).not.toBeNull();
     expect(within(header!).getByRole("link", { name: "Just Do Swift admin" })).toBeInTheDocument();
-    expect(within(header!).getByRole("button", { name: "Log out" })).toHaveClass("admin-auth-button");
+    expect(within(header!).getByRole("button", { name: "Log out" })).toHaveClass("admin-nav-action-icon");
+    expect(within(header!).getByRole("button", { name: "Select language" })).toHaveClass("admin-nav-action-icon");
+    expect(within(header!).getByRole("link", { name: /View Front Site/i })).toHaveClass("admin-nav-action-icon");
+    expect(within(header!).queryByText("Log out")).not.toBeInTheDocument();
+    expect(within(header!).queryByText("English")).not.toBeInTheDocument();
+    expect(within(header!).queryByText("中文")).not.toBeInTheDocument();
     expect(screen.queryByRole("navigation", { name: "Admin sections" })).not.toBeInTheDocument();
     expect(screen.getByTestId("admin-content-shell")).toHaveClass("md:px-24");
     expect(screen.getByTestId("admin-content-shell")).toHaveClass("xl:px-28");
@@ -148,6 +166,5 @@ describe("AdminLayout", () => {
     expect(screen.getByRole("tab", { name: "Surface" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Preview" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Publish" })).toBeInTheDocument();
-    expect(within(header!).getByRole("link", { name: /View Front Site/i })).toBeInTheDocument();
   });
 });

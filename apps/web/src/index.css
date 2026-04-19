@@ -2290,33 +2290,20 @@
   .admin-nav-action-icon {
     @apply w-11 rounded-full;
     border-radius: var(--radius-pill);
+    text-decoration: none;
   }
 
   .admin-nav-locale-root {
     @apply block shrink-0 self-center;
-    min-width: 5rem;
   }
 
   .admin-nav-locale-trigger {
-    @apply inline-flex h-10 w-full items-center justify-center gap-1 rounded-[12px] border border-transparent bg-transparent px-2.5 py-0 text-center shadow-none outline-none transition-colors duration-200 md:px-3;
-    border-radius: var(--radius-control);
-    color: var(--admin-header-action-text);
+    @apply inline-flex items-center justify-center p-0 text-center shadow-none outline-none;
     appearance: none;
     -webkit-appearance: none;
     display: flex !important;
-    flex-direction: row !important;
     align-items: center !important;
     justify-content: center !important;
-    row-gap: 0 !important;
-  }
-
-  .admin-nav-locale-value {
-    @apply min-w-0 flex-1 truncate text-center;
-    line-height: 1;
-  }
-
-  .admin-nav-locale-indicator {
-    @apply flex h-3.5 w-3.5 shrink-0 items-center justify-center;
   }
 
   .admin-nav-select-popover {

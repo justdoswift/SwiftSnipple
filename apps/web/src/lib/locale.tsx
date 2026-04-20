@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 import type { AppLocale, Snippet, SnippetLocalizedFields } from "../types";
-import { coerceLocalizedSnippetFields } from "./snippet-localization";
+import { coerceLocalizedSnippetFields, getSnippetRouteSlug } from "./snippet-localization";
 
 export const LOCALE_STORAGE_KEY = "just-do-swift-locale";
 export const DEFAULT_LOCALE: AppLocale = "en";
@@ -120,16 +120,19 @@ export function switchLocalePath(pathname: string, locale: AppLocale) {
 }
 
 export function getLocalizedSnippetFields(snippet: Snippet, locale: AppLocale): SnippetLocalizedFields {
+  if (snippet.locales) {
+    return coerceLocalizedSnippetFields(snippet.locales[locale]);
+  }
+
   const localizedFields = snippet.locales?.[locale];
   if (localizedFields) {
     return coerceLocalizedSnippetFields(localizedFields);
   }
-
   return coerceLocalizedSnippetFields(snippet as unknown as Partial<SnippetLocalizedFields>);
 }
 
 export function getLocalizedSnippetPath(locale: AppLocale, snippet: Snippet) {
-  return localizePublicPath(`/snippets/${getLocalizedSnippetFields(snippet, locale).slug}`);
+  return localizePublicPath(`/snippets/${getSnippetRouteSlug(snippet, locale)}`);
 }
 
 export function useAppLocale() {

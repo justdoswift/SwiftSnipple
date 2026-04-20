@@ -8,6 +8,7 @@ import { resolveAssetUrl } from "../lib/asset-url";
 import { getMessages } from "../lib/messages";
 import { extractMarkdownOutline, type MarkdownOutlineItem } from "../lib/markdown-outline";
 import { getLocalizedSnippetFields, getLocalizedSnippetPath, localizePublicPath, useAppLocale } from "../lib/locale";
+import { isSnippetLocaleAvailable } from "../lib/snippet-localization";
 import { getMemberSession } from "../services/member-auth";
 import { getSnippetBySlug } from "../services/snippets";
 import { MemberSession, Snippet } from "../types";
@@ -52,6 +53,7 @@ function normalizeSectionHash(hash: string): SnippetSectionId | null {
 export default function SnippetDetail() {
   const { locale } = useAppLocale();
   const copy = getMessages(locale).snippetDetail;
+  const common = getMessages(locale).common;
   const { slug } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -135,6 +137,10 @@ export default function SnippetDetail() {
     () => (snippet ? getLocalizedSnippetFields(snippet, locale) : null),
     [locale, snippet],
   );
+  const isLocaleAvailable = useMemo(
+    () => (snippet ? isSnippetLocaleAvailable(snippet, locale) : false),
+    [locale, snippet],
+  );
   const isAdminPreview = useMemo(() => {
     if (!location.search) {
       return false;
@@ -143,17 +149,38 @@ export default function SnippetDetail() {
     return new URLSearchParams(location.search).get("preview") === "admin";
   }, [location.search]);
   const hasCode = snippet?.code.trim().length ? true : false;
-  const hasPrompts = localizedFields?.prompts.trim().length ? true : false;
+  const hasPrompts = isLocaleAvailable && localizedFields?.prompts.trim().length ? true : false;
   const isLocked = Boolean(snippet?.locked);
   const notesOutline = useMemo<MarkdownOutlineItem[]>(
-    () => (localizedFields && !isLocked ? extractMarkdownOutline(localizedFields.content) : []),
-    [isLocked, localizedFields],
+    () => (localizedFields && !isLocked && isLocaleAvailable ? extractMarkdownOutline(localizedFields.content) : []),
+    [isLocaleAvailable, isLocked, localizedFields],
   );
   const paywallCTAPath = memberSession ? localizePublicPath("/account") : localizePublicPath("/login");
   const paywallCTALabel = memberSession ? copy.unlockNow : copy.loginToUnlock;
   const sections = useMemo<SnippetSection[]>(() => {
     if (!snippet) {
       return [];
+    }
+
+    if (!isLocaleAvailable) {
+      return [
+        {
+          id: "notes",
+          number: "01",
+          label: copy.implementationNotes,
+          content: (
+            <div className="public-content-panel mx-auto max-w-[800px] px-6 py-6 md:px-8 md:py-8">
+              <div className="rounded-[32px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-6 py-8 text-center md:px-10 md:py-10">
+                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.08)] px-3 py-1 text-[var(--public-micro)]">
+                  <span className="type-mono-micro">{common.languageUnavailable}</span>
+                </div>
+                <h3 className="type-section-title mb-3">{common.languageUnavailable}</h3>
+                <p className="type-body mx-auto max-w-[56ch]">{common.languageUnavailableLong}</p>
+              </div>
+            </div>
+          ),
+        },
+      ];
     }
 
     if (snippet.locked) {
@@ -248,14 +275,14 @@ export default function SnippetDetail() {
     }
 
     return availableSections;
-  }, [copy.copyPromptLogic, copy.copySwiftCode, copy.implementationNotes, copy.loginToUnlock, copy.manageSubscription, copy.membersOnly, copy.paywallCopy, copy.paywallTitle, copy.promptLogic, copy.swiftuiSource, hasCode, hasPrompts, localizedFields?.content, localizedFields?.prompts, memberSession, paywallCTALabel, paywallCTAPath, snippet]);
+  }, [copy.copyPromptLogic, copy.copySwiftCode, copy.implementationNotes, copy.loginToUnlock, copy.manageSubscription, copy.membersOnly, copy.paywallCopy, copy.paywallTitle, copy.promptLogic, copy.swiftuiSource, hasCode, hasPrompts, isLocaleAvailable, locale, localizedFields?.content, localizedFields?.prompts, memberSession, paywallCTALabel, paywallCTAPath, snippet]);
 
   useEffect(() => {
     if (!snippet || !localizedFields || !slug) return;
-    if (localizedFields.slug !== slug) {
+    if (isLocaleAvailable && localizedFields.slug !== slug) {
       navigate(getLocalizedSnippetPath(locale, snippet), { replace: true });
     }
-  }, [localizedFields, locale, navigate, slug, snippet]);
+  }, [isLocaleAvailable, localizedFields, locale, navigate, slug, snippet]);
 
   useEffect(() => {
     if (!sections.length) return;
@@ -400,7 +427,7 @@ export default function SnippetDetail() {
           >
             <div className="flex flex-wrap items-center justify-center gap-2">
               <span className="public-pill type-mono-label px-3 py-1">
-                {localizedFields?.category} / {formatDate(snippet.publishedAt)}
+                {(isLocaleAvailable ? localizedFields?.category : common.languageUnavailable)} / {formatDate(snippet.publishedAt)}
               </span>
               {snippet.requiresSubscription ? (
                 <span className="public-pill type-mono-label inline-flex items-center gap-2 px-3 py-1">
@@ -410,10 +437,10 @@ export default function SnippetDetail() {
               ) : null}
             </div>
             <h1 className="type-display">
-              {localizedFields?.title}
+              {isLocaleAvailable ? localizedFields?.title : common.languageUnavailable}
             </h1>
             <p className="type-body-lg mx-auto max-w-[620px]">
-              {localizedFields?.excerpt}
+              {isLocaleAvailable ? localizedFields?.excerpt : common.languageUnavailableLong}
             </p>
           </motion.div>
         </div>

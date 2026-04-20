@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getMemberSession } from "../services/member-auth";
 import { getSnippetBySlug } from "../services/snippets";
 import type { MemberSession, Snippet } from "../types";
+import { LocaleContext } from "../lib/locale";
 import { createMemberSession, createSnippet } from "../test/factories";
 import SnippetDetail from "./SnippetDetail";
 
@@ -131,12 +132,14 @@ function renderSnippetDetail(options?: {
   snippet?: Snippet;
   isDesktop?: boolean;
   memberSession?: MemberSession | null;
+  locale?: "en" | "zh";
 }) {
   const {
     initialEntries = ["/snippets/smooth-feedback-loops"],
     snippet = detailedSnippet,
     isDesktop = true,
     memberSession = null,
+    locale = "en",
   } = options ?? {};
 
   mockMatchMedia(isDesktop);
@@ -144,19 +147,21 @@ function renderSnippetDetail(options?: {
   mockedGetMemberSession.mockResolvedValue(memberSession);
 
   return render(
-    <MemoryRouter initialEntries={initialEntries}>
-      <Routes>
-        <Route
-          path="/snippets/:slug"
-          element={
-            <>
-              <SnippetDetail />
-              <HashProbe />
-            </>
-          }
-        />
-      </Routes>
-    </MemoryRouter>,
+    <LocaleContext.Provider value={{ locale }}>
+      <MemoryRouter initialEntries={initialEntries}>
+        <Routes>
+          <Route
+            path="/snippets/:slug"
+            element={
+              <>
+                <SnippetDetail />
+                <HashProbe />
+              </>
+            }
+          />
+        </Routes>
+      </MemoryRouter>
+    </LocaleContext.Provider>,
   );
 }
 
@@ -427,6 +432,46 @@ describe("SnippetDetail", () => {
     renderSnippetDetail();
 
     expect(screen.getByTestId("snippet-detail-shell")).toHaveClass("pt-32", "md:pt-36", "lg:pt-40");
+  });
+
+  it("shows a missing-language state instead of falling back to another locale", async () => {
+    renderSnippetDetail({
+      locale: "zh",
+      snippet: createSnippet({
+        slug: "smooth-feedback-loops",
+        locales: {
+          en: {
+            title: "Smooth Feedback Loops",
+            slug: "smooth-feedback-loops",
+            excerpt: "English excerpt",
+            category: "Workflow",
+            tags: ["SwiftUI"],
+            content: "English content",
+            prompts: "English prompts",
+            seoTitle: "English SEO",
+            seoDescription: "English description",
+          },
+          zh: {
+            title: "",
+            slug: "",
+            excerpt: "",
+            category: "Workflow",
+            tags: [],
+            content: "",
+            prompts: "",
+            seoTitle: "",
+            seoDescription: "",
+          },
+        },
+        availableLocales: { en: true, zh: false },
+      }),
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByRole("heading", { name: "当前语言暂未提供" }).length).toBeGreaterThan(0);
+    });
+
+    expect(screen.queryByText("English excerpt")).not.toBeInTheDocument();
   });
 
   it("renders paywall sections for locked snippets", async () => {

@@ -6,6 +6,7 @@ import type { Snippet, SnippetStatus } from "../../types";
 import { resolveAssetUrl } from "../../lib/asset-url";
 import { getMessages } from "../../lib/messages";
 import { getLocalizedSnippetFields, localizeAdminPath, useAppLocale } from "../../lib/locale";
+import { getAvailableSnippetLocales } from "../../lib/snippet-localization";
 import StatusBadge from "./StatusBadge";
 
 const STATUS_OPTIONS: Array<SnippetStatus | "All"> = ["All", "Draft", "Published"];
@@ -165,6 +166,7 @@ export default function AdminSnippetLibraryContent({
         {!isLoading && !error
           ? filteredSnippets.map((snippet) => {
               const fields = getLocalizedSnippetFields(snippet, locale);
+              const availableLocales = getAvailableSnippetLocales(snippet);
 
               return <Link
                 key={snippet.id}
@@ -186,6 +188,11 @@ export default function AdminSnippetLibraryContent({
                         <p className="admin-copy-faint type-mono-micro">{fields.category}</p>
                         <h2 className="type-card-title mt-3">{fields.title}</h2>
                         <p className="type-body-sm mt-3 max-w-3xl">{fields.excerpt}</p>
+                        <div className="mt-4 flex flex-wrap items-center gap-2">
+                          <span className="type-mono-micro">{copy.languageAvailability}</span>
+                          <span className="type-mono-micro">{common.english} {availableLocales.en ? copy.currentLanguageReady : copy.currentLanguageMissing}</span>
+                          <span className="type-mono-micro">{common.chinese} {availableLocales.zh ? copy.currentLanguageReady : copy.currentLanguageMissing}</span>
+                        </div>
                       </div>
                       <div className="flex flex-col justify-between gap-5 xl:items-end">
                         <StatusBadge status={snippet.status} />

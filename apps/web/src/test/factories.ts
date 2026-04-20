@@ -55,6 +55,10 @@ export function createSnippet(overrides?: Partial<Snippet>): Snippet {
     viewerCanAccess: true,
     locked: false,
     accessLevel: "full",
+    availableLocales: {
+      en: Boolean(locales.en.title || locales.en.slug || locales.en.excerpt || locales.en.content || locales.en.prompts),
+      zh: Boolean(locales.zh.title || locales.zh.slug || locales.zh.excerpt || locales.zh.content || locales.zh.prompts),
+    },
     locales,
     title: fallbackFields.title,
     slug: fallbackFields.slug,

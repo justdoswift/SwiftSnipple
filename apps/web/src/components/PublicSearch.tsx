@@ -5,6 +5,7 @@ import { resolveAssetUrl } from "../lib/asset-url";
 import { SearchField, Modal, Spinner } from "../lib/heroui";
 import { getMessages } from "../lib/messages";
 import { getLocalizedSnippetFields, getLocalizedSnippetPath, useAppLocale } from "../lib/locale";
+import { isSnippetLocaleAvailable } from "../lib/snippet-localization";
 import { searchPublicSnippets } from "../lib/public-search";
 import { getSnippets } from "../services/snippets";
 import type { Snippet } from "../types";
@@ -26,6 +27,7 @@ function formatUpdatedDate(value: string, locale: "en" | "zh") {
 export default function PublicSearch({ isOpen, onOpenChange, loadSnippets = getSnippets }: PublicSearchProps) {
   const { locale } = useAppLocale();
   const copy = getMessages(locale).search;
+  const common = getMessages(locale).common;
   const location = useLocation();
   const [query, setQuery] = useState("");
   const [snippets, setSnippets] = useState<Snippet[] | null>(null);
@@ -155,6 +157,7 @@ export default function PublicSearch({ isOpen, onOpenChange, loadSnippets = getS
                 <div className="public-search-results" role="list" aria-label={copy.resultsLabel}>
                   {results.map(({ snippet, preview }) => {
                     const fields = getLocalizedSnippetFields(snippet, locale);
+                    const isLocaleAvailable = isSnippetLocaleAvailable(snippet, locale);
                     return (
                       <Link
                         key={snippet.id}
@@ -181,8 +184,12 @@ export default function PublicSearch({ isOpen, onOpenChange, loadSnippets = getS
                             ) : null}
                             <span className="type-mono-micro">{formatUpdatedDate(snippet.updatedAt, locale)}</span>
                           </div>
-                          <h3 className="public-search-result-title">{fields.title}</h3>
-                          <p className="public-search-result-preview type-body-sm">{preview}</p>
+                          <h3 className="public-search-result-title">
+                            {isLocaleAvailable ? fields.title : common.languageUnavailable}
+                          </h3>
+                          <p className="public-search-result-preview type-body-sm">
+                            {isLocaleAvailable ? preview : common.languageUnavailableLong}
+                          </p>
                         </div>
                       </Link>
                     );

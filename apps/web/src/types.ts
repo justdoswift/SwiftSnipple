@@ -33,6 +33,11 @@ export interface SnippetLocales<T> {
   zh: T;
 }
 
+export interface SnippetAvailableLocales {
+  en: boolean;
+  zh: boolean;
+}
+
 export interface Snippet {
   id: string;
   coverImage: string;
@@ -44,6 +49,7 @@ export interface Snippet {
   viewerCanAccess: boolean;
   locked: boolean;
   accessLevel: SnippetAccessLevel;
+  availableLocales?: SnippetAvailableLocales;
   locales?: SnippetLocales<SnippetLocalizedFields>;
   title?: string;
   slug?: string;

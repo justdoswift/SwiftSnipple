@@ -9,10 +9,10 @@ import { useAdminHeader } from "../../components/admin/useAdminHeader";
 import { resolveAssetUrl } from "../../lib/asset-url";
 import { getMessages } from "../../lib/messages";
 import { getLocalizedSnippetFields, localizeAdminPath, localizePublicPath, useAppLocale } from "../../lib/locale";
-import { createEmptyLocalizedFields, getFormLocale, getSnippetLocale } from "../../lib/snippet-localization";
+import { createEmptyLocalizedFields, getAvailableSnippetLocales, getFormLocale, getSnippetLocale } from "../../lib/snippet-localization";
 import { isUnauthorizedError } from "../../services/api";
 import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, unpublishSnippet, updateSnippet, uploadCoverImage } from "../../services/snippets";
-import { Snippet, SnippetFormState, SnippetPayload, SnippetStatus } from "../../types";
+import { AppLocale, Snippet, SnippetFormState, SnippetPayload, SnippetStatus } from "../../types";
 import { ChevronDown, ChevronLeft, Code2, Eye, ImageUp, Layout, Monitor, MessageSquareQuote, Send, Smartphone, Settings2, Trash2, X } from "lucide-react";
 
 const EDITABLE_STATUS_OPTIONS: SnippetStatus[] = ["Draft"];
@@ -26,6 +26,10 @@ type EditorStatusOption = {
 };
 type EditorVisibilityOption = {
   id: "free" | "subscribers";
+  label: string;
+};
+type EditorContentLocaleOption = {
+  id: AppLocale;
   label: string;
 };
 type EditorTabOption = {
@@ -112,41 +116,11 @@ function createEmptySnippet(): Snippet {
         ...createEmptyLocalizedFields(),
         title: "",
         slug: "",
-        content: `# New Snippet
-
-Show the implementation here.
-
-## Key points
-
-- add your first point
-- add supporting evidence
-- explain what makes it useful`,
-        prompts: `Build a polished SwiftUI snippet with:
-- clear visual hierarchy
-- native-feeling motion
-- reusable layout structure
-
-Explain the tradeoffs briefly after the code.`,
       },
       zh: {
         ...createEmptyLocalizedFields(),
         title: "",
         slug: "",
-        content: `# 新 Snippet
-
-在这里记录实现说明。
-
-## 关键点
-
-- 先写出第一条重点
-- 补充支持证据
-- 解释它为什么值得复用`,
-        prompts: `构建一个高完成度的 SwiftUI snippet：
-- 有清晰的信息层级
-- 有原生感的动效
-- 具备可复用的布局结构
-
-在代码后简要说明关键取舍。`,
       },
     },
     code: `import SwiftUI
@@ -216,8 +190,8 @@ function fromFormState(baseSnippet: Snippet, form: SnippetFormState): Snippet {
     ...baseSnippet,
     locales: {
       en: {
-        title: form.locales.en.title.trim() || "Untitled Snippet",
-        slug: form.locales.en.slug.trim() || slugify(form.locales.en.title || "untitled-snippet"),
+        title: form.locales.en.title.trim(),
+        slug: form.locales.en.slug.trim(),
         excerpt: form.locales.en.excerpt.trim(),
         category: form.locales.en.category.trim() || "Workflow",
         tags: form.locales.en.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
@@ -227,8 +201,8 @@ function fromFormState(baseSnippet: Snippet, form: SnippetFormState): Snippet {
         seoDescription: form.locales.en.seoDescription.trim(),
       },
       zh: {
-        title: form.locales.zh.title.trim() || "未命名 Snippet",
-        slug: form.locales.zh.slug.trim() || slugify(form.locales.zh.title || "untitled-snippet"),
+        title: form.locales.zh.title.trim(),
+        slug: form.locales.zh.slug.trim(),
         excerpt: form.locales.zh.excerpt.trim(),
         category: form.locales.zh.category.trim() || "Workflow",
         tags: form.locales.zh.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
@@ -281,6 +255,7 @@ export default function AdminSnippetEditor() {
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
   const [activeTab, setActiveTab] = useState<EditorTabKey>("content");
+  const [editorLocale, setEditorLocale] = useState<AppLocale>(locale);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -432,9 +407,20 @@ export default function AdminSnippetEditor() {
     ],
     [copy.code, copy.narrative, copy.prompt, copy.surface],
   );
-  const localizedForm = useMemo(() => getFormLocale(form, locale), [form, locale]);
+  const localizedForm = useMemo(() => getFormLocale(form, editorLocale), [editorLocale, form]);
   const localizedPreview = useMemo(() => getLocalizedSnippetFields(previewSnippet, locale), [locale, previewSnippet]);
   const localizedBase = useMemo(() => getLocalizedSnippetFields(baseSnippet, locale), [baseSnippet, locale]);
+  const localeAvailability = useMemo(() => getAvailableSnippetLocales(previewSnippet), [previewSnippet]);
+  const editorLocaleOptions = useMemo<EditorContentLocaleOption[]>(
+    () => [
+      { id: "en", label: copy.localeEditorEnglish },
+      { id: "zh", label: copy.localeEditorChinese },
+    ],
+    [copy.localeEditorChinese, copy.localeEditorEnglish],
+  );
+  const otherEditorLocale: AppLocale = editorLocale === "en" ? "zh" : "en";
+  const otherEditorLocaleLabel =
+    editorLocaleOptions.find((option) => option.id === otherEditorLocale)?.label ?? otherEditorLocale.toUpperCase();
   const untitledSnippetLabel = copy.untitledSnippet;
   const previewPath = baseSnippet.id && localizedBase.slug ? localizePublicPath(`/snippets/${localizedBase.slug}`) : "";
   const previewIframePath = previewPath ? `${previewPath}?preview=admin` : "";
@@ -510,7 +496,7 @@ export default function AdminSnippetEditor() {
 
   const updateLocalizedField = (field: keyof SnippetFormState["locales"]["en"], value: string) => {
     setForm((current) => {
-      const currentLocaleForm = current.locales[locale];
+      const currentLocaleForm = current.locales[editorLocale];
       const nextLocaleForm = {
         ...currentLocaleForm,
         [field]: value,
@@ -524,7 +510,7 @@ export default function AdminSnippetEditor() {
         ...current,
         locales: {
           ...current.locales,
-          [locale]: nextLocaleForm,
+          [editorLocale]: nextLocaleForm,
         },
       };
     });
@@ -858,6 +844,48 @@ export default function AdminSnippetEditor() {
           <EditorSectionRail activeTab={activeTab} onSelect={setActiveTab} tabs={editorTabs} />
 
           <div className="space-y-12">
+            <div className="admin-section-card">
+              <div className="flex flex-col gap-5 p-5 md:flex-row md:items-center md:justify-between md:p-6">
+                <div className="space-y-2">
+                  <p className="admin-eyebrow type-mono-micro">{copy.contentLanguage}</p>
+                  <p className="admin-copy-muted">{copy.contentLanguageCopy}</p>
+                </div>
+                <div className="flex flex-col items-start gap-3 md:items-end">
+                  <div className="inline-flex rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] p-1">
+                    {editorLocaleOptions.map((option) => {
+                      const isActive = option.id === editorLocale;
+                      const isAvailable = localeAvailability[option.id];
+
+                      return (
+                        <button
+                          key={option.id}
+                          type="button"
+                          className={`min-w-[72px] rounded-full px-4 py-2 text-sm transition-colors ${
+                            isActive
+                              ? "bg-white text-black"
+                              : "text-[rgba(255,255,255,0.7)] hover:text-white"
+                          }`}
+                          aria-pressed={isActive}
+                          onClick={() => setEditorLocale(option.id)}
+                        >
+                          <span className="inline-flex items-center gap-2">
+                            <span>{option.label}</span>
+                            <span className="type-mono-micro opacity-70">
+                              {isAvailable ? copy.currentLanguageReady : copy.currentLanguageMissing}
+                            </span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="admin-copy-muted type-mono-micro">
+                    {copy.otherLanguageStatus}: {otherEditorLocaleLabel} ·{" "}
+                    {localeAvailability[otherEditorLocale] ? copy.currentLanguageReady : copy.currentLanguageMissing}
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div className="relative flex flex-col gap-2">
               <textarea
                 aria-label={copy.snippetTitle}

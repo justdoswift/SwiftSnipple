@@ -554,11 +554,18 @@ func decodeSnippetPayload(w http.ResponseWriter, r *http.Request) (domain.Snippe
 	}
 
 	payload = payload.Normalize()
-	if strings.TrimSpace(payload.Locales.EN.Title) == "" ||
-		strings.TrimSpace(payload.Locales.EN.Slug) == "" ||
-		strings.TrimSpace(payload.Locales.ZH.Title) == "" ||
-		strings.TrimSpace(payload.Locales.ZH.Slug) == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "localized title and slug are required"})
+	enHasTitle := strings.TrimSpace(payload.Locales.EN.Title) != ""
+	enHasSlug := strings.TrimSpace(payload.Locales.EN.Slug) != ""
+	zhHasTitle := strings.TrimSpace(payload.Locales.ZH.Title) != ""
+	zhHasSlug := strings.TrimSpace(payload.Locales.ZH.Slug) != ""
+
+	if enHasTitle != enHasSlug || zhHasTitle != zhHasSlug {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "localized title and slug must be paired"})
+		return domain.SnippetPayload{}, false
+	}
+
+	if !enHasTitle && !zhHasTitle {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "at least one localized title and slug are required"})
 		return domain.SnippetPayload{}, false
 	}
 	if !domain.IsValidStatus(payload.Status) {
@@ -665,6 +672,7 @@ func (h *Handler) isAdminPreview(r *http.Request) bool {
 
 func publicSnippetResponse(snippet domain.Snippet, canAccess bool, includeProtectedContent bool) domain.Snippet {
 	response := snippet
+	response.AvailableLocales = domain.AvailableLocalesFor(response.Locales)
 	response.ViewerCanAccess = canAccess
 	response.Locked = response.RequiresSubscription && !canAccess
 	if response.Locked {

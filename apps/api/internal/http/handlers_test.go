@@ -63,13 +63,21 @@ func newFakeSnippetStore(items ...domain.Snippet) *fakeSnippetStore {
 
 func (f *fakeSnippetStore) storeSnippet(snippet domain.Snippet) {
 	f.snippets[snippet.ID] = snippet
-	f.snippetsBySlug[snippet.Locales.EN.Slug] = snippet.ID
-	f.snippetsBySlug[snippet.Locales.ZH.Slug] = snippet.ID
+	if slug := strings.TrimSpace(snippet.Locales.EN.Slug); slug != "" {
+		f.snippetsBySlug[slug] = snippet.ID
+	}
+	if slug := strings.TrimSpace(snippet.Locales.ZH.Slug); slug != "" {
+		f.snippetsBySlug[slug] = snippet.ID
+	}
 }
 
 func (f *fakeSnippetStore) removeSnippet(snippet domain.Snippet) {
-	delete(f.snippetsBySlug, snippet.Locales.EN.Slug)
-	delete(f.snippetsBySlug, snippet.Locales.ZH.Slug)
+	if slug := strings.TrimSpace(snippet.Locales.EN.Slug); slug != "" {
+		delete(f.snippetsBySlug, slug)
+	}
+	if slug := strings.TrimSpace(snippet.Locales.ZH.Slug); slug != "" {
+		delete(f.snippetsBySlug, slug)
+	}
 	delete(f.snippets, snippet.ID)
 }
 
@@ -99,7 +107,8 @@ func (f *fakeSnippetStore) GetBySlug(_ context.Context, slug string) (domain.Sni
 
 func (f *fakeSnippetStore) Create(_ context.Context, payload domain.SnippetPayload) (domain.Snippet, error) {
 	normalized := payload.Normalize()
-	if normalized.Locales.EN.Slug == f.duplicateSlug || normalized.Locales.ZH.Slug == f.duplicateSlug {
+	if (strings.TrimSpace(normalized.Locales.EN.Slug) != "" && normalized.Locales.EN.Slug == f.duplicateSlug) ||
+		(strings.TrimSpace(normalized.Locales.ZH.Slug) != "" && normalized.Locales.ZH.Slug == f.duplicateSlug) {
 		return domain.Snippet{}, errors.New("duplicate key value violates unique constraint")
 	}
 
@@ -112,6 +121,7 @@ func (f *fakeSnippetStore) Create(_ context.Context, payload domain.SnippetPaylo
 		PublishedAt:          normalized.PublishedAt,
 		RequiresSubscription: normalized.RequiresSubscription,
 		Locales:              normalized.Locales,
+		AvailableLocales:     domain.AvailableLocalesFor(normalized.Locales),
 	}
 
 	f.storeSnippet(snippet)
@@ -125,8 +135,8 @@ func (f *fakeSnippetStore) Update(_ context.Context, id string, payload domain.S
 	}
 
 	normalized := payload.Normalize()
-	if (normalized.Locales.EN.Slug == f.duplicateSlug && normalized.Locales.EN.Slug != snippet.Locales.EN.Slug) ||
-		(normalized.Locales.ZH.Slug == f.duplicateSlug && normalized.Locales.ZH.Slug != snippet.Locales.ZH.Slug) {
+	if (strings.TrimSpace(normalized.Locales.EN.Slug) != "" && normalized.Locales.EN.Slug == f.duplicateSlug && normalized.Locales.EN.Slug != snippet.Locales.EN.Slug) ||
+		(strings.TrimSpace(normalized.Locales.ZH.Slug) != "" && normalized.Locales.ZH.Slug == f.duplicateSlug && normalized.Locales.ZH.Slug != snippet.Locales.ZH.Slug) {
 		return domain.Snippet{}, errors.New("duplicate key value violates unique constraint")
 	}
 
@@ -139,6 +149,7 @@ func (f *fakeSnippetStore) Update(_ context.Context, id string, payload domain.S
 	snippet.RequiresSubscription = normalized.RequiresSubscription
 	snippet.UpdatedAt = time.Now().UTC()
 	snippet.Locales = normalized.Locales
+	snippet.AvailableLocales = domain.AvailableLocalesFor(normalized.Locales)
 
 	f.storeSnippet(snippet)
 	return snippet, nil
@@ -510,16 +521,28 @@ func TestCreateValidationAndDuplicateErrors(t *testing.T) {
 		errorText  string
 	}{
 		{
-			name: "empty localized title",
+			name: "missing all localized titles",
 			payload: domain.SnippetPayload{
 				Status: domain.StatusDraft,
 				Locales: domain.SnippetLocales{
-					EN: localizedFields("", "valid-slug", "Workflow"),
-					ZH: localizedFields("标题", "valid-zh-slug", "Workflow"),
+					EN: localizedFields("", "", "Workflow"),
+					ZH: localizedFields("", "", "Workflow"),
 				},
 			},
 			statusCode: http.StatusBadRequest,
-			errorText:  "localized title and slug are required",
+			errorText:  "at least one localized title and slug are required",
+		},
+		{
+			name: "localized title and slug must be paired",
+			payload: domain.SnippetPayload{
+				Status: domain.StatusDraft,
+				Locales: domain.SnippetLocales{
+					EN: localizedFields("A", "", "Workflow"),
+					ZH: localizedFields("", "", "Workflow"),
+				},
+			},
+			statusCode: http.StatusBadRequest,
+			errorText:  "localized title and slug must be paired",
 		},
 		{
 			name: "invalid status",
@@ -838,6 +861,9 @@ func TestPublicPaidSnippetTeaserAndEntitledDetail(t *testing.T) {
 	if !listBody[0].Locked || listBody[0].AccessLevel != domain.AccessLevelTeaser {
 		t.Fatalf("expected teaser response for paid snippet, got locked=%v access=%q", listBody[0].Locked, listBody[0].AccessLevel)
 	}
+	if !listBody[0].AvailableLocales.EN || !listBody[0].AvailableLocales.ZH {
+		t.Fatalf("expected available locales on list response, got %#v", listBody[0].AvailableLocales)
+	}
 	if listBody[0].Code != "" || listBody[0].Locales.EN.Content != "" || listBody[0].Locales.EN.Prompts != "" {
 		t.Fatalf("expected public list teaser to omit protected content, got %#v", listBody[0])
 	}
@@ -874,6 +900,38 @@ func TestPublicPaidSnippetTeaserAndEntitledDetail(t *testing.T) {
 	entitledBody := decodeResponse[domain.Snippet](t, entitledRec.Body)
 	if entitledBody.Locked || entitledBody.AccessLevel != domain.AccessLevelFull || entitledBody.Code == "" || entitledBody.Locales.EN.Content == "" {
 		t.Fatalf("expected entitled member to receive full snippet, got %#v", entitledBody)
+	}
+}
+
+func TestCreateAllowsSingleLocaleWithoutCopyingOtherLocale(t *testing.T) {
+	store := newFakeSnippetStore()
+	router := newTestRouter(t, store, nil, nil)
+	adminCookie := loginCookie(t, router)
+
+	payload := domain.SnippetPayload{
+		Status: domain.StatusDraft,
+		Locales: domain.SnippetLocales{
+			EN: localizedFields("English Only", "english-only", "Workflow"),
+			ZH: domain.SnippetLocalizedFields{},
+		},
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/api/admin/snippets", strings.NewReader(snippetPayloadJSON(t, payload)))
+	req.Header.Set("Content-Type", "application/json")
+	req.AddCookie(adminCookie)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("expected create status 201, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	body := decodeResponse[domain.Snippet](t, rec.Body)
+	if !body.AvailableLocales.EN || body.AvailableLocales.ZH {
+		t.Fatalf("expected only EN locale available, got %#v", body.AvailableLocales)
+	}
+	if body.Locales.ZH.Title != "" || body.Locales.ZH.Slug != "" {
+		t.Fatalf("expected zh locale to remain empty, got %#v", body.Locales.ZH)
 	}
 }
 

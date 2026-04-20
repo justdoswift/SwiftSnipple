@@ -410,6 +410,7 @@ func scanSnippet(row interface {
 	}
 	snippet.Locales.EN.Tags = sanitizeTags(snippet.Locales.EN.Tags)
 	snippet.Locales.ZH.Tags = sanitizeTags(snippet.Locales.ZH.Tags)
+	snippet.AvailableLocales = domain.AvailableLocalesFor(snippet.Locales)
 	return snippet, nil
 }
 

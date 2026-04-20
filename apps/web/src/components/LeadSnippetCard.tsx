@@ -5,6 +5,7 @@ import { Card } from "../lib/heroui";
 import { resolveAssetUrl } from "../lib/asset-url";
 import { getMessages } from "../lib/messages";
 import { getLocalizedSnippetFields, localizePublicPath, useAppLocale } from "../lib/locale";
+import { isSnippetLocaleAvailable } from "../lib/snippet-localization";
 import type { Snippet } from "../types";
 
 interface LeadSnippetCardProps {
@@ -24,7 +25,9 @@ function formatPublishedDate(value: string | null, locale: "en" | "zh") {
 export default function LeadSnippetCard({ snippet }: LeadSnippetCardProps) {
   const { locale } = useAppLocale();
   const copy = getMessages(locale).home;
+  const common = getMessages(locale).common;
   const fields = getLocalizedSnippetFields(snippet, locale);
+  const isLocaleAvailable = isSnippetLocaleAvailable(snippet, locale);
   const publishedDate = formatPublishedDate(snippet.publishedAt, locale);
 
   return (
@@ -41,7 +44,7 @@ export default function LeadSnippetCard({ snippet }: LeadSnippetCardProps) {
           <div className="public-home-lead-card-grid grid min-h-[420px] gap-0 lg:grid-cols-[minmax(0,1fr)_minmax(340px,42%)]">
             <Card.Content className="public-home-lead-card-copy relative flex flex-col justify-end gap-7 px-7 py-8 md:px-10 md:py-10 lg:px-12 lg:py-12">
               <div className="flex flex-wrap items-center gap-3">
-                <span className="type-mono-micro">{fields.category}</span>
+                <span className="type-mono-micro">{isLocaleAvailable ? fields.category : common.languageUnavailable}</span>
                 {publishedDate ? <span className="type-mono-micro">{publishedDate}</span> : null}
                 {snippet.requiresSubscription ? (
                   <span className="type-mono-micro inline-flex items-center gap-1.5">
@@ -53,13 +56,13 @@ export default function LeadSnippetCard({ snippet }: LeadSnippetCardProps) {
 
               <div className="space-y-4">
                 <h2 className="public-home-lead-card-title max-w-[12ch] text-[2rem] font-semibold leading-[1.04] tracking-[-0.04em] md:text-[2.75rem] lg:text-[3.2rem]">
-                  {fields.title}
+                  {isLocaleAvailable ? fields.title : common.languageUnavailable}
                 </h2>
                 <p
                   className="public-home-lead-card-excerpt type-body max-w-[58ch] text-[1rem] leading-[1.65] md:text-[1.125rem]"
-                  aria-hidden={!fields.excerpt}
+                  aria-hidden={!isLocaleAvailable && !fields.excerpt}
                 >
-                  {fields.excerpt || "\u00A0"}
+                  {isLocaleAvailable ? fields.excerpt || "\u00A0" : common.languageUnavailableLong}
                 </p>
               </div>
 

@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 import { Card } from "../lib/heroui";
 import { resolveAssetUrl } from "../lib/asset-url";
 import { getLocalizedSnippetFields, localizePublicPath, useAppLocale } from "../lib/locale";
+import { isSnippetLocaleAvailable } from "../lib/snippet-localization";
+import { getMessages } from "../lib/messages";
 import type { Snippet } from "../types";
 
 interface SnippetGridCardProps {
@@ -22,7 +24,9 @@ function formatPublishedDate(value: string | null, locale: "en" | "zh") {
 
 export default function SnippetGridCard({ snippet }: SnippetGridCardProps) {
   const { locale } = useAppLocale();
+  const common = getMessages(locale).common;
   const fields = getLocalizedSnippetFields(snippet, locale);
+  const isLocaleAvailable = isSnippetLocaleAvailable(snippet, locale);
   const publishedDate = formatPublishedDate(snippet.publishedAt, locale);
 
   return (
@@ -45,17 +49,17 @@ export default function SnippetGridCard({ snippet }: SnippetGridCardProps) {
           </div>
           <Card.Content className="space-y-4 px-1 py-5 md:py-6">
             <div className="space-y-3">
-              <span className="type-mono-micro">{fields.category}</span>
+              <span className="type-mono-micro">{isLocaleAvailable ? fields.category : common.languageUnavailable}</span>
 
               <h3 className="public-home-grid-card-title text-[1.35rem] font-semibold leading-[1.16] tracking-[-0.025em]">
-                {fields.title}
+                {isLocaleAvailable ? fields.title : common.languageUnavailable}
               </h3>
 
               <p
                 className="public-home-grid-card-copy public-home-grid-card-copy-slot type-body line-clamp-2"
-                aria-hidden={!fields.excerpt}
+                aria-hidden={!isLocaleAvailable && !fields.excerpt}
               >
-                {fields.excerpt || "\u00A0"}
+                {isLocaleAvailable ? fields.excerpt || "\u00A0" : common.languageUnavailableLong}
               </p>
             </div>
 

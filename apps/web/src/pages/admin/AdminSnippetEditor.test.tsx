@@ -64,8 +64,8 @@ describe("AdminSnippetEditor", () => {
     expect(screen.getByRole("button", { name: "Publish" })).toHaveClass("admin-nav-action-icon");
     expect(screen.getByRole("button", { name: "Publish" })).not.toHaveClass("admin-nav-action-icon-primary");
     expect(screen.getByRole("link", { name: /view front site/i })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "EN" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "中文" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /EN/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /中文/i })).toBeInTheDocument();
     expect(screen.getByLabelText("Implementation notes")).toHaveClass("admin-editor-scrollbar");
     fireEvent.click(screen.getByRole("tab", { name: "Code" }));
     expect(screen.getByLabelText("SwiftUI code")).toHaveClass("admin-editor-scrollbar");
@@ -218,6 +218,60 @@ describe("AdminSnippetEditor", () => {
     const visibilityMenu = await screen.findByRole("menu");
     expect(within(visibilityMenu).getByText("Free")).toBeInTheDocument();
     expect(within(visibilityMenu).getByText("Subscribers only")).toBeInTheDocument();
+  });
+
+  it("switches the content editor language independently of the admin chrome locale", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedGetSnippetById.mockResolvedValue(createSnippetFixture({
+      title: "English Title",
+      slug: "english-title",
+      locales: {
+        en: {
+          title: "English Title",
+          slug: "english-title",
+          excerpt: "English excerpt",
+          category: "Workflow",
+          tags: ["SwiftUI"],
+          content: "English content",
+          prompts: "English prompts",
+          seoTitle: "English SEO",
+          seoDescription: "English description",
+        },
+        zh: {
+          title: "中文标题",
+          slug: "zhong-wen-biao-ti",
+          excerpt: "中文摘要",
+          category: "工作流",
+          tags: ["SwiftUI"],
+          content: "中文内容",
+          prompts: "中文提示词",
+          seoTitle: "中文 SEO",
+          seoDescription: "中文描述",
+        },
+      },
+    }));
+
+    render(
+      <LocaleContext.Provider value={{ locale: "zh" }}>
+        <MemoryRouter initialEntries={["/admin/snippets/snippet-1"]}>
+          <Routes>
+            <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+              <Route path="snippets/:id" element={<AdminSnippetEditor />} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </LocaleContext.Provider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Snippet 标题")).toHaveValue("中文标题");
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /EN/i }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Snippet 标题")).toHaveValue("English Title");
+    });
   });
 
   it("maps visibility dropdown choices to requiresSubscription during autosave", async () => {

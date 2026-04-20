@@ -37,6 +37,11 @@ type SnippetLocales struct {
 	ZH SnippetLocalizedFields `json:"zh"`
 }
 
+type SnippetAvailableLocales struct {
+	EN bool `json:"en"`
+	ZH bool `json:"zh"`
+}
+
 type Snippet struct {
 	ID                   string             `json:"id"`
 	CoverImage           string             `json:"coverImage"`
@@ -49,6 +54,7 @@ type Snippet struct {
 	Locked               bool               `json:"locked"`
 	AccessLevel          SnippetAccessLevel `json:"accessLevel"`
 	Locales              SnippetLocales     `json:"locales"`
+	AvailableLocales     SnippetAvailableLocales `json:"availableLocales"`
 }
 
 type SnippetPayload struct {
@@ -63,16 +69,6 @@ type SnippetPayload struct {
 func (p SnippetPayload) Normalize() SnippetPayload {
 	if p.Status == "" {
 		p.Status = StatusDraft
-	}
-
-	p.Locales.EN = normalizeLocalizedFields(p.Locales.EN)
-	p.Locales.ZH = normalizeLocalizedFields(p.Locales.ZH)
-
-	if !hasLocalizedValue(p.Locales.EN) && hasLocalizedValue(p.Locales.ZH) {
-		p.Locales.EN = p.Locales.ZH
-	}
-	if !hasLocalizedValue(p.Locales.ZH) && hasLocalizedValue(p.Locales.EN) {
-		p.Locales.ZH = p.Locales.EN
 	}
 
 	p.Locales.EN = normalizeLocalizedFields(p.Locales.EN)
@@ -96,6 +92,17 @@ func hasLocalizedValue(fields SnippetLocalizedFields) bool {
 		strings.TrimSpace(fields.Content) != "" ||
 		strings.TrimSpace(fields.Prompts) != "" ||
 		len(fields.Tags) > 0
+}
+
+func HasRenderableLocalizedValue(fields SnippetLocalizedFields) bool {
+	return hasLocalizedValue(fields)
+}
+
+func AvailableLocalesFor(locales SnippetLocales) SnippetAvailableLocales {
+	return SnippetAvailableLocales{
+		EN: HasRenderableLocalizedValue(locales.EN),
+		ZH: HasRenderableLocalizedValue(locales.ZH),
+	}
 }
 
 func (l SnippetLocales) ForLocale(locale AppLocale) SnippetLocalizedFields {

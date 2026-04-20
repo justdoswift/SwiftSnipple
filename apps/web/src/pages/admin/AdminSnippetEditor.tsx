@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Button, Description, Dropdown, Input, Label, Modal, Switch, TextArea, Tooltip, useOverlayState } from "../../lib/heroui";
+import { Button, Dropdown, Input, Modal, TextArea, Tooltip, useOverlayState } from "../../lib/heroui";
 import { useNavigate, useParams } from "react-router-dom";
 import EditorSection from "../../components/admin/EditorSection";
 import HighlightedCodeEditor from "../../components/admin/HighlightedCodeEditor";
@@ -22,6 +22,10 @@ type AutosaveState = "idle" | "saving" | "saved";
 type PrimaryActionState = "idle" | "publishing" | "updating";
 type EditorStatusOption = {
   id: SnippetStatus;
+  label: string;
+};
+type EditorVisibilityOption = {
+  id: "free" | "subscribers";
   label: string;
 };
 type EditorTabOption = {
@@ -444,7 +448,17 @@ export default function AdminSnippetEditor() {
     () => statusOptions.map((status) => ({ id: status, label: common.statuses[status] })),
     [common.statuses, statusOptions],
   );
+  const visibilitySelectOptions = useMemo<EditorVisibilityOption[]>(
+    () => [
+      { id: "free", label: copy.visibilityFree },
+      { id: "subscribers", label: copy.visibilitySubscribersOnly },
+    ],
+    [copy.visibilityFree, copy.visibilitySubscribersOnly],
+  );
   const selectedStatusLabel = statusSelectOptions.find((option) => option.id === form.status)?.label ?? form.status;
+  const selectedVisibilityKey = form.requiresSubscription ? "subscribers" : "free";
+  const selectedVisibilityLabel =
+    visibilitySelectOptions.find((option) => option.id === selectedVisibilityKey)?.label ?? copy.visibilityFree;
   const primaryActionLabel =
     primaryActionState === "publishing"
       ? copy.publishing
@@ -932,7 +946,7 @@ export default function AdminSnippetEditor() {
                 >
                   <EditorSection
                   >
-                    <div className="grid gap-6 md:grid-cols-2">
+                    <div className="grid gap-6">
                       <label className="grid gap-2">
                         <span className="admin-eyebrow type-mono-micro">{copy.category}</span>
                         <Input
@@ -1001,69 +1015,70 @@ export default function AdminSnippetEditor() {
                     description={copy.releaseControlsCopy}
                   >
                     <div className="grid gap-6">
-                       <label className="grid gap-2">
-                         <span className="admin-eyebrow type-mono-micro">{copy.status}</span>
-                         <Dropdown>
-                           <Dropdown.Trigger
-                             aria-label={copy.status}
-                             className="admin-form-select-trigger"
-                             isDisabled={isPublishedEntry}
-                           >
-                             <span className="admin-form-select-value">{selectedStatusLabel}</span>
-                             <ChevronDown className="admin-form-select-indicator" />
-                           </Dropdown.Trigger>
-                           <Dropdown.Popover>
-                             <Dropdown.Menu
-                               items={statusSelectOptions}
-                               selectionMode="single"
-                               disallowEmptySelection
-                               selectedKeys={[form.status]}
-                               onAction={(key) => updateField("status", String(key) as SnippetStatus)}
-                             >
-                               {(option: EditorStatusOption) => (
-                                 <Dropdown.Item
-                                   id={option.id}
-                                   textValue={option.label}
-                                 >
-                                   {option.label}
-                                   <Dropdown.ItemIndicator />
-                                 </Dropdown.Item>
-                               )}
-                             </Dropdown.Menu>
-                           </Dropdown.Popover>
-                           </Dropdown>
-                         </label>
-                      <Switch
-                        isSelected={form.requiresSubscription}
-                        onChange={(isSelected: boolean) => updateField("requiresSubscription", isSelected)}
-                        className="gap-4 rounded-[28px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] px-4 py-4"
-                      >
-                        {({ isSelected }: { isSelected: boolean }) => (
-                          <>
-                            <Switch.Control
-                              className={`mt-0.5 h-[30px] w-[52px] shrink-0 rounded-full border transition-colors ${
-                                isSelected
-                                  ? "border-white bg-white"
-                                  : "border-[rgba(255,255,255,0.14)] bg-[rgba(255,255,255,0.06)]"
-                              }`}
+                      <label className="grid gap-2">
+                        <span className="admin-eyebrow type-mono-micro">{copy.status}</span>
+                        <Dropdown>
+                          <Dropdown.Trigger
+                            aria-label={copy.status}
+                            className="admin-form-select-trigger"
+                            isDisabled={isPublishedEntry}
+                          >
+                            <span className="admin-form-select-value">{selectedStatusLabel}</span>
+                            <ChevronDown className="admin-form-select-indicator" />
+                          </Dropdown.Trigger>
+                          <Dropdown.Popover>
+                            <Dropdown.Menu
+                              items={statusSelectOptions}
+                              selectionMode="single"
+                              disallowEmptySelection
+                              selectedKeys={[form.status]}
+                              onAction={(key) => updateField("status", String(key) as SnippetStatus)}
                             >
-                              <Switch.Thumb
-                                className={`mt-[1px] size-[26px] rounded-full shadow-[0_10px_24px_rgba(0,0,0,0.28)] transition-[margin,background-color] duration-200 ${
-                                  isSelected
-                                    ? "ms-[24px] bg-[#0b0b0d]"
-                                    : "ms-[2px] bg-white"
-                                }`}
-                              />
-                            </Switch.Control>
-                            <Switch.Content className="gap-1">
-                              <Label className="type-body font-medium leading-none">{copy.paidSubscribersOnly}</Label>
-                              <Description className="type-body-sm text-[var(--admin-copy-muted)]">
-                                {copy.paidSubscribersOnlyCopy}
-                              </Description>
-                            </Switch.Content>
-                          </>
-                        )}
-                      </Switch>
+                              {(option: EditorStatusOption) => (
+                                <Dropdown.Item
+                                  id={option.id}
+                                  textValue={option.label}
+                                >
+                                  {option.label}
+                                  <Dropdown.ItemIndicator />
+                                </Dropdown.Item>
+                              )}
+                            </Dropdown.Menu>
+                          </Dropdown.Popover>
+                        </Dropdown>
+                      </label>
+                      <label className="grid gap-2">
+                        <span className="admin-eyebrow type-mono-micro">{copy.visibility}</span>
+                        <Dropdown>
+                          <Dropdown.Trigger
+                            aria-label={copy.visibility}
+                            className="admin-form-select-trigger"
+                          >
+                            <span className="admin-form-select-value">{selectedVisibilityLabel}</span>
+                            <ChevronDown className="admin-form-select-indicator" />
+                          </Dropdown.Trigger>
+                          <Dropdown.Popover>
+                            <Dropdown.Menu
+                              items={visibilitySelectOptions}
+                              selectionMode="single"
+                              disallowEmptySelection
+                              selectedKeys={[selectedVisibilityKey]}
+                              onAction={(key) => updateField("requiresSubscription", String(key) === "subscribers")}
+                            >
+                              {(option: EditorVisibilityOption) => (
+                                <Dropdown.Item
+                                  id={option.id}
+                                  textValue={option.label}
+                                >
+                                  {option.label}
+                                  <Dropdown.ItemIndicator />
+                                </Dropdown.Item>
+                              )}
+                            </Dropdown.Menu>
+                          </Dropdown.Popover>
+                        </Dropdown>
+                        <p className="admin-copy-muted mt-1">{copy.visibilityCopy}</p>
+                      </label>
                     </div>
                   </EditorSection>
 

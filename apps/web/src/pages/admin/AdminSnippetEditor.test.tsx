@@ -196,6 +196,9 @@ describe("AdminSnippetEditor", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "Surface" }));
 
+    const visibilityTrigger = screen.getByRole("button", { name: "Visibility" });
+    expect(within(visibilityTrigger).getByText("Free")).toBeInTheDocument();
+
     const statusValue = document.querySelector(".admin-form-select-value");
     expect(statusValue).toBeTruthy();
     const statusTriggerElement = statusValue?.closest("button, [data-slot='dropdown-trigger']") as HTMLElement | null;
@@ -209,6 +212,59 @@ describe("AdminSnippetEditor", () => {
     const selectedItem = within(menu).getByText("Draft").closest(".menu-item");
     expect(selectedItem).not.toBeNull();
     expect(selectedItem?.querySelector(".menu-item__indicator")).not.toBeNull();
+
+    fireEvent.click(visibilityTrigger);
+
+    const visibilityMenu = await screen.findByRole("menu");
+    expect(within(visibilityMenu).getByText("Free")).toBeInTheDocument();
+    expect(within(visibilityMenu).getByText("Subscribers only")).toBeInTheDocument();
+  });
+
+  it("maps visibility dropdown choices to requiresSubscription during autosave", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+    mockedUpdateSnippet.mockReset();
+    mockedCreateSnippet.mockResolvedValue(createSnippetFixture({
+      id: "snippet-1",
+      title: "Paid Snippet",
+      slug: "paid-snippet",
+      excerpt: "",
+      category: "Workflow",
+      tags: [],
+      coverImage: "https://example.com/cover.jpg",
+      content: "# New Snippet",
+      code: "Text(\"Hello\")",
+      prompts: "Build a polished snippet.",
+      seoTitle: "",
+      seoDescription: "",
+      status: "Draft",
+      updatedAt: "2026-04-18T00:00:00.000Z",
+      publishedAt: null,
+      requiresSubscription: true,
+    }));
+
+    render(
+      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+            <Route path="snippets/new" element={<AdminSnippetEditor />} />
+            <Route path="snippets/:id" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByLabelText("Snippet Title"), { target: { value: "Paid Snippet" } });
+    fireEvent.click(screen.getByRole("tab", { name: "Surface" }));
+    fireEvent.click(screen.getByRole("button", { name: "Visibility" }));
+    fireEvent.click(await screen.findByRole("menuitemradio", { name: "Subscribers only" }));
+
+    await waitFor(() => {
+      expect(mockedCreateSnippet).toHaveBeenCalledWith(expect.objectContaining({
+        requiresSubscription: true,
+      }));
+    });
   });
 
   it("renders localized preview controls in the zh editor route", async () => {
@@ -760,5 +816,50 @@ describe("AdminSnippetEditor", () => {
     fireEvent.click(screen.getByRole("tab", { name: "Surface" }));
 
     expect(screen.getByRole("button", { name: "Status" })).toBeDisabled();
+  });
+
+  it("shows the saved visibility choice for localized editors", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+    mockedGetSnippetById.mockResolvedValue(createSnippetFixture({
+      id: "snippet-1",
+      title: "Members Snippet",
+      slug: "members-snippet",
+      excerpt: "Subscriber access",
+      category: "Workflow",
+      tags: ["SwiftUI"],
+      coverImage: "https://example.com/cover.jpg",
+      content: "# Members Snippet",
+      code: "Text(\"Members\")",
+      prompts: "Keep this for subscribers.",
+      seoTitle: "Members Snippet",
+      seoDescription: "SEO copy",
+      status: "Draft",
+      updatedAt: "2026-04-18T00:00:00.000Z",
+      publishedAt: null,
+      requiresSubscription: true,
+    }));
+
+    render(
+      <LocaleContext.Provider value={{ locale: "zh" }}>
+        <MemoryRouter initialEntries={["/admin/snippets/snippet-1"]}>
+          <Routes>
+            <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+              <Route path="snippets/:id" element={<AdminSnippetEditor />} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </LocaleContext.Provider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Snippet 标题")).toHaveValue("玻璃导航");
+    });
+
+    fireEvent.click(screen.getByRole("tab", { name: "表面" }));
+
+    const visibilityTrigger = screen.getByRole("button", { name: "可见性" });
+    expect(within(visibilityTrigger).getByText("仅订阅用户")).toBeInTheDocument();
   });
 });

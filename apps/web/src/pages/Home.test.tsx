@@ -25,7 +25,17 @@ describe("Home", () => {
 
   it("renders published snippets from the API", async () => {
     mockedGetSnippets.mockResolvedValue([
-      publishedSnippet,
+      createSnippet({
+        ...publishedSnippet,
+        publishedAt: "2026-04-09T12:00:00.000Z",
+      }),
+      createSnippet({
+        id: "snippet-3",
+        title: "Newest Entry",
+        slug: "newest-entry",
+        excerpt: "The newest published snippet.",
+        publishedAt: "2026-04-12T12:00:00.000Z",
+      }),
       createSnippet({
         id: "snippet-2",
         title: "Draft Entry",
@@ -42,23 +52,30 @@ describe("Home", () => {
       </MemoryRouter>,
     );
 
+    expect(screen.getByRole("heading", { name: "Exceptional Builds. Native SwiftUI." })).toBeInTheDocument();
+    expect(screen.getByTestId("home-hero")).toHaveClass("min-h-screen");
     expect(screen.getByText("Accessing Data Stores...")).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getAllByText("Glass Navigation")).toHaveLength(2);
+      expect(screen.getByTestId("home-lead-card")).toHaveTextContent("Newest Entry");
     });
 
+    expect(screen.getByTestId("home-grid")).toHaveTextContent("Glass Navigation");
     expect(screen.queryByText("Draft Entry")).not.toBeInTheDocument();
   });
 
   it("preserves the excerpt slot even when a published snippet has no excerpt", async () => {
     mockedGetSnippets.mockResolvedValue([
-      publishedSnippet,
+      createSnippet({
+        ...publishedSnippet,
+        publishedAt: "2026-04-10T12:00:00.000Z",
+      }),
       createSnippet({
         id: "snippet-2",
         title: "Empty Excerpt",
         slug: "empty-excerpt",
         excerpt: "",
+        publishedAt: "2026-04-09T12:00:00.000Z",
       }),
     ]);
 
@@ -72,6 +89,6 @@ describe("Home", () => {
       expect(screen.getAllByText("Empty Excerpt").length).toBeGreaterThan(0);
     });
 
-    expect(container.querySelectorAll(".public-snippet-card-copy-slot")).toHaveLength(2);
+    expect(container.querySelectorAll(".public-home-grid-card-copy-slot")).toHaveLength(1);
   });
 });

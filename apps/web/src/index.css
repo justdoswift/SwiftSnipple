@@ -1086,6 +1086,92 @@
     min-height: 2.75rem;
   }
 
+  .public-home-lead-card-shell {
+    border-radius: calc(var(--radius-panel-lg) + 8px);
+    border-color: var(--public-border-faint);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22);
+  }
+
+  .public-home-lead-card-copy {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.015)),
+      linear-gradient(135deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.008));
+  }
+
+  .public-theme[data-theme="light"] .public-home-lead-card-copy {
+    background:
+      linear-gradient(180deg, rgba(0, 0, 0, 0.018), rgba(0, 0, 0, 0.012)),
+      linear-gradient(135deg, rgba(0, 0, 0, 0.025), rgba(0, 0, 0, 0.01));
+  }
+
+  .public-home-lead-card-media {
+    background-color: var(--public-surface-subtle-bg);
+  }
+
+  .public-home-lead-card-image-overlay {
+    background:
+      linear-gradient(180deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.14)),
+      linear-gradient(270deg, transparent 0%, rgba(0, 0, 0, 0.16) 100%);
+  }
+
+  .public-theme[data-theme="light"] .public-home-lead-card-image-overlay {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.14)),
+      linear-gradient(270deg, transparent 0%, rgba(255, 255, 255, 0.16) 100%);
+  }
+
+  .public-home-lead-card-cta {
+    color: var(--public-heading);
+  }
+
+  .public-home-lead-card-cta-icon {
+    background-color: var(--public-primary-button-bg);
+    color: var(--public-primary-button-text);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+  }
+
+  .public-theme[data-theme="light"] .public-home-lead-card-cta-icon {
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+  }
+
+  .public-home-grid-card-shell {
+    height: 100%;
+    border-radius: 18px;
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+    background: transparent;
+    transition: transform 220ms ease;
+  }
+
+  .public-home-grid-card:hover .public-home-grid-card-shell {
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .public-home-grid-card-media {
+    border-radius: 18px;
+    background-color: var(--public-surface-subtle-bg);
+  }
+
+  .public-home-grid-card-title {
+    color: var(--public-heading);
+    transition: color 200ms ease;
+  }
+
+  .public-home-grid-card-copy {
+    color: var(--public-body);
+    transition: color 200ms ease;
+  }
+
+  .public-home-grid-card:hover .public-home-grid-card-copy {
+    color: var(--public-body);
+  }
+
+  .public-home-grid-card-copy-slot {
+    min-height: 3.5rem;
+  }
+
   .public-input {
     @apply h-10 appearance-none rounded-[12px] text-base shadow-none transition-all;
     border-radius: var(--radius-control);

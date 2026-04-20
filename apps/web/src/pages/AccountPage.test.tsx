@@ -111,6 +111,26 @@ describe("AccountPage", () => {
     });
   });
 
+  it("shows an ending-soon state when cancellation is scheduled at period end", () => {
+    render(
+      <MemoryRouter initialEntries={["/account"]}>
+        <AccountPage
+          authSession={createMemberSession({
+            isEntitled: true,
+            subscriptionStatus: "active",
+            cancelAtPeriodEnd: true,
+            currentPeriodEnd: "2026-05-20T00:00:00.000Z",
+            hasBillingPortal: true,
+          })}
+          onSignOut={vi.fn()}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText("Ends at current period end")).toBeInTheDocument();
+    expect(screen.getByText("May 20, 2026")).toBeInTheDocument();
+  });
+
   it("refreshes the member session after a successful checkout redirect", async () => {
     const onRefreshSession = vi.fn().mockResolvedValue(undefined);
 

@@ -25,6 +25,14 @@ function formatDate(value: string | null, locale: "en" | "zh") {
   });
 }
 
+function resolveStatusCopy(authSession: MemberSession, copy: ReturnType<typeof getMessages>["account"]) {
+  if (authSession.isEntitled && (authSession.cancelAtPeriodEnd || authSession.subscriptionStatus === "canceled")) {
+    return copy.statusEnding;
+  }
+
+  return authSession.isEntitled ? copy.statusActive : copy.statusInactive;
+}
+
 export default function AccountPage({ authSession, onSignOut, onRefreshSession }: AccountPageProps) {
   const { locale } = useAppLocale();
   const copy = getMessages(locale).account;
@@ -85,7 +93,7 @@ export default function AccountPage({ authSession, onSignOut, onRefreshSession }
   }
 
   const renewalDate = formatDate(authSession.currentPeriodEnd, locale);
-  const statusCopy = authSession.isEntitled ? copy.statusActive : copy.statusInactive;
+  const statusCopy = resolveStatusCopy(authSession, copy);
 
   return (
     <section className="public-page mx-auto max-w-[980px] px-8 pb-24 pt-36 md:px-12 md:pt-40 lg:px-16 lg:pt-48">

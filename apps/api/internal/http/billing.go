@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/stripe/stripe-go/v83"
 	billingportalsession "github.com/stripe/stripe-go/v83/billingportal/session"
 	checkoutsession "github.com/stripe/stripe-go/v83/checkout/session"
-	"github.com/stripe/stripe-go/v83"
+	subscriptionsvc "github.com/stripe/stripe-go/v83/subscription"
 	"github.com/stripe/stripe-go/v83/webhook"
 )
 
@@ -34,13 +35,13 @@ type BillingCheckoutCompleted struct {
 }
 
 type BillingSubscriptionState struct {
-	UserID               string
-	CustomerID           string
-	SubscriptionID       string
-	Status               string
-	CurrentPeriodEnd     *time.Time
-	CancelAtPeriodEnd    bool
-	PriceID              string
+	UserID            string
+	CustomerID        string
+	SubscriptionID    string
+	Status            string
+	CurrentPeriodEnd  *time.Time
+	CancelAtPeriodEnd bool
+	PriceID           string
 }
 
 type BillingWebhookEvent struct {
@@ -52,6 +53,7 @@ type BillingWebhookEvent struct {
 type billingProvider interface {
 	CreateCheckoutSession(ctx context.Context, params CheckoutSessionParams) (string, error)
 	CreateBillingPortalSession(ctx context.Context, customerID string) (string, error)
+	GetSubscriptionState(ctx context.Context, subscriptionID string) (BillingSubscriptionState, error)
 	ParseWebhook(payload []byte, signatureHeader string) (BillingWebhookEvent, error)
 }
 
@@ -127,6 +129,20 @@ func (p stripeBillingProvider) CreateBillingPortalSession(_ context.Context, cus
 	return session.URL, nil
 }
 
+func (p stripeBillingProvider) GetSubscriptionState(ctx context.Context, subscriptionID string) (BillingSubscriptionState, error) {
+	stripe.Key = p.secretKey
+
+	params := &stripe.SubscriptionParams{}
+	params.Context = ctx
+
+	subscription, err := subscriptionsvc.Get(subscriptionID, params)
+	if err != nil {
+		return BillingSubscriptionState{}, err
+	}
+
+	return billingSubscriptionStateFromStripe(subscription), nil
+}
+
 func (p stripeBillingProvider) ParseWebhook(payload []byte, signatureHeader string) (BillingWebhookEvent, error) {
 	event, err := webhook.ConstructEvent(payload, signatureHeader, p.webhookSecret)
 	if err != nil {
@@ -164,36 +180,45 @@ func (p stripeBillingProvider) ParseWebhook(payload []byte, signatureHeader stri
 			return BillingWebhookEvent{}, err
 		}
 
-		customerID := ""
-		if subscription.Customer != nil {
-			customerID = subscription.Customer.ID
-		}
-
-		var currentPeriodEnd *time.Time
-		if subscription.Items != nil && len(subscription.Items.Data) > 0 && subscription.Items.Data[0].CurrentPeriodEnd > 0 {
-			value := time.Unix(subscription.Items.Data[0].CurrentPeriodEnd, 0).UTC()
-			currentPeriodEnd = &value
-		}
-
-		priceID := ""
-		if subscription.Items != nil && len(subscription.Items.Data) > 0 && subscription.Items.Data[0].Price != nil {
-			priceID = subscription.Items.Data[0].Price.ID
-		}
-
+		state := billingSubscriptionStateFromStripe(&subscription)
 		return BillingWebhookEvent{
-			Type: string(event.Type),
-			SubscriptionState: &BillingSubscriptionState{
-				UserID:            subscription.Metadata["user_id"],
-				CustomerID:        customerID,
-				SubscriptionID:    subscription.ID,
-				Status:            string(subscription.Status),
-				CurrentPeriodEnd:  currentPeriodEnd,
-				CancelAtPeriodEnd: subscription.CancelAtPeriodEnd,
-				PriceID:           priceID,
-			},
+			Type:              string(event.Type),
+			SubscriptionState: &state,
 		}, nil
 	default:
 		return BillingWebhookEvent{Type: string(event.Type)}, nil
+	}
+}
+
+func billingSubscriptionStateFromStripe(subscription *stripe.Subscription) BillingSubscriptionState {
+	if subscription == nil {
+		return BillingSubscriptionState{}
+	}
+
+	customerID := ""
+	if subscription.Customer != nil {
+		customerID = subscription.Customer.ID
+	}
+
+	var currentPeriodEnd *time.Time
+	if subscription.Items != nil && len(subscription.Items.Data) > 0 && subscription.Items.Data[0].CurrentPeriodEnd > 0 {
+		value := time.Unix(subscription.Items.Data[0].CurrentPeriodEnd, 0).UTC()
+		currentPeriodEnd = &value
+	}
+
+	priceID := ""
+	if subscription.Items != nil && len(subscription.Items.Data) > 0 && subscription.Items.Data[0].Price != nil {
+		priceID = subscription.Items.Data[0].Price.ID
+	}
+
+	return BillingSubscriptionState{
+		UserID:            subscription.Metadata["user_id"],
+		CustomerID:        customerID,
+		SubscriptionID:    subscription.ID,
+		Status:            string(subscription.Status),
+		CurrentPeriodEnd:  currentPeriodEnd,
+		CancelAtPeriodEnd: subscription.CancelAtPeriodEnd,
+		PriceID:           priceID,
 	}
 }
 

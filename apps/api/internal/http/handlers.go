@@ -1,17 +1,18 @@
 package http
 
 import (
-	"crypto/rand"
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"image"
 	"io"
-	"mime/multipart"
+	"log"
 	"math"
-	"net/mail"
+	"mime/multipart"
 	"net/http"
+	"net/mail"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,10 +25,10 @@ import (
 	"swiftsnipple/api/internal/domain"
 	"swiftsnipple/api/internal/repo"
 
+	_ "golang.org/x/image/webp"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
-	_ "golang.org/x/image/webp"
 )
 
 type dbPinger interface {
@@ -508,11 +509,27 @@ func (h *Handler) StripeWebhook(w http.ResponseWriter, r *http.Request) {
 
 	switch {
 	case event.CheckoutCompleted != nil:
+		log.Printf(
+			"stripe webhook received type=%s subscription_id=%s customer_id=%s user_id=%s",
+			event.Type,
+			strings.TrimSpace(event.CheckoutCompleted.SubscriptionID),
+			strings.TrimSpace(event.CheckoutCompleted.CustomerID),
+			strings.TrimSpace(event.CheckoutCompleted.UserID),
+		)
 		err = h.applyCheckoutCompleted(r.Context(), *event.CheckoutCompleted)
 	case event.SubscriptionState != nil:
+		log.Printf(
+			"stripe webhook received type=%s subscription_id=%s customer_id=%s user_id=%s status=%s",
+			event.Type,
+			strings.TrimSpace(event.SubscriptionState.SubscriptionID),
+			strings.TrimSpace(event.SubscriptionState.CustomerID),
+			strings.TrimSpace(event.SubscriptionState.UserID),
+			strings.TrimSpace(event.SubscriptionState.Status),
+		)
 		err = h.applySubscriptionState(r.Context(), *event.SubscriptionState)
 	}
 	if err != nil {
+		log.Printf("stripe webhook failed type=%s error=%v", event.Type, err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to process webhook"})
 		return
 	}
@@ -725,18 +742,59 @@ func (h *Handler) applyCheckoutCompleted(ctx context.Context, completed BillingC
 	}
 	if existing != nil {
 		subscription = *existing
-		if completed.CustomerID != "" {
-			subscription.StripeCustomerID = completed.CustomerID
-		}
-		if completed.SubscriptionID != "" {
-			subscription.StripeSubscriptionID = completed.SubscriptionID
-		}
-		if completed.PriceID != "" {
-			subscription.PriceID = completed.PriceID
-		}
 	}
 
-	_, err = h.members.UpsertSubscription(ctx, subscription)
+	if strings.TrimSpace(completed.SubscriptionID) != "" {
+		state, stateErr := h.billing.GetSubscriptionState(ctx, completed.SubscriptionID)
+		if stateErr == nil {
+			state.UserID = completed.UserID
+			if state.CustomerID == "" {
+				state.CustomerID = completed.CustomerID
+			}
+			if state.SubscriptionID == "" {
+				state.SubscriptionID = completed.SubscriptionID
+			}
+			if state.PriceID == "" {
+				state.PriceID = completed.PriceID
+			}
+
+			upserted, err := h.upsertResolvedSubscription(ctx, existing, state)
+			if err != nil {
+				return err
+			}
+
+			log.Printf(
+				"stripe checkout synced type=checkout.session.completed subscription_id=%s customer_id=%s user_id=%s status=%s",
+				upserted.StripeSubscriptionID,
+				upserted.StripeCustomerID,
+				upserted.UserID,
+				upserted.Status,
+			)
+			return nil
+		}
+
+		log.Printf(
+			"stripe checkout fetch failed type=checkout.session.completed subscription_id=%s customer_id=%s user_id=%s error=%v",
+			strings.TrimSpace(completed.SubscriptionID),
+			strings.TrimSpace(completed.CustomerID),
+			strings.TrimSpace(completed.UserID),
+			stateErr,
+		)
+	}
+
+	subscription = mergeCheckoutFallbackSubscription(existing, completed)
+	upserted, err := h.members.UpsertSubscription(ctx, subscription)
+	if err != nil {
+		return err
+	}
+
+	log.Printf(
+		"stripe checkout synced via fallback type=checkout.session.completed subscription_id=%s customer_id=%s user_id=%s status=%s",
+		upserted.StripeSubscriptionID,
+		upserted.StripeCustomerID,
+		upserted.UserID,
+		upserted.Status,
+	)
 	return err
 }
 
@@ -764,14 +822,36 @@ func (h *Handler) applySubscriptionState(ctx context.Context, state BillingSubsc
 		userID = existing.UserID
 	}
 	if userID == "" {
-		return errors.New("subscription event missing user id")
+		log.Printf(
+			"stripe subscription event ignored type=customer.subscription.* subscription_id=%s customer_id=%s reason=missing_user_id",
+			strings.TrimSpace(state.SubscriptionID),
+			strings.TrimSpace(state.CustomerID),
+		)
+		return nil
 	}
 	if _, err := h.members.GetUserByID(ctx, userID); err != nil {
 		return err
 	}
 
+	state.UserID = userID
+	upserted, err := h.upsertResolvedSubscription(ctx, existing, state)
+	if err != nil {
+		return err
+	}
+
+	log.Printf(
+		"stripe subscription synced type=customer.subscription.* subscription_id=%s customer_id=%s user_id=%s status=%s",
+		upserted.StripeSubscriptionID,
+		upserted.StripeCustomerID,
+		upserted.UserID,
+		upserted.Status,
+	)
+	return nil
+}
+
+func (h *Handler) upsertResolvedSubscription(ctx context.Context, existing *domain.MemberSubscription, state BillingSubscriptionState) (domain.MemberSubscription, error) {
 	subscription := domain.MemberSubscription{
-		UserID:               userID,
+		UserID:               state.UserID,
 		StripeCustomerID:     state.CustomerID,
 		StripeSubscriptionID: state.SubscriptionID,
 		Status:               domain.NormalizeSubscriptionStatus(state.Status),
@@ -781,6 +861,7 @@ func (h *Handler) applySubscriptionState(ctx context.Context, state BillingSubsc
 	}
 	if existing != nil {
 		subscription = *existing
+		subscription.UserID = state.UserID
 		if state.CustomerID != "" {
 			subscription.StripeCustomerID = state.CustomerID
 		}
@@ -795,8 +876,33 @@ func (h *Handler) applySubscriptionState(ctx context.Context, state BillingSubsc
 		}
 	}
 
-	_, err = h.members.UpsertSubscription(ctx, subscription)
-	return err
+	return h.members.UpsertSubscription(ctx, subscription)
+}
+
+func mergeCheckoutFallbackSubscription(existing *domain.MemberSubscription, completed BillingCheckoutCompleted) domain.MemberSubscription {
+	subscription := domain.MemberSubscription{
+		UserID:               completed.UserID,
+		Status:               domain.SubscriptionStatusInactive,
+		StripeCustomerID:     completed.CustomerID,
+		StripeSubscriptionID: completed.SubscriptionID,
+		PriceID:              completed.PriceID,
+	}
+	if existing == nil {
+		return subscription
+	}
+
+	subscription = *existing
+	subscription.UserID = completed.UserID
+	if completed.CustomerID != "" {
+		subscription.StripeCustomerID = completed.CustomerID
+	}
+	if completed.SubscriptionID != "" {
+		subscription.StripeSubscriptionID = completed.SubscriptionID
+	}
+	if completed.PriceID != "" {
+		subscription.PriceID = completed.PriceID
+	}
+	return subscription
 }
 
 func isValidEmail(value string) bool {

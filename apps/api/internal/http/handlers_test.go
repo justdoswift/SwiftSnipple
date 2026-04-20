@@ -285,9 +285,9 @@ func decodeResponse[T any](t *testing.T, reader io.Reader) T {
 }
 
 type fakeMemberStore struct {
-	users            map[string]domain.MemberUser
-	userIDsByEmail   map[string]string
-	subscriptions    map[string]domain.MemberSubscription
+	users          map[string]domain.MemberUser
+	userIDsByEmail map[string]string
+	subscriptions  map[string]domain.MemberSubscription
 }
 
 func newFakeMemberStore(users ...domain.MemberUser) *fakeMemberStore {
@@ -392,6 +392,8 @@ type fakeBillingProvider struct {
 	lastPortalCustomer string
 	webhookEvent       BillingWebhookEvent
 	webhookErr         error
+	subscriptionState  BillingSubscriptionState
+	subscriptionErr    error
 }
 
 func (f *fakeBillingProvider) CreateCheckoutSession(_ context.Context, params CheckoutSessionParams) (string, error) {
@@ -409,6 +411,18 @@ func (f *fakeBillingProvider) ParseWebhook(_ []byte, _ string) (BillingWebhookEv
 		return BillingWebhookEvent{}, f.webhookErr
 	}
 	return f.webhookEvent, nil
+}
+
+func (f *fakeBillingProvider) GetSubscriptionState(_ context.Context, subscriptionID string) (BillingSubscriptionState, error) {
+	if f.subscriptionErr != nil {
+		return BillingSubscriptionState{}, f.subscriptionErr
+	}
+
+	state := f.subscriptionState
+	if state.SubscriptionID == "" {
+		state.SubscriptionID = subscriptionID
+	}
+	return state, nil
 }
 
 func newTestRouter(t *testing.T, snippets *fakeSnippetStore, members *fakeMemberStore, billing *fakeBillingProvider) http.Handler {
@@ -948,6 +962,16 @@ func TestMemberCheckoutBillingPortalAndWebhookSync(t *testing.T) {
 		t.Fatalf("expected billing portal customer id, got %q", billing.lastPortalCustomer)
 	}
 
+	periodEnd := now.Add(30 * 24 * time.Hour)
+	billing.subscriptionState = BillingSubscriptionState{
+		UserID:            "member-1",
+		CustomerID:        "cus_member_123",
+		SubscriptionID:    "sub_member_123",
+		Status:            "active",
+		CurrentPeriodEnd:  &periodEnd,
+		CancelAtPeriodEnd: false,
+		PriceID:           "price_monthly_123",
+	}
 	billing.webhookEvent = BillingWebhookEvent{
 		CheckoutCompleted: &BillingCheckoutCompleted{
 			UserID:         "member-1",
@@ -964,26 +988,6 @@ func TestMemberCheckoutBillingPortalAndWebhookSync(t *testing.T) {
 		t.Fatalf("expected checkout webhook status 200, got %d with body %q", webhookRec.Code, webhookRec.Body.String())
 	}
 
-	periodEnd := now.Add(30 * 24 * time.Hour)
-	billing.webhookEvent = BillingWebhookEvent{
-		SubscriptionState: &BillingSubscriptionState{
-			UserID:            "member-1",
-			CustomerID:        "cus_member_123",
-			SubscriptionID:    "sub_member_123",
-			Status:            "active",
-			CurrentPeriodEnd:  &periodEnd,
-			CancelAtPeriodEnd: false,
-			PriceID:           "price_monthly_123",
-		},
-	}
-	webhookReq = httptest.NewRequest(http.MethodPost, "/api/stripe/webhook", strings.NewReader(`{}`))
-	webhookReq.Header.Set("Stripe-Signature", "test-signature")
-	webhookRec = httptest.NewRecorder()
-	router.ServeHTTP(webhookRec, webhookReq)
-	if webhookRec.Code != http.StatusOK {
-		t.Fatalf("expected subscription webhook status 200, got %d with body %q", webhookRec.Code, webhookRec.Body.String())
-	}
-
 	subscription := members.subscriptions["member-1"]
 	if subscription.Status != domain.SubscriptionStatusActive {
 		t.Fatalf("expected active subscription after webhook, got %q", subscription.Status)
@@ -993,6 +997,145 @@ func TestMemberCheckoutBillingPortalAndWebhookSync(t *testing.T) {
 	}
 	if subscription.PriceID != "price_monthly_123" {
 		t.Fatalf("expected price id to sync, got %q", subscription.PriceID)
+	}
+
+	sessionReq := httptest.NewRequest(http.MethodGet, "/api/member/session", nil)
+	sessionReq.AddCookie(memberCookie)
+	sessionRec := httptest.NewRecorder()
+	router.ServeHTTP(sessionRec, sessionReq)
+	if sessionRec.Code != http.StatusOK {
+		t.Fatalf("expected member session status 200, got %d with body %q", sessionRec.Code, sessionRec.Body.String())
+	}
+
+	sessionBody := decodeResponse[domain.MemberSession](t, sessionRec.Body)
+	if !sessionBody.IsEntitled || sessionBody.SubscriptionStatus != domain.SubscriptionStatusActive {
+		t.Fatalf("expected entitled active session after checkout sync, got %#v", sessionBody)
+	}
+}
+
+func TestMemberSubscriptionEventBeforeCheckoutStillEndsActive(t *testing.T) {
+	members := newFakeMemberStore()
+	billing := &fakeBillingProvider{
+		checkoutURL: "https://stripe.test/checkout",
+		portalURL:   "https://stripe.test/portal",
+	}
+	router := newTestRouter(t, nil, members, billing)
+	memberCookie := memberSignupCookie(t, router, "builder@example.com", "secret12")
+
+	periodEnd := time.Now().UTC().Add(30 * 24 * time.Hour)
+
+	billing.webhookEvent = BillingWebhookEvent{
+		SubscriptionState: &BillingSubscriptionState{
+			CustomerID:        "cus_member_456",
+			SubscriptionID:    "sub_member_456",
+			Status:            "active",
+			CurrentPeriodEnd:  &periodEnd,
+			CancelAtPeriodEnd: false,
+			PriceID:           "price_monthly_456",
+		},
+	}
+	webhookReq := httptest.NewRequest(http.MethodPost, "/api/stripe/webhook", strings.NewReader(`{}`))
+	webhookReq.Header.Set("Stripe-Signature", "test-signature")
+	webhookRec := httptest.NewRecorder()
+	router.ServeHTTP(webhookRec, webhookReq)
+	if webhookRec.Code != http.StatusOK {
+		t.Fatalf("expected orphan subscription webhook status 200, got %d with body %q", webhookRec.Code, webhookRec.Body.String())
+	}
+	if len(members.subscriptions) != 0 {
+		t.Fatalf("expected unresolved subscription event to avoid creating rows, got %#v", members.subscriptions)
+	}
+
+	billing.subscriptionState = BillingSubscriptionState{
+		CustomerID:        "cus_member_456",
+		SubscriptionID:    "sub_member_456",
+		Status:            "active",
+		CurrentPeriodEnd:  &periodEnd,
+		CancelAtPeriodEnd: false,
+		PriceID:           "price_monthly_456",
+	}
+	billing.webhookEvent = BillingWebhookEvent{
+		CheckoutCompleted: &BillingCheckoutCompleted{
+			UserID:         "member-1",
+			CustomerID:     "cus_member_456",
+			SubscriptionID: "sub_member_456",
+			PriceID:        "price_monthly_456",
+		},
+	}
+	webhookReq = httptest.NewRequest(http.MethodPost, "/api/stripe/webhook", strings.NewReader(`{}`))
+	webhookReq.Header.Set("Stripe-Signature", "test-signature")
+	webhookRec = httptest.NewRecorder()
+	router.ServeHTTP(webhookRec, webhookReq)
+	if webhookRec.Code != http.StatusOK {
+		t.Fatalf("expected checkout webhook status 200, got %d with body %q", webhookRec.Code, webhookRec.Body.String())
+	}
+
+	sessionReq := httptest.NewRequest(http.MethodGet, "/api/member/session", nil)
+	sessionReq.AddCookie(memberCookie)
+	sessionRec := httptest.NewRecorder()
+	router.ServeHTTP(sessionRec, sessionReq)
+	if sessionRec.Code != http.StatusOK {
+		t.Fatalf("expected member session status 200, got %d with body %q", sessionRec.Code, sessionRec.Body.String())
+	}
+
+	sessionBody := decodeResponse[domain.MemberSession](t, sessionRec.Body)
+	if !sessionBody.IsEntitled || sessionBody.SubscriptionStatus != domain.SubscriptionStatusActive {
+		t.Fatalf("expected checkout sync to recover active state after out-of-order events, got %#v", sessionBody)
+	}
+}
+
+func TestMemberCheckoutFallbackDoesNotDowngradeActiveSubscription(t *testing.T) {
+	now := time.Now().UTC()
+	periodEnd := now.Add(30 * 24 * time.Hour)
+	members := newFakeMemberStore(domain.MemberUser{
+		ID:           "member-1",
+		Email:        "builder@example.com",
+		PasswordHash: "ignored",
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	})
+	members.subscriptions["member-1"] = domain.MemberSubscription{
+		UserID:               "member-1",
+		StripeCustomerID:     "cus_old",
+		StripeSubscriptionID: "sub_old",
+		Status:               domain.SubscriptionStatusActive,
+		CurrentPeriodEnd:     &periodEnd,
+		CancelAtPeriodEnd:    false,
+		PriceID:              "price_old",
+		CreatedAt:            now,
+		UpdatedAt:            now,
+	}
+	billing := &fakeBillingProvider{
+		checkoutURL:     "https://stripe.test/checkout",
+		portalURL:       "https://stripe.test/portal",
+		subscriptionErr: errors.New("stripe unavailable"),
+	}
+	router := newTestRouter(t, nil, members, billing)
+
+	billing.webhookEvent = BillingWebhookEvent{
+		CheckoutCompleted: &BillingCheckoutCompleted{
+			UserID:         "member-1",
+			CustomerID:     "cus_new",
+			SubscriptionID: "sub_new",
+			PriceID:        "price_new",
+		},
+	}
+	webhookReq := httptest.NewRequest(http.MethodPost, "/api/stripe/webhook", strings.NewReader(`{}`))
+	webhookReq.Header.Set("Stripe-Signature", "test-signature")
+	webhookRec := httptest.NewRecorder()
+	router.ServeHTTP(webhookRec, webhookReq)
+	if webhookRec.Code != http.StatusOK {
+		t.Fatalf("expected fallback checkout webhook status 200, got %d with body %q", webhookRec.Code, webhookRec.Body.String())
+	}
+
+	subscription := members.subscriptions["member-1"]
+	if subscription.Status != domain.SubscriptionStatusActive {
+		t.Fatalf("expected fallback to preserve active status, got %q", subscription.Status)
+	}
+	if subscription.CurrentPeriodEnd == nil || !subscription.CurrentPeriodEnd.Equal(periodEnd) {
+		t.Fatalf("expected fallback to preserve period end, got %#v", subscription.CurrentPeriodEnd)
+	}
+	if subscription.StripeCustomerID != "cus_new" || subscription.StripeSubscriptionID != "sub_new" || subscription.PriceID != "price_new" {
+		t.Fatalf("expected fallback to refresh billing identifiers, got %#v", subscription)
 	}
 }
 

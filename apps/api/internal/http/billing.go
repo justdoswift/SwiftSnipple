@@ -144,7 +144,14 @@ func (p stripeBillingProvider) GetSubscriptionState(ctx context.Context, subscri
 }
 
 func (p stripeBillingProvider) ParseWebhook(payload []byte, signatureHeader string) (BillingWebhookEvent, error) {
-	event, err := webhook.ConstructEvent(payload, signatureHeader, p.webhookSecret)
+	event, err := webhook.ConstructEventWithOptions(
+		payload,
+		signatureHeader,
+		p.webhookSecret,
+		webhook.ConstructEventOptions{
+			IgnoreAPIVersionMismatch: true,
+		},
+	)
 	if err != nil {
 		return BillingWebhookEvent{}, err
 	}

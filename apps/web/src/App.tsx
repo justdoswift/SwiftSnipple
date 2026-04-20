@@ -201,6 +201,14 @@ export default function App() {
   }, [theme]);
 
   const toggleTheme = () => setTheme((currentTheme) => getNextPublicTheme(currentTheme));
+  const refreshMemberSession = async () => {
+    try {
+      const session = await getMemberSession();
+      setAuthSession(session);
+    } catch {
+      setAuthSession(null);
+    }
+  };
   const handleAuthenticate = (session: MemberSession) => {
     setAuthSession(session);
   };
@@ -315,7 +323,7 @@ export default function App() {
               path="/account"
               element={
                 <PublicShell theme={theme} onToggleTheme={toggleTheme} authSession={authSession}>
-                  <AccountPage authSession={authSession} onSignOut={handleSignOut} />
+                  <AccountPage authSession={authSession} onSignOut={handleSignOut} onRefreshSession={refreshMemberSession} />
                 </PublicShell>
               }
             />

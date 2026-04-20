@@ -1,6 +1,6 @@
 import { CreditCard, LogOut, LockKeyhole, Sparkles } from "lucide-react";
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { Button, Card } from "../lib/heroui";
 import { getMessages } from "../lib/messages";
 import { localizePublicPath, useAppLocale } from "../lib/locale";
@@ -10,6 +10,7 @@ import type { MemberSession } from "../types";
 interface AccountPageProps {
   authSession: MemberSession | null;
   onSignOut: () => void | Promise<void>;
+  onRefreshSession?: () => Promise<void>;
 }
 
 function formatDate(value: string | null, locale: "en" | "zh") {
@@ -24,11 +25,27 @@ function formatDate(value: string | null, locale: "en" | "zh") {
   });
 }
 
-export default function AccountPage({ authSession, onSignOut }: AccountPageProps) {
+export default function AccountPage({ authSession, onSignOut, onRefreshSession }: AccountPageProps) {
   const { locale } = useAppLocale();
   const copy = getMessages(locale).account;
   const [error, setError] = useState("");
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const hasRefreshedAfterCheckout = useRef(false);
+
+  useEffect(() => {
+    if (searchParams.get("checkout") !== "success" || hasRefreshedAfterCheckout.current) {
+      return;
+    }
+
+    hasRefreshedAfterCheckout.current = true;
+    const refreshPromise = onRefreshSession ? onRefreshSession() : Promise.resolve();
+    void refreshPromise.finally(() => {
+      const nextSearchParams = new URLSearchParams(searchParams);
+      nextSearchParams.delete("checkout");
+      setSearchParams(nextSearchParams, { replace: true });
+    });
+  }, [onRefreshSession, searchParams, setSearchParams]);
 
   async function redirectTo(urlPromise: Promise<{ url: string }>) {
     setError("");

@@ -110,4 +110,18 @@ describe("AccountPage", () => {
       expect(assignSpy).toHaveBeenCalledWith("https://stripe.test/portal");
     });
   });
+
+  it("refreshes the member session after a successful checkout redirect", async () => {
+    const onRefreshSession = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <MemoryRouter initialEntries={["/account?checkout=success"]}>
+        <AccountPage authSession={createMemberSession()} onSignOut={vi.fn()} onRefreshSession={onRefreshSession} />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(onRefreshSession).toHaveBeenCalledTimes(1);
+    });
+  });
 });

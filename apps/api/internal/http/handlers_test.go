@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -452,6 +453,8 @@ func newTestRouter(t *testing.T, snippets *fakeSnippetStore, members *fakeMember
 		}
 	}
 
+	assetStore := newLocalAssetStore(t.TempDir(), defaultUploadPublicBasePath)
+
 	return NewRouter(
 		fakePinger{},
 		snippets,
@@ -459,7 +462,7 @@ func newTestRouter(t *testing.T, snippets *fakeSnippetStore, members *fakeMember
 		testAdminAuthConfig,
 		testMemberAuthConfig,
 		billing,
-		t.TempDir(),
+		assetStore,
 	)
 }
 
@@ -1206,7 +1209,7 @@ func TestUploadCoverImageAndServeStatic(t *testing.T) {
 		testAdminAuthConfig,
 		testMemberAuthConfig,
 		&fakeBillingProvider{checkoutURL: "https://stripe.test/checkout", portalURL: "https://stripe.test/portal"},
-		uploadDir,
+		newLocalAssetStore(uploadDir, defaultUploadPublicBasePath),
 	)
 	adminCookie := loginCookie(t, router)
 
@@ -1253,7 +1256,7 @@ func TestUploadCoverImageAndServeStatic(t *testing.T) {
 		t.Fatalf("expected upload url to start with /api/uploads/, got %q", uploadedURL)
 	}
 
-	entries, err := os.ReadDir(uploadDir)
+	entries, err := os.ReadDir(filepath.Join(uploadDir, "covers"))
 	if err != nil {
 		t.Fatalf("read upload dir: %v", err)
 	}
@@ -1351,5 +1354,71 @@ func TestUploadCoverImageTooLarge(t *testing.T) {
 	}
 	if !strings.Contains(rec.Body.String(), "25 MB or smaller") {
 		t.Fatalf("expected oversized upload error message, got %q", rec.Body.String())
+	}
+}
+
+func TestUploadContentImageAndVideo(t *testing.T) {
+	router := newTestRouter(t, newFakeSnippetStore(), nil, nil)
+	adminCookie := loginCookie(t, router)
+
+	imageBody := &bytes.Buffer{}
+	imageWriter := multipart.NewWriter(imageBody)
+	imageFileWriter, err := imageWriter.CreateFormFile("file", "content.png")
+	if err != nil {
+		t.Fatalf("create image form file: %v", err)
+	}
+	smallImage := image.NewNRGBA(image.Rect(0, 0, 120, 90))
+	if err := png.Encode(imageFileWriter, smallImage); err != nil {
+		t.Fatalf("encode image payload: %v", err)
+	}
+	if err := imageWriter.Close(); err != nil {
+		t.Fatalf("close image writer: %v", err)
+	}
+
+	imageReq := httptest.NewRequest(http.MethodPost, "/api/admin/uploads/content-image", imageBody)
+	imageReq.Header.Set("Content-Type", imageWriter.FormDataContentType())
+	imageReq.AddCookie(adminCookie)
+	imageRec := httptest.NewRecorder()
+	router.ServeHTTP(imageRec, imageReq)
+	if imageRec.Code != http.StatusCreated {
+		t.Fatalf("expected content image upload status 201, got %d with body %q", imageRec.Code, imageRec.Body.String())
+	}
+
+	imageResponse := decodeResponse[map[string]string](t, imageRec.Body)
+	if !strings.HasPrefix(imageResponse["url"], "/api/uploads/content-images/") {
+		t.Fatalf("expected content image url prefix, got %q", imageResponse["url"])
+	}
+
+	videoBody := &bytes.Buffer{}
+	videoWriter := multipart.NewWriter(videoBody)
+	videoFileWriter, err := videoWriter.CreateFormFile("file", "clip.mp4")
+	if err != nil {
+		t.Fatalf("create video form file: %v", err)
+	}
+	if _, err := videoFileWriter.Write([]byte{
+		0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d,
+		0x00, 0x00, 0x02, 0x00, 0x69, 0x73, 0x6f, 0x6d,
+	}); err != nil {
+		t.Fatalf("write video payload: %v", err)
+	}
+	if err := videoWriter.Close(); err != nil {
+		t.Fatalf("close video writer: %v", err)
+	}
+
+	videoReq := httptest.NewRequest(http.MethodPost, "/api/admin/uploads/content-video", videoBody)
+	videoReq.Header.Set("Content-Type", videoWriter.FormDataContentType())
+	videoReq.AddCookie(adminCookie)
+	videoRec := httptest.NewRecorder()
+	router.ServeHTTP(videoRec, videoReq)
+	if videoRec.Code != http.StatusCreated {
+		t.Fatalf("expected content video upload status 201, got %d with body %q", videoRec.Code, videoRec.Body.String())
+	}
+
+	videoResponse := decodeResponse[map[string]string](t, videoRec.Body)
+	if !strings.HasPrefix(videoResponse["url"], "/api/uploads/content-videos/") {
+		t.Fatalf("expected content video url prefix, got %q", videoResponse["url"])
+	}
+	if videoResponse["mimeType"] != "video/mp4" {
+		t.Fatalf("expected video mime type video/mp4, got %q", videoResponse["mimeType"])
 	}
 }

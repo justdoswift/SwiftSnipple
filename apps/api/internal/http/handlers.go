@@ -1,6 +1,7 @@
 package http
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/json"
@@ -13,8 +14,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/mail"
-	"os"
-	"path/filepath"
+	"path"
 	"strings"
 	"time"
 
@@ -62,27 +62,17 @@ type Handler struct {
 	members    memberStore
 	auth       adminAuth
 	memberAuth memberAuth
-	uploads    localUploader
+	assets     assetStore
 	billing    billingProvider
-}
-
-type localUploader struct {
-	dir string
 }
 
 const (
 	maxCoverImageDimension = 2200
 	coverImageWebPQuality  = 92
+	maxCoverUploadBytes    = 25 << 20
+	maxContentImageBytes   = 18 << 20
+	maxContentVideoBytes   = 250 << 20
 )
-
-func newLocalUploader(dir string) localUploader {
-	cleanDir := strings.TrimSpace(dir)
-	if cleanDir == "" {
-		cleanDir = "uploads"
-	}
-
-	return localUploader{dir: filepath.Clean(cleanDir)}
-}
 
 func (h *Handler) Healthz(w http.ResponseWriter, r *http.Request) {
 	if err := h.db.Ping(r.Context()); err != nil {
@@ -265,35 +255,87 @@ func (h *Handler) DeleteSnippet(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *Handler) UploadCoverImage(w http.ResponseWriter, r *http.Request) {
-	const maxCoverUploadBytes = 25 << 20
-
-	r.Body = http.MaxBytesReader(w, r.Body, maxCoverUploadBytes)
-	if err := r.ParseMultipartForm(maxCoverUploadBytes); err != nil {
-		var maxBytesError *http.MaxBytesError
-		if errors.As(err, &maxBytesError) {
-			writeJSON(w, http.StatusRequestEntityTooLarge, map[string]string{"error": "cover image must be 25 MB or smaller"})
-			return
-		}
-
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid multipart upload payload"})
+func (h *Handler) ServeUpload(w http.ResponseWriter, r *http.Request) {
+	objectKey := strings.TrimSpace(chi.URLParam(r, "*"))
+	if objectKey == "" {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "asset not found"})
 		return
 	}
 
-	file, header, err := r.FormFile("file")
+	storedObject, err := h.assets.Get(r.Context(), objectKey)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "cover image file is required"})
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "asset not found"})
+		return
+	}
+	defer storedObject.Body.Close()
+
+	if storedObject.ContentType != "" {
+		w.Header().Set("Content-Type", storedObject.ContentType)
+	}
+	if storedObject.Size > 0 {
+		w.Header().Set("Content-Length", fmt.Sprintf("%d", storedObject.Size))
+	}
+	w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+	if _, err := io.Copy(w, storedObject.Body); err != nil {
+		log.Printf("stream uploaded asset: %v", err)
+	}
+}
+
+func (h *Handler) UploadCoverImage(w http.ResponseWriter, r *http.Request) {
+	file, _, ok := parseMultipartUpload(w, r, maxCoverUploadBytes, "cover image must be 25 MB or smaller", "cover image file is required")
+	if !ok {
 		return
 	}
 	defer file.Close()
 
-	urlPath, err := h.uploads.saveImage(file, header)
+	stored, err := h.storeCoverImage(r.Context(), file)
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, map[string]string{"url": urlPath})
+	writeJSON(w, http.StatusCreated, map[string]string{
+		"url":      stored.URL,
+		"mimeType": stored.ContentType,
+	})
+}
+
+func (h *Handler) UploadContentImage(w http.ResponseWriter, r *http.Request) {
+	file, header, ok := parseMultipartUpload(w, r, maxContentImageBytes, "content image must be 18 MB or smaller", "image file is required")
+	if !ok {
+		return
+	}
+	defer file.Close()
+
+	stored, err := h.storeContentImage(r.Context(), file, header)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, map[string]string{
+		"url":      stored.URL,
+		"mimeType": stored.ContentType,
+	})
+}
+
+func (h *Handler) UploadContentVideo(w http.ResponseWriter, r *http.Request) {
+	file, header, ok := parseMultipartUpload(w, r, maxContentVideoBytes, "content video must be 250 MB or smaller", "video file is required")
+	if !ok {
+		return
+	}
+	defer file.Close()
+
+	stored, err := h.storeContentVideo(r.Context(), file, header)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, map[string]string{
+		"url":      stored.URL,
+		"mimeType": stored.ContentType,
+	})
 }
 
 func (h *Handler) AdminLogin(w http.ResponseWriter, r *http.Request) {
@@ -928,58 +970,137 @@ func isValidEmail(value string) bool {
 	return err == nil
 }
 
-func (u localUploader) saveImage(file multipart.File, _ *multipart.FileHeader) (string, error) {
-	if err := os.MkdirAll(u.dir, 0o755); err != nil {
-		return "", errors.New("failed to prepare upload directory")
+func parseMultipartUpload(
+	w http.ResponseWriter,
+	r *http.Request,
+	maxBytes int64,
+	tooLargeMessage string,
+	missingFileMessage string,
+) (multipart.File, *multipart.FileHeader, bool) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBytes)
+	if err := r.ParseMultipartForm(maxBytes); err != nil {
+		var maxBytesError *http.MaxBytesError
+		if errors.As(err, &maxBytesError) {
+			writeJSON(w, http.StatusRequestEntityTooLarge, map[string]string{"error": tooLargeMessage})
+			return nil, nil, false
+		}
+
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid multipart upload payload"})
+		return nil, nil, false
 	}
 
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": missingFileMessage})
+		return nil, nil, false
+	}
+
+	return file, header, true
+}
+
+func sniffContentType(file multipart.File) (string, error) {
 	sniffBuffer := make([]byte, 512)
 	bytesRead, err := file.Read(sniffBuffer)
 	if err != nil && !errors.Is(err, io.EOF) {
-		return "", errors.New("failed to read cover image")
+		return "", errors.New("failed to read upload")
 	}
 
 	if _, err := file.Seek(0, io.SeekStart); err != nil {
-		return "", errors.New("failed to reset cover image")
+		return "", errors.New("failed to reset upload")
 	}
 
-	contentType := http.DetectContentType(sniffBuffer[:bytesRead])
+	return strings.TrimSpace(http.DetectContentType(sniffBuffer[:bytesRead])), nil
+}
+
+func (h *Handler) storeCoverImage(ctx context.Context, file multipart.File) (storedAsset, error) {
+	contentType, err := sniffContentType(file)
+	if err != nil {
+		return storedAsset{}, err
+	}
 	if !isAllowedCoverContentType(contentType) {
-		return "", errors.New("cover image must be PNG, JPEG, WEBP, or GIF")
+		return storedAsset{}, errors.New("cover image must be PNG, JPEG, WEBP, or GIF")
 	}
 
 	if _, err := file.Seek(0, io.SeekStart); err != nil {
-		return "", errors.New("failed to reset cover image")
+		return storedAsset{}, errors.New("failed to reset cover image")
 	}
 
 	decodedImage, _, err := image.Decode(file)
 	if err != nil {
-		return "", errors.New("failed to decode cover image")
+		return storedAsset{}, errors.New("failed to decode cover image")
 	}
 
 	optimizedImage := optimizeCoverImage(decodedImage)
-
-	randomName, err := randomUploadName()
-	if err != nil {
-		return "", errors.New("failed to create upload name")
-	}
-
-	fileName := randomName + ".webp"
-	destinationPath := filepath.Join(u.dir, fileName)
-	destinationFile, err := os.Create(destinationPath)
-	if err != nil {
-		return "", errors.New("failed to store cover image")
-	}
-	defer destinationFile.Close()
-
-	if err := webp.Encode(destinationFile, optimizedImage, &webp.Options{
+	buffer := &bytes.Buffer{}
+	if err := webp.Encode(buffer, optimizedImage, &webp.Options{
 		Lossy:   true,
 		Quality: float32(coverImageWebPQuality),
 	}); err != nil {
-		return "", errors.New("failed to compress cover image")
+		return storedAsset{}, errors.New("failed to compress cover image")
 	}
 
-	return "/api/uploads/" + fileName, nil
+	randomName, err := randomUploadName()
+	if err != nil {
+		return storedAsset{}, errors.New("failed to create upload name")
+	}
+
+	return h.assets.Put(ctx, path.Join("covers", randomName+".webp"), "image/webp", bytes.NewReader(buffer.Bytes()), int64(buffer.Len()))
+}
+
+func (h *Handler) storeContentImage(ctx context.Context, file multipart.File, header *multipart.FileHeader) (storedAsset, error) {
+	contentType, err := sniffContentType(file)
+	if err != nil {
+		return storedAsset{}, err
+	}
+	contentType = normalizeUploadedContentType(contentType, header.Filename)
+	if !isAllowedContentImageContentType(contentType) {
+		return storedAsset{}, errors.New("content image must be PNG, JPEG, WEBP, GIF, SVG, or AVIF")
+	}
+
+	if _, err := file.Seek(0, io.SeekStart); err != nil {
+		return storedAsset{}, errors.New("failed to reset content image")
+	}
+
+	randomName, err := randomUploadName()
+	if err != nil {
+		return storedAsset{}, errors.New("failed to create upload name")
+	}
+
+	return h.assets.Put(
+		ctx,
+		path.Join("content-images", randomName+extensionForContentType(contentType, header.Filename)),
+		contentType,
+		file,
+		header.Size,
+	)
+}
+
+func (h *Handler) storeContentVideo(ctx context.Context, file multipart.File, header *multipart.FileHeader) (storedAsset, error) {
+	contentType, err := sniffContentType(file)
+	if err != nil {
+		return storedAsset{}, err
+	}
+	contentType = normalizeUploadedContentType(contentType, header.Filename)
+	if !isAllowedContentVideoContentType(contentType) {
+		return storedAsset{}, errors.New("content video must be MP4, WEBM, or MOV")
+	}
+
+	if _, err := file.Seek(0, io.SeekStart); err != nil {
+		return storedAsset{}, errors.New("failed to reset content video")
+	}
+
+	randomName, err := randomUploadName()
+	if err != nil {
+		return storedAsset{}, errors.New("failed to create upload name")
+	}
+
+	return h.assets.Put(
+		ctx,
+		path.Join("content-videos", randomName+extensionForContentType(contentType, header.Filename)),
+		contentType,
+		file,
+		header.Size,
+	)
 }
 
 func isAllowedCoverContentType(contentType string) bool {
@@ -994,6 +1115,82 @@ func isAllowedCoverContentType(contentType string) bool {
 		return true
 	default:
 		return false
+	}
+}
+
+func isAllowedContentImageContentType(contentType string) bool {
+	switch contentType {
+	case "image/png", "image/jpeg", "image/webp", "image/gif", "image/svg+xml", "image/avif":
+		return true
+	default:
+		return false
+	}
+}
+
+func isAllowedContentVideoContentType(contentType string) bool {
+	switch contentType {
+	case "video/mp4", "video/webm", "video/quicktime":
+		return true
+	default:
+		return false
+	}
+}
+
+func extensionForContentType(contentType, fileName string) string {
+	switch contentType {
+	case "image/png":
+		return ".png"
+	case "image/jpeg":
+		return ".jpg"
+	case "image/webp":
+		return ".webp"
+	case "image/gif":
+		return ".gif"
+	case "image/svg+xml":
+		return ".svg"
+	case "image/avif":
+		return ".avif"
+	case "video/mp4":
+		return ".mp4"
+	case "video/webm":
+		return ".webm"
+	case "video/quicktime":
+		return ".mov"
+	default:
+		if extension := strings.TrimSpace(path.Ext(fileName)); extension != "" {
+			return extension
+		}
+	}
+
+	return ""
+}
+
+func normalizeUploadedContentType(contentType, fileName string) string {
+	if strings.TrimSpace(contentType) != "" && contentType != "application/octet-stream" {
+		return contentType
+	}
+
+	switch strings.ToLower(strings.TrimSpace(path.Ext(fileName))) {
+	case ".png":
+		return "image/png"
+	case ".jpg", ".jpeg":
+		return "image/jpeg"
+	case ".webp":
+		return "image/webp"
+	case ".gif":
+		return "image/gif"
+	case ".svg":
+		return "image/svg+xml"
+	case ".avif":
+		return "image/avif"
+	case ".mp4":
+		return "video/mp4"
+	case ".webm":
+		return "video/webm"
+	case ".mov":
+		return "video/quicktime"
+	default:
+		return strings.TrimSpace(contentType)
 	}
 }
 

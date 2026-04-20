@@ -20,13 +20,15 @@ func main() {
 
 	cfg := config.Load()
 	log.Printf(
-		"Stripe billing config secret_key_set=%t webhook_secret_len=%d price_id_set=%t success_url_set=%t cancel_url_set=%t portal_return_url_set=%t",
+		"Stripe billing config secret_key_set=%t webhook_secret_len=%d price_id_set=%t success_url_set=%t cancel_url_set=%t portal_return_url_set=%t storage_provider=%s uploads_base_path=%s",
 		cfg.StripeSecretKey != "",
 		len(cfg.StripeWebhookSecret),
 		cfg.StripePriceID != "",
 		cfg.StripeSuccessURL != "",
 		cfg.StripeCancelURL != "",
 		cfg.StripePortalReturnURL != "",
+		cfg.StorageProvider,
+		cfg.UploadsBasePath,
 	)
 
 	if err := db.RunMigrations(ctx, cfg.DatabaseURL); err != nil {
@@ -38,6 +40,21 @@ func main() {
 		log.Fatalf("connect database: %v", err)
 	}
 	defer pool.Close()
+
+	assets, err := httpapi.NewAssetStore(ctx, httpapi.AssetStorageConfig{
+		Provider:       cfg.StorageProvider,
+		LocalDir:       cfg.UploadsDir,
+		PublicBasePath: cfg.UploadsBasePath,
+		MinIOEndpoint:  cfg.MinIOEndpoint,
+		MinIOAccessKey: cfg.MinIOAccessKey,
+		MinIOSecretKey: cfg.MinIOSecretKey,
+		MinIOBucket:    cfg.MinIOBucket,
+		MinIORegion:    cfg.MinIORegion,
+		MinIOUseSSL:    cfg.MinIOUseSSL,
+	})
+	if err != nil {
+		log.Fatalf("configure asset storage: %v", err)
+	}
 
 	router := httpapi.NewRouter(
 		pool,
@@ -59,7 +76,7 @@ func main() {
 			CancelURL:       cfg.StripeCancelURL,
 			PortalReturnURL: cfg.StripePortalReturnURL,
 		}),
-		cfg.UploadsDir,
+		assets,
 	)
 	server := &http.Server{
 		Addr:              ":" + cfg.APIPort,

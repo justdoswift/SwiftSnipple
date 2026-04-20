@@ -12,6 +12,7 @@ import {
   Spinner as HeroSpinner,
   Switch as HeroSwitch,
   TextArea as HeroTextArea,
+  Toolbar as HeroToolbar,
   Tabs as HeroTabs,
   Tab as HeroTab,
   Tooltip as HeroTooltip,
@@ -31,6 +32,7 @@ export const SearchField = HeroSearchField as any;
 export const Spinner = HeroSpinner as any;
 export const Switch = HeroSwitch as any;
 export const TextArea = HeroTextArea as any;
+export const Toolbar = HeroToolbar as any;
 export const Tabs = HeroTabs as any;
 export const Tab = HeroTab as any;
 export const Tooltip = HeroTooltip as any;

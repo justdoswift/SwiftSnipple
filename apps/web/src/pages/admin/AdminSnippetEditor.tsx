@@ -4,14 +4,17 @@ import { Button, Dropdown, Input, Modal, TextArea, Tooltip, useOverlayState } fr
 import { useNavigate, useParams } from "react-router-dom";
 import EditorSection from "../../components/admin/EditorSection";
 import HighlightedCodeEditor from "../../components/admin/HighlightedCodeEditor";
+import MarkdownMediaModal from "../../components/admin/MarkdownMediaModal";
+import MarkdownToolbar from "../../components/admin/MarkdownToolbar";
 import StatusBadge from "../../components/admin/StatusBadge";
 import { useAdminHeader } from "../../components/admin/useAdminHeader";
 import { resolveAssetUrl } from "../../lib/asset-url";
+import { applyHeading, insertBlock, insertLink, replaceLinePrefix, wrapSelection } from "../../lib/markdown-editor";
 import { getMessages } from "../../lib/messages";
 import { getLocalizedSnippetFields, localizeAdminPath, localizePublicPath, useAppLocale } from "../../lib/locale";
 import { createEmptyLocalizedFields, getAvailableSnippetLocales, getFormLocale, getSnippetLocale } from "../../lib/snippet-localization";
 import { isUnauthorizedError } from "../../services/api";
-import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, unpublishSnippet, updateSnippet, uploadCoverImage } from "../../services/snippets";
+import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, unpublishSnippet, updateSnippet, uploadContentImage, uploadContentVideo, uploadCoverImage } from "../../services/snippets";
 import { AppLocale, Snippet, SnippetFormState, SnippetPayload, SnippetStatus } from "../../types";
 import { ChevronDown, ChevronLeft, Code2, Eye, ImageUp, Layout, Monitor, MessageSquareQuote, Send, Smartphone, Settings2, Trash2, X } from "lucide-react";
 
@@ -32,6 +35,7 @@ type EditorContentLocaleOption = {
   id: AppLocale;
   label: string;
 };
+type EditorMediaModalKind = "image" | "video" | null;
 type EditorTabOption = {
   key: EditorTabKey;
   label: string;
@@ -251,11 +255,14 @@ export default function AdminSnippetEditor() {
   const [isLoading, setIsLoading] = useState(!isNew);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUploadingCoverImage, setIsUploadingCoverImage] = useState(false);
+  const [isUploadingContentMedia, setIsUploadingContentMedia] = useState(false);
   const [localCoverPreviewUrl, setLocalCoverPreviewUrl] = useState("");
   const [error, setError] = useState("");
+  const [contentMediaError, setContentMediaError] = useState("");
   const [feedback, setFeedback] = useState("");
   const [activeTab, setActiveTab] = useState<EditorTabKey>("content");
   const [editorLocale, setEditorLocale] = useState<AppLocale>(locale);
+  const [contentMediaModal, setContentMediaModal] = useState<EditorMediaModalKind>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -265,6 +272,8 @@ export default function AdminSnippetEditor() {
   const hydratedSnippetRef = useRef<Snippet | null>(null);
   const formRef = useRef(form);
   const coverImageInputRef = useRef<HTMLInputElement | null>(null);
+  const contentTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const contentSelectionRef = useRef<{ start: number; end: number } | null>(null);
   const previewIframeRef = useRef<HTMLIFrameElement | null>(null);
   const previewScrollResetTimeoutRef = useRef<number | null>(null);
   const deleteConfirmState = useOverlayState({
@@ -445,6 +454,39 @@ export default function AdminSnippetEditor() {
   const selectedVisibilityKey = form.requiresSubscription ? "subscribers" : "free";
   const selectedVisibilityLabel =
     visibilitySelectOptions.find((option) => option.id === selectedVisibilityKey)?.label ?? copy.visibilityFree;
+  const currentHeadingLevel = useMemo<0 | 1 | 2 | 3 | 4 | 5 | 6>(() => {
+    const currentLine = localizedForm.content.slice(0, contentTextareaRef.current?.selectionStart ?? 0).split("\n").pop() ?? "";
+    const match = /^(#{1,6})\s/.exec(currentLine);
+    return match ? (match[1].length as 1 | 2 | 3 | 4 | 5 | 6) : 0;
+  }, [localizedForm.content]);
+  const toolbarLabels = useMemo(
+    () => ({
+      text: copy.markdownToolbar,
+      heading: copy.markdownHeading,
+      bold: copy.markdownBold,
+      italic: copy.markdownItalic,
+      strikethrough: copy.markdownStrikethrough,
+      inlineCode: copy.markdownInlineCode,
+      codeBlock: copy.markdownCodeBlock,
+      blockquote: copy.markdownBlockquote,
+      bulletedList: copy.markdownBulletedList,
+      numberedList: copy.markdownNumberedList,
+      link: copy.markdownLink,
+      image: copy.markdownImage,
+      video: copy.markdownVideo,
+      horizontalRule: copy.markdownHorizontalRule,
+      normalText: copy.markdownNormalText,
+      headings: [
+        copy.markdownHeading1,
+        copy.markdownHeading2,
+        copy.markdownHeading3,
+        copy.markdownHeading4,
+        copy.markdownHeading5,
+        copy.markdownHeading6,
+      ],
+    }),
+    [copy],
+  );
   const primaryActionLabel =
     primaryActionState === "publishing"
       ? copy.publishing
@@ -476,6 +518,11 @@ export default function AdminSnippetEditor() {
   const saveStateLabel = saveState === "syncing" ? copy.syncing : saveState === "saving" ? copy.saving : copy.saved;
   const autosaveFeedbackLabel =
     autosaveState === "saving" ? copy.saving : autosaveState === "saved" ? copy.saved : "";
+
+  const openContentMediaModal = useCallback((kind: Exclude<EditorMediaModalKind, null>) => {
+    setContentMediaError("");
+    setContentMediaModal(kind);
+  }, []);
   useEffect(() => {
     if (!isPreviewOpen) {
       if (previewScrollResetTimeoutRef.current !== null) {
@@ -494,7 +541,7 @@ export default function AdminSnippetEditor() {
     });
   };
 
-  const updateLocalizedField = (field: keyof SnippetFormState["locales"]["en"], value: string) => {
+  const updateLocalizedField = useCallback((field: keyof SnippetFormState["locales"]["en"], value: string) => {
     setForm((current) => {
       const currentLocaleForm = current.locales[editorLocale];
       const nextLocaleForm = {
@@ -514,7 +561,45 @@ export default function AdminSnippetEditor() {
         },
       };
     });
-  };
+  }, [editorLocale]);
+
+  const syncContentTextareaSelection = useCallback(() => {
+    if (!contentTextareaRef.current || !contentSelectionRef.current) {
+      return;
+    }
+
+    const { start, end } = contentSelectionRef.current;
+    contentTextareaRef.current.focus();
+    contentTextareaRef.current.setSelectionRange(start, end);
+    contentSelectionRef.current = null;
+  }, []);
+
+  const resizeContentTextarea = useCallback(() => {
+    const textarea = contentTextareaRef.current;
+    if (!textarea) {
+      return;
+    }
+    textarea.style.height = "auto";
+    textarea.style.height = `${Math.max(textarea.scrollHeight, 420)}px`;
+  }, []);
+
+  useEffect(() => {
+    resizeContentTextarea();
+    syncContentTextareaSelection();
+  }, [localizedForm.content, resizeContentTextarea, syncContentTextareaSelection]);
+
+  const applyContentEdit = useCallback((transform: (value: string, start: number, end: number) => { value: string; selectionStart: number; selectionEnd: number }) => {
+    const textarea = contentTextareaRef.current;
+    const currentValue = localizedForm.content;
+    const start = textarea?.selectionStart ?? currentValue.length;
+    const end = textarea?.selectionEnd ?? currentValue.length;
+    const nextState = transform(currentValue, start, end);
+    contentSelectionRef.current = {
+      start: nextState.selectionStart,
+      end: nextState.selectionEnd,
+    };
+    updateLocalizedField("content", nextState.value);
+  }, [localizedForm.content, updateLocalizedField]);
 
   const persistSnippet = useCallback(
     async (nextForm: SnippetFormState) => {
@@ -688,6 +773,55 @@ export default function AdminSnippetEditor() {
       setIsUploadingCoverImage(false);
     }
   }, [copy.failedCoverImageUpload, copy.invalidCoverImage, redirectToAdminLogin]);
+
+  const handleContentMediaInsert = useCallback(async (payload: { file?: File; url?: string; alt?: string; title?: string }) => {
+    if (!contentMediaModal) {
+      return;
+    }
+
+    try {
+      setContentMediaError("");
+      setIsUploadingContentMedia(true);
+      let assetURL = payload.url?.trim() ?? "";
+
+      if (payload.file) {
+        if (contentMediaModal === "image") {
+          const result = await uploadContentImage(payload.file);
+          assetURL = result.url;
+        } else {
+          const result = await uploadContentVideo(payload.file);
+          assetURL = result.url;
+        }
+      }
+
+      if (!assetURL) {
+        setContentMediaError(contentMediaModal === "image" ? copy.invalidContentImage : copy.invalidContentVideo);
+        return;
+      }
+
+      applyContentEdit((value, start, end) => {
+        if (contentMediaModal === "image") {
+          const altText = payload.alt?.trim() || copy.mediaAltPlaceholder;
+          const snippet = `![${altText}](${assetURL})`;
+          return insertBlock(value, start, end, snippet, snippet.length);
+        }
+
+        const title = payload.title?.trim() || copy.mediaTitlePlaceholder;
+        const snippet = `::video{src="${assetURL}" title="${title}"}`;
+        return insertBlock(value, start, end, snippet, snippet.length);
+      });
+
+      setContentMediaModal(null);
+    } catch (err) {
+      if (isUnauthorizedError(err)) {
+        redirectToAdminLogin();
+        return;
+      }
+      setContentMediaError(err instanceof Error ? err.message : copy.failedContentMediaUpload);
+    } finally {
+      setIsUploadingContentMedia(false);
+    }
+  }, [applyContentEdit, contentMediaModal, copy.failedContentMediaUpload, copy.invalidContentImage, copy.invalidContentVideo, copy.mediaAltPlaceholder, copy.mediaTitlePlaceholder, redirectToAdminLogin]);
 
   useEffect(() => {
     return () => {
@@ -916,11 +1050,35 @@ export default function AdminSnippetEditor() {
                   className="py-4"
                 >
                   <div className="admin-editor-panel admin-editor-panel-frame group relative border px-6 py-6">
+                    <MarkdownToolbar
+                      headingLevel={currentHeadingLevel}
+                      labels={toolbarLabels}
+                      onHeadingChange={(level) => applyContentEdit((value, start, end) => applyHeading(value, start, end, level))}
+                      onBold={() => applyContentEdit((value, start, end) => wrapSelection(value, start, end, "**", "**", copy.markdownBoldPlaceholder))}
+                      onItalic={() => applyContentEdit((value, start, end) => wrapSelection(value, start, end, "*", "*", copy.markdownItalicPlaceholder))}
+                      onStrikethrough={() => applyContentEdit((value, start, end) => wrapSelection(value, start, end, "~~", "~~", copy.markdownStrikePlaceholder))}
+                      onInlineCode={() => applyContentEdit((value, start, end) => wrapSelection(value, start, end, "`", "`", copy.markdownCodePlaceholder))}
+                      onCodeBlock={() =>
+                        applyContentEdit((value, start, end) =>
+                          insertBlock(value, start, end, `\`\`\`markdown\n${value.slice(start, end) || copy.markdownCodeBlockPlaceholder}\n\`\`\``, 12),
+                        )
+                      }
+                      onBlockquote={() => applyContentEdit((value, start, end) => replaceLinePrefix(value, start, end, "> "))}
+                      onBulletedList={() => applyContentEdit((value, start, end) => replaceLinePrefix(value, start, end, "- "))}
+                      onNumberedList={() => applyContentEdit((value, start, end) => replaceLinePrefix(value, start, end, "1. "))}
+                      onLink={() => applyContentEdit((value, start, end) => insertLink(value, start, end))}
+                      onImage={() => openContentMediaModal("image")}
+                      onVideo={() => openContentMediaModal("video")}
+                      onHorizontalRule={() => applyContentEdit((value, start, end) => insertBlock(value, start, end, "---", 3))}
+                    />
                     <textarea
+                      ref={contentTextareaRef}
                       aria-label={copy.implementationNotes}
                       placeholder={copy.implementationPlaceholder}
                       value={localizedForm.content}
                       onChange={(event) => updateLocalizedField("content", event.target.value)}
+                      onClick={resizeContentTextarea}
+                      onKeyUp={resizeContentTextarea}
                       className="admin-editor-textarea admin-editor-panel-body admin-editor-scrollbar w-full resize-none border-0 bg-transparent px-0 shadow-none outline-none focus:ring-0"
                     />
                   </div>
@@ -1276,6 +1434,31 @@ export default function AdminSnippetEditor() {
           </div>
         </div>
       ) : null}
+
+      <MarkdownMediaModal
+        kind={contentMediaModal === "video" ? "video" : "image"}
+        isOpen={contentMediaModal !== null}
+        isUploading={isUploadingContentMedia}
+        error={contentMediaError}
+        copy={{
+          insertImage: copy.markdownImage,
+          insertVideo: copy.markdownVideo,
+          uploadFile: copy.mediaUploadFile,
+          useExternalUrl: copy.mediaUseExternalUrl,
+          altText: copy.mediaAltText,
+          mediaTitle: copy.mediaVideoTitle,
+          mediaUrl: copy.mediaUrl,
+          chooseImage: copy.mediaChooseImage,
+          chooseVideo: copy.mediaChooseVideo,
+          insertIntoContent: copy.mediaInsert,
+          uploadingMedia: copy.mediaUploading,
+          cancel: common.cancel,
+          invalidImage: copy.invalidContentImage,
+          invalidVideo: copy.invalidContentVideo,
+        }}
+        onClose={() => setContentMediaModal(null)}
+        onSubmit={handleContentMediaInsert}
+      />
 
       <Modal state={deleteConfirmState}>
         <Modal.Trigger className="sr-only">

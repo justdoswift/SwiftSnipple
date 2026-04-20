@@ -5,6 +5,7 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
 type CoverImageUploadResponse = {
   url: string;
+  mimeType?: string;
 };
 
 export function getSnippets() {
@@ -56,10 +57,22 @@ export function deleteSnippet(id: string) {
 }
 
 export function uploadCoverImage(file: File) {
+  return uploadSnippetAsset("/api/admin/uploads/cover", file);
+}
+
+export function uploadContentImage(file: File) {
+  return uploadSnippetAsset("/api/admin/uploads/content-image", file);
+}
+
+export function uploadContentVideo(file: File) {
+  return uploadSnippetAsset("/api/admin/uploads/content-video", file);
+}
+
+function uploadSnippetAsset(endpoint: string, file: File) {
   const formData = new FormData();
   formData.append("file", file);
 
-  return request<CoverImageUploadResponse>(`${API_BASE}/api/admin/uploads/cover`, {
+  return request<CoverImageUploadResponse>(`${API_BASE}${endpoint}`, {
     method: "POST",
     body: formData,
   });

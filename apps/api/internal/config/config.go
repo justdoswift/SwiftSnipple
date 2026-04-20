@@ -21,7 +21,15 @@ type Config struct {
 	StripeSuccessURL      string
 	StripeCancelURL       string
 	StripePortalReturnURL string
+	StorageProvider       string
 	UploadsDir            string
+	UploadsBasePath       string
+	MinIOEndpoint         string
+	MinIOAccessKey        string
+	MinIOSecretKey        string
+	MinIOBucket           string
+	MinIORegion           string
+	MinIOUseSSL           bool
 }
 
 func Load() Config {
@@ -67,7 +75,15 @@ func Load() Config {
 		stripePortalReturnURL == "" {
 		log.Printf("Stripe billing is not fully configured; membership checkout and billing portal endpoints will be unavailable until STRIPE_* vars are set")
 	}
+	storageProvider := strings.TrimSpace(envOrDefault("STORAGE_PROVIDER", "local"))
 	uploadsDir := envOrDefault("UPLOADS_DIR", "uploads")
+	uploadsBasePath := strings.TrimSpace(envOrDefault("UPLOADS_BASE_PATH", "/api/uploads"))
+	minIOEndpoint := strings.TrimSpace(os.Getenv("MINIO_ENDPOINT"))
+	minIOAccessKey := strings.TrimSpace(os.Getenv("MINIO_ACCESS_KEY"))
+	minIOSecretKey := strings.TrimSpace(os.Getenv("MINIO_SECRET_KEY"))
+	minIOBucket := strings.TrimSpace(envOrDefault("MINIO_BUCKET", "swiftsnipple-assets"))
+	minIORegion := strings.TrimSpace(envOrDefault("MINIO_REGION", "us-east-1"))
+	minIOUseSSL := strings.EqualFold(strings.TrimSpace(envOrDefault("MINIO_USE_SSL", "false")), "true")
 
 	return Config{
 		APIPort:               apiPort,
@@ -82,7 +98,15 @@ func Load() Config {
 		StripeSuccessURL:      stripeSuccessURL,
 		StripeCancelURL:       stripeCancelURL,
 		StripePortalReturnURL: stripePortalReturnURL,
+		StorageProvider:       storageProvider,
 		UploadsDir:            uploadsDir,
+		UploadsBasePath:       uploadsBasePath,
+		MinIOEndpoint:         minIOEndpoint,
+		MinIOAccessKey:        minIOAccessKey,
+		MinIOSecretKey:        minIOSecretKey,
+		MinIOBucket:           minIOBucket,
+		MinIORegion:           minIORegion,
+		MinIOUseSSL:           minIOUseSSL,
 	}
 }
 

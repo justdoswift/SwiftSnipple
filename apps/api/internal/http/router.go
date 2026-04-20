@@ -15,7 +15,7 @@ func NewRouter(
 	authConfig AdminAuthConfig,
 	memberAuthConfig MemberAuthConfig,
 	billing billingProvider,
-	uploadsDir string,
+	assets assetStore,
 ) http.Handler {
 	handler := &Handler{
 		db:         pool,
@@ -23,7 +23,7 @@ func NewRouter(
 		members:    members,
 		auth:       newAdminAuth(authConfig),
 		memberAuth: newMemberAuth(memberAuthConfig),
-		uploads:    newLocalUploader(uploadsDir),
+		assets:     assets,
 		billing:    billing,
 	}
 
@@ -35,10 +35,10 @@ func NewRouter(
 	router.Use(middleware.Timeout(15 * time.Second))
 
 	router.Get("/healthz", handler.Healthz)
-	router.Handle("/uploads/*", http.StripPrefix("/uploads/", http.FileServer(http.Dir(handler.uploads.dir))))
+	router.Get("/uploads/*", handler.ServeUpload)
 
 	router.Route("/api", func(r chi.Router) {
-		r.Handle("/uploads/*", http.StripPrefix("/api/uploads/", http.FileServer(http.Dir(handler.uploads.dir))))
+		r.Get("/uploads/*", handler.ServeUpload)
 		r.Get("/snippets", handler.ListSnippets)
 		r.Get("/snippets/{id}", handler.GetSnippet)
 		r.Get("/snippets/slug/{slug}", handler.GetSnippetBySlug)
@@ -71,6 +71,8 @@ func NewRouter(
 				protected.Get("/snippets", handler.ListAdminSnippets)
 				protected.Get("/snippets/{id}", handler.GetAdminSnippet)
 				protected.Post("/uploads/cover", handler.UploadCoverImage)
+				protected.Post("/uploads/content-image", handler.UploadContentImage)
+				protected.Post("/uploads/content-video", handler.UploadContentVideo)
 				protected.Post("/snippets", handler.CreateSnippet)
 				protected.Put("/snippets/{id}", handler.UpdateSnippet)
 				protected.Post("/snippets/{id}/publish", handler.PublishSnippet)

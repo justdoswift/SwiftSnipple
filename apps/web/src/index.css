@@ -2945,6 +2945,34 @@
     color: color-mix(in srgb, var(--admin-title) 70%, var(--admin-muted) 30%);
   }
 
+  .admin-markdown-toolbar {
+    border-color: color-mix(in srgb, var(--admin-field-border) 88%, transparent);
+    background: color-mix(in srgb, var(--admin-field-background) 76%, transparent);
+    backdrop-filter: blur(18px);
+  }
+
+  .admin-markdown-toolbar-trigger,
+  .admin-markdown-toolbar-button,
+  .admin-media-mode-toggle {
+    @apply inline-flex items-center justify-center rounded-full border px-3 py-2 text-sm transition-all duration-200;
+    border-color: color-mix(in srgb, var(--admin-field-border) 88%, transparent);
+    background: color-mix(in srgb, var(--admin-field-background) 82%, transparent);
+    color: var(--admin-field-foreground);
+  }
+
+  .admin-markdown-toolbar-trigger {
+    @apply justify-between px-4;
+  }
+
+  .admin-markdown-toolbar-button:hover,
+  .admin-markdown-toolbar-trigger:hover,
+  .admin-media-mode-toggle:hover,
+  .admin-media-mode-toggle-active {
+    background: color-mix(in srgb, var(--admin-title) 18%, var(--admin-field-background) 82%);
+    border-color: color-mix(in srgb, var(--admin-title) 18%, var(--admin-field-border) 82%);
+    color: var(--admin-title);
+  }
+
   .admin-builder-label {
     color: color-mix(in srgb, var(--admin-title) 62%, #f59e0b 38%);
   }
@@ -3231,6 +3259,31 @@
   .markdown-renderer hr {
     @apply my-8;
     border-color: var(--public-border-soft);
+  }
+
+  .markdown-media-shell {
+    @apply my-6 overflow-hidden rounded-[22px] border;
+    border-color: var(--public-code-border);
+    background-color: var(--public-surface-subtle-bg);
+  }
+
+  .markdown-media-image,
+  .markdown-media-video,
+  .markdown-media-embed {
+    @apply block h-auto w-full;
+  }
+
+  .markdown-media-embed-shell {
+    @apply aspect-video w-full;
+  }
+
+  .markdown-media-embed {
+    border: 0;
+  }
+
+  .markdown-media-caption {
+    @apply px-4 py-3 text-sm;
+    color: var(--public-body-sm);
   }
 
   .markdown-table-wrap {

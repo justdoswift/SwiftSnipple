@@ -5,7 +5,7 @@ import AdminLayout from "../../components/admin/AdminLayout";
 import type { AdminAuthSession } from "../../lib/admin-auth";
 import { LocaleContext } from "../../lib/locale";
 import AdminSnippetEditor from "./AdminSnippetEditor";
-import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, updateSnippet, uploadCoverImage } from "../../services/snippets";
+import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, updateSnippet, uploadContentImage, uploadContentVideo, uploadCoverImage } from "../../services/snippets";
 import { createSnippet as createSnippetFixture } from "../../test/factories";
 
 vi.mock("../../services/snippets", () => ({
@@ -15,6 +15,8 @@ vi.mock("../../services/snippets", () => ({
   publishSnippet: vi.fn(),
   unpublishSnippet: vi.fn(),
   updateSnippet: vi.fn(),
+  uploadContentImage: vi.fn(),
+  uploadContentVideo: vi.fn(),
   uploadCoverImage: vi.fn(),
 }));
 
@@ -23,6 +25,8 @@ const mockedCreateSnippet = vi.mocked(createSnippet);
 const mockedDeleteSnippet = vi.mocked(deleteSnippet);
 const mockedPublishSnippet = vi.mocked(publishSnippet);
 const mockedUpdateSnippet = vi.mocked(updateSnippet);
+const mockedUploadContentImage = vi.mocked(uploadContentImage);
+const mockedUploadContentVideo = vi.mocked(uploadContentVideo);
 const mockedUploadCoverImage = vi.mocked(uploadCoverImage);
 
 const adminAuthSession: AdminAuthSession = {
@@ -40,6 +44,8 @@ describe("AdminSnippetEditor", () => {
     mockedGetSnippetById.mockReset();
     mockedCreateSnippet.mockReset();
     mockedPublishSnippet.mockReset();
+    mockedUploadContentImage.mockReset();
+    mockedUploadContentVideo.mockReset();
     mockedUploadCoverImage.mockReset();
 
     render(
@@ -152,6 +158,48 @@ describe("AdminSnippetEditor", () => {
 
     URL.createObjectURL = originalCreateObjectURL;
     URL.revokeObjectURL = originalRevokeObjectURL;
+  });
+
+  it("formats markdown content and inserts uploaded media", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+    mockedUploadContentImage.mockResolvedValue({ url: "/api/uploads/content-images/example.png", mimeType: "image/png" });
+
+    render(
+      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+            <Route path="snippets/new" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    const notes = screen.getByLabelText("Implementation notes") as HTMLTextAreaElement;
+    fireEvent.change(notes, { target: { value: "Hello world" } });
+    notes.setSelectionRange(0, 5);
+    fireEvent.click(screen.getByRole("button", { name: "Bold" }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Implementation notes")).toHaveValue("**Hello** world");
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Image" }));
+    const fileInput = document.querySelector('input[type="file"][accept*="image/png"]') as HTMLInputElement | null;
+    expect(fileInput).not.toBeNull();
+    fireEvent.change(fileInput!, { target: { files: [new File(["image"], "body.png", { type: "image/png" })] } });
+    fireEvent.click(screen.getByRole("button", { name: "Insert into notes" }));
+
+    await waitFor(() => {
+      expect(mockedUploadContentImage).toHaveBeenCalled();
+    });
+
+    await waitFor(() => {
+      const notesField = screen.getByLabelText("Implementation notes") as HTMLTextAreaElement;
+      expect(notesField.value).toContain("![");
+      expect(notesField.value).toContain("/api/uploads/content-images/example.png");
+    });
   });
 
   it("returns to the snippet library from the editor header back button", () => {

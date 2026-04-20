@@ -19,6 +19,15 @@ func main() {
 	defer stop()
 
 	cfg := config.Load()
+	log.Printf(
+		"Stripe billing config secret_key_set=%t webhook_secret_len=%d price_id_set=%t success_url_set=%t cancel_url_set=%t portal_return_url_set=%t",
+		cfg.StripeSecretKey != "",
+		len(cfg.StripeWebhookSecret),
+		cfg.StripePriceID != "",
+		cfg.StripeSuccessURL != "",
+		cfg.StripeCancelURL != "",
+		cfg.StripePortalReturnURL != "",
+	)
 
 	if err := db.RunMigrations(ctx, cfg.DatabaseURL); err != nil {
 		log.Fatalf("run migrations: %v", err)

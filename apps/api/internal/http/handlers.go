@@ -503,6 +503,12 @@ func (h *Handler) StripeWebhook(w http.ResponseWriter, r *http.Request) {
 
 	event, err := h.billing.ParseWebhook(payload, r.Header.Get("Stripe-Signature"))
 	if err != nil {
+		log.Printf(
+			"stripe webhook parse failed signature_present=%t payload_bytes=%d error=%v",
+			strings.TrimSpace(r.Header.Get("Stripe-Signature")) != "",
+			len(payload),
+			err,
+		)
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid webhook signature"})
 		return
 	}

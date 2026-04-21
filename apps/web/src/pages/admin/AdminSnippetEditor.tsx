@@ -1771,7 +1771,6 @@ export default function AdminSnippetEditor() {
                       onChange={handleContentTextareaChange}
                       onPaste={handleContentTextareaPaste}
                       onKeyDown={handleContentTextareaKeyDown}
-                      onFocus={syncContentTextareaSelection}
                       onClick={resizeContentTextarea}
                       onKeyUp={resizeContentTextarea}
                       className="admin-editor-textarea admin-editor-panel-body admin-editor-scrollbar w-full resize-none border-0 bg-transparent px-0 shadow-none outline-none focus:ring-0"

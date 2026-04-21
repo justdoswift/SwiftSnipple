@@ -632,6 +632,39 @@ describe("AdminSnippetEditor", () => {
     expect(document.activeElement).not.toBe(notes);
   });
 
+  it("keeps the clicked caret position when returning to implementation notes", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+
+    render(
+      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+            <Route path="snippets/new" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    const notes = screen.getByLabelText("Implementation notes") as HTMLTextAreaElement;
+    fireEvent.change(notes, { target: { value: "Hello world" } });
+    notes.setSelectionRange(0, 5);
+    fireEvent.click(screen.getByRole("button", { name: "Bold" }));
+
+    await waitFor(() => {
+      expect(notes.value).toBe("**Hello** world");
+    });
+
+    const expectedCaret = notes.value.length;
+    notes.focus();
+    notes.setSelectionRange(expectedCaret, expectedCaret);
+
+    expect(document.activeElement).toBe(notes);
+    expect(notes.selectionStart).toBe(expectedCaret);
+    expect(notes.selectionEnd).toBe(expectedCaret);
+  });
+
   it("returns to the snippet library from the editor header back button", () => {
     mockedGetSnippetById.mockReset();
     mockedCreateSnippet.mockReset();

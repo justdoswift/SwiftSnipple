@@ -743,7 +743,7 @@ describe("AdminSnippetEditor", () => {
     mockedUpdateSnippet.mockResolvedValue(createSnippetFixture({
       id: "snippet-1",
       title: "Live Snippet Updated",
-      slug: "live-snippet",
+      slug: "live-snippet-updated",
       excerpt: "Published snippet.",
       category: "Workflow",
       tags: ["SwiftUI"],
@@ -1023,9 +1023,12 @@ describe("AdminSnippetEditor", () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Published" })).toBeDisabled();
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
     });
+
+    expect(screen.getByRole("button", { name: "Published" })).toBeDisabled();
 
     await act(async () => {
       vi.advanceTimersByTime(4000);
@@ -1062,7 +1065,7 @@ describe("AdminSnippetEditor", () => {
     mockedUpdateSnippet.mockResolvedValue(createSnippetFixture({
       id: "snippet-1",
       title: "Live Snippet Updated",
-      slug: "live-snippet",
+      slug: "live-snippet-updated",
       excerpt: "Published snippet.",
       category: "Workflow",
       tags: ["SwiftUI"],
@@ -1090,9 +1093,12 @@ describe("AdminSnippetEditor", () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Published" })).toBeDisabled();
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
     });
+
+    expect(screen.getByRole("button", { name: "Published" })).toBeDisabled();
 
     fireEvent.change(screen.getByLabelText("Snippet Title"), { target: { value: "Live Snippet Updated" } });
 

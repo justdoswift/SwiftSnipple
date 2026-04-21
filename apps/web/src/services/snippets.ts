@@ -16,8 +16,14 @@ export function getSnippetById(id: string) {
   return request<Snippet>(`${API_BASE}/api/admin/snippets/${id}`);
 }
 
-export function getSnippetBySlug(slug: string) {
-  return request<Snippet>(`${API_BASE}/api/snippets/slug/${slug}`);
+export function getSnippetBySlug(slug: string, search = "") {
+  const normalizedSearch = search
+    ? search.startsWith("?")
+      ? search
+      : `?${search}`
+    : "";
+
+  return request<Snippet>(`${API_BASE}/api/snippets/slug/${slug}${normalizedSearch}`);
 }
 
 export function getAdminSnippets() {

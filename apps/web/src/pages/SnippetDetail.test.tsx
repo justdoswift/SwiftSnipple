@@ -241,6 +241,27 @@ describe("SnippetDetail", () => {
     expect(screen.getByRole("button", { name: "03 Prompt Logic" })).toHaveAttribute("aria-pressed", "false");
   });
 
+  it("forwards admin preview query params to the snippet detail request", async () => {
+    renderSnippetDetail({
+      initialEntries: ["/snippets/smooth-feedback-loops?preview=admin&id=snippet-1&locale=zh&rev=7"],
+    });
+
+    await waitFor(() => {
+      expect(mockedGetSnippetBySlug).toHaveBeenCalledWith(
+        "smooth-feedback-loops",
+        "?preview=admin&id=snippet-1&locale=zh&rev=7",
+      );
+    });
+  });
+
+  it("does not add preview query params during normal public requests", async () => {
+    renderSnippetDetail({ initialEntries: ["/snippets/smooth-feedback-loops"] });
+
+    await waitFor(() => {
+      expect(mockedGetSnippetBySlug).toHaveBeenCalledWith("smooth-feedback-loops", "");
+    });
+  });
+
   it("uses the preview locale query override in admin preview mode", async () => {
     renderSnippetDetail({
       locale: "en",

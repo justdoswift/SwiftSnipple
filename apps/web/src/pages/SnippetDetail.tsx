@@ -107,7 +107,7 @@ export default function SnippetDetail() {
     let active = true;
     setIsLoading(true);
     setIsCoverImageBroken(false);
-    Promise.resolve(getSnippetBySlug(slug))
+    Promise.resolve(getSnippetBySlug(slug, location.search))
       .then((value) => {
         if (!active) return;
         setSnippet(value);
@@ -125,7 +125,7 @@ export default function SnippetDetail() {
     return () => {
       active = false;
     };
-  }, [slug]);
+  }, [location.search, slug]);
 
   useEffect(() => {
     if (typeof window === "undefined" || typeof window.matchMedia !== "function") {

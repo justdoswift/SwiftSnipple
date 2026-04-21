@@ -3237,6 +3237,139 @@
     border-bottom-right-radius: var(--radius-panel);
   }
 
+  .admin-cover-crop-backdrop {
+    background: rgba(0, 0, 0, 0.78);
+    backdrop-filter: blur(16px);
+  }
+
+  .admin-cover-crop-dialog {
+    display: flex;
+    height: calc(100vh - 2rem);
+    width: min(1480px, calc(100vw - 2rem));
+    max-width: none;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--field-border);
+    background: var(--admin-preview-stage-bg);
+    color: var(--field-text);
+    box-shadow: 0 24px 90px rgba(0, 0, 0, 0.34);
+  }
+
+  .admin-cover-crop-header,
+  .admin-cover-crop-footer {
+    border-color: var(--field-border);
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .admin-cover-crop-header {
+    padding: 1.5rem 1.5rem 1rem;
+  }
+
+  .admin-cover-crop-body {
+    flex: 1;
+    min-height: 0;
+    padding: 0;
+  }
+
+  .admin-cover-crop-workspace {
+    display: grid;
+    height: 100%;
+    min-height: 0;
+    gap: 1rem;
+    padding: 1.5rem;
+  }
+
+  .admin-cover-crop-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .admin-cover-crop-zoom {
+    display: grid;
+    min-width: min(100%, 320px);
+    gap: 0.625rem;
+  }
+
+  .admin-cover-crop-zoom input[type="range"] {
+    width: 100%;
+  }
+
+  .admin-cover-crop-frame {
+    position: relative;
+    display: flex;
+    min-height: 0;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid var(--field-border);
+    border-radius: var(--radius-panel);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015)),
+      radial-gradient(circle at top, rgba(255, 255, 255, 0.06), transparent 52%);
+    touch-action: none;
+    user-select: none;
+  }
+
+  .admin-cover-crop-viewport {
+    position: relative;
+    width: min(calc(100% - 2rem), 1100px);
+    aspect-ratio: 1200 / 630;
+    overflow: hidden;
+  }
+
+  .admin-cover-crop-mask {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    box-shadow:
+      0 0 0 9999px rgba(0, 0, 0, 0.5),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
+  }
+
+  .admin-cover-crop-image {
+    position: absolute;
+    max-width: none;
+    cursor: grab;
+    object-fit: cover;
+  }
+
+  .admin-cover-crop-image:active {
+    cursor: grabbing;
+  }
+
+  .admin-cover-crop-loading {
+    color: var(--admin-copy-muted);
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .admin-cover-crop-footer {
+    padding: 1rem 1.5rem 1.5rem;
+  }
+
+  @media (max-width: 900px) {
+    .admin-cover-crop-dialog {
+      height: calc(100vh - 1rem);
+      width: calc(100vw - 1rem);
+    }
+
+    .admin-cover-crop-workspace {
+      padding: 1rem;
+    }
+
+    .admin-cover-crop-viewport {
+      width: calc(100% - 1rem);
+    }
+  }
+
   .markdown-renderer {
     @apply space-y-4 text-[1.0625rem] leading-[1.55];
     letter-spacing: 0;

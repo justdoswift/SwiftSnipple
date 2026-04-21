@@ -43,18 +43,21 @@ type SnippetAvailableLocales struct {
 }
 
 type Snippet struct {
-	ID                   string             `json:"id"`
-	CoverImage           string             `json:"coverImage"`
-	Code                 string             `json:"code"`
-	Status               SnippetStatus      `json:"status"`
-	UpdatedAt            time.Time          `json:"updatedAt"`
-	PublishedAt          *time.Time         `json:"publishedAt"`
-	RequiresSubscription bool               `json:"requiresSubscription"`
-	ViewerCanAccess      bool               `json:"viewerCanAccess"`
-	Locked               bool               `json:"locked"`
-	AccessLevel          SnippetAccessLevel `json:"accessLevel"`
-	Locales              SnippetLocales     `json:"locales"`
-	AvailableLocales     SnippetAvailableLocales `json:"availableLocales"`
+	ID                    string                  `json:"id"`
+	CoverImage            string                  `json:"coverImage"`
+	Code                  string                  `json:"code"`
+	Status                SnippetStatus           `json:"status"`
+	UpdatedAt             time.Time               `json:"updatedAt"`
+	PublishedAt           *time.Time              `json:"publishedAt"`
+	RequiresSubscription  bool                    `json:"requiresSubscription"`
+	ViewerCanAccess       bool                    `json:"viewerCanAccess"`
+	Locked                bool                    `json:"locked"`
+	AccessLevel           SnippetAccessLevel      `json:"accessLevel"`
+	Locales               SnippetLocales          `json:"locales"`
+	AvailableLocales      SnippetAvailableLocales `json:"availableLocales"`
+	HasUnpublishedChanges bool                    `json:"hasUnpublishedChanges"`
+	DraftUpdatedAt        *time.Time              `json:"draftUpdatedAt"`
+	LivePublishedAt       *time.Time              `json:"livePublishedAt"`
 }
 
 type SnippetPayload struct {

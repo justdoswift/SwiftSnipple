@@ -23,7 +23,7 @@ func NewSnippetRepository(pool *pgxpool.Pool) *SnippetRepository {
 	return &SnippetRepository{pool: pool}
 }
 
-const snippetSelectColumns = `
+const fullSnippetSelectColumns = `
 	id,
 	cover_image,
 	code,
@@ -48,12 +48,111 @@ const snippetSelectColumns = `
 	content_zh,
 	prompts_zh,
 	seo_title_zh,
-	seo_description_zh
+	seo_description_zh,
+	draft_cover_image,
+	draft_code,
+	draft_requires_subscription,
+	draft_title_en,
+	draft_slug_en,
+	draft_excerpt_en,
+	draft_category_en,
+	draft_tags_en,
+	draft_content_en,
+	draft_prompts_en,
+	draft_seo_title_en,
+	draft_seo_description_en,
+	draft_title_zh,
+	draft_slug_zh,
+	draft_excerpt_zh,
+	draft_category_zh,
+	draft_tags_zh,
+	draft_content_zh,
+	draft_prompts_zh,
+	draft_seo_title_zh,
+	draft_seo_description_zh,
+	has_unpublished_changes,
+	draft_updated_at
 `
+
+type rawSnippetRecord struct {
+	ID                   string
+	CoverImage           string
+	Code                 string
+	Status               domain.SnippetStatus
+	UpdatedAt            time.Time
+	PublishedAt          *time.Time
+	RequiresSubscription bool
+	Locales              domain.SnippetLocales
+
+	DraftCoverImage           string
+	DraftCode                 string
+	DraftRequiresSubscription bool
+	DraftLocales              domain.SnippetLocales
+	HasUnpublishedChanges     bool
+	DraftUpdatedAt            *time.Time
+}
+
+func (r rawSnippetRecord) liveSnippet() domain.Snippet {
+	snippet := domain.Snippet{
+		ID:                    r.ID,
+		CoverImage:            r.CoverImage,
+		Code:                  r.Code,
+		Status:                domain.NormalizeStoredStatus(r.Status),
+		UpdatedAt:             r.UpdatedAt,
+		PublishedAt:           r.PublishedAt,
+		LivePublishedAt:       r.PublishedAt,
+		RequiresSubscription:  r.RequiresSubscription,
+		Locales:               normalizeLocales(r.Locales),
+		HasUnpublishedChanges: r.HasUnpublishedChanges,
+		DraftUpdatedAt:        r.DraftUpdatedAt,
+	}
+	if snippet.Status != domain.StatusPublished {
+		snippet.PublishedAt = nil
+		snippet.LivePublishedAt = nil
+	}
+	snippet.AvailableLocales = domain.AvailableLocalesFor(snippet.Locales)
+	return snippet
+}
+
+func (r rawSnippetRecord) editableSnippet() domain.Snippet {
+	if r.Status == domain.StatusPublished && r.HasUnpublishedChanges {
+		snippet := domain.Snippet{
+			ID:                    r.ID,
+			CoverImage:            r.DraftCoverImage,
+			Code:                  r.DraftCode,
+			Status:                domain.StatusPublished,
+			UpdatedAt:             draftUpdatedAtOrFallback(r.DraftUpdatedAt, r.UpdatedAt),
+			PublishedAt:           r.PublishedAt,
+			LivePublishedAt:       r.PublishedAt,
+			RequiresSubscription:  r.DraftRequiresSubscription,
+			Locales:               normalizeLocales(r.DraftLocales),
+			HasUnpublishedChanges: true,
+			DraftUpdatedAt:        r.DraftUpdatedAt,
+		}
+		snippet.AvailableLocales = domain.AvailableLocalesFor(snippet.Locales)
+		return snippet
+	}
+
+	return r.liveSnippet()
+}
+
+func (r rawSnippetRecord) previewSnippet() domain.Snippet {
+	if r.HasUnpublishedChanges {
+		return r.editableSnippet()
+	}
+	return r.liveSnippet()
+}
+
+func draftUpdatedAtOrFallback(draftUpdatedAt *time.Time, fallback time.Time) time.Time {
+	if draftUpdatedAt != nil {
+		return *draftUpdatedAt
+	}
+	return fallback
+}
 
 func (r *SnippetRepository) List(ctx context.Context) ([]domain.Snippet, error) {
 	rows, err := r.pool.Query(ctx, `
-		SELECT `+snippetSelectColumns+`
+		SELECT `+fullSnippetSelectColumns+`
 		FROM snippets
 		ORDER BY updated_at DESC
 	`)
@@ -64,50 +163,77 @@ func (r *SnippetRepository) List(ctx context.Context) ([]domain.Snippet, error) 
 
 	var snippets []domain.Snippet
 	for rows.Next() {
-		snippet, err := scanSnippet(rows)
+		record, err := scanRawSnippet(rows)
 		if err != nil {
 			return nil, err
 		}
-		snippets = append(snippets, snippet)
+		snippets = append(snippets, record.liveSnippet())
+	}
+
+	return snippets, rows.Err()
+}
+
+func (r *SnippetRepository) ListAdmin(ctx context.Context) ([]domain.Snippet, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT `+fullSnippetSelectColumns+`
+		FROM snippets
+		ORDER BY updated_at DESC
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("query snippets: %w", err)
+	}
+	defer rows.Close()
+
+	var snippets []domain.Snippet
+	for rows.Next() {
+		record, err := scanRawSnippet(rows)
+		if err != nil {
+			return nil, err
+		}
+		snippets = append(snippets, record.editableSnippet())
 	}
 
 	return snippets, rows.Err()
 }
 
 func (r *SnippetRepository) GetByID(ctx context.Context, id string) (domain.Snippet, error) {
-	row := r.pool.QueryRow(ctx, `
-		SELECT `+snippetSelectColumns+`
-		FROM snippets
-		WHERE id = $1
-	`, id)
-
-	snippet, err := scanSnippet(row)
+	record, err := r.getRawByID(ctx, id)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.Snippet{}, ErrNotFound
-		}
 		return domain.Snippet{}, err
 	}
+	return record.liveSnippet(), nil
+}
 
-	return snippet, nil
+func (r *SnippetRepository) GetAdminByID(ctx context.Context, id string) (domain.Snippet, error) {
+	record, err := r.getRawByID(ctx, id)
+	if err != nil {
+		return domain.Snippet{}, err
+	}
+	return record.editableSnippet(), nil
 }
 
 func (r *SnippetRepository) GetBySlug(ctx context.Context, slug string) (domain.Snippet, error) {
-	row := r.pool.QueryRow(ctx, `
-		SELECT `+snippetSelectColumns+`
-		FROM snippets
-		WHERE slug_en = $1 OR slug_zh = $1
-	`, slug)
-
-	snippet, err := scanSnippet(row)
+	record, err := r.getRawByLiveSlug(ctx, slug)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.Snippet{}, ErrNotFound
-		}
 		return domain.Snippet{}, err
 	}
+	return record.liveSnippet(), nil
+}
 
-	return snippet, nil
+func (r *SnippetRepository) GetPreviewByID(ctx context.Context, id string) (domain.Snippet, error) {
+	record, err := r.getRawByID(ctx, id)
+	if err != nil {
+		return domain.Snippet{}, err
+	}
+	return record.previewSnippet(), nil
+}
+
+func (r *SnippetRepository) GetPreviewBySlug(ctx context.Context, slug string) (domain.Snippet, error) {
+	record, err := r.getRawByPreviewSlug(ctx, slug)
+	if err != nil {
+		return domain.Snippet{}, err
+	}
+	return record.previewSnippet(), nil
 }
 
 func (r *SnippetRepository) Create(ctx context.Context, payload domain.SnippetPayload) (domain.Snippet, error) {
@@ -115,9 +241,9 @@ func (r *SnippetRepository) Create(ctx context.Context, payload domain.SnippetPa
 	id := uuid.NewString()
 
 	row := r.pool.QueryRow(ctx, `
-			INSERT INTO snippets (
-				id,
-				title,
+		INSERT INTO snippets (
+			id,
+			title,
 			slug,
 			excerpt,
 			category,
@@ -144,51 +270,45 @@ func (r *SnippetRepository) Create(ctx context.Context, payload domain.SnippetPa
 			tags_zh,
 			content_zh,
 			prompts_zh,
-				seo_title_zh,
-				seo_description_zh,
-				status,
-				published_at,
-				requires_subscription,
-				created_at,
-				updated_at
-			) VALUES (
-			$1,
-			$2,
-			$3,
-			$4,
-			$5,
-			$6,
-			$7,
-			$8,
-			$9,
-			$10,
-			$11,
-			$12,
-			$13,
-			$14,
-			$15,
-			$16,
-			$17,
-			$18,
-			$19,
-			$20,
-			$21,
-			$22,
-			$23,
-			$24,
-			$25,
-			$26,
-			$27,
-			$28,
-			$29,
-				$30,
-				$31,
-				$32,
-				$33,
-				NOW(),
-				NOW()
-			)
-			RETURNING `+snippetSelectColumns,
+			seo_title_zh,
+			seo_description_zh,
+			draft_cover_image,
+			draft_code,
+			draft_requires_subscription,
+			draft_title_en,
+			draft_slug_en,
+			draft_excerpt_en,
+			draft_category_en,
+			draft_tags_en,
+			draft_content_en,
+			draft_prompts_en,
+			draft_seo_title_en,
+			draft_seo_description_en,
+			draft_title_zh,
+			draft_slug_zh,
+			draft_excerpt_zh,
+			draft_category_zh,
+			draft_tags_zh,
+			draft_content_zh,
+			draft_prompts_zh,
+			draft_seo_title_zh,
+			draft_seo_description_zh,
+			status,
+			published_at,
+			requires_subscription,
+			has_unpublished_changes,
+			draft_updated_at,
+			created_at,
+			updated_at
+		) VALUES (
+			$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,
+			$13,$14,$15,$16,$17,$18,$19,$20,$21,
+			$22,$23,$24,$25,$26,$27,$28,$29,$30,
+			$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,
+			$43,$44,$45,$46,$47,$48,$49,$50,$51,
+			$52,$53,$54,FALSE,NULL,NOW(),NOW()
+		)
+		RETURNING `+fullSnippetSelectColumns,
 		id,
 		payload.Locales.EN.Title,
 		payload.Locales.EN.Slug,
@@ -217,93 +337,222 @@ func (r *SnippetRepository) Create(ctx context.Context, payload domain.SnippetPa
 		payload.Locales.ZH.Tags,
 		payload.Locales.ZH.Content,
 		payload.Locales.ZH.Prompts,
-			payload.Locales.ZH.SEOTitle,
-			payload.Locales.ZH.SEODescription,
-			payload.Status,
-			payload.PublishedAt,
-			payload.RequiresSubscription,
-		)
+		payload.Locales.ZH.SEOTitle,
+		payload.Locales.ZH.SEODescription,
+		payload.CoverImage,
+		payload.Code,
+		payload.RequiresSubscription,
+		payload.Locales.EN.Title,
+		payload.Locales.EN.Slug,
+		payload.Locales.EN.Excerpt,
+		payload.Locales.EN.Category,
+		payload.Locales.EN.Tags,
+		payload.Locales.EN.Content,
+		payload.Locales.EN.Prompts,
+		payload.Locales.EN.SEOTitle,
+		payload.Locales.EN.SEODescription,
+		payload.Locales.ZH.Title,
+		payload.Locales.ZH.Slug,
+		payload.Locales.ZH.Excerpt,
+		payload.Locales.ZH.Category,
+		payload.Locales.ZH.Tags,
+		payload.Locales.ZH.Content,
+		payload.Locales.ZH.Prompts,
+		payload.Locales.ZH.SEOTitle,
+		payload.Locales.ZH.SEODescription,
+		payload.Status,
+		payload.PublishedAt,
+		payload.RequiresSubscription,
+	)
 
-	return scanSnippet(row)
+	record, err := scanRawSnippet(row)
+	if err != nil {
+		return domain.Snippet{}, err
+	}
+	return record.editableSnippet(), nil
 }
 
 func (r *SnippetRepository) Update(ctx context.Context, id string, payload domain.SnippetPayload) (domain.Snippet, error) {
+	existing, err := r.getRawByID(ctx, id)
+	if err != nil {
+		return domain.Snippet{}, err
+	}
+
 	payload = payload.Normalize()
 
-	row := r.pool.QueryRow(ctx, `
-		UPDATE snippets
-		SET
-			title = $2,
-			slug = $3,
-			excerpt = $4,
-			category = $5,
-			tags = $6,
-			cover_image = $7,
-			content = $8,
-			code = $9,
-			prompts = $10,
-			seo_title = $11,
-			seo_description = $12,
-			title_en = $13,
-			slug_en = $14,
-			excerpt_en = $15,
-			category_en = $16,
-			tags_en = $17,
-			content_en = $18,
-			prompts_en = $19,
-			seo_title_en = $20,
-			seo_description_en = $21,
-			title_zh = $22,
-			slug_zh = $23,
-			excerpt_zh = $24,
-			category_zh = $25,
-			tags_zh = $26,
-			content_zh = $27,
-			prompts_zh = $28,
-				seo_title_zh = $29,
-				seo_description_zh = $30,
-				status = $31,
-				published_at = $32,
-				requires_subscription = $33,
+	var row pgx.Row
+	if existing.Status == domain.StatusPublished {
+		row = r.pool.QueryRow(ctx, `
+			UPDATE snippets
+			SET
+				draft_cover_image = $2,
+				draft_code = $3,
+				draft_requires_subscription = $4,
+				draft_title_en = $5,
+				draft_slug_en = $6,
+				draft_excerpt_en = $7,
+				draft_category_en = $8,
+				draft_tags_en = $9,
+				draft_content_en = $10,
+				draft_prompts_en = $11,
+				draft_seo_title_en = $12,
+				draft_seo_description_en = $13,
+				draft_title_zh = $14,
+				draft_slug_zh = $15,
+				draft_excerpt_zh = $16,
+				draft_category_zh = $17,
+				draft_tags_zh = $18,
+				draft_content_zh = $19,
+				draft_prompts_zh = $20,
+				draft_seo_title_zh = $21,
+				draft_seo_description_zh = $22,
+				has_unpublished_changes = TRUE,
+				draft_updated_at = NOW(),
 				updated_at = NOW()
 			WHERE id = $1
-			RETURNING `+snippetSelectColumns,
-		id,
-		payload.Locales.EN.Title,
-		payload.Locales.EN.Slug,
-		payload.Locales.EN.Excerpt,
-		payload.Locales.EN.Category,
-		payload.Locales.EN.Tags,
-		payload.CoverImage,
-		payload.Locales.EN.Content,
-		payload.Code,
-		payload.Locales.EN.Prompts,
-		payload.Locales.EN.SEOTitle,
-		payload.Locales.EN.SEODescription,
-		payload.Locales.EN.Title,
-		payload.Locales.EN.Slug,
-		payload.Locales.EN.Excerpt,
-		payload.Locales.EN.Category,
-		payload.Locales.EN.Tags,
-		payload.Locales.EN.Content,
-		payload.Locales.EN.Prompts,
-		payload.Locales.EN.SEOTitle,
-		payload.Locales.EN.SEODescription,
-		payload.Locales.ZH.Title,
-		payload.Locales.ZH.Slug,
-		payload.Locales.ZH.Excerpt,
-		payload.Locales.ZH.Category,
-		payload.Locales.ZH.Tags,
-		payload.Locales.ZH.Content,
-		payload.Locales.ZH.Prompts,
+			RETURNING `+fullSnippetSelectColumns,
+			id,
+			payload.CoverImage,
+			payload.Code,
+			payload.RequiresSubscription,
+			payload.Locales.EN.Title,
+			payload.Locales.EN.Slug,
+			payload.Locales.EN.Excerpt,
+			payload.Locales.EN.Category,
+			payload.Locales.EN.Tags,
+			payload.Locales.EN.Content,
+			payload.Locales.EN.Prompts,
+			payload.Locales.EN.SEOTitle,
+			payload.Locales.EN.SEODescription,
+			payload.Locales.ZH.Title,
+			payload.Locales.ZH.Slug,
+			payload.Locales.ZH.Excerpt,
+			payload.Locales.ZH.Category,
+			payload.Locales.ZH.Tags,
+			payload.Locales.ZH.Content,
+			payload.Locales.ZH.Prompts,
+			payload.Locales.ZH.SEOTitle,
+			payload.Locales.ZH.SEODescription,
+		)
+	} else {
+		row = r.pool.QueryRow(ctx, `
+			UPDATE snippets
+			SET
+				title = $2,
+				slug = $3,
+				excerpt = $4,
+				category = $5,
+				tags = $6,
+				cover_image = $7,
+				content = $8,
+				code = $9,
+				prompts = $10,
+				seo_title = $11,
+				seo_description = $12,
+				title_en = $13,
+				slug_en = $14,
+				excerpt_en = $15,
+				category_en = $16,
+				tags_en = $17,
+				content_en = $18,
+				prompts_en = $19,
+				seo_title_en = $20,
+				seo_description_en = $21,
+				title_zh = $22,
+				slug_zh = $23,
+				excerpt_zh = $24,
+				category_zh = $25,
+				tags_zh = $26,
+				content_zh = $27,
+				prompts_zh = $28,
+				seo_title_zh = $29,
+				seo_description_zh = $30,
+				draft_cover_image = $31,
+				draft_code = $32,
+				draft_requires_subscription = $33,
+				draft_title_en = $34,
+				draft_slug_en = $35,
+				draft_excerpt_en = $36,
+				draft_category_en = $37,
+				draft_tags_en = $38,
+				draft_content_en = $39,
+				draft_prompts_en = $40,
+				draft_seo_title_en = $41,
+				draft_seo_description_en = $42,
+				draft_title_zh = $43,
+				draft_slug_zh = $44,
+				draft_excerpt_zh = $45,
+				draft_category_zh = $46,
+				draft_tags_zh = $47,
+				draft_content_zh = $48,
+				draft_prompts_zh = $49,
+				draft_seo_title_zh = $50,
+				draft_seo_description_zh = $51,
+				status = $52,
+				published_at = $53,
+				requires_subscription = $33,
+				has_unpublished_changes = FALSE,
+				draft_updated_at = NULL,
+				updated_at = NOW()
+			WHERE id = $1
+			RETURNING `+fullSnippetSelectColumns,
+			id,
+			payload.Locales.EN.Title,
+			payload.Locales.EN.Slug,
+			payload.Locales.EN.Excerpt,
+			payload.Locales.EN.Category,
+			payload.Locales.EN.Tags,
+			payload.CoverImage,
+			payload.Locales.EN.Content,
+			payload.Code,
+			payload.Locales.EN.Prompts,
+			payload.Locales.EN.SEOTitle,
+			payload.Locales.EN.SEODescription,
+			payload.Locales.EN.Title,
+			payload.Locales.EN.Slug,
+			payload.Locales.EN.Excerpt,
+			payload.Locales.EN.Category,
+			payload.Locales.EN.Tags,
+			payload.Locales.EN.Content,
+			payload.Locales.EN.Prompts,
+			payload.Locales.EN.SEOTitle,
+			payload.Locales.EN.SEODescription,
+			payload.Locales.ZH.Title,
+			payload.Locales.ZH.Slug,
+			payload.Locales.ZH.Excerpt,
+			payload.Locales.ZH.Category,
+			payload.Locales.ZH.Tags,
+			payload.Locales.ZH.Content,
+			payload.Locales.ZH.Prompts,
+			payload.Locales.ZH.SEOTitle,
+			payload.Locales.ZH.SEODescription,
+			payload.CoverImage,
+			payload.Code,
+			payload.RequiresSubscription,
+			payload.Locales.EN.Title,
+			payload.Locales.EN.Slug,
+			payload.Locales.EN.Excerpt,
+			payload.Locales.EN.Category,
+			payload.Locales.EN.Tags,
+			payload.Locales.EN.Content,
+			payload.Locales.EN.Prompts,
+			payload.Locales.EN.SEOTitle,
+			payload.Locales.EN.SEODescription,
+			payload.Locales.ZH.Title,
+			payload.Locales.ZH.Slug,
+			payload.Locales.ZH.Excerpt,
+			payload.Locales.ZH.Category,
+			payload.Locales.ZH.Tags,
+			payload.Locales.ZH.Content,
+			payload.Locales.ZH.Prompts,
 			payload.Locales.ZH.SEOTitle,
 			payload.Locales.ZH.SEODescription,
 			payload.Status,
 			payload.PublishedAt,
-			payload.RequiresSubscription,
 		)
+	}
 
-	snippet, err := scanSnippet(row)
+	record, err := scanRawSnippet(row)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Snippet{}, ErrNotFound
@@ -311,7 +560,7 @@ func (r *SnippetRepository) Update(ctx context.Context, id string, payload domai
 		return domain.Snippet{}, err
 	}
 
-	return snippet, nil
+	return record.editableSnippet(), nil
 }
 
 func (r *SnippetRepository) Publish(ctx context.Context, id string) (domain.Snippet, error) {
@@ -319,13 +568,66 @@ func (r *SnippetRepository) Publish(ctx context.Context, id string) (domain.Snip
 	row := r.pool.QueryRow(ctx, `
 		UPDATE snippets
 		SET
+			title = CASE WHEN has_unpublished_changes THEN draft_title_en ELSE title END,
+			slug = CASE WHEN has_unpublished_changes THEN draft_slug_en ELSE slug END,
+			excerpt = CASE WHEN has_unpublished_changes THEN draft_excerpt_en ELSE excerpt END,
+			category = CASE WHEN has_unpublished_changes THEN draft_category_en ELSE category END,
+			tags = CASE WHEN has_unpublished_changes THEN draft_tags_en ELSE tags END,
+			cover_image = CASE WHEN has_unpublished_changes THEN draft_cover_image ELSE cover_image END,
+			content = CASE WHEN has_unpublished_changes THEN draft_content_en ELSE content END,
+			code = CASE WHEN has_unpublished_changes THEN draft_code ELSE code END,
+			prompts = CASE WHEN has_unpublished_changes THEN draft_prompts_en ELSE prompts END,
+			seo_title = CASE WHEN has_unpublished_changes THEN draft_seo_title_en ELSE seo_title END,
+			seo_description = CASE WHEN has_unpublished_changes THEN draft_seo_description_en ELSE seo_description END,
+			title_en = CASE WHEN has_unpublished_changes THEN draft_title_en ELSE title_en END,
+			slug_en = CASE WHEN has_unpublished_changes THEN draft_slug_en ELSE slug_en END,
+			excerpt_en = CASE WHEN has_unpublished_changes THEN draft_excerpt_en ELSE excerpt_en END,
+			category_en = CASE WHEN has_unpublished_changes THEN draft_category_en ELSE category_en END,
+			tags_en = CASE WHEN has_unpublished_changes THEN draft_tags_en ELSE tags_en END,
+			content_en = CASE WHEN has_unpublished_changes THEN draft_content_en ELSE content_en END,
+			prompts_en = CASE WHEN has_unpublished_changes THEN draft_prompts_en ELSE prompts_en END,
+			seo_title_en = CASE WHEN has_unpublished_changes THEN draft_seo_title_en ELSE seo_title_en END,
+			seo_description_en = CASE WHEN has_unpublished_changes THEN draft_seo_description_en ELSE seo_description_en END,
+			title_zh = CASE WHEN has_unpublished_changes THEN draft_title_zh ELSE title_zh END,
+			slug_zh = CASE WHEN has_unpublished_changes THEN draft_slug_zh ELSE slug_zh END,
+			excerpt_zh = CASE WHEN has_unpublished_changes THEN draft_excerpt_zh ELSE excerpt_zh END,
+			category_zh = CASE WHEN has_unpublished_changes THEN draft_category_zh ELSE category_zh END,
+			tags_zh = CASE WHEN has_unpublished_changes THEN draft_tags_zh ELSE tags_zh END,
+			content_zh = CASE WHEN has_unpublished_changes THEN draft_content_zh ELSE content_zh END,
+			prompts_zh = CASE WHEN has_unpublished_changes THEN draft_prompts_zh ELSE prompts_zh END,
+			seo_title_zh = CASE WHEN has_unpublished_changes THEN draft_seo_title_zh ELSE seo_title_zh END,
+			seo_description_zh = CASE WHEN has_unpublished_changes THEN draft_seo_description_zh ELSE seo_description_zh END,
+			requires_subscription = CASE WHEN has_unpublished_changes THEN draft_requires_subscription ELSE requires_subscription END,
+			draft_cover_image = CASE WHEN has_unpublished_changes THEN draft_cover_image ELSE cover_image END,
+			draft_code = CASE WHEN has_unpublished_changes THEN draft_code ELSE code END,
+			draft_requires_subscription = CASE WHEN has_unpublished_changes THEN draft_requires_subscription ELSE requires_subscription END,
+			draft_title_en = CASE WHEN has_unpublished_changes THEN draft_title_en ELSE title_en END,
+			draft_slug_en = CASE WHEN has_unpublished_changes THEN draft_slug_en ELSE slug_en END,
+			draft_excerpt_en = CASE WHEN has_unpublished_changes THEN draft_excerpt_en ELSE excerpt_en END,
+			draft_category_en = CASE WHEN has_unpublished_changes THEN draft_category_en ELSE category_en END,
+			draft_tags_en = CASE WHEN has_unpublished_changes THEN draft_tags_en ELSE tags_en END,
+			draft_content_en = CASE WHEN has_unpublished_changes THEN draft_content_en ELSE content_en END,
+			draft_prompts_en = CASE WHEN has_unpublished_changes THEN draft_prompts_en ELSE prompts_en END,
+			draft_seo_title_en = CASE WHEN has_unpublished_changes THEN draft_seo_title_en ELSE seo_title_en END,
+			draft_seo_description_en = CASE WHEN has_unpublished_changes THEN draft_seo_description_en ELSE seo_description_en END,
+			draft_title_zh = CASE WHEN has_unpublished_changes THEN draft_title_zh ELSE title_zh END,
+			draft_slug_zh = CASE WHEN has_unpublished_changes THEN draft_slug_zh ELSE slug_zh END,
+			draft_excerpt_zh = CASE WHEN has_unpublished_changes THEN draft_excerpt_zh ELSE excerpt_zh END,
+			draft_category_zh = CASE WHEN has_unpublished_changes THEN draft_category_zh ELSE category_zh END,
+			draft_tags_zh = CASE WHEN has_unpublished_changes THEN draft_tags_zh ELSE tags_zh END,
+			draft_content_zh = CASE WHEN has_unpublished_changes THEN draft_content_zh ELSE content_zh END,
+			draft_prompts_zh = CASE WHEN has_unpublished_changes THEN draft_prompts_zh ELSE prompts_zh END,
+			draft_seo_title_zh = CASE WHEN has_unpublished_changes THEN draft_seo_title_zh ELSE seo_title_zh END,
+			draft_seo_description_zh = CASE WHEN has_unpublished_changes THEN draft_seo_description_zh ELSE seo_description_zh END,
 			status = 'Published',
 			published_at = $2,
+			has_unpublished_changes = FALSE,
+			draft_updated_at = NULL,
 			updated_at = NOW()
 		WHERE id = $1
-		RETURNING `+snippetSelectColumns, id, now)
+		RETURNING `+fullSnippetSelectColumns, id, now)
 
-	snippet, err := scanSnippet(row)
+	record, err := scanRawSnippet(row)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Snippet{}, ErrNotFound
@@ -333,20 +635,73 @@ func (r *SnippetRepository) Publish(ctx context.Context, id string) (domain.Snip
 		return domain.Snippet{}, err
 	}
 
-	return snippet, nil
+	return record.editableSnippet(), nil
 }
 
 func (r *SnippetRepository) Unpublish(ctx context.Context, id string) (domain.Snippet, error) {
 	row := r.pool.QueryRow(ctx, `
 		UPDATE snippets
 		SET
+			title = CASE WHEN has_unpublished_changes THEN draft_title_en ELSE title END,
+			slug = CASE WHEN has_unpublished_changes THEN draft_slug_en ELSE slug END,
+			excerpt = CASE WHEN has_unpublished_changes THEN draft_excerpt_en ELSE excerpt END,
+			category = CASE WHEN has_unpublished_changes THEN draft_category_en ELSE category END,
+			tags = CASE WHEN has_unpublished_changes THEN draft_tags_en ELSE tags END,
+			cover_image = CASE WHEN has_unpublished_changes THEN draft_cover_image ELSE cover_image END,
+			content = CASE WHEN has_unpublished_changes THEN draft_content_en ELSE content END,
+			code = CASE WHEN has_unpublished_changes THEN draft_code ELSE code END,
+			prompts = CASE WHEN has_unpublished_changes THEN draft_prompts_en ELSE prompts END,
+			seo_title = CASE WHEN has_unpublished_changes THEN draft_seo_title_en ELSE seo_title END,
+			seo_description = CASE WHEN has_unpublished_changes THEN draft_seo_description_en ELSE seo_description END,
+			title_en = CASE WHEN has_unpublished_changes THEN draft_title_en ELSE title_en END,
+			slug_en = CASE WHEN has_unpublished_changes THEN draft_slug_en ELSE slug_en END,
+			excerpt_en = CASE WHEN has_unpublished_changes THEN draft_excerpt_en ELSE excerpt_en END,
+			category_en = CASE WHEN has_unpublished_changes THEN draft_category_en ELSE category_en END,
+			tags_en = CASE WHEN has_unpublished_changes THEN draft_tags_en ELSE tags_en END,
+			content_en = CASE WHEN has_unpublished_changes THEN draft_content_en ELSE content_en END,
+			prompts_en = CASE WHEN has_unpublished_changes THEN draft_prompts_en ELSE prompts_en END,
+			seo_title_en = CASE WHEN has_unpublished_changes THEN draft_seo_title_en ELSE seo_title_en END,
+			seo_description_en = CASE WHEN has_unpublished_changes THEN draft_seo_description_en ELSE seo_description_en END,
+			title_zh = CASE WHEN has_unpublished_changes THEN draft_title_zh ELSE title_zh END,
+			slug_zh = CASE WHEN has_unpublished_changes THEN draft_slug_zh ELSE slug_zh END,
+			excerpt_zh = CASE WHEN has_unpublished_changes THEN draft_excerpt_zh ELSE excerpt_zh END,
+			category_zh = CASE WHEN has_unpublished_changes THEN draft_category_zh ELSE category_zh END,
+			tags_zh = CASE WHEN has_unpublished_changes THEN draft_tags_zh ELSE tags_zh END,
+			content_zh = CASE WHEN has_unpublished_changes THEN draft_content_zh ELSE content_zh END,
+			prompts_zh = CASE WHEN has_unpublished_changes THEN draft_prompts_zh ELSE prompts_zh END,
+			seo_title_zh = CASE WHEN has_unpublished_changes THEN draft_seo_title_zh ELSE seo_title_zh END,
+			seo_description_zh = CASE WHEN has_unpublished_changes THEN draft_seo_description_zh ELSE seo_description_zh END,
+			draft_cover_image = CASE WHEN has_unpublished_changes THEN draft_cover_image ELSE cover_image END,
+			draft_code = CASE WHEN has_unpublished_changes THEN draft_code ELSE code END,
+			draft_requires_subscription = CASE WHEN has_unpublished_changes THEN draft_requires_subscription ELSE requires_subscription END,
+			draft_title_en = CASE WHEN has_unpublished_changes THEN draft_title_en ELSE title_en END,
+			draft_slug_en = CASE WHEN has_unpublished_changes THEN draft_slug_en ELSE slug_en END,
+			draft_excerpt_en = CASE WHEN has_unpublished_changes THEN draft_excerpt_en ELSE excerpt_en END,
+			draft_category_en = CASE WHEN has_unpublished_changes THEN draft_category_en ELSE category_en END,
+			draft_tags_en = CASE WHEN has_unpublished_changes THEN draft_tags_en ELSE tags_en END,
+			draft_content_en = CASE WHEN has_unpublished_changes THEN draft_content_en ELSE content_en END,
+			draft_prompts_en = CASE WHEN has_unpublished_changes THEN draft_prompts_en ELSE prompts_en END,
+			draft_seo_title_en = CASE WHEN has_unpublished_changes THEN draft_seo_title_en ELSE seo_title_en END,
+			draft_seo_description_en = CASE WHEN has_unpublished_changes THEN draft_seo_description_en ELSE seo_description_en END,
+			draft_title_zh = CASE WHEN has_unpublished_changes THEN draft_title_zh ELSE title_zh END,
+			draft_slug_zh = CASE WHEN has_unpublished_changes THEN draft_slug_zh ELSE slug_zh END,
+			draft_excerpt_zh = CASE WHEN has_unpublished_changes THEN draft_excerpt_zh ELSE excerpt_zh END,
+			draft_category_zh = CASE WHEN has_unpublished_changes THEN draft_category_zh ELSE category_zh END,
+			draft_tags_zh = CASE WHEN has_unpublished_changes THEN draft_tags_zh ELSE tags_zh END,
+			draft_content_zh = CASE WHEN has_unpublished_changes THEN draft_content_zh ELSE content_zh END,
+			draft_prompts_zh = CASE WHEN has_unpublished_changes THEN draft_prompts_zh ELSE prompts_zh END,
+			draft_seo_title_zh = CASE WHEN has_unpublished_changes THEN draft_seo_title_zh ELSE seo_title_zh END,
+			draft_seo_description_zh = CASE WHEN has_unpublished_changes THEN draft_seo_description_zh ELSE seo_description_zh END,
+			requires_subscription = CASE WHEN has_unpublished_changes THEN draft_requires_subscription ELSE requires_subscription END,
 			status = 'Draft',
 			published_at = NULL,
+			has_unpublished_changes = FALSE,
+			draft_updated_at = NULL,
 			updated_at = NOW()
 		WHERE id = $1
-		RETURNING `+snippetSelectColumns, id)
+		RETURNING `+fullSnippetSelectColumns, id)
 
-	snippet, err := scanSnippet(row)
+	record, err := scanRawSnippet(row)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Snippet{}, ErrNotFound
@@ -354,7 +709,7 @@ func (r *SnippetRepository) Unpublish(ctx context.Context, id string) (domain.Sn
 		return domain.Snippet{}, err
 	}
 
-	return snippet, nil
+	return record.editableSnippet(), nil
 }
 
 func (r *SnippetRepository) Delete(ctx context.Context, id string) error {
@@ -370,48 +725,124 @@ func (r *SnippetRepository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func scanSnippet(row interface {
-	Scan(dest ...any) error
-}) (domain.Snippet, error) {
-	var snippet domain.Snippet
+func (r *SnippetRepository) getRawByID(ctx context.Context, id string) (rawSnippetRecord, error) {
+	row := r.pool.QueryRow(ctx, `
+		SELECT `+fullSnippetSelectColumns+`
+		FROM snippets
+		WHERE id = $1
+	`, id)
+
+	record, err := scanRawSnippet(row)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return rawSnippetRecord{}, ErrNotFound
+		}
+		return rawSnippetRecord{}, err
+	}
+	return record, nil
+}
+
+func (r *SnippetRepository) getRawByLiveSlug(ctx context.Context, slug string) (rawSnippetRecord, error) {
+	row := r.pool.QueryRow(ctx, `
+		SELECT `+fullSnippetSelectColumns+`
+		FROM snippets
+		WHERE slug_en = $1 OR slug_zh = $1
+	`, slug)
+
+	record, err := scanRawSnippet(row)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return rawSnippetRecord{}, ErrNotFound
+		}
+		return rawSnippetRecord{}, err
+	}
+	return record, nil
+}
+
+func (r *SnippetRepository) getRawByPreviewSlug(ctx context.Context, slug string) (rawSnippetRecord, error) {
+	row := r.pool.QueryRow(ctx, `
+		SELECT `+fullSnippetSelectColumns+`
+		FROM snippets
+		WHERE slug_en = $1 OR slug_zh = $1 OR draft_slug_en = $1 OR draft_slug_zh = $1
+	`, slug)
+
+	record, err := scanRawSnippet(row)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return rawSnippetRecord{}, ErrNotFound
+		}
+		return rawSnippetRecord{}, err
+	}
+	return record, nil
+}
+
+func scanRawSnippet(row interface{ Scan(dest ...any) error }) (rawSnippetRecord, error) {
+	var record rawSnippetRecord
 	if err := row.Scan(
-		&snippet.ID,
-		&snippet.CoverImage,
-		&snippet.Code,
-		&snippet.Status,
-		&snippet.UpdatedAt,
-		&snippet.PublishedAt,
-		&snippet.RequiresSubscription,
-		&snippet.Locales.EN.Title,
-		&snippet.Locales.EN.Slug,
-		&snippet.Locales.EN.Excerpt,
-		&snippet.Locales.EN.Category,
-		&snippet.Locales.EN.Tags,
-		&snippet.Locales.EN.Content,
-		&snippet.Locales.EN.Prompts,
-		&snippet.Locales.EN.SEOTitle,
-		&snippet.Locales.EN.SEODescription,
-		&snippet.Locales.ZH.Title,
-		&snippet.Locales.ZH.Slug,
-		&snippet.Locales.ZH.Excerpt,
-		&snippet.Locales.ZH.Category,
-		&snippet.Locales.ZH.Tags,
-		&snippet.Locales.ZH.Content,
-		&snippet.Locales.ZH.Prompts,
-		&snippet.Locales.ZH.SEOTitle,
-		&snippet.Locales.ZH.SEODescription,
+		&record.ID,
+		&record.CoverImage,
+		&record.Code,
+		&record.Status,
+		&record.UpdatedAt,
+		&record.PublishedAt,
+		&record.RequiresSubscription,
+		&record.Locales.EN.Title,
+		&record.Locales.EN.Slug,
+		&record.Locales.EN.Excerpt,
+		&record.Locales.EN.Category,
+		&record.Locales.EN.Tags,
+		&record.Locales.EN.Content,
+		&record.Locales.EN.Prompts,
+		&record.Locales.EN.SEOTitle,
+		&record.Locales.EN.SEODescription,
+		&record.Locales.ZH.Title,
+		&record.Locales.ZH.Slug,
+		&record.Locales.ZH.Excerpt,
+		&record.Locales.ZH.Category,
+		&record.Locales.ZH.Tags,
+		&record.Locales.ZH.Content,
+		&record.Locales.ZH.Prompts,
+		&record.Locales.ZH.SEOTitle,
+		&record.Locales.ZH.SEODescription,
+		&record.DraftCoverImage,
+		&record.DraftCode,
+		&record.DraftRequiresSubscription,
+		&record.DraftLocales.EN.Title,
+		&record.DraftLocales.EN.Slug,
+		&record.DraftLocales.EN.Excerpt,
+		&record.DraftLocales.EN.Category,
+		&record.DraftLocales.EN.Tags,
+		&record.DraftLocales.EN.Content,
+		&record.DraftLocales.EN.Prompts,
+		&record.DraftLocales.EN.SEOTitle,
+		&record.DraftLocales.EN.SEODescription,
+		&record.DraftLocales.ZH.Title,
+		&record.DraftLocales.ZH.Slug,
+		&record.DraftLocales.ZH.Excerpt,
+		&record.DraftLocales.ZH.Category,
+		&record.DraftLocales.ZH.Tags,
+		&record.DraftLocales.ZH.Content,
+		&record.DraftLocales.ZH.Prompts,
+		&record.DraftLocales.ZH.SEOTitle,
+		&record.DraftLocales.ZH.SEODescription,
+		&record.HasUnpublishedChanges,
+		&record.DraftUpdatedAt,
 	); err != nil {
-		return domain.Snippet{}, err
+		return rawSnippetRecord{}, err
 	}
 
-	snippet.Status = domain.NormalizeStoredStatus(snippet.Status)
-	if snippet.Status != domain.StatusPublished {
-		snippet.PublishedAt = nil
-	}
-	snippet.Locales.EN.Tags = sanitizeTags(snippet.Locales.EN.Tags)
-	snippet.Locales.ZH.Tags = sanitizeTags(snippet.Locales.ZH.Tags)
-	snippet.AvailableLocales = domain.AvailableLocalesFor(snippet.Locales)
-	return snippet, nil
+	return record, nil
+}
+
+func normalizeLocales(locales domain.SnippetLocales) domain.SnippetLocales {
+	locales.EN = normalizeLocalizedFields(locales.EN)
+	locales.ZH = normalizeLocalizedFields(locales.ZH)
+	return locales
+}
+
+func normalizeLocalizedFields(fields domain.SnippetLocalizedFields) domain.SnippetLocalizedFields {
+	fields.Tags = sanitizeTags(fields.Tags)
+	return fields
 }
 
 func sanitizeTags(tags []string) []string {

@@ -64,6 +64,13 @@ export function uploadContentImage(file: File) {
   return uploadSnippetAsset("/api/admin/uploads/content-image", file);
 }
 
+export function uploadContentImageFromURL(url: string) {
+  return request<CoverImageUploadResponse>(`${API_BASE}/api/admin/uploads/content-image-url`, {
+    method: "POST",
+    body: JSON.stringify({ url }),
+  });
+}
+
 export function uploadContentVideo(file: File) {
   return uploadSnippetAsset("/api/admin/uploads/content-video", file);
 }

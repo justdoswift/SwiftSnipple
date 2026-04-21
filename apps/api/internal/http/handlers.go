@@ -14,6 +14,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/mail"
+	"net/url"
 	"path"
 	"strings"
 	"time"
@@ -37,8 +38,12 @@ type dbPinger interface {
 
 type snippetStore interface {
 	List(ctx context.Context) ([]domain.Snippet, error)
+	ListAdmin(ctx context.Context) ([]domain.Snippet, error)
 	GetByID(ctx context.Context, id string) (domain.Snippet, error)
+	GetAdminByID(ctx context.Context, id string) (domain.Snippet, error)
 	GetBySlug(ctx context.Context, slug string) (domain.Snippet, error)
+	GetPreviewByID(ctx context.Context, id string) (domain.Snippet, error)
+	GetPreviewBySlug(ctx context.Context, slug string) (domain.Snippet, error)
 	Create(ctx context.Context, payload domain.SnippetPayload) (domain.Snippet, error)
 	Update(ctx context.Context, id string, payload domain.SnippetPayload) (domain.Snippet, error)
 	Publish(ctx context.Context, id string) (domain.Snippet, error)
@@ -67,11 +72,12 @@ type Handler struct {
 }
 
 const (
-	maxCoverImageDimension = 2200
-	coverImageWebPQuality  = 92
-	maxCoverUploadBytes    = 25 << 20
-	maxContentImageBytes   = 18 << 20
-	maxContentVideoBytes   = 250 << 20
+	maxCoverImageDimension  = 2200
+	coverImageWebPQuality   = 92
+	maxCoverUploadBytes     = 25 << 20
+	maxContentVideoBytes    = 250 << 20
+	contentImageWebPQuality = 90
+	maxRemoteContentImageBytes = 64 << 20
 )
 
 func (h *Handler) Healthz(w http.ResponseWriter, r *http.Request) {
@@ -133,19 +139,27 @@ func (h *Handler) GetSnippet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetSnippetBySlug(w http.ResponseWriter, r *http.Request) {
-	snippet, err := h.snippets.GetBySlug(r.Context(), chi.URLParam(r, "slug"))
+	viewer, err := h.resolveViewerAccess(r)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to resolve access"})
+		return
+	}
+
+	var snippet domain.Snippet
+	previewID := strings.TrimSpace(r.URL.Query().Get("id"))
+	if viewer.IsAdminPreview && previewID != "" {
+		snippet, err = h.snippets.GetPreviewByID(r.Context(), previewID)
+	} else if viewer.IsAdminPreview {
+		snippet, err = h.snippets.GetPreviewBySlug(r.Context(), chi.URLParam(r, "slug"))
+	} else {
+		snippet, err = h.snippets.GetBySlug(r.Context(), chi.URLParam(r, "slug"))
+	}
 	if err != nil {
 		if errors.Is(err, repo.ErrNotFound) {
 			writeJSON(w, http.StatusNotFound, map[string]string{"error": "snippet not found"})
 			return
 		}
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to fetch snippet"})
-		return
-	}
-
-	viewer, err := h.resolveViewerAccess(r)
-	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to resolve access"})
 		return
 	}
 	if snippet.Status != domain.StatusPublished && !viewer.IsAdminPreview {
@@ -157,7 +171,7 @@ func (h *Handler) GetSnippetBySlug(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ListAdminSnippets(w http.ResponseWriter, r *http.Request) {
-	snippets, err := h.snippets.List(r.Context())
+	snippets, err := h.snippets.ListAdmin(r.Context())
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to list snippets"})
 		return
@@ -167,7 +181,7 @@ func (h *Handler) ListAdminSnippets(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetAdminSnippet(w http.ResponseWriter, r *http.Request) {
-	snippet, err := h.snippets.GetByID(r.Context(), chi.URLParam(r, "id"))
+	snippet, err := h.snippets.GetAdminByID(r.Context(), chi.URLParam(r, "id"))
 	if err != nil {
 		if errors.Is(err, repo.ErrNotFound) {
 			writeJSON(w, http.StatusNotFound, map[string]string{"error": "snippet not found"})
@@ -301,13 +315,83 @@ func (h *Handler) UploadCoverImage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) UploadContentImage(w http.ResponseWriter, r *http.Request) {
-	file, header, ok := parseMultipartUpload(w, r, maxContentImageBytes, "content image must be 18 MB or smaller", "image file is required")
+	file, header, ok := parseMultipartUpload(w, r, 0, "", "image file is required")
 	if !ok {
 		return
 	}
 	defer file.Close()
 
 	stored, err := h.storeContentImage(r.Context(), file, header)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, map[string]string{
+		"url":      stored.URL,
+		"mimeType": stored.ContentType,
+	})
+}
+
+type remoteContentImageUploadRequest struct {
+	URL string `json:"url"`
+}
+
+func (h *Handler) UploadContentImageByURL(w http.ResponseWriter, r *http.Request) {
+	var payload remoteContentImageUploadRequest
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+
+	if err := decoder.Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json payload"})
+		return
+	}
+
+	remoteURL := strings.TrimSpace(payload.URL)
+	if remoteURL == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "image url is required"})
+		return
+	}
+
+	parsedURL, err := url.Parse(remoteURL)
+	if err != nil || (parsedURL.Scheme != "http" && parsedURL.Scheme != "https") || parsedURL.Host == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "image url must be a valid http or https address"})
+		return
+	}
+
+	request, err := http.NewRequestWithContext(r.Context(), http.MethodGet, remoteURL, nil)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "failed to prepare image download"})
+		return
+	}
+	request.Header.Set("Accept", "image/*")
+	request.Header.Set("User-Agent", "SwiftSnipple/1.0")
+
+	client := &http.Client{Timeout: 20 * time.Second}
+	response, err := client.Do(request)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "failed to download remote image"})
+		return
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": fmt.Sprintf("remote image responded with status %d", response.StatusCode)})
+		return
+	}
+
+	limitedBody := io.LimitReader(response.Body, maxRemoteContentImageBytes+1)
+	body, err := io.ReadAll(limitedBody)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "failed to read remote image"})
+		return
+	}
+	if int64(len(body)) > maxRemoteContentImageBytes {
+		writeJSON(w, http.StatusRequestEntityTooLarge, map[string]string{"error": "remote image must be 64 MB or smaller"})
+		return
+	}
+
+	stored, err := h.storeContentImageBytes(r.Context(), body, path.Base(parsedURL.Path), strings.TrimSpace(response.Header.Get("Content-Type")))
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
@@ -977,10 +1061,15 @@ func parseMultipartUpload(
 	tooLargeMessage string,
 	missingFileMessage string,
 ) (multipart.File, *multipart.FileHeader, bool) {
-	r.Body = http.MaxBytesReader(w, r.Body, maxBytes)
-	if err := r.ParseMultipartForm(maxBytes); err != nil {
+	parseLimit := maxBytes
+	if parseLimit <= 0 {
+		parseLimit = 32 << 20
+	} else {
+		r.Body = http.MaxBytesReader(w, r.Body, maxBytes)
+	}
+	if err := r.ParseMultipartForm(parseLimit); err != nil {
 		var maxBytesError *http.MaxBytesError
-		if errors.As(err, &maxBytesError) {
+		if maxBytes > 0 && errors.As(err, &maxBytesError) {
 			writeJSON(w, http.StatusRequestEntityTooLarge, map[string]string{"error": tooLargeMessage})
 			return nil, nil, false
 		}
@@ -1048,17 +1137,35 @@ func (h *Handler) storeCoverImage(ctx context.Context, file multipart.File) (sto
 }
 
 func (h *Handler) storeContentImage(ctx context.Context, file multipart.File, header *multipart.FileHeader) (storedAsset, error) {
-	contentType, err := sniffContentType(file)
+	contentBytes, err := io.ReadAll(file)
 	if err != nil {
-		return storedAsset{}, err
-	}
-	contentType = normalizeUploadedContentType(contentType, header.Filename)
-	if !isAllowedContentImageContentType(contentType) {
-		return storedAsset{}, errors.New("content image must be PNG, JPEG, WEBP, GIF, SVG, or AVIF")
+		return storedAsset{}, errors.New("failed to read content image")
 	}
 
-	if _, err := file.Seek(0, io.SeekStart); err != nil {
-		return storedAsset{}, errors.New("failed to reset content image")
+	return h.storeContentImageBytes(ctx, contentBytes, header.Filename, "")
+}
+
+func (h *Handler) storeContentImageBytes(ctx context.Context, content []byte, fileName string, headerContentType string) (storedAsset, error) {
+	contentType := strings.TrimSpace(headerContentType)
+	if contentType == "" {
+		contentType = http.DetectContentType(content)
+	}
+	contentType = normalizeUploadedContentType(contentType, fileName)
+	if !isAllowedContentImageContentType(contentType) {
+		return storedAsset{}, errors.New("content image must be PNG, JPEG, WEBP, GIF, or AVIF")
+	}
+
+	decodedImage, _, err := image.Decode(bytes.NewReader(content))
+	if err != nil {
+		return storedAsset{}, errors.New("failed to decode content image")
+	}
+
+	buffer := &bytes.Buffer{}
+	if err := webp.Encode(buffer, decodedImage, &webp.Options{
+		Lossy:   true,
+		Quality: float32(contentImageWebPQuality),
+	}); err != nil {
+		return storedAsset{}, errors.New("failed to compress content image")
 	}
 
 	randomName, err := randomUploadName()
@@ -1068,10 +1175,10 @@ func (h *Handler) storeContentImage(ctx context.Context, file multipart.File, he
 
 	return h.assets.Put(
 		ctx,
-		path.Join("content-images", randomName+extensionForContentType(contentType, header.Filename)),
-		contentType,
-		file,
-		header.Size,
+		path.Join("content-images", randomName+".webp"),
+		"image/webp",
+		bytes.NewReader(buffer.Bytes()),
+		int64(buffer.Len()),
 	)
 }
 
@@ -1120,7 +1227,7 @@ func isAllowedCoverContentType(contentType string) bool {
 
 func isAllowedContentImageContentType(contentType string) bool {
 	switch contentType {
-	case "image/png", "image/jpeg", "image/webp", "image/gif", "image/svg+xml", "image/avif":
+	case "image/png", "image/jpeg", "image/webp", "image/gif", "image/avif":
 		return true
 	default:
 		return false

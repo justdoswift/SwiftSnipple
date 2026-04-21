@@ -45,6 +45,9 @@ export interface Snippet {
   status: SnippetStatus;
   updatedAt: string;
   publishedAt: string | null;
+  livePublishedAt?: string | null;
+  draftUpdatedAt?: string | null;
+  hasUnpublishedChanges?: boolean;
   requiresSubscription: boolean;
   viewerCanAccess: boolean;
   locked: boolean;

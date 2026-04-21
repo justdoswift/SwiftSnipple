@@ -2807,10 +2807,10 @@
   .admin-editor-title-input,
   .admin-editor-title-input::placeholder {
     color: var(--admin-title);
-    font-size: 2rem;
+    font-size: 1.625rem;
     font-weight: 700;
-    line-height: 1;
-    letter-spacing: -0.03em;
+    line-height: 1.06;
+    letter-spacing: -0.025em;
   }
 
   .admin-theme[data-theme="light"] .admin-editor-title-input::placeholder {
@@ -2819,6 +2819,43 @@
 
   .admin-theme[data-theme="dark"] .admin-editor-title-input::placeholder {
     color: rgba(255, 255, 255, 0.05);
+  }
+
+  .admin-editor-locale-switcher {
+    border-color: color-mix(in srgb, var(--admin-field-border) 88%, transparent);
+    background: color-mix(in srgb, var(--admin-field-background) 76%, transparent);
+    backdrop-filter: blur(18px);
+    align-self: flex-start;
+  }
+
+  .admin-editor-locale-button {
+    min-height: 2.5rem;
+    min-width: 5rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    padding: 0.5rem 0.95rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.15;
+    transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease;
+  }
+
+  .admin-editor-locale-button-active {
+    background-color: var(--admin-title);
+    color: var(--admin-header-bg);
+  }
+
+  .admin-editor-locale-button-inactive {
+    color: color-mix(in srgb, var(--admin-title) 68%, transparent);
+  }
+
+  .admin-editor-locale-button-inactive:hover {
+    color: var(--admin-title);
+  }
+
+  .admin-editor-locale-meta {
+    font-size: 0.625rem;
+    opacity: 0.72;
   }
 
   .admin-editor-panel {
@@ -3131,7 +3168,7 @@
 
     .admin-editor-title-input,
     .admin-editor-title-input::placeholder {
-      font-size: 3.25rem;
+      font-size: 2.5rem;
     }
   }
 
@@ -3271,6 +3308,10 @@
   .markdown-media-video,
   .markdown-media-embed {
     @apply block h-auto w-full;
+  }
+
+  .markdown-media-linked-image {
+    @apply block no-underline;
   }
 
   .markdown-media-embed-shell {

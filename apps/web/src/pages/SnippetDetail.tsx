@@ -52,11 +52,21 @@ function normalizeSectionHash(hash: string): SnippetSectionId | null {
 
 export default function SnippetDetail() {
   const { locale } = useAppLocale();
-  const copy = getMessages(locale).snippetDetail;
-  const common = getMessages(locale).common;
   const { slug } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const previewLocale = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("preview") !== "admin") {
+      return null;
+    }
+
+    const requestedLocale = params.get("locale");
+    return requestedLocale === "zh" || requestedLocale === "en" ? requestedLocale : null;
+  }, [location.search]);
+  const effectiveLocale = previewLocale ?? locale;
+  const copy = getMessages(effectiveLocale).snippetDetail;
+  const common = getMessages(effectiveLocale).common;
   const [snippet, setSnippet] = useState<Snippet | null>(null);
   const [memberSession, setMemberSession] = useState<MemberSession | null>(null);
   const [error, setError] = useState("");
@@ -67,6 +77,7 @@ export default function SnippetDetail() {
   const [isNotesContentsHovered, setIsNotesContentsHovered] = useState(false);
   const [hasEnteredDesktopReadingZone, setHasEnteredDesktopReadingZone] = useState(false);
   const [hasReachedDesktopReadingZoneEnd, setHasReachedDesktopReadingZoneEnd] = useState(false);
+  const [isCoverImageBroken, setIsCoverImageBroken] = useState(false);
   const desktopReadingStartRef = useRef<HTMLDivElement | null>(null);
   const desktopReadingEndRef = useRef<HTMLDivElement | null>(null);
   const activeSectionRef = useRef<HTMLElement | null>(null);
@@ -95,6 +106,7 @@ export default function SnippetDetail() {
 
     let active = true;
     setIsLoading(true);
+    setIsCoverImageBroken(false);
     Promise.resolve(getSnippetBySlug(slug))
       .then((value) => {
         if (!active) return;
@@ -134,12 +146,12 @@ export default function SnippetDetail() {
   }, []);
 
   const localizedFields = useMemo(
-    () => (snippet ? getLocalizedSnippetFields(snippet, locale) : null),
-    [locale, snippet],
+    () => (snippet ? getLocalizedSnippetFields(snippet, effectiveLocale) : null),
+    [effectiveLocale, snippet],
   );
   const isLocaleAvailable = useMemo(
-    () => (snippet ? isSnippetLocaleAvailable(snippet, locale) : false),
-    [locale, snippet],
+    () => (snippet ? isSnippetLocaleAvailable(snippet, effectiveLocale) : false),
+    [effectiveLocale, snippet],
   );
   const isAdminPreview = useMemo(() => {
     if (!location.search) {
@@ -275,14 +287,14 @@ export default function SnippetDetail() {
     }
 
     return availableSections;
-  }, [copy.copyPromptLogic, copy.copySwiftCode, copy.implementationNotes, copy.loginToUnlock, copy.manageSubscription, copy.membersOnly, copy.paywallCopy, copy.paywallTitle, copy.promptLogic, copy.swiftuiSource, hasCode, hasPrompts, isLocaleAvailable, locale, localizedFields?.content, localizedFields?.prompts, memberSession, paywallCTALabel, paywallCTAPath, snippet]);
+  }, [copy.copyPromptLogic, copy.copySwiftCode, copy.implementationNotes, copy.loginToUnlock, copy.manageSubscription, copy.membersOnly, copy.paywallCopy, copy.paywallTitle, copy.promptLogic, copy.swiftuiSource, effectiveLocale, hasCode, hasPrompts, isLocaleAvailable, localizedFields?.content, localizedFields?.prompts, memberSession, paywallCTALabel, paywallCTAPath, snippet]);
 
   useEffect(() => {
     if (!snippet || !localizedFields || !slug) return;
     if (isLocaleAvailable && localizedFields.slug !== slug) {
-      navigate(getLocalizedSnippetPath(locale, snippet), { replace: true });
+      navigate(getLocalizedSnippetPath(effectiveLocale, snippet), { replace: true });
     }
-  }, [isLocaleAvailable, localizedFields, locale, navigate, slug, snippet]);
+  }, [effectiveLocale, isLocaleAvailable, localizedFields, navigate, slug, snippet]);
 
   useEffect(() => {
     if (!sections.length) return;
@@ -411,7 +423,7 @@ export default function SnippetDetail() {
       <div data-testid="snippet-detail-shell" className={`${detailShellClass} pb-20 text-center`}>
         <h1 className="type-section-title mb-4">{copy.snippetNotFound}</h1>
         <p className="type-body mb-6 public-status-copy">{error || copy.snippetNotFoundCopy}</p>
-        <a href={`/${locale}#library-index`} className="public-inline-link">{copy.backToLibrary}</a>
+        <a href={`${localizePublicPath("/")}#library-index`} className="public-inline-link">{copy.backToLibrary}</a>
       </div>
     );
   }
@@ -449,12 +461,26 @@ export default function SnippetDetail() {
       <section className="mb-20 px-4 md:mb-24 md:px-0">
         <div className="public-content-frame vibe-glass mx-auto max-w-[1120px] p-2">
           <div className="public-media-shell aspect-[16/9] overflow-hidden">
-            <img
-              src={resolveAssetUrl(snippet.coverImage)}
-              alt={localizedFields?.title}
-              className="h-full w-full object-cover"
-              referrerPolicy="no-referrer"
-            />
+            {isCoverImageBroken ? (
+              <div className="flex h-full w-full items-center justify-center bg-[rgba(255,255,255,0.02)] text-center">
+                <div className="max-w-[32ch] px-6 py-8">
+                  <div className="mb-3 inline-flex items-center rounded-full border border-[rgba(255,255,255,0.08)] px-3 py-1">
+                    <span className="type-mono-micro text-[rgba(255,255,255,0.58)]">{copy.loadingSnippet}</span>
+                  </div>
+                  <p className="type-body text-[rgba(255,255,255,0.64)]">
+                    {copy.coverUnavailable}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <img
+                src={resolveAssetUrl(snippet.coverImage)}
+                alt={localizedFields?.title}
+                className="h-full w-full object-cover"
+                referrerPolicy="no-referrer"
+                onError={() => setIsCoverImageBroken(true)}
+              />
+            )}
           </div>
         </div>
       </section>

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Bold, Code2, Heading, ImagePlus, Italic, Link2, List, ListOrdered, Minus, Quote, Strikethrough, Video } from "lucide-react";
+import { Bold, Code2, Heading, ImagePlus, Italic, Link2, List, ListOrdered, Minus, Quote, Redo2, Strikethrough, Undo2, Video } from "lucide-react";
 import { Button, Dropdown, Toolbar } from "../../lib/heroui";
 
 type HeadingLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -8,6 +8,8 @@ type MarkdownToolbarProps = {
   headingLevel: HeadingLevel;
   labels: {
     text: string;
+    undo: string;
+    redo: string;
     heading: string;
     bold: string;
     italic: string;
@@ -25,6 +27,10 @@ type MarkdownToolbarProps = {
     headings: string[];
   };
   onHeadingChange: (level: HeadingLevel) => void;
+  onUndo: () => void;
+  onRedo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
   onBold: () => void;
   onItalic: () => void;
   onStrikethrough: () => void;
@@ -43,6 +49,10 @@ export default function MarkdownToolbar({
   headingLevel,
   labels,
   onHeadingChange,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
   onBold,
   onItalic,
   onStrikethrough,
@@ -60,8 +70,11 @@ export default function MarkdownToolbar({
 
   return (
     <Toolbar aria-label={labels.text} className="admin-markdown-toolbar mb-4 flex flex-wrap gap-2 rounded-[26px] border p-2">
+      <ToolbarButton label={labels.undo} icon={<Undo2 className="h-4 w-4" />} onPress={onUndo} isDisabled={!canUndo} />
+      <ToolbarButton label={labels.redo} icon={<Redo2 className="h-4 w-4" />} onPress={onRedo} isDisabled={!canRedo} />
+
       <Dropdown>
-        <Dropdown.Trigger aria-label={labels.heading} className="admin-markdown-toolbar-trigger min-w-[180px]">
+        <Dropdown.Trigger aria-label={labels.heading} className="admin-markdown-toolbar-trigger min-w-[132px]">
           <span className="inline-flex items-center gap-3">
             <Heading className="h-4 w-4" />
             <span>{headingLabel}</span>
@@ -105,13 +118,15 @@ function ToolbarButton({
   label,
   icon,
   onPress,
+  isDisabled = false,
 }: {
   label: string;
   icon: ReactNode;
   onPress: () => void;
+  isDisabled?: boolean;
 }) {
   return (
-    <Button type="button" aria-label={label} className="admin-markdown-toolbar-button" onPress={onPress}>
+    <Button type="button" aria-label={label} className="admin-markdown-toolbar-button" onPress={onPress} isDisabled={isDisabled}>
       {icon}
       <span className="sr-only">{label}</span>
     </Button>

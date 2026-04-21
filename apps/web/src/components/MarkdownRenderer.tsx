@@ -31,6 +31,26 @@ function getNodeText(node: ReactNode): string {
   return "";
 }
 
+function hasImageDescendant(node: ReactNode): boolean {
+  if (node === null || node === undefined || typeof node === "boolean") {
+    return false;
+  }
+
+  if (Array.isArray(node)) {
+    return node.some(hasImageDescendant);
+  }
+
+  if (!isValidElement<{ children?: ReactNode; node?: { tagName?: string } }>(node)) {
+    return false;
+  }
+
+  if (node.type === "img" || node.props.node?.tagName === "img") {
+    return true;
+  }
+
+  return hasImageDescendant(node.props.children);
+}
+
 export default function MarkdownRenderer({ content, className = "" }: MarkdownRendererProps) {
   const segments = useMemo(() => splitMarkdownMediaSegments(content), [content]);
   const markdownComponents = useMemo<Components>(() => {
@@ -47,11 +67,21 @@ export default function MarkdownRenderer({ content, className = "" }: MarkdownRe
       li: ({ children }) => <li>{children}</li>,
       blockquote: ({ children }) => <blockquote>{children}</blockquote>,
       hr: () => <hr />,
-      a: ({ children, href }) => (
-        <a href={href} target="_blank" rel="noreferrer">
-          {children}
-        </a>
-      ),
+      a: ({ children, href }) => {
+        if (hasImageDescendant(children)) {
+          return (
+            <a href={href} target="_blank" rel="noreferrer" className="markdown-media-shell markdown-media-linked-image">
+              {children}
+            </a>
+          );
+        }
+
+        return (
+          <a href={href} target="_blank" rel="noreferrer">
+            {children}
+          </a>
+        );
+      },
       img: ({ src, alt }) => <img src={resolveAssetUrl(src ?? "")} alt={alt ?? ""} className="markdown-media-image" loading="lazy" />,
       table: ({ children }) => (
         <div className="markdown-table-wrap">

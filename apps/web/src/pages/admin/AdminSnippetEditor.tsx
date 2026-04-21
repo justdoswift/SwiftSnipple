@@ -12,9 +12,9 @@ import { resolveAssetUrl } from "../../lib/asset-url";
 import { applyHeading, insertBlock, insertLink, replaceLinePrefix, wrapSelection } from "../../lib/markdown-editor";
 import { getMessages } from "../../lib/messages";
 import { getLocalizedSnippetFields, localizeAdminPath, localizePublicPath, useAppLocale } from "../../lib/locale";
-import { createEmptyLocalizedFields, getAvailableSnippetLocales, getFormLocale, getSnippetLocale } from "../../lib/snippet-localization";
+import { createEmptyLocalizedFields, getFormLocale, getSnippetLocale } from "../../lib/snippet-localization";
 import { isUnauthorizedError } from "../../services/api";
-import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, unpublishSnippet, updateSnippet, uploadContentImage, uploadContentVideo, uploadCoverImage } from "../../services/snippets";
+import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, unpublishSnippet, updateSnippet, uploadContentImage, uploadContentImageFromURL, uploadContentVideo, uploadCoverImage } from "../../services/snippets";
 import { AppLocale, Snippet, SnippetFormState, SnippetPayload, SnippetStatus } from "../../types";
 import { ChevronDown, ChevronLeft, Code2, Eye, ImageUp, Layout, Monitor, MessageSquareQuote, Send, Smartphone, Settings2, Trash2, X } from "lucide-react";
 
@@ -36,6 +36,11 @@ type EditorContentLocaleOption = {
   label: string;
 };
 type EditorMediaModalKind = "image" | "video" | null;
+type ContentHistoryEntry = {
+  value: string;
+  selectionStart: number;
+  selectionEnd: number;
+};
 type EditorTabOption = {
   key: EditorTabKey;
   label: string;
@@ -182,46 +187,31 @@ function toFormState(snippet: Snippet): SnippetFormState {
   };
 }
 
-function fromFormState(baseSnippet: Snippet, form: SnippetFormState): Snippet {
-  const publishedAt =
-    form.status === "Published"
-      ? form.publishedAt
-        ? new Date(form.publishedAt).toISOString()
-        : new Date().toISOString()
-      : null;
-
+function buildLocalizedPayload(fields: SnippetFormState["locales"]["en"]) {
   return {
-    ...baseSnippet,
-    locales: {
-      en: {
-        title: form.locales.en.title.trim(),
-        slug: form.locales.en.slug.trim(),
-        excerpt: form.locales.en.excerpt.trim(),
-        category: form.locales.en.category.trim() || "Workflow",
-        tags: form.locales.en.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
-        content: form.locales.en.content,
-        prompts: form.locales.en.prompts,
-        seoTitle: form.locales.en.seoTitle.trim(),
-        seoDescription: form.locales.en.seoDescription.trim(),
-      },
-      zh: {
-        title: form.locales.zh.title.trim(),
-        slug: form.locales.zh.slug.trim(),
-        excerpt: form.locales.zh.excerpt.trim(),
-        category: form.locales.zh.category.trim() || "Workflow",
-        tags: form.locales.zh.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
-        content: form.locales.zh.content,
-        prompts: form.locales.zh.prompts,
-        seoTitle: form.locales.zh.seoTitle.trim(),
-        seoDescription: form.locales.zh.seoDescription.trim(),
-      },
-    },
+    title: fields.title.trim(),
+    slug: fields.slug.trim(),
+    excerpt: fields.excerpt.trim(),
+    category: fields.category.trim() || "Workflow",
+    tags: fields.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
+    content: fields.content,
+    prompts: fields.prompts,
+    seoTitle: fields.seoTitle.trim(),
+    seoDescription: fields.seoDescription.trim(),
+  };
+}
+
+function buildSnippetPayload(baseSnippet: Snippet, form: SnippetFormState): SnippetPayload {
+  return {
     coverImage: form.coverImage.trim(),
     code: form.code,
     status: form.status,
-    publishedAt,
+    publishedAt: baseSnippet.id ? baseSnippet.publishedAt : null,
     requiresSubscription: form.requiresSubscription,
-    updatedAt: new Date().toISOString(),
+    locales: {
+      en: buildLocalizedPayload(form.locales.en),
+      zh: buildLocalizedPayload(form.locales.zh),
+    },
   };
 }
 
@@ -240,6 +230,241 @@ function toSnippetPayload(snippet: Snippet): SnippetPayload {
       zh: { ...chinese },
     },
   };
+}
+
+function fromFormState(baseSnippet: Snippet, form: SnippetFormState): Snippet {
+  const payload = buildSnippetPayload(baseSnippet, form);
+
+  return {
+    ...baseSnippet,
+    ...payload,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+type RichPasteImageReference = {
+  token: string;
+  src: string;
+  alt: string;
+};
+
+type RichPasteMarkdownDraft = {
+  markdown: string;
+  images: RichPasteImageReference[];
+};
+
+const BLOCK_ELEMENT_TAGS = new Set([
+  "article",
+  "aside",
+  "blockquote",
+  "div",
+  "figcaption",
+  "figure",
+  "footer",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "header",
+  "hr",
+  "li",
+  "main",
+  "nav",
+  "ol",
+  "p",
+  "pre",
+  "section",
+  "table",
+  "tbody",
+  "td",
+  "tfoot",
+  "th",
+  "thead",
+  "tr",
+  "ul",
+]);
+
+function normalizeInlineText(value: string) {
+  return value.replace(/\s+/g, " ");
+}
+
+function joinInlineParts(parts: string[]) {
+  return parts
+    .join("")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n[ \t]+/g, "\n")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
+}
+
+function createRichPasteImageToken(index: number) {
+  return `@@SWIFTSNIPPLE_IMAGE_${index}@@`;
+}
+
+function hasBlockChildren(element: Element) {
+  return Array.from(element.childNodes).some(
+    (node) => node.nodeType === Node.ELEMENT_NODE && BLOCK_ELEMENT_TAGS.has((node as Element).tagName.toLowerCase()),
+  );
+}
+
+function renderInlineMarkdown(node: Node, images: RichPasteImageReference[], fallbackAlt: string): string {
+  if (node.nodeType === Node.TEXT_NODE) {
+    return normalizeInlineText(node.textContent ?? "");
+  }
+
+  if (node.nodeType !== Node.ELEMENT_NODE) {
+    return "";
+  }
+
+  const element = node as Element;
+  const tag = element.tagName.toLowerCase();
+  const children = () => joinInlineParts(Array.from(element.childNodes).map((child) => renderInlineMarkdown(child, images, fallbackAlt)));
+
+  switch (tag) {
+    case "br":
+      return "\n";
+    case "img": {
+      const src = element.getAttribute("src")?.trim() ?? "";
+      if (!src) {
+        return "";
+      }
+      const alt = element.getAttribute("alt")?.trim() || fallbackAlt;
+      const token = createRichPasteImageToken(images.length);
+      images.push({ token, src, alt });
+      return token;
+    }
+    case "strong":
+    case "b": {
+      const content = children();
+      return content ? `**${content}**` : "";
+    }
+    case "em":
+    case "i": {
+      const content = children();
+      return content ? `*${content}*` : "";
+    }
+    case "del":
+    case "s":
+    case "strike": {
+      const content = children();
+      return content ? `~~${content}~~` : "";
+    }
+    case "code": {
+      const content = children() || "code";
+      return `\`${content}\``;
+    }
+    case "a": {
+      const href = element.getAttribute("href")?.trim() ?? "";
+      const content = children() || href;
+      return href ? `[${content}](${href})` : content;
+    }
+    default:
+      return children();
+  }
+}
+
+function renderBlockMarkdown(node: Node, images: RichPasteImageReference[], fallbackAlt: string): string[] {
+  if (node.nodeType === Node.TEXT_NODE) {
+    const text = normalizeInlineText(node.textContent ?? "").trim();
+    return text ? [text] : [];
+  }
+
+  if (node.nodeType !== Node.ELEMENT_NODE) {
+    return [];
+  }
+
+  const element = node as Element;
+  const tag = element.tagName.toLowerCase();
+  const inline = () => joinInlineParts(Array.from(element.childNodes).map((child) => renderInlineMarkdown(child, images, fallbackAlt)));
+  const childBlocks = () => Array.from(element.childNodes).flatMap((child) => renderBlockMarkdown(child, images, fallbackAlt));
+
+  switch (tag) {
+    case "img": {
+      const token = renderInlineMarkdown(node, images, fallbackAlt);
+      return token ? [token] : [];
+    }
+    case "p":
+    case "figcaption": {
+      const content = inline();
+      return content ? [content] : [];
+    }
+    case "h1":
+    case "h2":
+    case "h3":
+    case "h4":
+    case "h5":
+    case "h6": {
+      const content = inline();
+      if (!content) {
+        return [];
+      }
+      const level = Number.parseInt(tag.slice(1), 10);
+      return [`${"#".repeat(level)} ${content}`];
+    }
+    case "blockquote": {
+      const blocks = childBlocks();
+      const content = blocks.length > 0 ? blocks.join("\n\n") : inline();
+      if (!content) {
+        return [];
+      }
+      return [
+        content
+          .split("\n")
+          .map((line) => (line.trim() ? `> ${line}` : ">"))
+          .join("\n"),
+      ];
+    }
+    case "pre": {
+      const code = element.textContent?.replace(/\s+$/, "") ?? "";
+      return code ? [`\`\`\`\n${code}\n\`\`\``] : [];
+    }
+    case "ul":
+    case "ol": {
+      const ordered = tag === "ol";
+      const items = Array.from(element.children)
+        .filter((child) => child.tagName.toLowerCase() === "li")
+        .map((child, index) => {
+          const content = joinInlineParts(Array.from(child.childNodes).map((childNode) => renderInlineMarkdown(childNode, images, fallbackAlt)));
+          if (!content) {
+            return "";
+          }
+          return ordered ? `${index + 1}. ${content}` : `- ${content}`;
+        })
+        .filter(Boolean);
+      return items.length > 0 ? [items.join("\n")] : [];
+    }
+    case "hr":
+      return ["---"];
+    default: {
+      if (hasBlockChildren(element)) {
+        return childBlocks();
+      }
+      const content = inline();
+      return content ? [content] : [];
+    }
+  }
+}
+
+function parseRichPasteToMarkdown(html: string, plainText: string, fallbackAlt: string): RichPasteMarkdownDraft {
+  const document = new DOMParser().parseFromString(html, "text/html");
+  const images: RichPasteImageReference[] = [];
+  const blocks = Array.from(document.body.childNodes).flatMap((node) => renderBlockMarkdown(node, images, fallbackAlt));
+  const markdown = blocks.join("\n\n").trim() || plainText.trim();
+
+  return {
+    markdown,
+    images,
+  };
+}
+
+function replaceRichPasteImagePlaceholders(
+  markdown: string,
+  images: RichPasteImageReference[],
+  replacements: Map<string, string>,
+) {
+  return images.reduce((current, image) => current.split(image.token).join(replacements.get(image.token) ?? image.token), markdown);
 }
 
 export default function AdminSnippetEditor() {
@@ -267,13 +492,23 @@ export default function AdminSnippetEditor() {
   const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<PreviewDevice>("desktop");
+  const [previewRevision, setPreviewRevision] = useState(0);
   const [autosaveState, setAutosaveState] = useState<AutosaveState>("idle");
   const [primaryActionState, setPrimaryActionState] = useState<PrimaryActionState>("idle");
+  const [contentHistoryState, setContentHistoryState] = useState({ canUndo: false, canRedo: false });
   const hydratedSnippetRef = useRef<Snippet | null>(null);
   const formRef = useRef(form);
   const coverImageInputRef = useRef<HTMLInputElement | null>(null);
   const contentTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const contentSelectionRef = useRef<{ start: number; end: number } | null>(null);
+  const contentHistoryRef = useRef<{
+    undoStack: ContentHistoryEntry[];
+    redoStack: ContentHistoryEntry[];
+  }>({
+    undoStack: [],
+    redoStack: [],
+  });
+  const contentValueRef = useRef(form.locales[editorLocale].content);
   const previewIframeRef = useRef<HTMLIFrameElement | null>(null);
   const previewScrollResetTimeoutRef = useRef<number | null>(null);
   const deleteConfirmState = useOverlayState({
@@ -406,6 +641,10 @@ export default function AdminSnippetEditor() {
     }, 90);
   }, []);
 
+  const bumpPreviewRevision = useCallback(() => {
+    setPreviewRevision((current) => current + 1);
+  }, []);
+
   const previewSnippet = useMemo(() => fromFormState(baseSnippet, form), [baseSnippet, form]);
   const editorTabs = useMemo<EditorTabOption[]>(
     () => [
@@ -417,9 +656,7 @@ export default function AdminSnippetEditor() {
     [copy.code, copy.narrative, copy.prompt, copy.surface],
   );
   const localizedForm = useMemo(() => getFormLocale(form, editorLocale), [editorLocale, form]);
-  const localizedPreview = useMemo(() => getLocalizedSnippetFields(previewSnippet, locale), [locale, previewSnippet]);
-  const localizedBase = useMemo(() => getLocalizedSnippetFields(baseSnippet, locale), [baseSnippet, locale]);
-  const localeAvailability = useMemo(() => getAvailableSnippetLocales(previewSnippet), [previewSnippet]);
+  const localizedPreview = useMemo(() => getLocalizedSnippetFields(previewSnippet, editorLocale), [editorLocale, previewSnippet]);
   const editorLocaleOptions = useMemo<EditorContentLocaleOption[]>(
     () => [
       { id: "en", label: copy.localeEditorEnglish },
@@ -431,13 +668,32 @@ export default function AdminSnippetEditor() {
   const otherEditorLocaleLabel =
     editorLocaleOptions.find((option) => option.id === otherEditorLocale)?.label ?? otherEditorLocale.toUpperCase();
   const untitledSnippetLabel = copy.untitledSnippet;
-  const previewPath = baseSnippet.id && localizedBase.slug ? localizePublicPath(`/snippets/${localizedBase.slug}`) : "";
-  const previewIframePath = previewPath ? `${previewPath}?preview=admin` : "";
-  const hasSavedPreview = Boolean(baseSnippet.id && localizedBase.slug);
-  const previewPayloadSignature = useMemo(() => JSON.stringify(toSnippetPayload(previewSnippet)), [previewSnippet]);
+  const draftPreviewPath = baseSnippet.id && localizedPreview.slug ? localizePublicPath(`/snippets/${localizedPreview.slug}`) : "";
+  const previewPath = draftPreviewPath;
+  const previewIframePath = useMemo(() => {
+    if (!previewPath || !baseSnippet.id) {
+      return "";
+    }
+
+    const params = new URLSearchParams({
+      preview: "admin",
+      id: baseSnippet.id,
+      locale: editorLocale,
+      rev: String(previewRevision),
+    });
+
+    return `${previewPath}?${params.toString()}`;
+  }, [baseSnippet.id, editorLocale, previewPath, previewRevision]);
+  const hasSavedPreview = Boolean(baseSnippet.id && localizedPreview.slug);
+  const previewPayloadSignature = useMemo(
+    () => JSON.stringify(buildSnippetPayload(baseSnippet, form)),
+    [baseSnippet, form],
+  );
   const basePayloadSignature = useMemo(() => JSON.stringify(toSnippetPayload(baseSnippet)), [baseSnippet]);
   const hasUnsavedChanges = previewPayloadSignature !== basePayloadSignature;
   const isPublishedEntry = baseSnippet.status === "Published";
+  const hasDraftChanges = Boolean(baseSnippet.hasUnpublishedChanges);
+  const hasPendingPublishedChanges = isPublishedEntry && (hasUnsavedChanges || hasDraftChanges);
   const statusOptions = isPublishedEntry ? (["Published"] as const) : EDITABLE_STATUS_OPTIONS;
   const statusSelectOptions = useMemo<EditorStatusOption[]>(
     () => statusOptions.map((status) => ({ id: status, label: common.statuses[status] })),
@@ -462,6 +718,8 @@ export default function AdminSnippetEditor() {
   const toolbarLabels = useMemo(
     () => ({
       text: copy.markdownToolbar,
+      undo: copy.markdownUndo,
+      redo: copy.markdownRedo,
       heading: copy.markdownHeading,
       bold: copy.markdownBold,
       italic: copy.markdownItalic,
@@ -493,7 +751,7 @@ export default function AdminSnippetEditor() {
       : primaryActionState === "updating"
         ? copy.updating
         : isPublishedEntry
-          ? hasUnsavedChanges
+          ? hasPendingPublishedChanges
             ? copy.update
             : copy.publishedStable
           : copy.publish;
@@ -502,7 +760,7 @@ export default function AdminSnippetEditor() {
     isDeleting ||
     autosaveState === "saving" ||
     primaryActionState !== "idle" ||
-    (isPublishedEntry && !hasUnsavedChanges);
+    (isPublishedEntry && !hasPendingPublishedChanges);
   const publishDialogTitle = isPublishedEntry
     ? copy.updateDialogTitle
     : copy.publishDialogTitle;
@@ -515,14 +773,53 @@ export default function AdminSnippetEditor() {
           ? copy.confirmUpdate
           : copy.confirmPublish;
   const saveState = isLoading ? "syncing" : autosaveState === "saving" ? "saving" : "saved";
-  const saveStateLabel = saveState === "syncing" ? copy.syncing : saveState === "saving" ? copy.saving : copy.saved;
+  const saveStateLabel =
+    saveState === "syncing"
+      ? copy.syncing
+      : saveState === "saving"
+        ? copy.saving
+        : isPublishedEntry && hasDraftChanges
+          ? copy.autoSavedDraftUpdate
+          : copy.saved;
   const autosaveFeedbackLabel =
-    autosaveState === "saving" ? copy.saving : autosaveState === "saved" ? copy.saved : "";
+    autosaveState === "saving"
+      ? copy.saving
+      : autosaveState === "saved"
+        ? isPublishedEntry
+          ? copy.autoSavedDraftUpdate
+          : copy.saved
+        : "";
 
   const openContentMediaModal = useCallback((kind: Exclude<EditorMediaModalKind, null>) => {
     setContentMediaError("");
     setContentMediaModal(kind);
   }, []);
+
+  const syncContentHistoryState = useCallback(() => {
+    setContentHistoryState({
+      canUndo: contentHistoryRef.current.undoStack.length > 0,
+      canRedo: contentHistoryRef.current.redoStack.length > 0,
+    });
+  }, []);
+
+  const resetContentHistory = useCallback(() => {
+    contentHistoryRef.current = {
+      undoStack: [],
+      redoStack: [],
+    };
+    syncContentHistoryState();
+  }, [syncContentHistoryState]);
+
+  const currentContentSelection = useCallback((): ContentHistoryEntry => {
+    const textarea = contentTextareaRef.current;
+    const value = formRef.current.locales[editorLocale].content;
+
+    return {
+      value,
+      selectionStart: textarea?.selectionStart ?? value.length,
+      selectionEnd: textarea?.selectionEnd ?? value.length,
+    };
+  }, [editorLocale]);
   useEffect(() => {
     if (!isPreviewOpen) {
       if (previewScrollResetTimeoutRef.current !== null) {
@@ -574,6 +871,15 @@ export default function AdminSnippetEditor() {
     contentSelectionRef.current = null;
   }, []);
 
+  useEffect(() => {
+    contentValueRef.current = localizedForm.content;
+  }, [localizedForm.content]);
+
+  useEffect(() => {
+    resetContentHistory();
+    contentValueRef.current = form.locales[editorLocale].content;
+  }, [baseSnippet.id, editorLocale, resetContentHistory]);
+
   const resizeContentTextarea = useCallback(() => {
     const textarea = contentTextareaRef.current;
     if (!textarea) {
@@ -588,22 +894,64 @@ export default function AdminSnippetEditor() {
     syncContentTextareaSelection();
   }, [localizedForm.content, resizeContentTextarea, syncContentTextareaSelection]);
 
+  const applyContentSnapshot = useCallback((nextState: ContentHistoryEntry, historyMode: "push" | "undo" | "redo" = "push") => {
+    const currentState = currentContentSelection();
+
+    if (historyMode === "push" && nextState.value !== currentState.value) {
+      contentHistoryRef.current.undoStack.push(currentState);
+      contentHistoryRef.current.redoStack = [];
+      syncContentHistoryState();
+    }
+
+    if (historyMode === "undo") {
+      contentHistoryRef.current.redoStack.push(currentState);
+      syncContentHistoryState();
+    }
+
+    if (historyMode === "redo") {
+      contentHistoryRef.current.undoStack.push(currentState);
+      syncContentHistoryState();
+    }
+
+    contentSelectionRef.current = {
+      start: nextState.selectionStart,
+      end: nextState.selectionEnd,
+    };
+    updateLocalizedField("content", nextState.value);
+  }, [currentContentSelection, syncContentHistoryState, updateLocalizedField]);
+
   const applyContentEdit = useCallback((transform: (value: string, start: number, end: number) => { value: string; selectionStart: number; selectionEnd: number }) => {
     const textarea = contentTextareaRef.current;
     const currentValue = localizedForm.content;
     const start = textarea?.selectionStart ?? currentValue.length;
     const end = textarea?.selectionEnd ?? currentValue.length;
     const nextState = transform(currentValue, start, end);
-    contentSelectionRef.current = {
-      start: nextState.selectionStart,
-      end: nextState.selectionEnd,
-    };
-    updateLocalizedField("content", nextState.value);
-  }, [localizedForm.content, updateLocalizedField]);
+    applyContentSnapshot(nextState, "push");
+  }, [applyContentSnapshot, localizedForm.content]);
+
+  const undoContentEdit = useCallback(() => {
+    const previousState = contentHistoryRef.current.undoStack.pop();
+    if (!previousState) {
+      syncContentHistoryState();
+      return;
+    }
+
+    applyContentSnapshot(previousState, "undo");
+  }, [applyContentSnapshot, syncContentHistoryState]);
+
+  const redoContentEdit = useCallback(() => {
+    const nextState = contentHistoryRef.current.redoStack.pop();
+    if (!nextState) {
+      syncContentHistoryState();
+      return;
+    }
+
+    applyContentSnapshot(nextState, "redo");
+  }, [applyContentSnapshot, syncContentHistoryState]);
 
   const persistSnippet = useCallback(
     async (nextForm: SnippetFormState) => {
-      const payload = toSnippetPayload(fromFormState(baseSnippet, nextForm));
+      const payload = buildSnippetPayload(baseSnippet, nextForm);
       return isNew ? createSnippet(payload) : updateSnippet(baseSnippet.id, payload);
     },
     [baseSnippet, isNew],
@@ -620,7 +968,7 @@ export default function AdminSnippetEditor() {
   }, [autosaveState]);
 
   useEffect(() => {
-    if (isLoading || isDeleting || primaryActionState !== "idle" || isPublishedEntry || !hasUnsavedChanges) {
+    if (isLoading || isDeleting || primaryActionState !== "idle" || !hasUnsavedChanges) {
       return undefined;
     }
 
@@ -639,8 +987,9 @@ export default function AdminSnippetEditor() {
         }
 
         setBaseSnippet(savedSnippet);
-        setFeedback(copy.autoSavedDraft);
+        setFeedback(isPublishedEntry ? copy.autoSavedDraftUpdate : copy.autoSavedDraft);
         setAutosaveState("saved");
+        bumpPreviewRevision();
 
         if (isNew) {
           hydratedSnippetRef.current = savedSnippet;
@@ -657,7 +1006,20 @@ export default function AdminSnippetEditor() {
     }, AUTOSAVE_DEBOUNCE_MS);
 
     return () => window.clearTimeout(timeoutId);
-  }, [copy.failedSave, hasUnsavedChanges, isDeleting, isLoading, isNew, isPublishedEntry, navigate, persistSnippet, primaryActionState, redirectToAdminLogin]);
+  }, [
+    copy.autoSavedDraft,
+    copy.autoSavedDraftUpdate,
+    copy.failedSave,
+    hasUnsavedChanges,
+    isDeleting,
+    isLoading,
+    isNew,
+    isPublishedEntry,
+    navigate,
+    persistSnippet,
+    primaryActionState,
+    redirectToAdminLogin,
+  ]);
 
   const handleConfirmPublish = useCallback(async () => {
     const nextActionState: PrimaryActionState = isPublishedEntry ? "updating" : "publishing";
@@ -668,11 +1030,12 @@ export default function AdminSnippetEditor() {
       setError("");
       setFeedback("");
       setAutosaveState("idle");
-      const savedSnippet = await persistSnippet(formRef.current);
+      const savedSnippet = isNew || hasUnsavedChanges ? await persistSnippet(formRef.current) : baseSnippet;
       const finalSnippet = await publishSnippet(savedSnippet.id);
 
       setBaseSnippet(finalSnippet);
       setForm(toFormState(finalSnippet));
+      bumpPreviewRevision();
       setFeedback(
         nextActionState === "updating"
           ? copy.updateSuccess
@@ -692,7 +1055,7 @@ export default function AdminSnippetEditor() {
     } finally {
       setPrimaryActionState("idle");
     }
-  }, [copy.failedPublish, copy.publishSuccess, copy.updateSuccess, isNew, isPublishedEntry, navigate, persistSnippet, redirectToAdminLogin]);
+  }, [baseSnippet, copy.failedPublish, copy.publishSuccess, copy.updateSuccess, hasUnsavedChanges, isNew, isPublishedEntry, navigate, persistSnippet, redirectToAdminLogin]);
 
   const handleUnpublish = async () => {
     if (!baseSnippet.id) return;
@@ -704,6 +1067,7 @@ export default function AdminSnippetEditor() {
       const snippet = await unpublishSnippet(baseSnippet.id);
       setBaseSnippet(snippet);
       setForm(toFormState(snippet));
+      bumpPreviewRevision();
       setFeedback(copy.unpublishSuccess);
     } catch (err) {
       if (isUnauthorizedError(err)) {
@@ -774,6 +1138,157 @@ export default function AdminSnippetEditor() {
     }
   }, [copy.failedCoverImageUpload, copy.invalidCoverImage, redirectToAdminLogin]);
 
+  const handleContentTextareaChange = useCallback((event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const previousValue = contentValueRef.current;
+    const nextValue = event.target.value;
+    if (nextValue !== previousValue) {
+      contentHistoryRef.current.undoStack.push({
+        value: previousValue,
+        selectionStart: event.target.selectionStart ?? previousValue.length,
+        selectionEnd: event.target.selectionEnd ?? previousValue.length,
+      });
+      contentHistoryRef.current.redoStack = [];
+      syncContentHistoryState();
+    }
+
+    contentValueRef.current = nextValue;
+    updateLocalizedField("content", nextValue);
+  }, [syncContentHistoryState, updateLocalizedField]);
+
+  const handleContentTextareaKeyDown = useCallback((event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    const isMod = event.metaKey || event.ctrlKey;
+    if (!isMod || event.altKey) {
+      return;
+    }
+
+    if (event.key.toLowerCase() !== "z") {
+      return;
+    }
+
+    event.preventDefault();
+    if (event.shiftKey) {
+      redoContentEdit();
+      return;
+    }
+
+    undoContentEdit();
+  }, [redoContentEdit, undoContentEdit]);
+
+  const insertUploadedContentImage = useCallback((assetURL: string, altText?: string) => {
+    applyContentEdit((value, start, end) => {
+      const snippet = `![${altText?.trim() || copy.mediaAltPlaceholder}](${assetURL})`;
+      return insertBlock(value, start, end, snippet, snippet.length);
+    });
+  }, [applyContentEdit, copy.mediaAltPlaceholder]);
+
+  const insertUploadedContentImages = useCallback((images: Array<{ url: string; alt?: string }>) => {
+    if (images.length === 0) {
+      return;
+    }
+
+    applyContentEdit((value, start, end) => {
+      const block = images
+        .map(({ url, alt }) => `![${alt?.trim() || copy.mediaAltPlaceholder}](${url})`)
+        .join("\n\n");
+      return insertBlock(value, start, end, block, block.length);
+    });
+  }, [applyContentEdit, copy.mediaAltPlaceholder]);
+
+  const applyRichPasteMarkdown = useCallback((start: number, end: number, markdown: string) => {
+    const nextState = insertBlock(contentValueRef.current, start, end, markdown, markdown.length);
+    applyContentSnapshot(nextState, "push");
+  }, [applyContentSnapshot]);
+
+  const handleContentTextareaPaste = useCallback(async (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const clipboardFiles = Array.from(event.clipboardData?.files ?? []);
+    const fileFromFiles = clipboardFiles.find((candidate) => candidate.type.startsWith("image/"));
+    const clipboardItems = Array.from(event.clipboardData?.items ?? []);
+    const fileFromItems = clipboardItems
+      .filter((item) => item.kind === "file" && item.type.startsWith("image/"))
+      .map((item) => item.getAsFile())
+      .find((candidate): candidate is File => Boolean(candidate));
+
+    const file = fileFromFiles ?? fileFromItems;
+    if (!file) {
+      const html = typeof event.clipboardData?.getData === "function"
+        ? event.clipboardData.getData("text/html")?.trim()
+        : "";
+      if (!html) {
+        return;
+      }
+
+      const plainText = typeof event.clipboardData?.getData === "function"
+        ? event.clipboardData.getData("text/plain")
+        : "";
+      const richPasteDraft = parseRichPasteToMarkdown(html, plainText, copy.mediaAltPlaceholder);
+
+      if (richPasteDraft.images.length === 0) {
+        return;
+      }
+
+      event.preventDefault();
+      const pasteStart = event.currentTarget.selectionStart ?? contentValueRef.current.length;
+      const pasteEnd = event.currentTarget.selectionEnd ?? contentValueRef.current.length;
+
+      try {
+        setContentMediaError("");
+        setIsUploadingContentMedia(true);
+
+        const replacements = new Map<string, string>();
+        let hadImageFailures = false;
+
+        for (const image of richPasteDraft.images) {
+          try {
+            const result = await uploadContentImageFromURL(image.src);
+            replacements.set(image.token, `![${image.alt.trim() || copy.mediaAltPlaceholder}](${result.url})`);
+          } catch (err) {
+            if (isUnauthorizedError(err)) {
+              redirectToAdminLogin();
+              return;
+            }
+
+            hadImageFailures = true;
+            const fallbackLabel = image.alt.trim() || copy.mediaAltPlaceholder;
+            replacements.set(image.token, `[${fallbackLabel}](${image.src})`);
+          }
+        }
+
+        const finalMarkdown = replaceRichPasteImagePlaceholders(richPasteDraft.markdown, richPasteDraft.images, replacements);
+        applyRichPasteMarkdown(pasteStart, pasteEnd, finalMarkdown);
+
+        if (hadImageFailures) {
+          setContentMediaError(copy.failedContentMediaUpload);
+        }
+      } catch (err) {
+        if (isUnauthorizedError(err)) {
+          redirectToAdminLogin();
+          return;
+        }
+        setContentMediaError(err instanceof Error ? err.message : copy.failedContentMediaUpload);
+      } finally {
+        setIsUploadingContentMedia(false);
+      }
+      return;
+    }
+
+    event.preventDefault();
+
+    try {
+      setContentMediaError("");
+      setIsUploadingContentMedia(true);
+      const result = await uploadContentImage(file);
+      insertUploadedContentImage(result.url);
+    } catch (err) {
+      if (isUnauthorizedError(err)) {
+        redirectToAdminLogin();
+        return;
+      }
+      setContentMediaError(err instanceof Error ? err.message : copy.failedContentMediaUpload);
+    } finally {
+      setIsUploadingContentMedia(false);
+    }
+  }, [applyRichPasteMarkdown, copy.failedContentMediaUpload, copy.mediaAltPlaceholder, insertUploadedContentImage, redirectToAdminLogin]);
+
   const handleContentMediaInsert = useCallback(async (payload: { file?: File; url?: string; alt?: string; title?: string }) => {
     if (!contentMediaModal) {
       return;
@@ -801,8 +1316,7 @@ export default function AdminSnippetEditor() {
 
       applyContentEdit((value, start, end) => {
         if (contentMediaModal === "image") {
-          const altText = payload.alt?.trim() || copy.mediaAltPlaceholder;
-          const snippet = `![${altText}](${assetURL})`;
+          const snippet = `![${payload.alt?.trim() || copy.mediaAltPlaceholder}](${assetURL})`;
           return insertBlock(value, start, end, snippet, snippet.length);
         }
 
@@ -909,7 +1423,11 @@ export default function AdminSnippetEditor() {
             <span className="admin-feedback-success type-mono-micro hidden animate-in fade-in duration-500 2xl:block">{feedback}</span>
           ) : null}
           <div className="hidden shrink-0 2xl:block xl:mr-1">
-            <StatusBadge status={previewSnippet.status} />
+            {isPublishedEntry && hasDraftChanges ? (
+              <span className="admin-status-badge type-mono-micro admin-status-badge-published">{copy.publishedDraftChanges}</span>
+            ) : (
+              <StatusBadge status={previewSnippet.status} />
+            )}
           </div>
           <Tooltip delay={0} closeDelay={0}>
             <Tooltip.Trigger>
@@ -957,15 +1475,19 @@ export default function AdminSnippetEditor() {
       copy.saving,
       copy.saved,
       feedback,
+      hasDraftChanges,
+      hasUnsavedChanges,
       handlePreview,
       isDeleting,
       isLoading,
       isPrimaryActionDisabled,
+      isPublishedEntry,
       locale,
       navigate,
       primaryActionLabel,
       primaryActionState,
       previewSnippet.status,
+      copy.publishedDraftChanges,
     ],
   );
 
@@ -978,62 +1500,46 @@ export default function AdminSnippetEditor() {
           <EditorSectionRail activeTab={activeTab} onSelect={setActiveTab} tabs={editorTabs} />
 
           <div className="space-y-12">
-            <div className="admin-section-card">
-              <div className="flex flex-col gap-5 p-5 md:flex-row md:items-center md:justify-between md:p-6">
-                <div className="space-y-2">
-                  <p className="admin-eyebrow type-mono-micro">{copy.contentLanguage}</p>
-                  <p className="admin-copy-muted">{copy.contentLanguageCopy}</p>
-                </div>
-                <div className="flex flex-col items-start gap-3 md:items-end">
-                  <div className="inline-flex rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] p-1">
-                    {editorLocaleOptions.map((option) => {
-                      const isActive = option.id === editorLocale;
-                      const isAvailable = localeAvailability[option.id];
-
-                      return (
-                        <button
-                          key={option.id}
-                          type="button"
-                          className={`min-w-[72px] rounded-full px-4 py-2 text-sm transition-colors ${
-                            isActive
-                              ? "bg-white text-black"
-                              : "text-[rgba(255,255,255,0.7)] hover:text-white"
-                          }`}
-                          aria-pressed={isActive}
-                          onClick={() => setEditorLocale(option.id)}
-                        >
-                          <span className="inline-flex items-center gap-2">
-                            <span>{option.label}</span>
-                            <span className="type-mono-micro opacity-70">
-                              {isAvailable ? copy.currentLanguageReady : copy.currentLanguageMissing}
-                            </span>
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <p className="admin-copy-muted type-mono-micro">
-                    {copy.otherLanguageStatus}: {otherEditorLocaleLabel} ·{" "}
-                    {localeAvailability[otherEditorLocale] ? copy.currentLanguageReady : copy.currentLanguageMissing}
-                  </p>
-                </div>
+            <div
+              className="admin-editor-title-row flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-6"
+              data-testid="admin-editor-title-row"
+            >
+              <div className="relative min-w-0 flex-1">
+                <textarea
+                  aria-label={copy.snippetTitle}
+                  placeholder={copy.snippetTitle}
+                  value={localizedForm.title}
+                  onChange={(e) => updateLocalizedField("title", e.target.value)}
+                  className="admin-editor-title-input w-full resize-none overflow-hidden border-none bg-transparent p-0 outline-none transition-all duration-500 focus:ring-0"
+                  rows={1}
+                  onInput={(e) => {
+                    const target = e.target as HTMLTextAreaElement;
+                    target.style.height = "auto";
+                    target.style.height = `${target.scrollHeight}px`;
+                  }}
+                />
               </div>
-            </div>
 
-            <div className="relative flex flex-col gap-2">
-              <textarea
-                aria-label={copy.snippetTitle}
-                placeholder={copy.snippetTitle}
-                value={localizedForm.title}
-                onChange={(e) => updateLocalizedField("title", e.target.value)}
-                className="admin-editor-title-input w-full resize-none overflow-hidden border-none bg-transparent p-0 outline-none transition-all duration-500 focus:ring-0"
-                rows={1}
-                onInput={(e) => {
-                  const target = e.target as HTMLTextAreaElement;
-                  target.style.height = "auto";
-                  target.style.height = `${target.scrollHeight}px`;
-                }}
-              />
+              <div
+                className="admin-editor-locale-switcher inline-flex w-fit max-w-full flex-wrap rounded-full border p-1"
+                data-testid="admin-editor-locale-switcher"
+              >
+                {editorLocaleOptions.map((option) => {
+                  const isActive = option.id === editorLocale;
+
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      className={`admin-editor-locale-button ${isActive ? "admin-editor-locale-button-active" : "admin-editor-locale-button-inactive"}`}
+                      aria-pressed={isActive}
+                      onClick={() => setEditorLocale(option.id)}
+                    >
+                      <span>{option.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <motion.div
@@ -1053,6 +1559,10 @@ export default function AdminSnippetEditor() {
                     <MarkdownToolbar
                       headingLevel={currentHeadingLevel}
                       labels={toolbarLabels}
+                      onUndo={undoContentEdit}
+                      onRedo={redoContentEdit}
+                      canUndo={contentHistoryState.canUndo}
+                      canRedo={contentHistoryState.canRedo}
                       onHeadingChange={(level) => applyContentEdit((value, start, end) => applyHeading(value, start, end, level))}
                       onBold={() => applyContentEdit((value, start, end) => wrapSelection(value, start, end, "**", "**", copy.markdownBoldPlaceholder))}
                       onItalic={() => applyContentEdit((value, start, end) => wrapSelection(value, start, end, "*", "*", copy.markdownItalicPlaceholder))}
@@ -1076,7 +1586,9 @@ export default function AdminSnippetEditor() {
                       aria-label={copy.implementationNotes}
                       placeholder={copy.implementationPlaceholder}
                       value={localizedForm.content}
-                      onChange={(event) => updateLocalizedField("content", event.target.value)}
+                      onChange={handleContentTextareaChange}
+                      onPaste={handleContentTextareaPaste}
+                      onKeyDown={handleContentTextareaKeyDown}
                       onClick={resizeContentTextarea}
                       onKeyUp={resizeContentTextarea}
                       className="admin-editor-textarea admin-editor-panel-body admin-editor-scrollbar w-full resize-none border-0 bg-transparent px-0 shadow-none outline-none focus:ring-0"
@@ -1420,6 +1932,7 @@ export default function AdminSnippetEditor() {
                     }`}
                   >
                     <iframe
+                      key={previewIframePath}
                       ref={previewIframeRef}
                       title="Snippet public preview"
                       src={previewIframePath}

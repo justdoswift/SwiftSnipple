@@ -241,6 +241,51 @@ describe("SnippetDetail", () => {
     expect(screen.getByRole("button", { name: "03 Prompt Logic" })).toHaveAttribute("aria-pressed", "false");
   });
 
+  it("uses the preview locale query override in admin preview mode", async () => {
+    renderSnippetDetail({
+      locale: "en",
+      initialEntries: ["/snippets/smooth-feedback-loops?preview=admin&locale=zh"],
+      snippet: createSnippet({
+        title: "English Title",
+        slug: "english-title",
+        excerpt: "English excerpt",
+        content: "# English content",
+        prompts: "English prompts",
+        locales: {
+          en: {
+            title: "English Title",
+            slug: "english-title",
+            excerpt: "English excerpt",
+            category: "Workflow",
+            tags: ["SwiftUI"],
+            content: "# English content",
+            prompts: "English prompts",
+            seoTitle: "English Title",
+            seoDescription: "English description",
+          },
+          zh: {
+            title: "中文标题",
+            slug: "zhong-wen-biao-ti",
+            excerpt: "中文摘要",
+            category: "工作流",
+            tags: ["SwiftUI"],
+            content: "# 中文内容",
+            prompts: "中文提示词",
+            seoTitle: "中文标题",
+            seoDescription: "中文描述",
+          },
+        },
+      }),
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "中文标题" })).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("中文摘要")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "English Title" })).not.toBeInTheDocument();
+  });
+
   it("switches desktop panels and syncs the hash", async () => {
     renderSnippetDetail();
 

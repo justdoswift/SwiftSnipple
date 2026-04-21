@@ -5,7 +5,7 @@ import AdminLayout from "../../components/admin/AdminLayout";
 import type { AdminAuthSession } from "../../lib/admin-auth";
 import { LocaleContext } from "../../lib/locale";
 import AdminSnippetEditor from "./AdminSnippetEditor";
-import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, updateSnippet, uploadContentImage, uploadContentVideo, uploadCoverImage } from "../../services/snippets";
+import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, updateSnippet, uploadContentImage, uploadContentImageFromURL, uploadContentVideo, uploadCoverImage } from "../../services/snippets";
 import { createSnippet as createSnippetFixture } from "../../test/factories";
 
 vi.mock("../../services/snippets", () => ({
@@ -16,6 +16,7 @@ vi.mock("../../services/snippets", () => ({
   unpublishSnippet: vi.fn(),
   updateSnippet: vi.fn(),
   uploadContentImage: vi.fn(),
+  uploadContentImageFromURL: vi.fn(),
   uploadContentVideo: vi.fn(),
   uploadCoverImage: vi.fn(),
 }));
@@ -26,6 +27,7 @@ const mockedDeleteSnippet = vi.mocked(deleteSnippet);
 const mockedPublishSnippet = vi.mocked(publishSnippet);
 const mockedUpdateSnippet = vi.mocked(updateSnippet);
 const mockedUploadContentImage = vi.mocked(uploadContentImage);
+const mockedUploadContentImageFromURL = vi.mocked(uploadContentImageFromURL);
 const mockedUploadContentVideo = vi.mocked(uploadContentVideo);
 const mockedUploadCoverImage = vi.mocked(uploadCoverImage);
 
@@ -37,6 +39,7 @@ const adminAuthSession: AdminAuthSession = {
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.restoreAllMocks();
 });
 
 describe("AdminSnippetEditor", () => {
@@ -72,6 +75,10 @@ describe("AdminSnippetEditor", () => {
     expect(screen.getByRole("link", { name: /view front site/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /EN/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /中文/i })).toBeInTheDocument();
+    expect(screen.getByTestId("admin-editor-title-row")).toContainElement(screen.getByLabelText("Snippet Title"));
+    expect(screen.getByTestId("admin-editor-title-row")).toContainElement(screen.getByTestId("admin-editor-locale-switcher"));
+    expect(screen.getByRole("button", { name: "Undo" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Redo" })).toBeDisabled();
     expect(screen.getByLabelText("Implementation notes")).toHaveClass("admin-editor-scrollbar");
     fireEvent.click(screen.getByRole("tab", { name: "Code" }));
     expect(screen.getByLabelText("SwiftUI code")).toHaveClass("admin-editor-scrollbar");
@@ -164,7 +171,7 @@ describe("AdminSnippetEditor", () => {
     mockedGetSnippetById.mockReset();
     mockedCreateSnippet.mockReset();
     mockedPublishSnippet.mockReset();
-    mockedUploadContentImage.mockResolvedValue({ url: "/api/uploads/content-images/example.png", mimeType: "image/png" });
+    mockedUploadContentImage.mockResolvedValue({ url: "/api/uploads/content-images/example.webp", mimeType: "image/webp" });
 
     render(
       <MemoryRouter initialEntries={["/admin/snippets/new"]}>
@@ -198,7 +205,263 @@ describe("AdminSnippetEditor", () => {
     await waitFor(() => {
       const notesField = screen.getByLabelText("Implementation notes") as HTMLTextAreaElement;
       expect(notesField.value).toContain("![");
-      expect(notesField.value).toContain("/api/uploads/content-images/example.png");
+      expect(notesField.value).toContain("/api/uploads/content-images/example.webp");
+    });
+  });
+
+  it("uploads pasted images into markdown notes", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+    mockedUploadContentImage.mockResolvedValue({ url: "/api/uploads/content-images/pasted.webp", mimeType: "image/webp" });
+
+    render(
+      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+            <Route path="snippets/new" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    const notes = screen.getByLabelText("Implementation notes") as HTMLTextAreaElement;
+    fireEvent.change(notes, { target: { value: "Hello world" } });
+    notes.setSelectionRange(11, 11);
+
+    const file = new File(["image"], "clipboard.png", { type: "image/png" });
+    fireEvent.paste(notes, {
+      clipboardData: {
+        items: [
+          {
+            kind: "file",
+            type: "image/png",
+            getAsFile: () => file,
+          },
+        ],
+      },
+    });
+
+    await waitFor(() => {
+      expect(mockedUploadContentImage).toHaveBeenCalledWith(file);
+    });
+
+    await waitFor(() => {
+      expect(notes.value).toContain("![Snippet image](/api/uploads/content-images/pasted.webp)");
+    });
+  });
+
+  it("uploads pasted images from clipboard files when items are unavailable", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+    mockedUploadContentImage.mockResolvedValue({ url: "/api/uploads/content-images/pasted-files.webp", mimeType: "image/webp" });
+
+    render(
+      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+            <Route path="snippets/new" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    const notes = screen.getByLabelText("Implementation notes") as HTMLTextAreaElement;
+    const file = new File(["image"], "clipboard-files.png", { type: "image/png" });
+
+    fireEvent.paste(notes, {
+      clipboardData: {
+        files: [file],
+        items: [],
+      },
+    });
+
+    await waitFor(() => {
+      expect(mockedUploadContentImage).toHaveBeenCalledWith(file);
+    });
+
+    await waitFor(() => {
+      expect(notes.value).toContain("![Snippet image](/api/uploads/content-images/pasted-files.webp)");
+    });
+  });
+
+  it("uploads pasted html images from rich content", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+    mockedUploadContentImageFromURL.mockResolvedValueOnce({
+      url: "/api/uploads/content-images/from-html.webp",
+      mimeType: "image/webp",
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+            <Route path="snippets/new" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    const notes = screen.getByLabelText("Implementation notes") as HTMLTextAreaElement;
+    fireEvent.change(notes, { target: { value: "Before paste" } });
+    notes.setSelectionRange(notes.value.length, notes.value.length);
+
+    fireEvent.paste(notes, {
+      clipboardData: {
+        files: [],
+        items: [],
+        getData: (type: string) =>
+          type === "text/html"
+            ? '<div><h2>Language Identification</h2><p>Tries to figure out what language a piece of text is in.</p><img src="https://substackcdn.com/example.png" alt="Substack figure" /></div>'
+            : type === "text/plain"
+              ? "Language Identification\nTries to figure out what language a piece of text is in."
+              : "",
+      },
+    });
+
+    await waitFor(() => {
+      expect(mockedUploadContentImageFromURL).toHaveBeenCalledWith("https://substackcdn.com/example.png");
+    });
+
+    await waitFor(() => {
+      expect(notes.value).toContain("Before paste");
+      expect(notes.value).toContain("## Language Identification");
+      expect(notes.value).toContain("Tries to figure out what language a piece of text is in.");
+      expect(notes.value).toContain("![Substack figure](/api/uploads/content-images/from-html.webp)");
+    });
+  });
+
+  it("keeps pasted html text when one remote image upload fails", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+    mockedUploadContentImageFromURL
+      .mockResolvedValueOnce({
+        url: "/api/uploads/content-images/first.webp",
+        mimeType: "image/webp",
+      })
+      .mockRejectedValueOnce(new Error("remote fetch failed"));
+
+    render(
+      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+            <Route path="snippets/new" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    const notes = screen.getByLabelText("Implementation notes") as HTMLTextAreaElement;
+    fireEvent.paste(notes, {
+      clipboardData: {
+        files: [],
+        items: [],
+        getData: (type: string) =>
+          type === "text/html"
+            ? '<div><p>One image works.</p><img src="https://substackcdn.com/first.png" alt="First figure" /><p>Second image fails.</p><img src="https://substackcdn.com/second.png" alt="Second figure" /></div>'
+            : type === "text/plain"
+              ? "One image works. Second image fails."
+              : "",
+      },
+    });
+
+    await waitFor(() => {
+      expect(mockedUploadContentImageFromURL).toHaveBeenNthCalledWith(1, "https://substackcdn.com/first.png");
+      expect(mockedUploadContentImageFromURL).toHaveBeenNthCalledWith(2, "https://substackcdn.com/second.png");
+    });
+
+    await waitFor(() => {
+      expect(notes.value).toContain("One image works.");
+      expect(notes.value).toContain("![First figure](/api/uploads/content-images/first.webp)");
+      expect(notes.value).toContain("Second image fails.");
+      expect(notes.value).toContain("[Second figure](https://substackcdn.com/second.png)");
+    });
+  });
+
+  it("keeps normal paste behavior for non-image clipboard content", () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+    mockedUploadContentImage.mockReset();
+
+    render(
+      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+            <Route path="snippets/new" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    const notes = screen.getByLabelText("Implementation notes") as HTMLTextAreaElement;
+    const preventDefault = vi.fn();
+    fireEvent.paste(notes, {
+      clipboardData: {
+        items: [
+          {
+            kind: "string",
+            type: "text/plain",
+          },
+        ],
+      },
+      preventDefault,
+    });
+
+    expect(preventDefault).not.toHaveBeenCalled();
+    expect(mockedUploadContentImage).not.toHaveBeenCalled();
+  });
+
+  it("supports undo and redo for the content editor", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+
+    render(
+      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+            <Route path="snippets/new" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    const notes = screen.getByLabelText("Implementation notes") as HTMLTextAreaElement;
+    fireEvent.change(notes, { target: { value: "Hello world", selectionStart: 11, selectionEnd: 11 } });
+    notes.setSelectionRange(0, 5);
+    fireEvent.click(screen.getByRole("button", { name: "Bold" }));
+
+    await waitFor(() => {
+      expect(notes.value).toBe("**Hello** world");
+    });
+
+    const undoButton = screen.getByRole("button", { name: "Undo" });
+    const redoButton = screen.getByRole("button", { name: "Redo" });
+    expect(undoButton).not.toBeDisabled();
+
+    fireEvent.click(undoButton);
+    await waitFor(() => {
+      expect(notes.value).toBe("Hello world");
+    });
+
+    fireEvent.click(redoButton);
+    await waitFor(() => {
+      expect(notes.value).toBe("**Hello** world");
+    });
+
+    fireEvent.keyDown(notes, { key: "z", metaKey: true });
+    await waitFor(() => {
+      expect(notes.value).toBe("Hello world");
+    });
+
+    fireEvent.keyDown(notes, { key: "z", metaKey: true, shiftKey: true });
+    await waitFor(() => {
+      expect(notes.value).toBe("**Hello** world");
     });
   });
 
@@ -314,6 +577,8 @@ describe("AdminSnippetEditor", () => {
     await waitFor(() => {
       expect(screen.getByLabelText("Snippet 标题")).toHaveValue("中文标题");
     });
+
+    expect(screen.getByTestId("admin-editor-title-row")).toContainElement(screen.getByTestId("admin-editor-locale-switcher"));
 
     fireEvent.click(screen.getByRole("button", { name: /EN/i }));
 
@@ -449,8 +714,164 @@ describe("AdminSnippetEditor", () => {
     expect(screen.queryByRole("link", { name: "新标签打开" })).not.toBeInTheDocument();
     expect(screen.getByTitle("Snippet public preview")).toHaveAttribute(
       "src",
-      "/snippets/smooth-feedback-loops?preview=admin",
+      "/snippets/smooth-feedback-loops?preview=admin&id=snippet-1&locale=zh&rev=0",
     );
+  });
+
+  it("refreshes the preview iframe after autosaving a published draft update", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+    mockedUpdateSnippet.mockReset();
+    mockedGetSnippetById.mockResolvedValue(createSnippetFixture({
+      id: "snippet-1",
+      title: "Live Snippet",
+      slug: "live-snippet",
+      excerpt: "Published snippet.",
+      category: "Workflow",
+      tags: ["SwiftUI"],
+      coverImage: "https://example.com/cover.jpg",
+      content: "# Live Snippet",
+      code: "Text(\"Live\")",
+      prompts: "Keep it polished.",
+      seoTitle: "Live Snippet",
+      seoDescription: "SEO copy",
+      status: "Published",
+      updatedAt: "2026-04-18T00:00:00.000Z",
+      publishedAt: "2026-04-18T00:00:00.000Z",
+    }));
+    mockedUpdateSnippet.mockResolvedValue(createSnippetFixture({
+      id: "snippet-1",
+      title: "Live Snippet Updated",
+      slug: "live-snippet",
+      excerpt: "Published snippet.",
+      category: "Workflow",
+      tags: ["SwiftUI"],
+      coverImage: "https://example.com/cover.jpg",
+      content: "# Live Snippet Updated",
+      code: "Text(\"Live\")",
+      prompts: "Keep it polished.",
+      seoTitle: "Live Snippet",
+      seoDescription: "SEO copy",
+      status: "Published",
+      updatedAt: "2026-04-18T00:10:00.000Z",
+      publishedAt: "2026-04-18T00:00:00.000Z",
+      livePublishedAt: "2026-04-18T00:00:00.000Z",
+      draftUpdatedAt: "2026-04-18T00:10:00.000Z",
+      hasUnpublishedChanges: true,
+    }));
+
+    render(
+      <MemoryRouter initialEntries={["/admin/snippets/snippet-1"]}>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+            <Route path="snippets/:id" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Published" })).toBeDisabled();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Preview" }));
+
+    await waitFor(() => {
+      expect(screen.getByTitle("Snippet public preview")).toHaveAttribute(
+        "src",
+        "/snippets/live-snippet?preview=admin&id=snippet-1&locale=en&rev=0",
+      );
+    });
+
+    fireEvent.change(screen.getByLabelText("Snippet Title"), { target: { value: "Live Snippet Updated" } });
+
+    await new Promise((resolve) => setTimeout(resolve, 1800));
+
+    await waitFor(() => {
+      expect(mockedUpdateSnippet).toHaveBeenCalled();
+      expect(screen.getByTitle("Snippet public preview")).toHaveAttribute(
+        "src",
+        "/snippets/live-snippet-updated?preview=admin&id=snippet-1&locale=en&rev=1",
+      );
+    });
+  }, 12000);
+
+  it("uses the current editor language for preview urls even when the admin chrome locale differs", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+    mockedGetSnippetById.mockResolvedValue(createSnippetFixture({
+      id: "snippet-1",
+      title: "English Title",
+      slug: "english-title",
+      excerpt: "English excerpt.",
+      category: "Workflow",
+      tags: ["SwiftUI"],
+      coverImage: "https://example.com/cover.jpg",
+      content: "# English Title",
+      code: "Text(\"Preview\")",
+      prompts: "Build an English previewable snippet.",
+      seoTitle: "English Title",
+      seoDescription: "SEO copy",
+      status: "Published",
+      updatedAt: "2026-04-09T12:00:00.000Z",
+      publishedAt: "2026-04-09T12:00:00.000Z",
+      locales: {
+        en: {
+          title: "English Title",
+          slug: "english-title",
+          excerpt: "English excerpt.",
+          category: "Workflow",
+          tags: ["SwiftUI"],
+          content: "# English Title",
+          prompts: "Build an English previewable snippet.",
+          seoTitle: "English Title",
+          seoDescription: "SEO copy",
+        },
+        zh: {
+          title: "中文标题",
+          slug: "zhong-wen-biao-ti",
+          excerpt: "中文摘要。",
+          category: "工作流",
+          tags: ["SwiftUI"],
+          content: "# 中文标题",
+          prompts: "构建一个可预览的中文 snippet。",
+          seoTitle: "中文标题",
+          seoDescription: "中文 SEO",
+        },
+      },
+    }));
+
+    render(
+      <LocaleContext.Provider value={{ locale: "en" }}>
+        <MemoryRouter initialEntries={["/admin/snippets/snippet-1"]}>
+          <Routes>
+            <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+              <Route path="snippets/:id" element={<AdminSnippetEditor />} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </LocaleContext.Provider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Snippet Title")).toHaveValue("English Title");
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /中文/i }));
+    await waitFor(() => {
+      expect(screen.getByLabelText("Snippet Title")).toHaveValue("中文标题");
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Preview" }));
+
+    await waitFor(() => {
+      expect(screen.getByTitle("Snippet public preview")).toHaveAttribute(
+        "src",
+        "/snippets/zhong-wen-biao-ti?preview=admin&id=snippet-1&locale=zh&rev=0",
+      );
+    });
   });
 
   it("opens a publish confirmation dialog before calling the publish API", async () => {
@@ -568,6 +989,130 @@ describe("AdminSnippetEditor", () => {
     expect(mockedUpdateSnippet).not.toHaveBeenCalled();
   });
 
+  it("does not autosave immediately when opening a published snippet with seconds in publishedAt", async () => {
+    vi.useFakeTimers();
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+    mockedUpdateSnippet.mockReset();
+    mockedGetSnippetById.mockResolvedValue(createSnippetFixture({
+      id: "snippet-1",
+      title: "Live Snippet",
+      slug: "live-snippet",
+      excerpt: "Published snippet.",
+      category: "Workflow",
+      tags: ["SwiftUI"],
+      coverImage: "https://example.com/cover.jpg",
+      content: "# Live Snippet",
+      code: "Text(\"Live\")",
+      prompts: "Keep it polished.",
+      seoTitle: "Live Snippet",
+      seoDescription: "SEO copy",
+      status: "Published",
+      updatedAt: "2026-04-18T00:00:00.000Z",
+      publishedAt: "2026-04-20T08:11:39.519917Z",
+    }));
+
+    render(
+      <MemoryRouter initialEntries={["/admin/snippets/snippet-1"]}>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+            <Route path="snippets/:id" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Published" })).toBeDisabled();
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(4000);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(mockedUpdateSnippet).not.toHaveBeenCalled();
+  });
+
+  it("does not schedule repeated autosaves after saving a published draft update", async () => {
+    vi.useFakeTimers();
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+    mockedUpdateSnippet.mockReset();
+    mockedGetSnippetById.mockResolvedValue(createSnippetFixture({
+      id: "snippet-1",
+      title: "Live Snippet",
+      slug: "live-snippet",
+      excerpt: "Published snippet.",
+      category: "Workflow",
+      tags: ["SwiftUI"],
+      coverImage: "https://example.com/cover.jpg",
+      content: "# Live Snippet",
+      code: "Text(\"Live\")",
+      prompts: "Keep it polished.",
+      seoTitle: "Live Snippet",
+      seoDescription: "SEO copy",
+      status: "Published",
+      updatedAt: "2026-04-18T00:00:00.000Z",
+      publishedAt: "2026-04-20T08:11:39.519917Z",
+    }));
+    mockedUpdateSnippet.mockResolvedValue(createSnippetFixture({
+      id: "snippet-1",
+      title: "Live Snippet Updated",
+      slug: "live-snippet",
+      excerpt: "Published snippet.",
+      category: "Workflow",
+      tags: ["SwiftUI"],
+      coverImage: "https://example.com/cover.jpg",
+      content: "# Live Snippet",
+      code: "Text(\"Live\")",
+      prompts: "Keep it polished.",
+      seoTitle: "Live Snippet",
+      seoDescription: "SEO copy",
+      status: "Published",
+      updatedAt: "2026-04-18T00:10:00.000Z",
+      publishedAt: "2026-04-20T08:11:39.519917Z",
+      livePublishedAt: "2026-04-20T08:11:39.519917Z",
+      draftUpdatedAt: "2026-04-18T00:10:00.000Z",
+      hasUnpublishedChanges: true,
+    }));
+
+    render(
+      <MemoryRouter initialEntries={["/admin/snippets/snippet-1"]}>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+            <Route path="snippets/:id" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Published" })).toBeDisabled();
+    });
+
+    fireEvent.change(screen.getByLabelText("Snippet Title"), { target: { value: "Live Snippet Updated" } });
+
+    await act(async () => {
+      vi.advanceTimersByTime(2200);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(mockedUpdateSnippet).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      vi.advanceTimersByTime(4000);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(mockedUpdateSnippet).toHaveBeenCalledTimes(1);
+  });
+
   it("opens a HeroUI delete confirmation modal before deleting", async () => {
     mockedGetSnippetById.mockReset();
     mockedCreateSnippet.mockReset();
@@ -631,7 +1176,7 @@ describe("AdminSnippetEditor", () => {
     });
   });
 
-  it("turns Published into Update when a published snippet is edited", async () => {
+  it("turns Published into Update when a published snippet is edited and autosaves the draft update", async () => {
     mockedGetSnippetById.mockReset();
     mockedCreateSnippet.mockReset();
     mockedPublishSnippet.mockReset();
@@ -653,6 +1198,26 @@ describe("AdminSnippetEditor", () => {
       updatedAt: "2026-04-18T00:00:00.000Z",
       publishedAt: "2026-04-18T00:00:00.000Z",
     }));
+    mockedUpdateSnippet.mockResolvedValue(createSnippetFixture({
+      id: "snippet-1",
+      title: "Live Snippet Updated",
+      slug: "live-snippet",
+      excerpt: "Published snippet.",
+      category: "Workflow",
+      tags: ["SwiftUI"],
+      coverImage: "https://example.com/cover.jpg",
+      content: "# Live Snippet",
+      code: "Text(\"Live\")",
+      prompts: "Keep it polished.",
+      seoTitle: "Live Snippet",
+      seoDescription: "SEO copy",
+      status: "Published",
+      updatedAt: "2026-04-18T00:10:00.000Z",
+      publishedAt: "2026-04-18T00:00:00.000Z",
+      livePublishedAt: "2026-04-18T00:00:00.000Z",
+      draftUpdatedAt: "2026-04-18T00:10:00.000Z",
+      hasUnpublishedChanges: true,
+    }));
 
     render(
       <MemoryRouter initialEntries={["/admin/snippets/snippet-1"]}>
@@ -671,7 +1236,6 @@ describe("AdminSnippetEditor", () => {
     fireEvent.change(screen.getByLabelText("Snippet Title"), { target: { value: "Live Snippet Updated" } });
 
     expect(screen.getByRole("button", { name: "Update" })).toBeInTheDocument();
-    expect(mockedUpdateSnippet).not.toHaveBeenCalled();
   });
 
   it("updates a published snippet only after confirmation", async () => {
@@ -712,6 +1276,9 @@ describe("AdminSnippetEditor", () => {
       status: "Published",
       updatedAt: "2026-04-18T00:10:00.000Z",
       publishedAt: "2026-04-18T00:00:00.000Z",
+      livePublishedAt: "2026-04-18T00:00:00.000Z",
+      draftUpdatedAt: "2026-04-18T00:10:00.000Z",
+      hasUnpublishedChanges: true,
     }));
     mockedPublishSnippet.mockResolvedValue(createSnippetFixture({
       id: "snippet-1",
@@ -746,6 +1313,13 @@ describe("AdminSnippetEditor", () => {
     });
 
     fireEvent.change(screen.getByLabelText("Snippet Title"), { target: { value: "Live Snippet Updated" } });
+    await new Promise((resolve) => setTimeout(resolve, 1800));
+
+    await waitFor(() => {
+      expect(mockedUpdateSnippet.mock.calls.length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByRole("button", { name: "Update" })).not.toBeDisabled();
+    }, { timeout: 4000 });
+
     fireEvent.click(screen.getByRole("button", { name: "Update" }));
 
     expect(screen.getByText("Update this snippet in the public library?")).toBeInTheDocument();
@@ -753,6 +1327,7 @@ describe("AdminSnippetEditor", () => {
     expect(screen.queryByText("Update this snippet in the public library?")).not.toBeInTheDocument();
 
     await waitFor(() => {
+      expect(mockedUpdateSnippet.mock.calls.length).toBeGreaterThanOrEqual(1);
       expect(mockedUpdateSnippet).toHaveBeenCalledWith(
         "snippet-1",
         expect.objectContaining({
@@ -766,7 +1341,7 @@ describe("AdminSnippetEditor", () => {
       expect(mockedPublishSnippet).toHaveBeenCalledWith("snippet-1");
       expect(screen.getByRole("button", { name: "Published" })).toBeDisabled();
     });
-  });
+  }, 12000);
 
   it("localizes published update actions in the zh editor route", async () => {
     mockedGetSnippetById.mockReset();
@@ -806,6 +1381,9 @@ describe("AdminSnippetEditor", () => {
       status: "Published",
       updatedAt: "2026-04-18T00:10:00.000Z",
       publishedAt: "2026-04-18T00:00:00.000Z",
+      livePublishedAt: "2026-04-18T00:00:00.000Z",
+      draftUpdatedAt: "2026-04-18T00:10:00.000Z",
+      hasUnpublishedChanges: true,
     }));
     mockedPublishSnippet.mockResolvedValue(createSnippetFixture({
       id: "snippet-1",
@@ -842,12 +1420,16 @@ describe("AdminSnippetEditor", () => {
     });
 
     fireEvent.change(screen.getByLabelText("Snippet 标题"), { target: { value: "Live Snippet Updated" } });
-    expect(screen.getByRole("button", { name: "更新" })).toBeInTheDocument();
+    await new Promise((resolve) => setTimeout(resolve, 1800));
+    await waitFor(() => {
+      expect(mockedUpdateSnippet.mock.calls.length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByRole("button", { name: "更新" })).not.toBeDisabled();
+    }, { timeout: 4000 });
 
     fireEvent.click(screen.getByRole("button", { name: "更新" }));
     expect(screen.getByText("确认更新前台内容库中的这条 snippet？")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "确认更新" })).toBeInTheDocument();
-  });
+  }, 12000);
 
   it("removes Published from manual status choices for unpublished snippets", () => {
     mockedGetSnippetById.mockReset();

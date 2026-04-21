@@ -35,4 +35,29 @@ Text("Hello")
     expect(screen.getByText("Demo video")).toBeInTheDocument();
     expect(screen.getByText("Demo video").closest("figure")?.querySelector("video")).not.toBeNull();
   });
+
+  it("renders linked markdown images without swallowing following content", () => {
+    render(
+      <MarkdownRenderer
+        content={`## 1. Language Identification with \`NLLanguageRecognizer\`
+
+[![Snippet 图片](/api/uploads/content-images/first.webp)](https://substackcdn.com/image/fetch/example-first)
+
+**What it does:**
+Tries to figure out what language a piece of text is in.
+
+## 2. Robust Tokenization with \`NLTokenizer\`
+
+[![Snippet 图片](/api/uploads/content-images/second.webp)](https://substackcdn.com/image/fetch/example-second)
+
+**What it does:**
+Breaks up text into words.`}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: /Language Identification/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Robust Tokenization/i })).toBeInTheDocument();
+    expect(screen.getAllByRole("img", { name: "Snippet 图片" })).toHaveLength(2);
+    expect(screen.getByText("Breaks up text into words.")).toBeInTheDocument();
+  });
 });

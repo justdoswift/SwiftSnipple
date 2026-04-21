@@ -84,7 +84,7 @@ export default function MarkdownMediaModal({
                       ref={fileInputRef}
                       type="file"
                       className="sr-only"
-                      accept={kind === "image" ? "image/png,image/jpeg,image/webp,image/gif,image/svg+xml,image/avif" : "video/mp4,video/webm,video/quicktime,.mov"}
+                      accept={kind === "image" ? "image/png,image/jpeg,image/webp,image/gif,image/avif" : "video/mp4,video/webm,video/quicktime,.mov"}
                       onChange={(event) => setFile(event.target.files?.[0] ?? null)}
                     />
                     <Button type="button" className="admin-button-secondary justify-start" onPress={() => fileInputRef.current?.click()}>

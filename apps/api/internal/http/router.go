@@ -72,6 +72,7 @@ func NewRouter(
 				protected.Get("/snippets/{id}", handler.GetAdminSnippet)
 				protected.Post("/uploads/cover", handler.UploadCoverImage)
 				protected.Post("/uploads/content-image", handler.UploadContentImage)
+				protected.Post("/uploads/content-image-url", handler.UploadContentImageByURL)
 				protected.Post("/uploads/content-video", handler.UploadContentVideo)
 				protected.Post("/snippets", handler.CreateSnippet)
 				protected.Put("/snippets/{id}", handler.UpdateSnippet)

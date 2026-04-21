@@ -44,15 +44,19 @@ func (f fakePinger) Ping(context.Context) error {
 }
 
 type fakeSnippetStore struct {
-	snippets       map[string]domain.Snippet
-	snippetsBySlug map[string]string
-	duplicateSlug  string
+	liveSnippets          map[string]domain.Snippet
+	editableSnippets      map[string]domain.Snippet
+	liveSnippetsBySlug    map[string]string
+	previewSnippetsBySlug map[string]string
+	duplicateSlug         string
 }
 
 func newFakeSnippetStore(items ...domain.Snippet) *fakeSnippetStore {
 	store := &fakeSnippetStore{
-		snippets:       map[string]domain.Snippet{},
-		snippetsBySlug: map[string]string{},
+		liveSnippets:          map[string]domain.Snippet{},
+		editableSnippets:      map[string]domain.Snippet{},
+		liveSnippetsBySlug:    map[string]string{},
+		previewSnippetsBySlug: map[string]string{},
 	}
 
 	for _, snippet := range items {
@@ -63,35 +67,53 @@ func newFakeSnippetStore(items ...domain.Snippet) *fakeSnippetStore {
 }
 
 func (f *fakeSnippetStore) storeSnippet(snippet domain.Snippet) {
-	f.snippets[snippet.ID] = snippet
-	if slug := strings.TrimSpace(snippet.Locales.EN.Slug); slug != "" {
-		f.snippetsBySlug[slug] = snippet.ID
-	}
-	if slug := strings.TrimSpace(snippet.Locales.ZH.Slug); slug != "" {
-		f.snippetsBySlug[slug] = snippet.ID
-	}
+	live := snippet
+	live.HasUnpublishedChanges = false
+	live.DraftUpdatedAt = nil
+	live.LivePublishedAt = live.PublishedAt
+
+	editable := snippet
+	editable.LivePublishedAt = live.PublishedAt
+
+	f.liveSnippets[live.ID] = live
+	f.editableSnippets[editable.ID] = editable
+	f.indexLiveSnippet(live)
+	f.indexPreviewSnippet(editable)
 }
 
 func (f *fakeSnippetStore) removeSnippet(snippet domain.Snippet) {
-	if slug := strings.TrimSpace(snippet.Locales.EN.Slug); slug != "" {
-		delete(f.snippetsBySlug, slug)
-	}
-	if slug := strings.TrimSpace(snippet.Locales.ZH.Slug); slug != "" {
-		delete(f.snippetsBySlug, slug)
-	}
-	delete(f.snippets, snippet.ID)
+	f.removeLiveIndexes(snippet)
+	f.removePreviewIndexes(snippet)
+	delete(f.liveSnippets, snippet.ID)
+	delete(f.editableSnippets, snippet.ID)
 }
 
 func (f *fakeSnippetStore) List(context.Context) ([]domain.Snippet, error) {
-	snippets := make([]domain.Snippet, 0, len(f.snippets))
-	for _, snippet := range f.snippets {
+	snippets := make([]domain.Snippet, 0, len(f.liveSnippets))
+	for _, snippet := range f.liveSnippets {
+		snippets = append(snippets, snippet)
+	}
+	return snippets, nil
+}
+
+func (f *fakeSnippetStore) ListAdmin(context.Context) ([]domain.Snippet, error) {
+	snippets := make([]domain.Snippet, 0, len(f.editableSnippets))
+	for _, snippet := range f.editableSnippets {
 		snippets = append(snippets, snippet)
 	}
 	return snippets, nil
 }
 
 func (f *fakeSnippetStore) GetByID(_ context.Context, id string) (domain.Snippet, error) {
-	snippet, ok := f.snippets[id]
+	snippet, ok := f.liveSnippets[id]
+	if !ok {
+		return domain.Snippet{}, repo.ErrNotFound
+	}
+	return snippet, nil
+}
+
+func (f *fakeSnippetStore) GetAdminByID(_ context.Context, id string) (domain.Snippet, error) {
+	snippet, ok := f.editableSnippets[id]
 	if !ok {
 		return domain.Snippet{}, repo.ErrNotFound
 	}
@@ -99,11 +121,27 @@ func (f *fakeSnippetStore) GetByID(_ context.Context, id string) (domain.Snippet
 }
 
 func (f *fakeSnippetStore) GetBySlug(_ context.Context, slug string) (domain.Snippet, error) {
-	id, ok := f.snippetsBySlug[slug]
+	id, ok := f.liveSnippetsBySlug[slug]
 	if !ok {
 		return domain.Snippet{}, repo.ErrNotFound
 	}
-	return f.snippets[id], nil
+	return f.liveSnippets[id], nil
+}
+
+func (f *fakeSnippetStore) GetPreviewByID(_ context.Context, id string) (domain.Snippet, error) {
+	snippet, ok := f.editableSnippets[id]
+	if !ok {
+		return domain.Snippet{}, repo.ErrNotFound
+	}
+	return snippet, nil
+}
+
+func (f *fakeSnippetStore) GetPreviewBySlug(_ context.Context, slug string) (domain.Snippet, error) {
+	id, ok := f.previewSnippetsBySlug[slug]
+	if !ok {
+		return domain.Snippet{}, repo.ErrNotFound
+	}
+	return f.editableSnippets[id], nil
 }
 
 func (f *fakeSnippetStore) Create(_ context.Context, payload domain.SnippetPayload) (domain.Snippet, error) {
@@ -114,15 +152,18 @@ func (f *fakeSnippetStore) Create(_ context.Context, payload domain.SnippetPaylo
 	}
 
 	snippet := domain.Snippet{
-		ID:                   "new-id",
-		CoverImage:           normalized.CoverImage,
-		Code:                 normalized.Code,
-		Status:               normalized.Status,
-		UpdatedAt:            time.Now().UTC(),
-		PublishedAt:          normalized.PublishedAt,
-		RequiresSubscription: normalized.RequiresSubscription,
-		Locales:              normalized.Locales,
-		AvailableLocales:     domain.AvailableLocalesFor(normalized.Locales),
+		ID:                    "new-id",
+		CoverImage:            normalized.CoverImage,
+		Code:                  normalized.Code,
+		Status:                normalized.Status,
+		UpdatedAt:             time.Now().UTC(),
+		PublishedAt:           normalized.PublishedAt,
+		RequiresSubscription:  normalized.RequiresSubscription,
+		Locales:               normalized.Locales,
+		AvailableLocales:      domain.AvailableLocalesFor(normalized.Locales),
+		HasUnpublishedChanges: false,
+		DraftUpdatedAt:        nil,
+		LivePublishedAt:       normalized.PublishedAt,
 	}
 
 	f.storeSnippet(snippet)
@@ -130,62 +171,135 @@ func (f *fakeSnippetStore) Create(_ context.Context, payload domain.SnippetPaylo
 }
 
 func (f *fakeSnippetStore) Update(_ context.Context, id string, payload domain.SnippetPayload) (domain.Snippet, error) {
-	snippet, ok := f.snippets[id]
+	editable, ok := f.editableSnippets[id]
 	if !ok {
 		return domain.Snippet{}, repo.ErrNotFound
 	}
+	live := f.liveSnippets[id]
 
 	normalized := payload.Normalize()
-	if (strings.TrimSpace(normalized.Locales.EN.Slug) != "" && normalized.Locales.EN.Slug == f.duplicateSlug && normalized.Locales.EN.Slug != snippet.Locales.EN.Slug) ||
-		(strings.TrimSpace(normalized.Locales.ZH.Slug) != "" && normalized.Locales.ZH.Slug == f.duplicateSlug && normalized.Locales.ZH.Slug != snippet.Locales.ZH.Slug) {
+	if (strings.TrimSpace(normalized.Locales.EN.Slug) != "" && normalized.Locales.EN.Slug == f.duplicateSlug && normalized.Locales.EN.Slug != editable.Locales.EN.Slug) ||
+		(strings.TrimSpace(normalized.Locales.ZH.Slug) != "" && normalized.Locales.ZH.Slug == f.duplicateSlug && normalized.Locales.ZH.Slug != editable.Locales.ZH.Slug) {
 		return domain.Snippet{}, errors.New("duplicate key value violates unique constraint")
 	}
 
-	f.removeSnippet(snippet)
+	f.removePreviewIndexes(editable)
+	now := time.Now().UTC()
 
-	snippet.CoverImage = normalized.CoverImage
-	snippet.Code = normalized.Code
-	snippet.Status = normalized.Status
-	snippet.PublishedAt = normalized.PublishedAt
-	snippet.RequiresSubscription = normalized.RequiresSubscription
-	snippet.UpdatedAt = time.Now().UTC()
-	snippet.Locales = normalized.Locales
-	snippet.AvailableLocales = domain.AvailableLocalesFor(normalized.Locales)
+	editable.CoverImage = normalized.CoverImage
+	editable.Code = normalized.Code
+	editable.RequiresSubscription = normalized.RequiresSubscription
+	editable.UpdatedAt = now
+	editable.Locales = normalized.Locales
+	editable.AvailableLocales = domain.AvailableLocalesFor(normalized.Locales)
 
-	f.storeSnippet(snippet)
-	return snippet, nil
+	if live.Status == domain.StatusPublished {
+		editable.Status = domain.StatusPublished
+		editable.PublishedAt = live.PublishedAt
+		editable.LivePublishedAt = live.PublishedAt
+		editable.HasUnpublishedChanges = true
+		editable.DraftUpdatedAt = &now
+		f.editableSnippets[id] = editable
+		f.indexPreviewSnippet(editable)
+		return editable, nil
+	}
+
+	f.removeLiveIndexes(live)
+	editable.Status = normalized.Status
+	editable.PublishedAt = normalized.PublishedAt
+	editable.LivePublishedAt = normalized.PublishedAt
+	editable.HasUnpublishedChanges = false
+	editable.DraftUpdatedAt = nil
+
+	f.liveSnippets[id] = editable
+	f.editableSnippets[id] = editable
+	f.indexLiveSnippet(editable)
+	f.indexPreviewSnippet(editable)
+	return editable, nil
 }
 
 func (f *fakeSnippetStore) Publish(_ context.Context, id string) (domain.Snippet, error) {
-	snippet, ok := f.snippets[id]
+	editable, ok := f.editableSnippets[id]
 	if !ok {
 		return domain.Snippet{}, repo.ErrNotFound
 	}
 	now := time.Now().UTC()
-	snippet.Status = domain.StatusPublished
-	snippet.PublishedAt = &now
-	f.storeSnippet(snippet)
-	return snippet, nil
+	f.removeLiveIndexes(f.liveSnippets[id])
+	f.removePreviewIndexes(editable)
+	editable.Status = domain.StatusPublished
+	editable.PublishedAt = &now
+	editable.LivePublishedAt = &now
+	editable.HasUnpublishedChanges = false
+	editable.DraftUpdatedAt = nil
+	f.liveSnippets[id] = editable
+	f.editableSnippets[id] = editable
+	f.indexLiveSnippet(editable)
+	f.indexPreviewSnippet(editable)
+	return editable, nil
 }
 
 func (f *fakeSnippetStore) Unpublish(_ context.Context, id string) (domain.Snippet, error) {
-	snippet, ok := f.snippets[id]
+	editable, ok := f.editableSnippets[id]
 	if !ok {
 		return domain.Snippet{}, repo.ErrNotFound
 	}
-	snippet.Status = domain.StatusDraft
-	snippet.PublishedAt = nil
-	f.storeSnippet(snippet)
-	return snippet, nil
+	f.removeLiveIndexes(f.liveSnippets[id])
+	f.removePreviewIndexes(editable)
+	editable.Status = domain.StatusDraft
+	editable.PublishedAt = nil
+	editable.LivePublishedAt = nil
+	editable.HasUnpublishedChanges = false
+	editable.DraftUpdatedAt = nil
+	f.liveSnippets[id] = editable
+	f.editableSnippets[id] = editable
+	f.indexLiveSnippet(editable)
+	f.indexPreviewSnippet(editable)
+	return editable, nil
 }
 
 func (f *fakeSnippetStore) Delete(_ context.Context, id string) error {
-	snippet, ok := f.snippets[id]
+	snippet, ok := f.editableSnippets[id]
 	if !ok {
 		return repo.ErrNotFound
 	}
 	f.removeSnippet(snippet)
 	return nil
+}
+
+func (f *fakeSnippetStore) indexLiveSnippet(snippet domain.Snippet) {
+	if slug := strings.TrimSpace(snippet.Locales.EN.Slug); slug != "" {
+		f.liveSnippetsBySlug[slug] = snippet.ID
+	}
+	if slug := strings.TrimSpace(snippet.Locales.ZH.Slug); slug != "" {
+		f.liveSnippetsBySlug[slug] = snippet.ID
+	}
+}
+
+func (f *fakeSnippetStore) indexPreviewSnippet(snippet domain.Snippet) {
+	if slug := strings.TrimSpace(snippet.Locales.EN.Slug); slug != "" {
+		f.previewSnippetsBySlug[slug] = snippet.ID
+	}
+	if slug := strings.TrimSpace(snippet.Locales.ZH.Slug); slug != "" {
+		f.previewSnippetsBySlug[slug] = snippet.ID
+	}
+}
+
+func (f *fakeSnippetStore) removeLiveIndexes(snippet domain.Snippet) {
+	if slug := strings.TrimSpace(snippet.Locales.EN.Slug); slug != "" {
+		delete(f.liveSnippetsBySlug, slug)
+	}
+	if slug := strings.TrimSpace(snippet.Locales.ZH.Slug); slug != "" {
+		delete(f.liveSnippetsBySlug, slug)
+	}
+}
+
+func (f *fakeSnippetStore) removePreviewIndexes(snippet domain.Snippet) {
+	if slug := strings.TrimSpace(snippet.Locales.EN.Slug); slug != "" {
+		delete(f.previewSnippetsBySlug, slug)
+	}
+	if slug := strings.TrimSpace(snippet.Locales.ZH.Slug); slug != "" {
+		delete(f.previewSnippetsBySlug, slug)
+	}
 }
 
 func localizedFields(title, slug, category string) domain.SnippetLocalizedFields {
@@ -1358,7 +1472,16 @@ func TestUploadCoverImageTooLarge(t *testing.T) {
 }
 
 func TestUploadContentImageAndVideo(t *testing.T) {
-	router := newTestRouter(t, newFakeSnippetStore(), nil, nil)
+	uploadDir := t.TempDir()
+	router := NewRouter(
+		fakePinger{},
+		newFakeSnippetStore(),
+		newFakeMemberStore(),
+		testAdminAuthConfig,
+		testMemberAuthConfig,
+		&fakeBillingProvider{checkoutURL: "https://stripe.test/checkout", portalURL: "https://stripe.test/portal"},
+		newLocalAssetStore(uploadDir, defaultUploadPublicBasePath),
+	)
 	adminCookie := loginCookie(t, router)
 
 	imageBody := &bytes.Buffer{}
@@ -1385,8 +1508,21 @@ func TestUploadContentImageAndVideo(t *testing.T) {
 	}
 
 	imageResponse := decodeResponse[map[string]string](t, imageRec.Body)
-	if !strings.HasPrefix(imageResponse["url"], "/api/uploads/content-images/") {
+	if !strings.HasPrefix(imageResponse["url"], "/api/uploads/content-images/") || !strings.HasSuffix(imageResponse["url"], ".webp") {
 		t.Fatalf("expected content image url prefix, got %q", imageResponse["url"])
+	}
+	if imageResponse["mimeType"] != "image/webp" {
+		t.Fatalf("expected image mime type image/webp, got %q", imageResponse["mimeType"])
+	}
+
+	imageStaticReq := httptest.NewRequest(http.MethodGet, imageResponse["url"], nil)
+	imageStaticRec := httptest.NewRecorder()
+	router.ServeHTTP(imageStaticRec, imageStaticReq)
+	if imageStaticRec.Code != http.StatusOK {
+		t.Fatalf("expected stored content image status 200, got %d", imageStaticRec.Code)
+	}
+	if !strings.HasPrefix(imageStaticRec.Header().Get("Content-Type"), "image/webp") {
+		t.Fatalf("expected stored content image content type image/webp, got %q", imageStaticRec.Header().Get("Content-Type"))
 	}
 
 	videoBody := &bytes.Buffer{}
@@ -1420,5 +1556,67 @@ func TestUploadContentImageAndVideo(t *testing.T) {
 	}
 	if videoResponse["mimeType"] != "video/mp4" {
 		t.Fatalf("expected video mime type video/mp4, got %q", videoResponse["mimeType"])
+	}
+}
+
+func TestUploadContentImageAllowsPayloadsAboveLegacyLimit(t *testing.T) {
+	router := newTestRouter(t, newFakeSnippetStore(), nil, nil)
+	adminCookie := loginCookie(t, router)
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	fileWriter, err := writer.CreateFormFile("file", "large-content.png")
+	if err != nil {
+		t.Fatalf("create form file: %v", err)
+	}
+
+	tinyImage := image.NewNRGBA(image.Rect(0, 0, 2, 2))
+	if err := png.Encode(fileWriter, tinyImage); err != nil {
+		t.Fatalf("encode base image: %v", err)
+	}
+	if _, err := fileWriter.Write(bytes.Repeat([]byte{0x00}, 19<<20)); err != nil {
+		t.Fatalf("append oversized payload: %v", err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("close multipart writer: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/api/admin/uploads/content-image", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.AddCookie(adminCookie)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("expected content image upload status 201, got %d with body %q", rec.Code, rec.Body.String())
+	}
+}
+
+func TestUploadContentImageRejectsSVG(t *testing.T) {
+	router := newTestRouter(t, newFakeSnippetStore(), nil, nil)
+	adminCookie := loginCookie(t, router)
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	fileWriter, err := writer.CreateFormFile("file", "vector.svg")
+	if err != nil {
+		t.Fatalf("create form file: %v", err)
+	}
+	if _, err := io.WriteString(fileWriter, `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10" fill="black"/></svg>`); err != nil {
+		t.Fatalf("write svg bytes: %v", err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("close multipart writer: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/api/admin/uploads/content-image", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.AddCookie(adminCookie)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected svg content image upload status 400, got %d", rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), "PNG, JPEG, WEBP, GIF, or AVIF") {
+		t.Fatalf("expected svg rejection message, got %q", rec.Body.String())
 	}
 }

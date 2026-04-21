@@ -1101,6 +1101,9 @@
     border-radius: calc(var(--radius-panel-lg) + 8px);
     border-color: var(--public-border-faint);
     box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.015)),
+      linear-gradient(135deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.008));
   }
 
   .public-home-lead-card-grid {
@@ -1111,6 +1114,8 @@
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.015)),
       linear-gradient(135deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.008));
+    border-top-left-radius: calc(var(--radius-panel-lg) + 8px);
+    border-bottom-left-radius: calc(var(--radius-panel-lg) + 8px);
   }
 
   .public-theme[data-theme="light"] .public-home-lead-card-copy {
@@ -1119,15 +1124,48 @@
       linear-gradient(135deg, rgba(0, 0, 0, 0.025), rgba(0, 0, 0, 0.01));
   }
 
+  .public-home-lead-card-copy .type-mono-micro {
+    color: var(--public-body-sm);
+  }
+
+  .public-home-lead-card-title {
+    color: var(--public-heading);
+  }
+
+  .public-home-lead-card-excerpt {
+    color: var(--public-body);
+  }
+
   .public-home-lead-card-media {
+    min-height: 100%;
+    border-top-right-radius: calc(var(--radius-panel-lg) + 8px);
+    border-bottom-right-radius: calc(var(--radius-panel-lg) + 8px);
+    background: transparent;
+  }
+
+  .public-home-lead-card-media-frame {
+    position: relative;
+    padding: 0;
+  }
+
+  .public-home-lead-card-media-panel {
+    width: 100%;
     background-color: var(--public-surface-subtle-bg);
-    border-radius: calc(var(--radius-panel-lg) - 4px);
+  }
+
+  .public-home-lead-card-media-image {
+    position: relative;
+    z-index: 1;
+    display: block;
+    object-fit: contain;
+    object-position: center;
   }
 
   .public-home-lead-card-image-overlay {
     background:
-      linear-gradient(180deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.12)),
-      linear-gradient(270deg, transparent 18%, rgba(0, 0, 0, 0.1) 100%);
+      linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.08)),
+      linear-gradient(270deg, transparent 18%, rgba(0, 0, 0, 0.08) 100%);
+    pointer-events: none;
   }
 
   .public-theme[data-theme="light"] .public-home-lead-card-image-overlay {
@@ -1197,6 +1235,16 @@
   @media (min-width: 1024px) {
     .public-home-lead-card-copy {
       min-height: 100%;
+    }
+
+    .public-home-lead-card-media-frame {
+      padding: 0 0.375rem 0 0;
+    }
+
+    .public-home-lead-card-media-panel {
+      width: min(100%, 100%);
+      transform: scale(1.03);
+      transform-origin: center center;
     }
   }
 

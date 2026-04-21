@@ -68,12 +68,14 @@ Current high-level structure:
 - When working on future membership-related code, keep it compatible with Stripe and gated access without inventing fake completed behavior
 - Avoid placeholder marketing language that makes the product sound like a newsletter or essay platform if that is not actually the goal
 - Prefer monorepo-friendly changes that keep frontend and backend responsibilities clearly separated
+- When the project needs to be started locally for verification or browser testing, use `make start` as the default startup command instead of ad-hoc `npm run dev` or other alternatives unless the user explicitly asks for something else
 
 ## Verification Expectations
 
 After meaningful code changes, validate with the existing project commands when relevant:
 
 ```bash
+make start
 cd apps/web && npm run lint
 cd apps/web && npm run build
 ```

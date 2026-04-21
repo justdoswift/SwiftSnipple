@@ -29,6 +29,7 @@ export default function LeadSnippetCard({ snippet }: LeadSnippetCardProps) {
   const fields = getLocalizedSnippetFields(snippet, locale);
   const isLocaleAvailable = isSnippetLocaleAvailable(snippet, locale);
   const publishedDate = formatPublishedDate(snippet.publishedAt, locale);
+  const coverImageUrl = resolveAssetUrl(snippet.coverImage);
 
   return (
     <Link
@@ -40,24 +41,9 @@ export default function LeadSnippetCard({ snippet }: LeadSnippetCardProps) {
         whileHover={{ scale: 1.003, y: -2 }}
         transition={{ type: "spring", stiffness: 220, damping: 26 }}
       >
-        <Card className="public-home-lead-card-shell public-surface overflow-hidden">
-          <div className="public-home-lead-card-grid grid gap-0 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-            <div
-              className="public-home-lead-card-media-shell order-1 p-3 md:p-4 lg:order-2 lg:p-5"
-              data-testid="home-lead-card-media"
-            >
-              <div className="snippet-cover-frame public-home-lead-card-media relative overflow-hidden">
-                <img
-                  src={resolveAssetUrl(snippet.coverImage)}
-                  alt={fields.title}
-                  className="snippet-cover-image transition-transform duration-500 group-hover:scale-[1.015]"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="public-home-lead-card-image-overlay absolute inset-0" />
-              </div>
-            </div>
-
-            <Card.Content className="public-home-lead-card-copy order-2 relative flex flex-col justify-end gap-7 px-7 py-8 md:px-10 md:py-10 lg:order-1 lg:px-12 lg:py-12">
+        <Card className="public-home-lead-card-shell public-surface overflow-hidden" data-testid="home-lead-card-shell">
+          <div className="public-home-lead-card-grid grid min-h-[420px] gap-0 lg:grid-cols-[minmax(0,1fr)_minmax(340px,42%)]">
+            <Card.Content className="public-home-lead-card-copy relative flex flex-col justify-end gap-7 px-7 py-8 md:px-10 md:py-10 lg:px-12 lg:py-12">
               <div className="flex flex-wrap items-center gap-3">
                 <span className="type-mono-micro">{isLocaleAvailable ? fields.category : common.languageUnavailable}</span>
                 {publishedDate ? <span className="type-mono-micro">{publishedDate}</span> : null}
@@ -90,6 +76,20 @@ export default function LeadSnippetCard({ snippet }: LeadSnippetCardProps) {
                 </span>
               </div>
             </Card.Content>
+
+            <div className="public-home-lead-card-media relative min-h-[280px] overflow-hidden lg:min-h-full" data-testid="home-lead-card-media">
+              <div className="public-home-lead-card-media-frame relative z-[1] flex h-full w-full items-center justify-center lg:justify-end">
+                <div className="snippet-cover-frame public-home-lead-card-media-panel overflow-hidden">
+                  <img
+                    src={coverImageUrl}
+                    alt={fields.title}
+                    className="public-home-lead-card-media-image h-full w-full transition-transform duration-700 group-hover:scale-[1.01]"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+              </div>
+              <div className="public-home-lead-card-image-overlay absolute inset-0" />
+            </div>
           </div>
         </Card>
       </motion.div>

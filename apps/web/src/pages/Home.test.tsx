@@ -52,7 +52,7 @@ describe("Home", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole("heading", { name: "Curated SwiftUI builds, broken down clearly" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Exceptional Builds. Native SwiftUI." })).toBeInTheDocument();
     expect(screen.getByTestId("home-hero")).toHaveClass("min-h-screen");
     expect(screen.getByText("Accessing Data Stores...")).toBeInTheDocument();
 
@@ -61,7 +61,9 @@ describe("Home", () => {
     });
 
     expect(screen.getByTestId("home-lead-card")).toHaveAttribute("href", "/snippets/newest-entry");
-    expect(screen.getByTestId("home-lead-card-media").querySelector(".snippet-cover-frame")).not.toBeNull();
+    expect(screen.getByTestId("home-lead-card-media").querySelector(".public-home-lead-card-media-panel")).not.toBeNull();
+    expect(screen.getByTestId("home-lead-card-media").querySelector(".public-home-lead-card-media-image")).not.toBeNull();
+    expect(screen.getByTestId("home-lead-card-shell")).not.toHaveAttribute("data-tone");
 
     expect(screen.getByTestId("home-grid")).toHaveTextContent("Glass Navigation");
     expect(screen.queryByText("Draft Entry")).not.toBeInTheDocument();

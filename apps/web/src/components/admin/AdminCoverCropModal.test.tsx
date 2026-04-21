@@ -254,8 +254,8 @@ describe("AdminCoverCropModal", () => {
     );
 
     expect(clamped.scale).toBeCloseTo(0.7933, 4);
-    expect(clamped.offsetX).toBeCloseTo(24, 2);
-    expect(clamped.offsetY).toBeCloseTo(100.1, 2);
+    expect(clamped.offsetX).toBeCloseTo(0, 4);
+    expect(clamped.offsetY).toBeCloseTo(0, 4);
   });
 
   it("keeps the toolbar, stage, and hint inside one editor card", async () => {

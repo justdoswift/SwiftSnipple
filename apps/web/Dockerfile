@@ -1,4 +1,7 @@
-FROM node:20-alpine AS builder
+ARG CADDY_IMAGE=caddy:2.10-alpine
+ARG NODE_IMAGE=node:20-alpine
+
+FROM ${NODE_IMAGE} AS builder
 
 WORKDIR /app/apps/web
 
@@ -8,7 +11,7 @@ RUN npm ci
 COPY apps/web ./
 RUN npm run build
 
-FROM caddy:2.10-alpine
+FROM ${CADDY_IMAGE}
 
 WORKDIR /srv
 

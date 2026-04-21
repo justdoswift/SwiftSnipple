@@ -46,6 +46,8 @@ services:
       context: .
       dockerfile: apps/api/Dockerfile
       args:
+        GOLANG_IMAGE: ${GOLANG_IMAGE:-golang:1.26.2-alpine3.22}
+        ALPINE_IMAGE: ${ALPINE_IMAGE:-alpine:3.21}
         GOPROXY: ${GOPROXY:-https://proxy.golang.org,direct}
         GOSUMDB: ${GOSUMDB:-sum.golang.org}
     env_file: .env
@@ -80,6 +82,9 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      args:
+        NODE_IMAGE: ${NODE_IMAGE:-node:20-alpine}
+        CADDY_IMAGE: ${CADDY_IMAGE:-caddy:2.10-alpine}
     env_file: .env
     expose:
       - "3000"
@@ -90,6 +95,8 @@ services:
     build:
       context: .
       dockerfile: infra/caddy/Dockerfile
+      args:
+        CADDY_IMAGE: ${CADDY_IMAGE:-caddy:2.10-alpine}
     env_file: .env
     depends_on:
       - api

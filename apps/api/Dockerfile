@@ -1,4 +1,7 @@
-FROM golang:1.26.2-alpine3.22 AS builder
+ARG GOLANG_IMAGE=golang:1.26.2-alpine3.22
+ARG ALPINE_IMAGE=alpine:3.21
+
+FROM ${GOLANG_IMAGE} AS builder
 
 ARG GOPROXY=https://proxy.golang.org,direct
 ARG GOSUMDB=sum.golang.org
@@ -18,7 +21,7 @@ RUN echo "[api build] compiling API server binary" && \
     echo "[api build] compiling migration binary" && \
     go build -o /out/migrate ./cmd/migrate
 
-FROM alpine:3.21
+FROM ${ALPINE_IMAGE}
 
 WORKDIR /app
 RUN echo "[api build] installing runtime certificates" && \

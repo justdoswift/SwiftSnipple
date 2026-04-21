@@ -563,9 +563,9 @@
   .public-search-field-group {
     display: flex;
     align-items: center;
-    min-height: 76px;
+    min-height: 64px;
     width: 100%;
-    border-radius: calc(var(--radius-control) + 6px);
+    border-radius: calc(var(--radius-control) + 4px);
     border: 1px solid var(--public-border-faint);
     background: rgba(255, 255, 255, 0.05);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
@@ -595,8 +595,8 @@
     flex: 1 1 auto;
     width: 100%;
     min-width: 0;
-    font-size: 1.375rem;
-    line-height: 1.35;
+    font-size: 1.125rem;
+    line-height: 1.3;
   }
 
   .public-search-field-input:focus,
@@ -607,8 +607,8 @@
 
   .public-search-field-icon {
     color: var(--public-micro);
-    transform: scale(1.22);
-    margin-right: 0.875rem;
+    transform: scale(1.08);
+    margin-right: 0.75rem;
   }
 
   .public-search-body {
@@ -1078,7 +1078,7 @@
   .public-chip-metric {
     min-height: 40px;
     padding-inline: 1rem;
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-control);
   }
 
   .public-snippet-mini-card-media {

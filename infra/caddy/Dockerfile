@@ -1,1 +1,2 @@
-FROM caddy:2.10-alpine
+ARG CADDY_IMAGE=caddy:2.10-alpine
+FROM ${CADDY_IMAGE}

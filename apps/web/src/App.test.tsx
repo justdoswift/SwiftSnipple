@@ -86,7 +86,7 @@ describe("App public theme", () => {
     renderAppAt("/");
 
     await waitFor(() => {
-      expect(screen.getByText("Exceptional Builds. Native SwiftUI.")).toBeInTheDocument();
+      expect(screen.getByText("Curated SwiftUI builds, broken down clearly")).toBeInTheDocument();
     });
 
     const shell = screen.getByTestId("public-theme-root");
@@ -104,7 +104,7 @@ describe("App public theme", () => {
     renderAppAt("/");
 
     await waitFor(() => {
-      expect(screen.getByText("Exceptional Builds. Native SwiftUI.")).toBeInTheDocument();
+      expect(screen.getByText("Curated SwiftUI builds, broken down clearly")).toBeInTheDocument();
     });
 
     expect(screen.getByTestId("public-theme-root")).toHaveAttribute("data-theme", "light");
@@ -192,7 +192,7 @@ describe("App public theme", () => {
     renderAppAt("/");
 
     await waitFor(() => {
-      expect(screen.getByText("Exceptional Builds. Native SwiftUI.")).toBeInTheDocument();
+      expect(screen.getByText("Curated SwiftUI builds, broken down clearly")).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Switch to light site mode" }));

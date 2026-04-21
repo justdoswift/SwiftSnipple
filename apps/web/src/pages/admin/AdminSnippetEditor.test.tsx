@@ -152,6 +152,7 @@ describe("AdminSnippetEditor", () => {
     URL.revokeObjectURL = vi.fn();
     Object.defineProperty(window, "Image", { configurable: true, writable: true, value: MockLoadedImage });
     HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
+      clearRect: vi.fn(),
       drawImage: vi.fn(),
     })) as unknown as typeof HTMLCanvasElement.prototype.getContext;
     HTMLCanvasElement.prototype.toBlob = vi.fn((callback: BlobCallback, type?: string) => {
@@ -177,6 +178,7 @@ describe("AdminSnippetEditor", () => {
 
     expect(mockedUploadCoverImage).not.toHaveBeenCalled();
     expect(await screen.findByRole("heading", { name: "Crop cover image" })).toBeInTheDocument();
+    expect(await screen.findByTestId("cover-crop-image")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Crop and upload" }));
 
@@ -231,6 +233,7 @@ describe("AdminSnippetEditor", () => {
     fireEvent.change(fileInput!, { target: { files: [file] } });
 
     expect(await screen.findByRole("heading", { name: "Crop cover image" })).toBeInTheDocument();
+    expect(await screen.findByTestId("cover-crop-image")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
     await waitFor(() => {

@@ -52,7 +52,7 @@ describe("Home", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole("heading", { name: "Exceptional Builds. Native SwiftUI." })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Curated SwiftUI builds, broken down clearly" })).toBeInTheDocument();
     expect(screen.getByTestId("home-hero")).toHaveClass("min-h-screen");
     expect(screen.getByText("Accessing Data Stores...")).toBeInTheDocument();
 

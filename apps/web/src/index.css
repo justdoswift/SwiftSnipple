@@ -3244,8 +3244,9 @@
 
   .admin-cover-crop-dialog {
     display: flex;
-    height: calc(100vh - 2rem);
-    width: min(1480px, calc(100vw - 2rem));
+    height: min(900px, calc(100dvh - 2rem));
+    max-height: calc(100dvh - 2rem);
+    width: min(1320px, calc(100vw - 2rem));
     max-width: none;
     flex-direction: column;
     overflow: hidden;
@@ -3258,89 +3259,224 @@
   .admin-cover-crop-header,
   .admin-cover-crop-footer {
     border-color: var(--field-border);
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(255, 255, 255, 0.03);
   }
 
   .admin-cover-crop-header {
-    padding: 1.5rem 1.5rem 1rem;
+    flex: 0 0 auto;
+    padding: 0.875rem 1.25rem 0.25rem;
+  }
+
+  .admin-cover-crop-header-copy {
+    width: min(100%, 1040px);
+    margin: 0 auto;
+  }
+
+  .admin-cover-crop-title {
+    margin-top: 0.5rem;
+  }
+
+  .admin-cover-crop-copy {
+    margin-top: 0.375rem;
+    max-width: 42rem;
+    line-height: 1.5;
   }
 
   .admin-cover-crop-body {
     flex: 1;
+    display: flex;
     min-height: 0;
     padding: 0;
+    overflow: hidden;
   }
 
   .admin-cover-crop-workspace {
-    display: grid;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    width: min(100%, 1040px);
     height: 100%;
     min-height: 0;
-    gap: 1rem;
-    padding: 1.5rem;
+    margin: 0 auto;
+    padding: 0.625rem 1.25rem 0.875rem;
+    overflow: hidden;
+  }
+
+  .admin-cover-crop-editor {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    gap: 0;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: calc(var(--radius-panel) + 0.35rem);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015)),
+      radial-gradient(circle at top, rgba(255, 255, 255, 0.04), transparent 62%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.03),
+      0 18px 60px rgba(0, 0, 0, 0.18);
+    overflow: hidden;
+  }
+
+  .admin-cover-crop-panel {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
   }
 
   .admin-cover-crop-toolbar {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    flex: 0 0 auto;
     align-items: end;
-    justify-content: space-between;
-    gap: 1rem;
+    gap: 0.875rem;
+    width: min(100%, 960px);
+    margin: 0 auto;
+    padding: 0.875rem 1rem 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .admin-cover-crop-toolbar-copy {
+    display: grid;
+    gap: 0.125rem;
+  }
+
+  .admin-cover-crop-toolbar-actions {
+    display: flex;
+    justify-content: flex-end;
   }
 
   .admin-cover-crop-zoom {
-    display: grid;
-    min-width: min(100%, 320px);
-    gap: 0.625rem;
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 480px;
   }
 
   .admin-cover-crop-zoom input[type="range"] {
     width: 100%;
   }
 
+  .admin-cover-crop-frame-shell {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+    align-items: stretch;
+    justify-content: center;
+    position: relative;
+    z-index: 0;
+    overflow: hidden;
+    padding: 0.875rem 1rem 1rem;
+  }
+
   .admin-cover-crop-frame {
     position: relative;
-    display: flex;
-    min-height: 0;
-    flex: 1;
-    align-items: center;
-    justify-content: center;
+    flex: 1 1 auto;
+    width: min(100%, 960px);
+    height: 100%;
+    max-height: 100%;
     overflow: hidden;
     border: 1px solid var(--field-border);
-    border-radius: var(--radius-panel);
+    border-radius: 8px;
     background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015)),
-      radial-gradient(circle at top, rgba(255, 255, 255, 0.06), transparent 52%);
+      linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01)),
+      radial-gradient(circle at top, rgba(255, 255, 255, 0.04), transparent 52%);
     touch-action: none;
     user-select: none;
+    isolation: isolate;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.03),
+      0 10px 36px rgba(0, 0, 0, 0.18);
   }
 
-  .admin-cover-crop-viewport {
+  .admin-cover-crop-stage {
     position: relative;
-    width: min(calc(100% - 2rem), 1100px);
-    aspect-ratio: 1200 / 630;
+    height: 100%;
+    width: 100%;
     overflow: hidden;
+    cursor: grab;
+    background:
+      linear-gradient(45deg, rgba(255, 255, 255, 0.025) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.025) 75%, rgba(255, 255, 255, 0.025)),
+      linear-gradient(45deg, rgba(255, 255, 255, 0.025) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.025) 75%, rgba(255, 255, 255, 0.025));
+    background-position: 0 0, 12px 12px;
+    background-size: 24px 24px;
+    background-color: rgba(4, 4, 5, 0.95);
   }
 
-  .admin-cover-crop-mask {
+  .admin-cover-crop-stage:active {
+    cursor: grabbing;
+  }
+
+  .admin-cover-crop-overlay {
     pointer-events: none;
     position: absolute;
     inset: 0;
-    border: 1px solid rgba(255, 255, 255, 0.24);
+  }
+
+  .admin-cover-crop-shade {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.56);
+  }
+
+  .admin-cover-crop-shade-top {
+    inset: 0 0 auto;
+  }
+
+  .admin-cover-crop-shade-left {
+    left: 0;
+  }
+
+  .admin-cover-crop-shade-right {
+    right: 0;
+  }
+
+  .admin-cover-crop-shade-bottom {
+    inset: auto 0 0;
+  }
+
+  .admin-cover-crop-window {
+    position: absolute;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 4px;
     box-shadow:
-      0 0 0 9999px rgba(0, 0, 0, 0.5),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.12);
-    border-radius: 20px;
+      inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+      0 0 0 1px rgba(255, 255, 255, 0.04);
   }
 
   .admin-cover-crop-image {
     position: absolute;
     max-width: none;
-    cursor: grab;
-    object-fit: cover;
+    object-fit: contain;
+    z-index: 0;
   }
 
-  .admin-cover-crop-image:active {
-    cursor: grabbing;
+  .admin-cover-crop-meta {
+    display: grid;
+    gap: 0.375rem;
+    flex: 0 0 auto;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    min-height: 0;
+    padding: 0.75rem 1rem 0.875rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(7, 7, 8, 0.72);
+  }
+
+  .admin-cover-crop-hint {
+    max-width: 52rem;
+    color: rgba(255, 255, 255, 0.44);
+    line-height: 1.45;
+  }
+
+  .admin-cover-crop-error {
+    margin-top: 0;
   }
 
   .admin-cover-crop-loading {
@@ -3352,22 +3488,73 @@
   }
 
   .admin-cover-crop-footer {
-    padding: 1rem 1.5rem 1.5rem;
+    flex: 0 0 auto;
+    padding: 0.625rem 1.25rem 0.875rem;
+  }
+
+  .admin-cover-crop-footer-actions {
+    display: flex;
+    width: min(100%, 1040px);
+    margin: 0 auto;
+    justify-content: flex-end;
+    gap: 0.875rem;
+  }
+
+  .admin-cover-crop-footer-actions > * {
+    flex: 0 0 auto;
   }
 
   @media (max-width: 900px) {
     .admin-cover-crop-dialog {
-      height: calc(100vh - 1rem);
+      height: calc(100dvh - 1rem);
+      max-height: calc(100dvh - 1rem);
       width: calc(100vw - 1rem);
     }
 
     .admin-cover-crop-workspace {
-      padding: 1rem;
+      padding: 0.875rem;
     }
 
-    .admin-cover-crop-viewport {
-      width: calc(100% - 1rem);
+    .admin-cover-crop-panel {
+      gap: 0;
     }
+
+    .admin-cover-crop-toolbar {
+      grid-template-columns: 1fr;
+      align-items: stretch;
+      gap: 0.75rem;
+      padding: 0.75rem 0.75rem 0.625rem;
+    }
+
+    .admin-cover-crop-zoom {
+      max-width: none;
+    }
+
+    .admin-cover-crop-toolbar-actions {
+      justify-content: flex-start;
+    }
+
+    .admin-cover-crop-frame-shell {
+      padding: 0.75rem;
+    }
+
+    .admin-cover-crop-frame {
+      width: 100%;
+    }
+
+    .admin-cover-crop-meta {
+      padding: 0.625rem 0.75rem 0.75rem;
+    }
+
+    .admin-cover-crop-footer-actions {
+      width: 100%;
+      justify-content: stretch;
+    }
+
+    .admin-cover-crop-footer-actions > * {
+      flex: 1 1 0;
+    }
+
   }
 
   .markdown-renderer {

@@ -251,6 +251,7 @@ type RichPasteImageReference = {
 type RichPasteMarkdownDraft = {
   markdown: string;
   images: RichPasteImageReference[];
+  hasStructuredCode: boolean;
 };
 
 const BLOCK_ELEMENT_TAGS = new Set([
@@ -290,6 +291,14 @@ function normalizeInlineText(value: string) {
   return value.replace(/\s+/g, " ");
 }
 
+function normalizeCodeBlockText(value: string) {
+  return value
+    .replace(/\r\n?/g, "\n")
+    .replace(/\u00a0/g, " ")
+    .replace(/^\n+/, "")
+    .replace(/\s+$/, "");
+}
+
 function joinInlineParts(parts: string[]) {
   return parts
     .join("")
@@ -307,6 +316,136 @@ function hasBlockChildren(element: Element) {
   return Array.from(element.childNodes).some(
     (node) => node.nodeType === Node.ELEMENT_NODE && BLOCK_ELEMENT_TAGS.has((node as Element).tagName.toLowerCase()),
   );
+}
+
+function sanitizeCodeLanguage(value: string) {
+  return value.trim().toLowerCase().replace(/[^a-z0-9#+-]/g, "");
+}
+
+function extractCodeLanguage(element: Element | null) {
+  if (!element) {
+    return "";
+  }
+
+  const dataLanguage = sanitizeCodeLanguage(
+    element.getAttribute("data-language")?.trim() ??
+      element.getAttribute("data-lang")?.trim() ??
+      "",
+  );
+  if (dataLanguage) {
+    return dataLanguage;
+  }
+
+  for (const token of Array.from(element.classList)) {
+    const languageMatch = /^(?:language|lang)-([\w#+-]+)$/i.exec(token);
+    if (languageMatch) {
+      return sanitizeCodeLanguage(languageMatch[1]);
+    }
+  }
+
+  return "";
+}
+
+function renderCodeFence(code: string, language: string) {
+  const normalizedCode = normalizeCodeBlockText(code);
+  if (!normalizedCode) {
+    return "";
+  }
+
+  return language ? `\`\`\`${language}\n${normalizedCode}\n\`\`\`` : `\`\`\`\n${normalizedCode}\n\`\`\``;
+}
+
+function isCodeBlockContainer(element: Element) {
+  if (element.tagName.toLowerCase() === "pre") {
+    return true;
+  }
+
+  const classTokens = Array.from(element.classList);
+  if (
+    classTokens.some((token) =>
+      /(?:^|[-_])(highlight|codeblock|code-block|syntax|source|source-code|hljs)(?:$|[-_])/i.test(token),
+    )
+  ) {
+    return true;
+  }
+
+  return Boolean(
+    element.getAttribute("data-language") ||
+      element.getAttribute("data-lang"),
+  );
+}
+
+function getOnlyMeaningfulElementChild(element: Element) {
+  const meaningfulChildren = Array.from(element.childNodes).filter((child) => {
+    if (child.nodeType === Node.TEXT_NODE) {
+      return Boolean(child.textContent?.trim());
+    }
+
+    return child.nodeType === Node.ELEMENT_NODE;
+  });
+
+  if (
+    meaningfulChildren.length === 1 &&
+    meaningfulChildren[0]?.nodeType === Node.ELEMENT_NODE
+  ) {
+    return meaningfulChildren[0] as Element;
+  }
+
+  return null;
+}
+
+function getStructuredCodeBlock(node: Node): { code: string; language: string } | null {
+  if (node.nodeType !== Node.ELEMENT_NODE) {
+    return null;
+  }
+
+  const element = node as Element;
+  const tag = element.tagName.toLowerCase();
+
+  if (tag === "pre") {
+    const nestedCode = element.querySelector(":scope > code");
+    const code = nestedCode?.textContent ?? element.textContent ?? "";
+    const language = extractCodeLanguage(nestedCode) || extractCodeLanguage(element);
+    return code.trim() ? { code, language } : null;
+  }
+
+  if (tag === "code" && element.parentElement?.tagName.toLowerCase() !== "pre") {
+    const language = extractCodeLanguage(element);
+    const code = element.textContent ?? "";
+    const parentTag = element.parentElement?.tagName.toLowerCase() ?? "";
+    const codeLooksBlockLevel = Boolean(language) || code.includes("\n");
+
+    if (
+      codeLooksBlockLevel &&
+      (!parentTag || BLOCK_ELEMENT_TAGS.has(parentTag) || parentTag === "body")
+    ) {
+      return { code, language };
+    }
+    return null;
+  }
+
+  const onlyMeaningfulChild = getOnlyMeaningfulElementChild(element);
+  if (onlyMeaningfulChild?.tagName.toLowerCase() === "code") {
+    const codeElement = onlyMeaningfulChild;
+    const language = extractCodeLanguage(codeElement) || extractCodeLanguage(element);
+    const code = codeElement.textContent ?? "";
+    if (language || code.includes("\n")) {
+      return { code, language };
+    }
+  }
+
+  if (!isCodeBlockContainer(element)) {
+    return null;
+  }
+
+  const nestedCode = element.querySelector(":scope > code") ?? element.querySelector("code");
+  const code = nestedCode?.textContent ?? element.textContent ?? "";
+  const language = extractCodeLanguage(nestedCode) || extractCodeLanguage(element);
+  if (!language && !code.includes("\n")) {
+    return null;
+  }
+
+  return code.trim() ? { code, language } : null;
 }
 
 function renderInlineMarkdown(node: Node, images: RichPasteImageReference[], fallbackAlt: string): string {
@@ -379,6 +518,12 @@ function renderBlockMarkdown(node: Node, images: RichPasteImageReference[], fall
   const tag = element.tagName.toLowerCase();
   const inline = () => joinInlineParts(Array.from(element.childNodes).map((child) => renderInlineMarkdown(child, images, fallbackAlt)));
   const childBlocks = () => Array.from(element.childNodes).flatMap((child) => renderBlockMarkdown(child, images, fallbackAlt));
+  const structuredCodeBlock = getStructuredCodeBlock(element);
+
+  if (structuredCodeBlock) {
+    const fencedCode = renderCodeFence(structuredCodeBlock.code, structuredCodeBlock.language);
+    return fencedCode ? [fencedCode] : [];
+  }
 
   switch (tag) {
     case "img": {
@@ -452,10 +597,12 @@ function parseRichPasteToMarkdown(html: string, plainText: string, fallbackAlt: 
   const images: RichPasteImageReference[] = [];
   const blocks = Array.from(document.body.childNodes).flatMap((node) => renderBlockMarkdown(node, images, fallbackAlt));
   const markdown = blocks.join("\n\n").trim() || plainText.trim();
+  const hasStructuredCode = Array.from(document.body.querySelectorAll("*")).some((element) => Boolean(getStructuredCodeBlock(element)));
 
   return {
     markdown,
     images,
+    hasStructuredCode,
   };
 }
 
@@ -1222,13 +1369,18 @@ export default function AdminSnippetEditor() {
         : "";
       const richPasteDraft = parseRichPasteToMarkdown(html, plainText, copy.mediaAltPlaceholder);
 
-      if (richPasteDraft.images.length === 0) {
+      if (richPasteDraft.images.length === 0 && !richPasteDraft.hasStructuredCode) {
         return;
       }
 
       event.preventDefault();
       const pasteStart = event.currentTarget.selectionStart ?? contentValueRef.current.length;
       const pasteEnd = event.currentTarget.selectionEnd ?? contentValueRef.current.length;
+
+      if (richPasteDraft.images.length === 0) {
+        applyRichPasteMarkdown(pasteStart, pasteEnd, richPasteDraft.markdown);
+        return;
+      }
 
       try {
         setContentMediaError("");

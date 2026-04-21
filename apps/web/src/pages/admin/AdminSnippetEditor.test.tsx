@@ -334,6 +334,126 @@ describe("AdminSnippetEditor", () => {
     });
   });
 
+  it("converts structured html code blocks into fenced markdown", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+
+    render(
+      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+            <Route path="snippets/new" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    const notes = screen.getByLabelText("Implementation notes") as HTMLTextAreaElement;
+    fireEvent.paste(notes, {
+      clipboardData: {
+        files: [],
+        items: [],
+        getData: (type: string) =>
+          type === "text/html"
+            ? '<div><p>Intro copy</p><pre><code class="language-swift">import SwiftUI\nimport NaturalLanguage\n\nstruct TokenizeView: View {\n    var body: some View {\n        Text("Hello")\n    }\n}</code></pre><p>After code</p></div>'
+            : type === "text/plain"
+              ? 'Intro copy\nimport SwiftUI import NaturalLanguage struct TokenizeView: View { var body: some View { Text("Hello") } }\nAfter code'
+              : "",
+      },
+    });
+
+    await waitFor(() => {
+      expect(notes.value).toContain("Intro copy");
+      expect(notes.value).toContain("```swift");
+      expect(notes.value).toContain("import SwiftUI\nimport NaturalLanguage");
+      expect(notes.value).toContain("    var body: some View {");
+      expect(notes.value).toContain("After code");
+    });
+  });
+
+  it("treats standalone language-tagged code elements as fenced blocks", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+
+    render(
+      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+            <Route path="snippets/new" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    const notes = screen.getByLabelText("Implementation notes") as HTMLTextAreaElement;
+    fireEvent.paste(notes, {
+      clipboardData: {
+        files: [],
+        items: [],
+        getData: (type: string) =>
+          type === "text/html"
+            ? '<div><code class="lang-swift">import SwiftUI\nstruct ExampleView: View {\n    var body: some View {\n        Text("Hello")\n    }\n}</code></div>'
+            : type === "text/plain"
+              ? 'import SwiftUI struct ExampleView: View { var body: some View { Text("Hello") } }'
+              : "",
+      },
+    });
+
+    await waitFor(() => {
+      expect(notes.value).toContain("```swift");
+      expect(notes.value).toContain("struct ExampleView: View {");
+      expect(notes.value).toContain('        Text("Hello")');
+    });
+  });
+
+  it("keeps code blocks formatted when rich html also includes remote images", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+    mockedUploadContentImageFromURL.mockResolvedValueOnce({
+      url: "/api/uploads/content-images/mixed.webp",
+      mimeType: "image/webp",
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+            <Route path="snippets/new" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    const notes = screen.getByLabelText("Implementation notes") as HTMLTextAreaElement;
+    fireEvent.paste(notes, {
+      clipboardData: {
+        files: [],
+        items: [],
+        getData: (type: string) =>
+          type === "text/html"
+            ? '<div><p>Before code</p><pre><code class="language-swift">import SwiftUI\nText("Hello")</code></pre><img src="https://substackcdn.com/mixed.png" alt="Mixed figure" /><p>After image</p></div>'
+            : type === "text/plain"
+              ? 'Before code\nimport SwiftUI Text("Hello")\nAfter image'
+              : "",
+      },
+    });
+
+    await waitFor(() => {
+      expect(mockedUploadContentImageFromURL).toHaveBeenCalledWith("https://substackcdn.com/mixed.png");
+    });
+
+    await waitFor(() => {
+      expect(notes.value).toContain("Before code");
+      expect(notes.value).toContain("```swift");
+      expect(notes.value).toContain('Text("Hello")');
+      expect(notes.value).toContain("![Mixed figure](/api/uploads/content-images/mixed.webp)");
+      expect(notes.value).toContain("After image");
+    });
+  });
+
   it("keeps pasted html text when one remote image upload fails", async () => {
     mockedGetSnippetById.mockReset();
     mockedCreateSnippet.mockReset();

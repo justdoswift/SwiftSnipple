@@ -25,7 +25,7 @@ function formatDate(value: string | null) {
 }
 
 interface AdminSnippetLibraryContentProps {
-  snippets: Snippet[];
+  snippets: Snippet[] | null | undefined;
   isLoading: boolean;
   error: string;
 }
@@ -38,9 +38,10 @@ export default function AdminSnippetLibraryContent({
   const { locale } = useAppLocale();
   const copy = getMessages(locale).admin;
   const common = getMessages(locale).common;
+  const safeSnippets = snippets ?? [];
   const categories = useMemo(
-    () => Array.from(new Set(snippets.map((snippet) => getLocalizedSnippetFields(snippet, locale).category))),
-    [locale, snippets],
+    () => Array.from(new Set(safeSnippets.map((snippet) => getLocalizedSnippetFields(snippet, locale).category))),
+    [locale, safeSnippets],
   );
   const statusFilterOptions = useMemo<LibrarySelectOption[]>(
     () =>
@@ -68,7 +69,7 @@ export default function AdminSnippetLibraryContent({
   const filteredSnippets = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
-    return snippets.filter((snippet) => {
+    return safeSnippets.filter((snippet) => {
       const fields = getLocalizedSnippetFields(snippet, locale);
       const matchesStatus = statusFilter === "All" || snippet.status === statusFilter;
       const matchesCategory = categoryFilter === "All" || fields.category === categoryFilter;
@@ -79,7 +80,7 @@ export default function AdminSnippetLibraryContent({
 
       return matchesStatus && matchesCategory && matchesQuery;
     });
-  }, [categoryFilter, locale, query, snippets, statusFilter]);
+  }, [categoryFilter, locale, query, safeSnippets, statusFilter]);
 
   return (
     <>
@@ -151,7 +152,7 @@ export default function AdminSnippetLibraryContent({
         {isLoading ? <p className="admin-copy-muted type-body-sm">{copy.loadingSnippetLibrary}</p> : null}
         {error ? <p className="admin-inline-alert px-4 py-3">{error}</p> : null}
 
-        {!isLoading && !error && !snippets.length ? (
+        {!isLoading && !error && !safeSnippets.length ? (
           <div className="admin-section-card admin-list-divider border border-dashed">
             <div className="px-6 py-12 text-center">
               <p className="admin-empty-kicker type-mono-micro">{copy.noSnippets}</p>
@@ -208,7 +209,7 @@ export default function AdminSnippetLibraryContent({
             })
           : null}
 
-        {!isLoading && !error && !filteredSnippets.length && snippets.length ? (
+        {!isLoading && !error && !filteredSnippets.length && safeSnippets.length ? (
           <div className="admin-section-card admin-list-divider border border-dashed">
             <div className="px-6 py-12 text-center">
               <p className="admin-empty-kicker type-mono-micro">{copy.noMatches}</p>

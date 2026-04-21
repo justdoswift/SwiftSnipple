@@ -225,6 +225,19 @@ describe("AdminLayout", () => {
     expect(screen.getByTestId("admin-page-width-shell")).not.toHaveClass("admin-editor-shell-width");
   });
 
+  it("renders the empty library state when admin snippets resolves to null", async () => {
+    mockedGetAdminSnippets.mockResolvedValueOnce(null as unknown as ReturnType<typeof createSnippet>[]);
+
+    renderAdminRoute("/admin");
+
+    await waitFor(() => {
+      expect(screen.getByText("No snippets yet")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("Start the first showcase entry")).toBeInTheDocument();
+    expect(screen.getByText("The library will populate as soon as the first snippet is created.")).toBeInTheDocument();
+  });
+
   it("shows the unified snippets command bar", async () => {
     renderAdminRoute("/admin/snippets");
 

@@ -49,7 +49,7 @@ export default function AdminDashboard() {
     getAdminSnippets()
       .then((items) => {
         if (!active) return;
-        setSnippets(items);
+        setSnippets(items ?? []);
         setError("");
       })
       .catch((err: Error) => {

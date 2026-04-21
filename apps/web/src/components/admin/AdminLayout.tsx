@@ -1,5 +1,5 @@
 import { ArrowUpRight, Languages, LogOut, Moon, Sun } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import type { AdminAuthSession } from "../../lib/admin-auth";
 import { Dropdown, Tooltip } from "../../lib/heroui";
@@ -28,6 +28,17 @@ export default function AdminLayout({ adminAuthSession, onSignOut, onToggleTheme
     location.pathname === "/admin/snippets/new" ||
     (location.pathname.startsWith("/admin/snippets/") && location.pathname !== "/admin/snippets");
   const activeHeader: AdminHeaderConfig = headerConfig ?? {};
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const previousScrollBehavior = root.style.scrollBehavior;
+
+    root.style.scrollBehavior = "auto";
+
+    return () => {
+      root.style.scrollBehavior = previousScrollBehavior;
+    };
+  }, []);
 
   return (
     <div className="admin-theme admin-page min-h-screen" data-theme={theme} data-testid="admin-theme-root">

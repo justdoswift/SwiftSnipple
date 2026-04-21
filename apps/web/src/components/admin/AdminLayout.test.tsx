@@ -139,6 +139,24 @@ describe("AdminLayout", () => {
     mockedGetAdminSnippets.mockResolvedValue([baseSnippet]);
   });
 
+  it("forces auto scroll behavior while the admin layout is mounted and restores it on unmount", async () => {
+    const previousScrollBehavior = document.documentElement.style.scrollBehavior;
+    document.documentElement.style.scrollBehavior = "smooth";
+
+    const { unmount } = renderAdminRoute("/admin");
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Search title or slug")).toBeInTheDocument();
+    });
+
+    expect(document.documentElement.style.scrollBehavior).toBe("auto");
+
+    unmount();
+
+    expect(document.documentElement.style.scrollBehavior).toBe("smooth");
+    document.documentElement.style.scrollBehavior = previousScrollBehavior;
+  });
+
   it("shows the unified dashboard command bar", async () => {
     renderAdminRoute("/admin");
 

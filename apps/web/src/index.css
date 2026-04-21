@@ -2874,6 +2874,10 @@
     overflow: auto;
   }
 
+  .admin-editor-narrative-body {
+    overflow-anchor: none;
+  }
+
   .admin-editor-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: var(--admin-editor-scrollbar-thumb) var(--admin-editor-scrollbar-track);

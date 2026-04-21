@@ -659,6 +659,7 @@ describe("AdminSnippetEditor", () => {
     const expectedCaret = notes.value.length;
     notes.focus();
     notes.setSelectionRange(expectedCaret, expectedCaret);
+    fireEvent.click(notes);
 
     expect(document.activeElement).toBe(notes);
     expect(notes.selectionStart).toBe(expectedCaret);

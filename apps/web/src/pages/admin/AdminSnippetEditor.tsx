@@ -41,6 +41,12 @@ type ContentHistoryEntry = {
   selectionStart: number;
   selectionEnd: number;
 };
+type ContentSelectionRestoreMode = "preserveSelectionOnly" | "restoreEditorSelection";
+type PendingContentSelection = {
+  start: number;
+  end: number;
+  mode: ContentSelectionRestoreMode;
+};
 type EditorTabOption = {
   key: EditorTabKey;
   label: string;
@@ -647,7 +653,7 @@ export default function AdminSnippetEditor() {
   const formRef = useRef(form);
   const coverImageInputRef = useRef<HTMLInputElement | null>(null);
   const contentTextareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const contentSelectionRef = useRef<{ start: number; end: number } | null>(null);
+  const contentSelectionRef = useRef<PendingContentSelection | null>(null);
   const contentHistoryRef = useRef<{
     undoStack: ContentHistoryEntry[];
     redoStack: ContentHistoryEntry[];
@@ -1008,13 +1014,25 @@ export default function AdminSnippetEditor() {
   }, [editorLocale]);
 
   const syncContentTextareaSelection = useCallback(() => {
-    if (!contentTextareaRef.current || !contentSelectionRef.current) {
+    const textarea = contentTextareaRef.current;
+    const pendingSelection = contentSelectionRef.current;
+
+    if (!textarea || !pendingSelection) {
       return;
     }
 
-    const { start, end } = contentSelectionRef.current;
-    contentTextareaRef.current.focus();
-    contentTextareaRef.current.setSelectionRange(start, end);
+    const shouldRestoreSelection =
+      document.activeElement === textarea || pendingSelection.mode === "restoreEditorSelection";
+
+    if (!shouldRestoreSelection) {
+      return;
+    }
+
+    if (pendingSelection.mode === "restoreEditorSelection" && document.activeElement !== textarea) {
+      textarea.focus({ preventScroll: true });
+    }
+
+    textarea.setSelectionRange(pendingSelection.start, pendingSelection.end);
     contentSelectionRef.current = null;
   }, []);
 
@@ -1041,7 +1059,12 @@ export default function AdminSnippetEditor() {
     syncContentTextareaSelection();
   }, [localizedForm.content, resizeContentTextarea, syncContentTextareaSelection]);
 
-  const applyContentSnapshot = useCallback((nextState: ContentHistoryEntry, historyMode: "push" | "undo" | "redo" = "push") => {
+  const applyContentSnapshot = useCallback((
+    nextState: ContentHistoryEntry,
+    historyMode: "push" | "undo" | "redo" = "push",
+    selectionMode: ContentSelectionRestoreMode = "preserveSelectionOnly",
+  ) => {
+    const textarea = contentTextareaRef.current;
     const currentState = currentContentSelection();
 
     if (historyMode === "push" && nextState.value !== currentState.value) {
@@ -1063,37 +1086,44 @@ export default function AdminSnippetEditor() {
     contentSelectionRef.current = {
       start: nextState.selectionStart,
       end: nextState.selectionEnd,
+      mode:
+        selectionMode === "restoreEditorSelection" || document.activeElement === textarea
+          ? "restoreEditorSelection"
+          : "preserveSelectionOnly",
     };
     updateLocalizedField("content", nextState.value);
   }, [currentContentSelection, syncContentHistoryState, updateLocalizedField]);
 
-  const applyContentEdit = useCallback((transform: (value: string, start: number, end: number) => { value: string; selectionStart: number; selectionEnd: number }) => {
+  const applyContentEdit = useCallback((
+    transform: (value: string, start: number, end: number) => { value: string; selectionStart: number; selectionEnd: number },
+    selectionMode: ContentSelectionRestoreMode = "preserveSelectionOnly",
+  ) => {
     const textarea = contentTextareaRef.current;
     const currentValue = localizedForm.content;
     const start = textarea?.selectionStart ?? currentValue.length;
     const end = textarea?.selectionEnd ?? currentValue.length;
     const nextState = transform(currentValue, start, end);
-    applyContentSnapshot(nextState, "push");
+    applyContentSnapshot(nextState, "push", selectionMode);
   }, [applyContentSnapshot, localizedForm.content]);
 
-  const undoContentEdit = useCallback(() => {
+  const undoContentEdit = useCallback((selectionMode: ContentSelectionRestoreMode = "preserveSelectionOnly") => {
     const previousState = contentHistoryRef.current.undoStack.pop();
     if (!previousState) {
       syncContentHistoryState();
       return;
     }
 
-    applyContentSnapshot(previousState, "undo");
+    applyContentSnapshot(previousState, "undo", selectionMode);
   }, [applyContentSnapshot, syncContentHistoryState]);
 
-  const redoContentEdit = useCallback(() => {
+  const redoContentEdit = useCallback((selectionMode: ContentSelectionRestoreMode = "preserveSelectionOnly") => {
     const nextState = contentHistoryRef.current.redoStack.pop();
     if (!nextState) {
       syncContentHistoryState();
       return;
     }
 
-    applyContentSnapshot(nextState, "redo");
+    applyContentSnapshot(nextState, "redo", selectionMode);
   }, [applyContentSnapshot, syncContentHistoryState]);
 
   const persistSnippet = useCallback(
@@ -1314,11 +1344,11 @@ export default function AdminSnippetEditor() {
 
     event.preventDefault();
     if (event.shiftKey) {
-      redoContentEdit();
+      redoContentEdit("restoreEditorSelection");
       return;
     }
 
-    undoContentEdit();
+    undoContentEdit("restoreEditorSelection");
   }, [redoContentEdit, undoContentEdit]);
 
   const insertUploadedContentImage = useCallback((assetURL: string, altText?: string) => {
@@ -1343,7 +1373,7 @@ export default function AdminSnippetEditor() {
 
   const applyRichPasteMarkdown = useCallback((start: number, end: number, markdown: string) => {
     const nextState = insertBlock(contentValueRef.current, start, end, markdown, markdown.length);
-    applyContentSnapshot(nextState, "push");
+    applyContentSnapshot(nextState, "push", "preserveSelectionOnly");
   }, [applyContentSnapshot]);
 
   const handleContentTextareaPaste = useCallback(async (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
@@ -1741,6 +1771,7 @@ export default function AdminSnippetEditor() {
                       onChange={handleContentTextareaChange}
                       onPaste={handleContentTextareaPaste}
                       onKeyDown={handleContentTextareaKeyDown}
+                      onFocus={syncContentTextareaSelection}
                       onClick={resizeContentTextarea}
                       onKeyUp={resizeContentTextarea}
                       className="admin-editor-textarea admin-editor-panel-body admin-editor-scrollbar w-full resize-none border-0 bg-transparent px-0 shadow-none outline-none focus:ring-0"

@@ -186,17 +186,22 @@ describe("AdminSnippetEditor", () => {
     const notes = screen.getByLabelText("Implementation notes") as HTMLTextAreaElement;
     fireEvent.change(notes, { target: { value: "Hello world" } });
     notes.setSelectionRange(0, 5);
-    fireEvent.click(screen.getByRole("button", { name: "Bold" }));
+    const boldButton = screen.getByRole("button", { name: "Bold" });
+    fireEvent.focus(boldButton);
+    fireEvent.click(boldButton);
 
     await waitFor(() => {
       expect(screen.getByLabelText("Implementation notes")).toHaveValue("**Hello** world");
     });
+    expect(document.activeElement).not.toBe(notes);
 
     fireEvent.click(screen.getByRole("button", { name: "Image" }));
     const fileInput = document.querySelector('input[type="file"][accept*="image/png"]') as HTMLInputElement | null;
     expect(fileInput).not.toBeNull();
     fireEvent.change(fileInput!, { target: { files: [new File(["image"], "body.png", { type: "image/png" })] } });
-    fireEvent.click(screen.getByRole("button", { name: "Insert into notes" }));
+    const insertButton = screen.getByRole("button", { name: "Insert into notes" });
+    fireEvent.focus(insertButton);
+    fireEvent.click(insertButton);
 
     await waitFor(() => {
       expect(mockedUploadContentImage).toHaveBeenCalled();
@@ -207,6 +212,7 @@ describe("AdminSnippetEditor", () => {
       expect(notesField.value).toContain("![");
       expect(notesField.value).toContain("/api/uploads/content-images/example.webp");
     });
+    expect(document.activeElement).not.toBe(notes);
   });
 
   it("uploads pasted images into markdown notes", async () => {
@@ -578,11 +584,52 @@ describe("AdminSnippetEditor", () => {
     await waitFor(() => {
       expect(notes.value).toBe("Hello world");
     });
+    expect(document.activeElement).toBe(notes);
 
     fireEvent.keyDown(notes, { key: "z", metaKey: true, shiftKey: true });
     await waitFor(() => {
       expect(notes.value).toBe("**Hello** world");
     });
+    expect(document.activeElement).toBe(notes);
+  });
+
+  it("keeps focus on locale and tab controls after prior content edits", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+
+    render(
+      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+            <Route path="snippets/new" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    const notes = screen.getByLabelText("Implementation notes") as HTMLTextAreaElement;
+    fireEvent.change(notes, { target: { value: "Hello world" } });
+    notes.setSelectionRange(0, 5);
+    fireEvent.click(screen.getByRole("button", { name: "Bold" }));
+
+    await waitFor(() => {
+      expect(notes.value).toBe("**Hello** world");
+    });
+
+    const chineseLocaleButton = screen.getByRole("button", { name: /中文/i });
+    fireEvent.focus(chineseLocaleButton);
+    fireEvent.click(chineseLocaleButton);
+    expect(document.activeElement).not.toBe(notes);
+
+    const codeTab = screen.getByRole("tab", { name: "Code" });
+    fireEvent.focus(codeTab);
+    fireEvent.click(codeTab);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("SwiftUI code")).toBeInTheDocument();
+    });
+    expect(document.activeElement).not.toBe(notes);
   });
 
   it("returns to the snippet library from the editor header back button", () => {

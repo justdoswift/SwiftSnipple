@@ -681,7 +681,6 @@
   }
 
   .public-search-result-media {
-    aspect-ratio: 1 / 1;
     overflow: hidden;
     border-radius: 1.25rem;
     background: rgba(255, 255, 255, 0.04);
@@ -1009,6 +1008,18 @@
     background: var(--public-card-overlay);
   }
 
+  .snippet-cover-frame {
+    aspect-ratio: 1200 / 630;
+    background-color: var(--public-surface-subtle-bg);
+  }
+
+  .snippet-cover-image {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
   .public-snippet-card-title,
   .public-snippet-mini-card-title {
     color: var(--public-heading);
@@ -1092,6 +1103,10 @@
     box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22);
   }
 
+  .public-home-lead-card-grid {
+    align-items: stretch;
+  }
+
   .public-home-lead-card-copy {
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.015)),
@@ -1106,18 +1121,19 @@
 
   .public-home-lead-card-media {
     background-color: var(--public-surface-subtle-bg);
+    border-radius: calc(var(--radius-panel-lg) - 4px);
   }
 
   .public-home-lead-card-image-overlay {
     background:
-      linear-gradient(180deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.14)),
-      linear-gradient(270deg, transparent 0%, rgba(0, 0, 0, 0.16) 100%);
+      linear-gradient(180deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.12)),
+      linear-gradient(270deg, transparent 18%, rgba(0, 0, 0, 0.1) 100%);
   }
 
   .public-theme[data-theme="light"] .public-home-lead-card-image-overlay {
     background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.14)),
-      linear-gradient(270deg, transparent 0%, rgba(255, 255, 255, 0.16) 100%);
+      linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.12)),
+      linear-gradient(270deg, transparent 18%, rgba(255, 255, 255, 0.1) 100%);
   }
 
   .public-home-lead-card-cta {
@@ -1151,7 +1167,6 @@
 
   .public-home-grid-card-media {
     border-radius: 18px;
-    background-color: var(--public-surface-subtle-bg);
   }
 
   .public-home-grid-card-title {
@@ -1177,6 +1192,12 @@
     border-radius: var(--radius-control);
     appearance: none;
     -webkit-appearance: none;
+  }
+
+  @media (min-width: 1024px) {
+    .public-home-lead-card-copy {
+      min-height: 100%;
+    }
   }
 
   .public-input-inverse {

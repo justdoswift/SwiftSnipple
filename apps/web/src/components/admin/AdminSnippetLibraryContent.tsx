@@ -176,11 +176,11 @@ export default function AdminSnippetLibraryContent({
               >
                 <div className="admin-section-card transition-all hover:-translate-y-0.5">
                   <div className="grid gap-6 p-5 md:grid-cols-[220px_minmax(0,1fr)] md:p-6">
-                    <div className="admin-image-stage aspect-[4/3] overflow-hidden">
+                    <div className="snippet-cover-frame admin-image-stage overflow-hidden">
                       <img
                         src={resolveAssetUrl(snippet.coverImage)}
                         alt={fields.title}
-                        className="h-full w-full object-cover grayscale transition-all duration-500 hover:scale-[1.03] hover:grayscale-0"
+                        className="snippet-cover-image grayscale transition-all duration-500 hover:scale-[1.02] hover:grayscale-0"
                         referrerPolicy="no-referrer"
                       />
                     </div>

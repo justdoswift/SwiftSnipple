@@ -271,6 +271,7 @@ describe("PublicSearch", () => {
     fireEvent.change(input, { target: { value: "glass" } });
 
     const result = await screen.findByRole("link", { name: /Glass Navigation/i });
+    expect(result.querySelector(".public-search-result-media")).toHaveClass("snippet-cover-frame");
     fireEvent.click(result);
 
     await waitFor(() => {

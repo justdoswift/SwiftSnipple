@@ -165,11 +165,11 @@ export default function PublicSearch({ isOpen, onOpenChange, loadSnippets = getS
                         className="public-search-result"
                         onClick={handleClose}
                       >
-                        <div className="public-search-result-media">
+                        <div className="snippet-cover-frame public-search-result-media">
                           <img
                             src={resolveAssetUrl(snippet.coverImage)}
                             alt={fields.title}
-                            className="h-full w-full object-cover"
+                            className="snippet-cover-image"
                           />
                         </div>
 

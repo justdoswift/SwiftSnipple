@@ -144,7 +144,6 @@ describe("AdminSnippetEditor", () => {
     );
 
     fireEvent.click(screen.getByRole("tab", { name: "Surface" }));
-
     const file = new File(["cover"], "cover.png", { type: "image/png" });
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement | null;
     expect(fileInput).not.toBeNull();
@@ -159,6 +158,7 @@ describe("AdminSnippetEditor", () => {
       expect(screen.getByAltText("Untitled Snippet")).toHaveAttribute("src", "blob:cover-preview");
     });
 
+    expect(document.querySelector(".admin-cover-upload-preview")).toHaveClass("snippet-cover-frame");
     expect(screen.queryByText("/api/uploads/cover-test.webp")).not.toBeInTheDocument();
     expect(URL.createObjectURL).toHaveBeenCalledWith(file);
     expect(URL.revokeObjectURL).not.toHaveBeenCalled();

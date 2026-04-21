@@ -60,6 +60,9 @@ describe("Home", () => {
       expect(screen.getByTestId("home-lead-card")).toHaveTextContent("Newest Entry");
     });
 
+    expect(screen.getByTestId("home-lead-card")).toHaveAttribute("href", "/snippets/newest-entry");
+    expect(screen.getByTestId("home-lead-card-media").querySelector(".snippet-cover-frame")).not.toBeNull();
+
     expect(screen.getByTestId("home-grid")).toHaveTextContent("Glass Navigation");
     expect(screen.queryByText("Draft Entry")).not.toBeInTheDocument();
   });

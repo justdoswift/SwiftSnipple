@@ -39,11 +39,11 @@ export default function SnippetGridCard({ snippet }: SnippetGridCardProps) {
         transition={{ type: "spring", stiffness: 280, damping: 24 }}
       >
         <Card className="public-home-grid-card-shell public-surface-subtle overflow-hidden">
-          <div className="public-home-grid-card-media aspect-[1.18/1] overflow-hidden">
+          <div className="snippet-cover-frame public-home-grid-card-media overflow-hidden">
             <img
               src={resolveAssetUrl(snippet.coverImage)}
               alt={fields.title}
-              className="h-full w-full object-cover transition-all duration-500 group-hover:scale-[1.04] group-hover:brightness-105"
+              className="snippet-cover-image transition-all duration-500 group-hover:scale-[1.02] group-hover:brightness-105"
               referrerPolicy="no-referrer"
             />
           </div>

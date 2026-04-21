@@ -1847,11 +1847,11 @@ export default function AdminSnippetEditor() {
                         <span className="admin-eyebrow type-mono-micro">{copy.coverImage}</span>
                         <div className="admin-cover-upload-shell grid gap-4">
                           {form.coverImage || localCoverPreviewUrl ? (
-                            <div className="admin-cover-upload-preview aspect-[16/10] overflow-hidden">
+                            <div className="snippet-cover-frame admin-cover-upload-preview overflow-hidden">
                               <img
                                 src={localCoverPreviewUrl || resolveAssetUrl(form.coverImage)}
                                 alt={localizedForm.title || copy.untitledSnippet}
-                                className="h-full w-full object-cover"
+                                className="snippet-cover-image"
                               />
                             </div>
                           ) : null}

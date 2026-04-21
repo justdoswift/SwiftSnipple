@@ -460,7 +460,7 @@ export default function SnippetDetail() {
 
       <section className="mb-20 px-4 md:mb-24 md:px-0">
         <div className="public-content-frame vibe-glass mx-auto max-w-[1120px] p-2">
-          <div className="public-media-shell aspect-[16/9] overflow-hidden">
+          <div className="snippet-cover-frame public-media-shell overflow-hidden">
             {isCoverImageBroken ? (
               <div className="flex h-full w-full items-center justify-center bg-[rgba(255,255,255,0.02)] text-center">
                 <div className="max-w-[32ch] px-6 py-8">
@@ -476,7 +476,7 @@ export default function SnippetDetail() {
               <img
                 src={resolveAssetUrl(snippet.coverImage)}
                 alt={localizedFields?.title}
-                className="h-full w-full object-cover"
+                className="snippet-cover-image"
                 referrerPolicy="no-referrer"
                 onError={() => setIsCoverImageBroken(true)}
               />

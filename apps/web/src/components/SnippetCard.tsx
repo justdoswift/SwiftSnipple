@@ -35,11 +35,11 @@ export default function SnippetCard({ snippet }: SnippetCardProps) {
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
       >
         <Card className="public-surface overflow-hidden">
-          <div className="relative aspect-[16/10] overflow-hidden">
+          <div className="snippet-cover-frame relative overflow-hidden">
             <img
               src={resolveAssetUrl(snippet.coverImage)}
               alt={fields.title}
-              className="h-full w-full object-cover transition-all duration-700 group-hover:scale-[1.05] group-hover:brightness-110"
+              className="snippet-cover-image transition-all duration-700 group-hover:scale-[1.02] group-hover:brightness-110"
               referrerPolicy="no-referrer"
             />
             <div className="public-snippet-card-overlay absolute inset-0 opacity-60" />

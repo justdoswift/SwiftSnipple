@@ -24,11 +24,11 @@ export default function SnippetMiniCard({ snippet }: SnippetMiniCardProps) {
         transition={{ type: "spring", stiffness: 400, damping: 22 }}
       >
           <Card className="public-snippet-mini-card-shell vibe-glass overflow-hidden transition-colors">
-          <div className="public-snippet-mini-card-media aspect-square overflow-hidden">
+          <div className="snippet-cover-frame public-snippet-mini-card-media overflow-hidden">
             <img
               src={resolveAssetUrl(snippet.coverImage)}
               alt={fields.title}
-              className="h-full w-full object-cover opacity-80 transition-all duration-500 group-hover:scale-[1.05] group-hover:opacity-100 group-hover:brightness-110"
+              className="snippet-cover-image opacity-80 transition-all duration-500 group-hover:scale-[1.02] group-hover:opacity-100 group-hover:brightness-110"
               referrerPolicy="no-referrer"
             />
           </div>

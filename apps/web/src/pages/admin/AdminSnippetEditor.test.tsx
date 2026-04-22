@@ -31,21 +31,6 @@ const mockedUploadContentImageFromURL = vi.mocked(uploadContentImageFromURL);
 const mockedUploadContentVideo = vi.mocked(uploadContentVideo);
 const mockedUploadCoverImage = vi.mocked(uploadCoverImage);
 
-class MockLoadedImage {
-  height = 900;
-  naturalHeight = 900;
-  naturalWidth = 1600;
-  onerror: null | (() => void) = null;
-  onload: null | (() => void) = null;
-  width = 1600;
-
-  set src(_value: string) {
-    queueMicrotask(() => {
-      this.onload?.();
-    });
-  }
-}
-
 const adminAuthSession: AdminAuthSession = {
   email: "creator@example.com",
   provider: "email",
@@ -145,19 +130,8 @@ describe("AdminSnippetEditor", () => {
     mockedUploadCoverImage.mockResolvedValue({ url: "/api/uploads/cover-test.webp" });
     const originalCreateObjectURL = URL.createObjectURL;
     const originalRevokeObjectURL = URL.revokeObjectURL;
-    const originalImage = window.Image;
-    const originalGetContext = HTMLCanvasElement.prototype.getContext;
-    const originalToBlob = HTMLCanvasElement.prototype.toBlob;
     URL.createObjectURL = vi.fn(() => "blob:cover-preview");
     URL.revokeObjectURL = vi.fn();
-    Object.defineProperty(window, "Image", { configurable: true, writable: true, value: MockLoadedImage });
-    HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
-      clearRect: vi.fn(),
-      drawImage: vi.fn(),
-    })) as unknown as typeof HTMLCanvasElement.prototype.getContext;
-    HTMLCanvasElement.prototype.toBlob = vi.fn((callback: BlobCallback, type?: string) => {
-      callback(new Blob(["cropped"], { type: type ?? "image/webp" }));
-    });
 
     render(
       <MemoryRouter initialEntries={["/admin/snippets/new"]}>
@@ -176,14 +150,9 @@ describe("AdminSnippetEditor", () => {
 
     fireEvent.change(fileInput!, { target: { files: [file] } });
 
-    expect(mockedUploadCoverImage).not.toHaveBeenCalled();
-    expect(await screen.findByRole("heading", { name: "Crop cover image" })).toBeInTheDocument();
-    expect(await screen.findByTestId("cover-crop-image")).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "Crop and upload" }));
-
     await waitFor(() => {
       expect(mockedUploadCoverImage).toHaveBeenCalledTimes(1);
+      expect(mockedUploadCoverImage).toHaveBeenCalledWith(file);
     });
 
     await waitFor(() => {
@@ -197,22 +166,13 @@ describe("AdminSnippetEditor", () => {
 
     URL.createObjectURL = originalCreateObjectURL;
     URL.revokeObjectURL = originalRevokeObjectURL;
-    Object.defineProperty(window, "Image", { configurable: true, writable: true, value: originalImage });
-    HTMLCanvasElement.prototype.getContext = originalGetContext;
-    HTMLCanvasElement.prototype.toBlob = originalToBlob;
   });
 
-  it("cancels cover cropping without uploading", async () => {
+  it("shows an error and skips upload for invalid cover files", async () => {
     mockedGetSnippetById.mockReset();
     mockedCreateSnippet.mockReset();
     mockedPublishSnippet.mockReset();
     mockedUploadCoverImage.mockReset();
-    const originalCreateObjectURL = URL.createObjectURL;
-    const originalRevokeObjectURL = URL.revokeObjectURL;
-    const originalImage = window.Image;
-    URL.createObjectURL = vi.fn(() => "blob:cover-preview");
-    URL.revokeObjectURL = vi.fn();
-    Object.defineProperty(window, "Image", { configurable: true, writable: true, value: MockLoadedImage });
 
     render(
       <MemoryRouter initialEntries={["/admin/snippets/new"]}>
@@ -225,29 +185,14 @@ describe("AdminSnippetEditor", () => {
     );
 
     fireEvent.click(screen.getByRole("tab", { name: "Surface" }));
-
-    const file = new File(["cover"], "cover.png", { type: "image/png" });
+    const file = new File(["cover"], "cover.txt", { type: "text/plain" });
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement | null;
     expect(fileInput).not.toBeNull();
 
     fireEvent.change(fileInput!, { target: { files: [file] } });
 
-    expect(await screen.findByRole("heading", { name: "Crop cover image" })).toBeInTheDocument();
-    expect(await screen.findByTestId("cover-crop-image")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
-
-    await waitFor(() => {
-      expect(screen.queryByRole("heading", { name: "Crop cover image" })).not.toBeInTheDocument();
-    });
+    expect(await screen.findByText("Choose a valid image file before uploading.")).toBeInTheDocument();
     expect(mockedUploadCoverImage).not.toHaveBeenCalled();
-    expect(screen.getByAltText("Untitled Snippet")).toHaveAttribute(
-      "src",
-      "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=80",
-    );
-
-    URL.createObjectURL = originalCreateObjectURL;
-    URL.revokeObjectURL = originalRevokeObjectURL;
-    Object.defineProperty(window, "Image", { configurable: true, writable: true, value: originalImage });
   });
 
   it("formats markdown content and inserts uploaded media", async () => {
@@ -749,7 +694,7 @@ describe("AdminSnippetEditor", () => {
     expect(notes.selectionEnd).toBe(expectedCaret);
   });
 
-  it("returns to the snippet library from the editor header back button", () => {
+  it("returns to the admin library route from the editor header back button", async () => {
     mockedGetSnippetById.mockReset();
     mockedCreateSnippet.mockReset();
     mockedPublishSnippet.mockReset();
@@ -758,7 +703,7 @@ describe("AdminSnippetEditor", () => {
       <MemoryRouter initialEntries={["/admin/snippets/new"]}>
         <Routes>
           <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
-            <Route path="snippets" element={<div>snippet library route</div>} />
+            <Route index element={<div>snippet library route</div>} />
             <Route path="snippets/new" element={<AdminSnippetEditor />} />
           </Route>
         </Routes>
@@ -767,7 +712,7 @@ describe("AdminSnippetEditor", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Back to snippets" }));
 
-    expect(screen.getByText("snippet library route")).toBeInTheDocument();
+    expect(await screen.findByText("snippet library route")).toBeInTheDocument();
   });
 
   it("uses the shared HeroUI dropdown classes for the editor status menu", async () => {

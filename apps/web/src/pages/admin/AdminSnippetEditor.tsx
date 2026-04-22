@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Dropdown, Input, Modal, TextArea, Tooltip, useOverlayState } from "../../lib/heroui";
 import { useNavigate, useParams } from "react-router-dom";
 import EditorSection from "../../components/admin/EditorSection";
-import AdminCoverCropModal from "../../components/admin/AdminCoverCropModal";
 import HighlightedCodeEditor from "../../components/admin/HighlightedCodeEditor";
 import MarkdownMediaModal from "../../components/admin/MarkdownMediaModal";
 import MarkdownToolbar from "../../components/admin/MarkdownToolbar";
@@ -636,8 +635,6 @@ export default function AdminSnippetEditor() {
   const [isUploadingCoverImage, setIsUploadingCoverImage] = useState(false);
   const [isUploadingContentMedia, setIsUploadingContentMedia] = useState(false);
   const [localCoverPreviewUrl, setLocalCoverPreviewUrl] = useState("");
-  const [pendingCoverCrop, setPendingCoverCrop] = useState<{ file: File; objectUrl: string } | null>(null);
-  const [coverCropError, setCoverCropError] = useState("");
   const [error, setError] = useState("");
   const [contentMediaError, setContentMediaError] = useState("");
   const [feedback, setFeedback] = useState("");
@@ -671,21 +668,6 @@ export default function AdminSnippetEditor() {
     isOpen: isDeleteConfirmOpen,
     onOpenChange: setIsDeleteConfirmOpen,
   });
-
-  const clearPendingCoverCrop = useCallback(() => {
-    setPendingCoverCrop((currentPendingCrop) => {
-      if (
-        currentPendingCrop?.objectUrl &&
-        typeof URL !== "undefined" &&
-        typeof URL.revokeObjectURL === "function"
-      ) {
-        URL.revokeObjectURL(currentPendingCrop.objectUrl);
-      }
-
-      return null;
-    });
-    setCoverCropError("");
-  }, []);
 
   useEffect(() => {
     formRef.current = form;
@@ -1309,37 +1291,8 @@ export default function AdminSnippetEditor() {
     try {
       setError("");
       setFeedback("");
-      setCoverCropError("");
-      setPendingCoverCrop((currentPendingCrop) => {
-        if (
-          currentPendingCrop?.objectUrl &&
-          typeof URL !== "undefined" &&
-          typeof URL.revokeObjectURL === "function"
-        ) {
-          URL.revokeObjectURL(currentPendingCrop.objectUrl);
-        }
-
-        return {
-          file,
-          objectUrl: nextPreviewUrl,
-        };
-      });
-    } catch {
-      setError(copy.invalidCoverImage);
-    }
-  }, [copy.invalidCoverImage]);
-
-  const handleCoverCropConfirm = useCallback(async (croppedFile: File) => {
-    const nextPreviewUrl = typeof URL !== "undefined" && typeof URL.createObjectURL === "function"
-      ? URL.createObjectURL(croppedFile)
-      : "";
-
-    try {
-      setError("");
-      setFeedback("");
-      setCoverCropError("");
       setIsUploadingCoverImage(true);
-      const result = await uploadCoverImage(croppedFile);
+      const result = await uploadCoverImage(file);
       setLocalCoverPreviewUrl((currentPreviewUrl) => {
         if (currentPreviewUrl && typeof URL !== "undefined" && typeof URL.revokeObjectURL === "function") {
           URL.revokeObjectURL(currentPreviewUrl);
@@ -1347,7 +1300,6 @@ export default function AdminSnippetEditor() {
         return nextPreviewUrl;
       });
       updateField("coverImage", result.url);
-      clearPendingCoverCrop();
     } catch (err) {
       if (nextPreviewUrl && typeof URL !== "undefined" && typeof URL.revokeObjectURL === "function") {
         URL.revokeObjectURL(nextPreviewUrl);
@@ -1359,12 +1311,10 @@ export default function AdminSnippetEditor() {
 
       const nextError = err instanceof Error ? err.message : copy.failedCoverImageUpload;
       setError(nextError);
-      setCoverCropError(nextError);
-      throw err;
     } finally {
       setIsUploadingCoverImage(false);
     }
-  }, [clearPendingCoverCrop, copy.failedCoverImageUpload, redirectToAdminLogin]);
+  }, [copy.failedCoverImageUpload, copy.invalidCoverImage, redirectToAdminLogin]);
 
   const handleContentTextareaChange = useCallback((event: React.ChangeEvent<HTMLTextAreaElement>) => {
     const previousValue = contentValueRef.current;
@@ -1577,18 +1527,6 @@ export default function AdminSnippetEditor() {
       }
     };
   }, [localCoverPreviewUrl]);
-
-  useEffect(() => {
-    return () => {
-      if (
-        pendingCoverCrop?.objectUrl &&
-        typeof URL !== "undefined" &&
-        typeof URL.revokeObjectURL === "function"
-      ) {
-        URL.revokeObjectURL(pendingCoverCrop.objectUrl);
-      }
-    };
-  }, [pendingCoverCrop]);
 
   const handlePreview = useCallback(() => {
     if (!hasSavedPreview || !previewPath) {
@@ -2214,27 +2152,6 @@ export default function AdminSnippetEditor() {
         }}
         onClose={() => setContentMediaModal(null)}
         onSubmit={handleContentMediaInsert}
-      />
-
-      <AdminCoverCropModal
-        isOpen={pendingCoverCrop !== null}
-        source={pendingCoverCrop}
-        error={coverCropError}
-        isSubmitting={isUploadingCoverImage}
-        copy={{
-          eyebrow: copy.coverImage,
-          title: copy.coverCropTitle,
-          description: copy.coverCropCopy,
-          zoom: copy.coverCropZoom,
-          reset: copy.coverCropReset,
-          confirm: copy.coverCropConfirm,
-          loading: copy.coverCropLoading,
-          dragHint: copy.coverCropDragHint,
-          cancel: common.cancel,
-          exportFailed: copy.coverCropExportFailed,
-        }}
-        onClose={clearPendingCoverCrop}
-        onConfirm={handleCoverCropConfirm}
       />
 
       <Modal state={deleteConfirmState}>

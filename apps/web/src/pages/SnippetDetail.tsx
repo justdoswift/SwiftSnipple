@@ -245,7 +245,7 @@ export default function SnippetDetail() {
         number: "01",
         label: copy.implementationNotes,
         content: (
-          <div className="public-content-panel px-6 py-6 md:px-8 md:py-8">
+          <div className="public-snippet-notes-panel px-6 py-6 md:px-8 md:py-8">
             <MarkdownRenderer content={localizedFields?.content ?? ""} />
           </div>
         ),

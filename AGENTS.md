@@ -119,7 +119,9 @@ How to deploy by change type:
   run `make deploy-api`
 - frontend-only React/Vite changes:
   run `make deploy-web`
-  after deploy, ensure `justdoswift.com` points to the latest production deployment if the root alias did not move automatically
+  after deploy, do not assume the root domain moved automatically
+  explicitly verify that `justdoswift.com` points to the newest Vercel production deployment
+  if it still points to an older deployment, immediately update the root alias to the latest deployment before considering the deploy complete
 - changes affecting both frontend and backend:
   run `make deploy`
 
@@ -139,7 +141,7 @@ Important gotchas learned from production setup:
 - if frontend shows CORS errors, confirm `API_BASE_URL` is still `https://justdoswift.com` for production and that `apps/web/vercel.json` rewrites are present
 - if `/admin` or any client route returns 404 on Vercel, confirm the SPA fallback rewrite in `apps/web/vercel.json`
 - if API changes are deployed, the frontend may still need redeploying when rewrite or env behavior changed
-- Vercel domain aliases can lag behind the newest production deployment; if needed, update the root alias to the latest deployment explicitly
+- after every `make deploy-web`, check the current alias state instead of trusting the deploy output alone; `justdoswift-web.vercel.app` updating is not enough unless `justdoswift.com` also points to that same latest deployment
 - `api.justdoswift.com` custom-domain work is not the primary production path right now; avoid switching browser traffic back to it unless the domain mapping and DNS behavior have been fully re-verified
 
 ## Default Assumption

@@ -34,6 +34,7 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const AccountPage = lazy(() => import("./pages/AccountPage"));
+const PricingPage = lazy(() => import("./pages/PricingPage"));
 const AdminLoginPage = lazy(() => import("./pages/admin/AdminLoginPage"));
 const AdminMembers = lazy(() => import("./pages/admin/AdminMembers"));
 const AdminSnippets = lazy(() => import("./pages/admin/AdminSnippets"));
@@ -316,6 +317,14 @@ export default function App() {
                   showFooter={false}
                 >
                   <LoginPage authSession={authSession} onAuthenticate={handleAuthenticate} />
+                </PublicShell>
+              }
+            />
+            <Route
+              path="/pricing"
+              element={
+                <PublicShell theme={theme} onToggleTheme={toggleTheme} authSession={authSession}>
+                  <PricingPage authSession={authSession} />
                 </PublicShell>
               }
             />

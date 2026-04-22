@@ -44,9 +44,10 @@ export function logoutMember() {
   });
 }
 
-export function createCheckoutSession() {
+export function createCheckoutSession(priceId?: string) {
   return request<SessionURLResponse>(`${API_BASE}/api/member/checkout`, {
     method: "POST",
+    body: priceId ? JSON.stringify({ price_id: priceId }) : undefined,
   });
 }
 

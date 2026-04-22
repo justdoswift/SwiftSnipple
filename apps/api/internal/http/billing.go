@@ -51,7 +51,7 @@ type BillingWebhookEvent struct {
 }
 
 type billingProvider interface {
-	CreateCheckoutSession(ctx context.Context, params CheckoutSessionParams) (string, error)
+	CreateCheckoutSession(ctx context.Context, params CheckoutSessionParams, priceID string) (string, error)
 	CreateBillingPortalSession(ctx context.Context, customerID string) (string, error)
 	GetSubscriptionState(ctx context.Context, subscriptionID string) (BillingSubscriptionState, error)
 	ParseWebhook(payload []byte, signatureHeader string) (BillingWebhookEvent, error)
@@ -77,8 +77,13 @@ func NewStripeBillingProvider(cfg BillingConfig) billingProvider {
 	}
 }
 
-func (p stripeBillingProvider) CreateCheckoutSession(_ context.Context, params CheckoutSessionParams) (string, error) {
+func (p stripeBillingProvider) CreateCheckoutSession(_ context.Context, params CheckoutSessionParams, priceID string) (string, error) {
 	stripe.Key = p.secretKey
+
+	effectivePriceID := priceID
+	if effectivePriceID == "" {
+		effectivePriceID = p.priceID
+	}
 
 	sessionParams := &stripe.CheckoutSessionParams{
 		AllowPromotionCodes: stripe.Bool(true),
@@ -87,7 +92,7 @@ func (p stripeBillingProvider) CreateCheckoutSession(_ context.Context, params C
 		CustomerEmail:       stripe.String(params.Email),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
-				Price:    stripe.String(p.priceID),
+				Price:    stripe.String(effectivePriceID),
 				Quantity: stripe.Int64(1),
 			},
 		},

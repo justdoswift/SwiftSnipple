@@ -103,11 +103,14 @@ describe("Navbar", () => {
     const searchButton = screen.getByRole("button", { name: "Search snippets" });
     const themeButton = screen.getByRole("button", { name: "Switch to light site mode" });
     const localeButton = screen.getByRole("button", { name: "Select language" });
+    const pricingLink = screen.getByRole("link", { name: "Pricing" });
     const authLink = screen.getByRole("link", { name: "Log in" });
 
     expect(searchButton).toHaveClass("public-nav-icon-button");
     expect(themeButton).toHaveClass("public-nav-icon-button");
     expect(localeButton).toHaveClass("public-nav-icon-button", "public-nav-locale-trigger");
+    expect(pricingLink).toHaveAttribute("href", "/pricing");
+    expect(pricingLink).toHaveClass("public-nav-icon-button");
     expect(authLink).toHaveAttribute("href", "/login");
     expect(authLink).toHaveClass("public-nav-icon-button", "public-nav-auth-button");
     expect(screen.queryByText("English")).not.toBeInTheDocument();
@@ -122,6 +125,11 @@ describe("Navbar", () => {
     fireEvent.focus(themeButton);
     expect(screen.getByText("Switch to light site mode")).toBeInTheDocument();
     fireEvent.mouseLeave(themeButton);
+
+    fireEvent.pointerEnter(pricingLink);
+    fireEvent.mouseEnter(pricingLink);
+    fireEvent.focus(pricingLink);
+    expect(screen.getByText("Pricing")).toBeInTheDocument();
 
     fireEvent.click(localeButton);
     const menu = screen.getByRole("menu");

@@ -1,4 +1,4 @@
-import { Languages, LogIn, Moon, Search, Sun, User } from "lucide-react";
+import { Gem, Languages, LogIn, Moon, Search, Sun, User } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { getMessages } from "../lib/messages";
@@ -20,6 +20,7 @@ export default function Navbar({ theme, onToggleTheme, authSession }: NavbarProp
   const themeToggleLabel = theme === "dark" ? copy.nav.switchToLightMode : copy.nav.switchToDarkMode;
   const authLabel = authSession ? copy.nav.account : copy.nav.login;
   const authHref = authSession ? localizePublicPath("/account") : localizePublicPath("/login");
+  const pricingHref = localizePublicPath("/pricing");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   return (
@@ -101,6 +102,21 @@ export default function Navbar({ theme, onToggleTheme, authSession }: NavbarProp
               </Dropdown.Popover>
             </Dropdown>
           </div>
+
+          <Tooltip delay={0} closeDelay={0}>
+            <Tooltip.Trigger>
+              <Link
+                to={pricingHref}
+                aria-label={copy.nav.pricing}
+                className="public-nav-icon-button type-action"
+              >
+                <Gem size={18} strokeWidth={2} aria-hidden="true" />
+              </Link>
+            </Tooltip.Trigger>
+            <Tooltip.Content>
+              {copy.nav.pricing}
+            </Tooltip.Content>
+          </Tooltip>
 
           <Tooltip delay={0} closeDelay={0}>
             <Tooltip.Trigger>

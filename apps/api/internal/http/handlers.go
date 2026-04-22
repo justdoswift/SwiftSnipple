@@ -564,11 +564,24 @@ func (h *Handler) MemberSession(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, memberSessionResponse(user, subscription))
 }
 
+type createCheckoutSessionRequest struct {
+	PriceID string `json:"price_id"`
+}
+
 func (h *Handler) CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 	session, ok := memberSessionFromContext(r.Context())
 	if !ok {
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
 		return
+	}
+
+	var payload createCheckoutSessionRequest
+	if r.ContentLength > 0 {
+		decoder := json.NewDecoder(r.Body)
+		if err := decoder.Decode(&payload); err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json payload"})
+			return
+		}
 	}
 
 	user, err := h.members.GetUserByID(r.Context(), session.UserID)
@@ -596,7 +609,7 @@ func (h *Handler) CreateCheckoutSession(w http.ResponseWriter, r *http.Request) 
 		UserID:     user.ID,
 		Email:      user.Email,
 		CustomerID: customerID,
-	})
+	}, payload.PriceID)
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to create checkout session"})
 		return

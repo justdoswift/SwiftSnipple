@@ -50,12 +50,13 @@ describe("PricingPage", () => {
 
     expect(screen.getByRole("heading", { name: "Choose the plan that fits your native SwiftUI workflow." })).toBeInTheDocument();
     expect(screen.getByText("$10")).toBeInTheDocument();
+    expect(screen.getByText("$100")).toBeInTheDocument();
     expect(screen.getByText("per month")).toBeInTheDocument();
-    expect(screen.getAllByText("Founding").length).toBeGreaterThan(0);
-    expect(screen.getByText("$300")).toBeInTheDocument();
+    expect(screen.getByText("Yearly")).toBeInTheDocument();
+    expect(screen.queryByText("Founding")).not.toBeInTheDocument();
     expect(screen.queryByText("Enterprise")).not.toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: "Log in to subscribe" })).toHaveLength(3);
-    expect(screen.getByText("All plans unlock the full library. Annual and Founding simply give you different commitment levels.")).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Log in to subscribe" })).toHaveLength(2);
+    expect(screen.getByText("Both plans unlock the full library. Yearly is for builders who already know they want to stay close to the archive.")).toBeInTheDocument();
   });
 
   it("renders localized copy in chinese", () => {
@@ -63,17 +64,18 @@ describe("PricingPage", () => {
 
     expect(screen.getByRole("heading", { name: "选择适合您 SwiftUI 工作流的方案。" })).toBeInTheDocument();
     expect(screen.getByText("每月")).toBeInTheDocument();
-    expect(screen.getByText("Founding 方案")).toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: "登录后订阅" })).toHaveLength(3);
+    expect(screen.getByText("年付方案")).toBeInTheDocument();
+    expect(screen.queryByText("Founding 方案")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "登录后订阅" })).toHaveLength(2);
   });
 
   it("starts checkout for an authenticated member without a billing portal", async () => {
     renderPricingPage({ authSession: createMemberSession() });
 
-    fireEvent.click(screen.getAllByRole("button", { name: "Choose plan" })[2]);
+    fireEvent.click(screen.getAllByRole("button", { name: "Choose plan" })[1]);
 
     await waitFor(() => {
-      expect(mockedCreateCheckoutSession).toHaveBeenCalledWith("price_founding_default");
+      expect(mockedCreateCheckoutSession).toHaveBeenCalledWith("price_1TOuyqJztnwbPNQuktziCIfy");
       expect(assignSpy).toHaveBeenCalledWith("https://stripe.test/checkout");
     });
   });
@@ -87,7 +89,7 @@ describe("PricingPage", () => {
       }),
     });
 
-    expect(screen.getAllByRole("link", { name: "Open member center" })).toHaveLength(3);
+    expect(screen.getAllByRole("link", { name: "Open member center" })).toHaveLength(2);
     expect(screen.getAllByRole("link", { name: "Open member center" })[0]).toHaveAttribute("href", "/account");
   });
 });

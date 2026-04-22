@@ -115,10 +115,6 @@ export default function AdminMembersContent({ members, isLoading, error }: Admin
           <div className="admin-section-card admin-list-divider border border-dashed">
             <div className="px-6 py-12 text-center">
               <p className="admin-empty-kicker type-mono-micro">{copy.noMembers}</p>
-              <h2 className="admin-section-title admin-section-title-lg mt-4">{copy.membersEmptyTitle}</h2>
-              <p className="type-body-sm mt-3">
-                {copy.noMembersCopy}
-              </p>
             </div>
           </div>
         ) : null}

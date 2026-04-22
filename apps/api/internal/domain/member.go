@@ -5,15 +5,15 @@ import "time"
 type SubscriptionStatus string
 
 const (
-	SubscriptionStatusInactive           SubscriptionStatus = "inactive"
-	SubscriptionStatusTrialing           SubscriptionStatus = "trialing"
-	SubscriptionStatusActive             SubscriptionStatus = "active"
-	SubscriptionStatusPastDue            SubscriptionStatus = "past_due"
-	SubscriptionStatusCanceled           SubscriptionStatus = "canceled"
-	SubscriptionStatusUnpaid             SubscriptionStatus = "unpaid"
-	SubscriptionStatusIncomplete         SubscriptionStatus = "incomplete"
-	SubscriptionStatusIncompleteExpired  SubscriptionStatus = "incomplete_expired"
-	SubscriptionStatusPaused             SubscriptionStatus = "paused"
+	SubscriptionStatusInactive          SubscriptionStatus = "inactive"
+	SubscriptionStatusTrialing          SubscriptionStatus = "trialing"
+	SubscriptionStatusActive            SubscriptionStatus = "active"
+	SubscriptionStatusPastDue           SubscriptionStatus = "past_due"
+	SubscriptionStatusCanceled          SubscriptionStatus = "canceled"
+	SubscriptionStatusUnpaid            SubscriptionStatus = "unpaid"
+	SubscriptionStatusIncomplete        SubscriptionStatus = "incomplete"
+	SubscriptionStatusIncompleteExpired SubscriptionStatus = "incomplete_expired"
+	SubscriptionStatusPaused            SubscriptionStatus = "paused"
 )
 
 type MemberUser struct {
@@ -44,6 +44,17 @@ type MemberSession struct {
 	CurrentPeriodEnd   *time.Time         `json:"currentPeriodEnd"`
 	CancelAtPeriodEnd  bool               `json:"cancelAtPeriodEnd"`
 	HasBillingPortal   bool               `json:"hasBillingPortal"`
+}
+
+type AdminMember struct {
+	ID                 string             `json:"id"`
+	Email              string             `json:"email"`
+	CreatedAt          time.Time          `json:"createdAt"`
+	UpdatedAt          time.Time          `json:"updatedAt"`
+	SubscriptionStatus SubscriptionStatus `json:"subscriptionStatus"`
+	IsPaid             bool               `json:"isPaid"`
+	CurrentPeriodEnd   *time.Time         `json:"currentPeriodEnd"`
+	CancelAtPeriodEnd  bool               `json:"cancelAtPeriodEnd"`
 }
 
 func NormalizeSubscriptionStatus(status string) SubscriptionStatus {

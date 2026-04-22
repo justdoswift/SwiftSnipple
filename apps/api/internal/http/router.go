@@ -68,6 +68,7 @@ func NewRouter(
 
 			admin.Group(func(protected chi.Router) {
 				protected.Use(handler.requireAdminSession)
+				protected.Get("/members", handler.ListAdminMembers)
 				protected.Get("/snippets", handler.ListAdminSnippets)
 				protected.Get("/snippets/{id}", handler.GetAdminSnippet)
 				protected.Post("/uploads/cover", handler.UploadCoverImage)

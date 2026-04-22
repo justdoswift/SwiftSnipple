@@ -1281,7 +1281,7 @@ export default function AdminSnippetEditor() {
       setError("");
       setIsDeleteConfirmOpen(false);
       await deleteSnippet(baseSnippet.id);
-      navigate(localizeAdminPath(locale, "/admin/snippets"));
+      navigate(localizeAdminPath(locale, "/admin"));
     } catch (err) {
       if (isUnauthorizedError(err)) {
         redirectToAdminLogin();
@@ -1613,7 +1613,7 @@ export default function AdminSnippetEditor() {
             type="button"
             aria-label={copy.backToSnippetLibrary}
             className="admin-editor-back-button"
-            onClick={() => navigate(localizeAdminPath(locale, "/admin/snippets"))}
+            onClick={() => navigate(localizeAdminPath(locale, "/admin"))}
           >
             <ChevronLeft className="h-5 w-5" />
           </button>

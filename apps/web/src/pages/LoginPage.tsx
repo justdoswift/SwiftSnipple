@@ -100,7 +100,7 @@ export default function LoginPage({ authSession, onAuthenticate }: LoginPageProp
       <header className="auth-page-brand-shell public-nav-shell flex w-full items-center justify-between gap-3 px-4 py-3 md:px-6 lg:px-8">
         <Link to={localizePublicPath("/")} className="auth-page-brand public-nav-brand min-w-0" aria-label="Return to Just Do Swift home">
           <span className="public-nav-logo" aria-hidden="true">
-            <img src="/favicon.svg" alt="" className="public-nav-logo-image" />
+            <img src="/logo-mark.svg" alt="" className="public-nav-logo-image" />
           </span>
           <span className="auth-brand-title truncate">
             Just Do Swift

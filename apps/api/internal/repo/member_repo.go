@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -114,6 +116,61 @@ func (r *MemberRepository) GetUserByID(ctx context.Context, id string) (domain.M
 	}
 
 	return user, nil
+}
+
+func (r *MemberRepository) ListAdminMembers(ctx context.Context) ([]domain.AdminMember, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT
+			u.id,
+			u.email,
+			u.created_at,
+			u.updated_at,
+			COALESCE(s.status, 'inactive'),
+			s.current_period_end,
+			COALESCE(s.cancel_at_period_end, FALSE)
+		FROM member_users u
+		LEFT JOIN member_subscriptions s ON s.user_id = u.id
+		ORDER BY u.created_at DESC, u.email ASC
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("list admin members: %w", err)
+	}
+	defer rows.Close()
+
+	members := make([]domain.AdminMember, 0)
+	now := time.Now().UTC()
+
+	for rows.Next() {
+		var member domain.AdminMember
+		if err := rows.Scan(
+			&member.ID,
+			&member.Email,
+			&member.CreatedAt,
+			&member.UpdatedAt,
+			&member.SubscriptionStatus,
+			&member.CurrentPeriodEnd,
+			&member.CancelAtPeriodEnd,
+		); err != nil {
+			return nil, fmt.Errorf("scan admin member: %w", err)
+		}
+
+		member.SubscriptionStatus = domain.NormalizeSubscriptionStatus(string(member.SubscriptionStatus))
+		member.IsPaid = domain.IsEntitledSubscription(member.SubscriptionStatus, member.CurrentPeriodEnd, now)
+		members = append(members, member)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate admin members: %w", err)
+	}
+
+	slices.SortFunc(members, func(a, b domain.AdminMember) int {
+		if cmp := b.CreatedAt.Compare(a.CreatedAt); cmp != 0 {
+			return cmp
+		}
+		return strings.Compare(a.Email, b.Email)
+	})
+
+	return members, nil
 }
 
 func (r *MemberRepository) GetSubscriptionByUserID(ctx context.Context, userID string) (*domain.MemberSubscription, error) {

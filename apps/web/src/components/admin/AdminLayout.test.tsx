@@ -2,9 +2,10 @@ import { Children, cloneElement, isValidElement, useState, type FocusEvent, type
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import AdminDashboard from "../../pages/admin/AdminDashboard";
+import AdminMembers from "../../pages/admin/AdminMembers";
 import AdminSnippetEditor from "../../pages/admin/AdminSnippetEditor";
 import AdminSnippets from "../../pages/admin/AdminSnippets";
+import { getAdminMembers } from "../../services/admin-members";
 import { getAdminSnippets } from "../../services/snippets";
 import AdminLayout from "./AdminLayout";
 import type { AdminAuthSession } from "../../lib/admin-auth";
@@ -93,7 +94,12 @@ vi.mock("../../services/snippets", () => ({
   updateSnippet: vi.fn(),
 }));
 
+vi.mock("../../services/admin-members", () => ({
+  getAdminMembers: vi.fn(),
+}));
+
 const mockedGetAdminSnippets = vi.mocked(getAdminSnippets);
+const mockedGetAdminMembers = vi.mocked(getAdminMembers);
 
 const baseSnippet = createSnippet({
   title: "Prompt Studio",
@@ -123,8 +129,8 @@ function renderAdminRoute(initialEntry: string, onToggleTheme = vi.fn(), theme: 
             path="/admin"
             element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} onToggleTheme={onToggleTheme} />}
           >
-            <Route index element={<AdminDashboard />} />
-            <Route path="snippets" element={<AdminSnippets />} />
+            <Route index element={<AdminSnippets />} />
+            <Route path="members" element={<AdminMembers />} />
             <Route path="snippets/new" element={<AdminSnippetEditor />} />
           </Route>
         </Routes>
@@ -136,7 +142,9 @@ function renderAdminRoute(initialEntry: string, onToggleTheme = vi.fn(), theme: 
 describe("AdminLayout", () => {
   beforeEach(() => {
     mockedGetAdminSnippets.mockReset();
+    mockedGetAdminMembers.mockReset();
     mockedGetAdminSnippets.mockResolvedValue([baseSnippet]);
+    mockedGetAdminMembers.mockResolvedValue([]);
   });
 
   it("forces auto scroll behavior while the admin layout is mounted and restores it on unmount", async () => {
@@ -157,7 +165,7 @@ describe("AdminLayout", () => {
     document.documentElement.style.scrollBehavior = previousScrollBehavior;
   });
 
-  it("shows the unified dashboard command bar", async () => {
+  it("shows the library command bar on the admin home route", async () => {
     renderAdminRoute("/admin");
 
     await waitFor(() => {
@@ -228,7 +236,7 @@ describe("AdminLayout", () => {
     expect(await screen.findByText("Log out")).toBeInTheDocument();
     fireEvent.mouseLeave(logOutButton);
 
-    expect(screen.queryByRole("navigation", { name: "Admin sections" })).not.toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Admin sections" })).toBeInTheDocument();
     expect(screen.queryByText("Ship SwiftUI snippets with the same care you use to build them.")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Search title or slug")).toBeInTheDocument();
     expect(screen.getByText("Prompt Studio")).toBeInTheDocument();
@@ -238,8 +246,8 @@ describe("AdminLayout", () => {
     expect(screen.queryByText("Status Mix")).not.toBeInTheDocument();
     expect(screen.queryByText("Next Up")).not.toBeInTheDocument();
     expect(screen.queryByText("Scheduled Release")).not.toBeInTheDocument();
-    expect(screen.getByTestId("admin-content-shell")).not.toHaveClass("md:pl-24");
-    expect(screen.getByTestId("admin-content-shell")).not.toHaveClass("xl:pl-28");
+    expect(screen.getByTestId("admin-content-shell")).toHaveClass("md:pl-24");
+    expect(screen.getByTestId("admin-content-shell")).toHaveClass("xl:pl-28");
     expect(screen.getByTestId("admin-page-width-shell")).not.toHaveClass("admin-editor-shell-width");
   });
 
@@ -256,33 +264,25 @@ describe("AdminLayout", () => {
     expect(screen.getByText("The library will populate as soon as the first snippet is created.")).toBeInTheDocument();
   });
 
-  it("shows the unified snippets command bar", async () => {
-    renderAdminRoute("/admin/snippets");
+  it("shows the members workspace with sidebar navigation", async () => {
+    renderAdminRoute("/admin/members");
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Snippet Library" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Members" })).toBeInTheDocument();
     });
 
-    const header = screen.getByTestId("admin-navbar-shell").closest("header");
-
-    expect(header).not.toBeNull();
-    expect(within(header!).getByRole("link", { name: "New" })).toHaveAttribute("href", "/admin/snippets/new");
-    expect(within(header!).getByRole("link", { name: "New" })).toHaveClass("admin-nav-action-icon");
-    expect(within(header!).getByRole("button", { name: "Switch to light site mode" })).toHaveClass("admin-nav-action-icon");
-    expect(within(header!).getByRole("button", { name: "Log out" })).toHaveClass("admin-nav-action-icon");
-    expect(within(header!).getByRole("button", { name: "Select language" })).toHaveClass("admin-nav-action-icon");
-    expect(within(header!).getByRole("link", { name: /View Front Site/i })).toHaveClass("admin-nav-action-icon");
-    expect(within(header!).queryByText("New")).not.toBeInTheDocument();
-    expect(within(header!).queryByText("Log out")).not.toBeInTheDocument();
-    expect(within(header!).queryByText("English")).not.toBeInTheDocument();
-    expect(within(header!).queryByText("中文")).not.toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Admin sections" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /overview/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /snippets/i })).toBeInTheDocument();
-    expect(screen.getByTestId("admin-content-shell")).toHaveClass("md:pl-24");
-    expect(screen.getByTestId("admin-content-shell")).toHaveClass("xl:pl-28");
-    expect(screen.getByTestId("admin-page-width-shell")).not.toHaveClass("admin-editor-shell-width");
-    expect(screen.getByLabelText("Search title or slug")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /members/i })).toHaveAttribute("href", "/admin/members");
+    expect(screen.getByLabelText("Search member email")).toBeInTheDocument();
+  });
+
+  it("does not expose a snippets list route anymore", () => {
+    renderAdminRoute("/admin/snippets");
+
+    expect(screen.queryByRole("navigation", { name: "Admin sections" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Search title or slug")).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Snippet Library" })).not.toBeInTheDocument();
+    expect(screen.queryByTestId("admin-theme-root")).not.toBeInTheDocument();
   });
 
   it("shows the unified editor command bar", async () => {

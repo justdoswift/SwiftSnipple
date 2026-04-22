@@ -1,0 +1,37 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="64" height="64" rx="18" fill="#090909"/>
+  <g filter="url(#shadow)">
+    <rect x="16.5" y="15.5" width="20" height="28" rx="5.75" transform="rotate(8 16.5 15.5)" fill="url(#rearCard)"/>
+    <rect x="25.5" y="21.25" width="22" height="28" rx="6.5" transform="rotate(-7 25.5 21.25)" fill="url(#frontCard)"/>
+    <path d="M17.75 40.75C24.75 41.1 29.25 38.9 33.5 33.75C37.9 28.45 42.4 26 50.75 27C46.2 26.15 41.5 26.45 37.7 28.1C34.05 29.7 31.45 32.6 29.15 35.05C26.2 38.25 23 40.15 17.75 40.75Z" fill="url(#swooshDark)"/>
+    <path d="M15 43.4C23 44.05 28.85 42.2 33.75 36.85C39.05 31.1 44.2 28.95 53 30.1C47.95 28.95 42.5 29.25 38.15 31.15C34.05 32.95 31.1 36.05 28.45 38.8C25.05 42.35 21.4 44.15 15 43.4Z" fill="url(#swooshLight)"/>
+  </g>
+  <defs>
+    <filter id="shadow" x="10.5" y="11.5" width="45.5" height="36.9" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="1"/>
+      <feGaussianBlur stdDeviation="1.2"/>
+      <feComposite in2="hardAlpha" operator="out"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.4 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1_1"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1_1" result="shape"/>
+    </filter>
+    <linearGradient id="rearCard" x1="26.5" y1="15.5" x2="26.5" y2="43.5" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8B8B8B"/>
+      <stop offset="1" stop-color="#4B4B4B"/>
+    </linearGradient>
+    <linearGradient id="frontCard" x1="36.5" y1="21.25" x2="36.5" y2="49.25" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F2F2F2"/>
+      <stop offset="1" stop-color="#BDBDBD"/>
+    </linearGradient>
+    <linearGradient id="swooshDark" x1="17.75" y1="33.3" x2="50.75" y2="33.3" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4B4B4B"/>
+      <stop offset="1" stop-color="#6B6B6B"/>
+    </linearGradient>
+    <linearGradient id="swooshLight" x1="15" y1="36.45" x2="53" y2="36.45" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F4F4F4"/>
+      <stop offset="1" stop-color="#BFBFBF"/>
+    </linearGradient>
+  </defs>
+</svg>

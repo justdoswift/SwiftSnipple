@@ -93,6 +93,17 @@ export interface MemberSession {
   hasBillingPortal: boolean;
 }
 
+export interface AdminMember {
+  id: string;
+  email: string;
+  createdAt: string;
+  updatedAt: string;
+  subscriptionStatus: SubscriptionStatus;
+  isPaid: boolean;
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
+}
+
 export type ArticleStatus = SnippetStatus;
 export type Article = Snippet;
 export type ArticlePayload = SnippetPayload;

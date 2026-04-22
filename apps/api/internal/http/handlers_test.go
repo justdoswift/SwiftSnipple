@@ -467,6 +467,37 @@ func (f *fakeMemberStore) GetUserByID(_ context.Context, id string) (domain.Memb
 	return user, nil
 }
 
+func (f *fakeMemberStore) ListAdminMembers(_ context.Context) ([]domain.AdminMember, error) {
+	members := make([]domain.AdminMember, 0, len(f.users))
+	now := time.Now().UTC()
+
+	for _, user := range f.users {
+		subscription, ok := f.subscriptions[user.ID]
+		status := domain.SubscriptionStatusInactive
+		var currentPeriodEnd *time.Time
+		cancelAtPeriodEnd := false
+
+		if ok {
+			status = domain.NormalizeSubscriptionStatus(string(subscription.Status))
+			currentPeriodEnd = subscription.CurrentPeriodEnd
+			cancelAtPeriodEnd = subscription.CancelAtPeriodEnd
+		}
+
+		members = append(members, domain.AdminMember{
+			ID:                 user.ID,
+			Email:              user.Email,
+			CreatedAt:          user.CreatedAt,
+			UpdatedAt:          user.UpdatedAt,
+			SubscriptionStatus: status,
+			IsPaid:             domain.IsEntitledSubscription(status, currentPeriodEnd, now),
+			CurrentPeriodEnd:   currentPeriodEnd,
+			CancelAtPeriodEnd:  cancelAtPeriodEnd,
+		})
+	}
+
+	return members, nil
+}
+
 func (f *fakeMemberStore) GetSubscriptionByUserID(_ context.Context, userID string) (*domain.MemberSubscription, error) {
 	subscription, ok := f.subscriptions[userID]
 	if !ok {
@@ -876,6 +907,102 @@ func TestAdminUnauthorizedAndProtectedRoutes(t *testing.T) {
 	router.ServeHTTP(invalidCookieRec, invalidCookieReq)
 	if invalidCookieRec.Code != http.StatusUnauthorized {
 		t.Fatalf("expected invalid cookie session status 401, got %d", invalidCookieRec.Code)
+	}
+}
+
+func TestAdminMembersRouteRequiresAdminSessionAndSeparatesPaidAccess(t *testing.T) {
+	periodEnd := time.Now().UTC().Add(48 * time.Hour).Truncate(time.Second)
+	expiredEnd := time.Now().UTC().Add(-48 * time.Hour).Truncate(time.Second)
+	members := newFakeMemberStore(
+		domain.MemberUser{
+			ID:           "member-1",
+			Email:        "paid@example.com",
+			PasswordHash: "hash",
+			CreatedAt:    time.Date(2026, time.April, 18, 0, 0, 0, 0, time.UTC),
+			UpdatedAt:    time.Date(2026, time.April, 19, 0, 0, 0, 0, time.UTC),
+		},
+		domain.MemberUser{
+			ID:           "member-2",
+			Email:        "trial@example.com",
+			PasswordHash: "hash",
+			CreatedAt:    time.Date(2026, time.April, 17, 0, 0, 0, 0, time.UTC),
+			UpdatedAt:    time.Date(2026, time.April, 18, 0, 0, 0, 0, time.UTC),
+		},
+		domain.MemberUser{
+			ID:           "member-3",
+			Email:        "grace@example.com",
+			PasswordHash: "hash",
+			CreatedAt:    time.Date(2026, time.April, 16, 0, 0, 0, 0, time.UTC),
+			UpdatedAt:    time.Date(2026, time.April, 17, 0, 0, 0, 0, time.UTC),
+		},
+		domain.MemberUser{
+			ID:           "member-4",
+			Email:        "free@example.com",
+			PasswordHash: "hash",
+			CreatedAt:    time.Date(2026, time.April, 15, 0, 0, 0, 0, time.UTC),
+			UpdatedAt:    time.Date(2026, time.April, 16, 0, 0, 0, 0, time.UTC),
+		},
+	)
+	members.subscriptions["member-1"] = domain.MemberSubscription{
+		UserID:           "member-1",
+		Status:           domain.SubscriptionStatusActive,
+		CurrentPeriodEnd: &periodEnd,
+	}
+	members.subscriptions["member-2"] = domain.MemberSubscription{
+		UserID:           "member-2",
+		Status:           domain.SubscriptionStatusTrialing,
+		CurrentPeriodEnd: &periodEnd,
+	}
+	members.subscriptions["member-3"] = domain.MemberSubscription{
+		UserID:           "member-3",
+		Status:           domain.SubscriptionStatusCanceled,
+		CurrentPeriodEnd: &periodEnd,
+	}
+	members.subscriptions["member-4"] = domain.MemberSubscription{
+		UserID:           "member-4",
+		Status:           domain.SubscriptionStatusCanceled,
+		CurrentPeriodEnd: &expiredEnd,
+	}
+
+	router := newTestRouter(t, nil, members, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/admin/members", nil)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected anonymous members status 401, got %d", rec.Code)
+	}
+
+	adminCookie := loginCookie(t, router)
+	req = httptest.NewRequest(http.MethodGet, "/api/admin/members", nil)
+	req.AddCookie(adminCookie)
+	rec = httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected members status 200, got %d with body %q", rec.Code, rec.Body.String())
+	}
+
+	body := decodeResponse[[]domain.AdminMember](t, rec.Body)
+	if len(body) != 4 {
+		t.Fatalf("expected 4 admin members, got %d", len(body))
+	}
+
+	byEmail := make(map[string]domain.AdminMember, len(body))
+	for _, member := range body {
+		byEmail[member.Email] = member
+	}
+
+	if !byEmail["paid@example.com"].IsPaid || byEmail["paid@example.com"].SubscriptionStatus != domain.SubscriptionStatusActive {
+		t.Fatalf("expected active member to be paid, got %#v", byEmail["paid@example.com"])
+	}
+	if !byEmail["trial@example.com"].IsPaid || byEmail["trial@example.com"].SubscriptionStatus != domain.SubscriptionStatusTrialing {
+		t.Fatalf("expected trialing member to be paid, got %#v", byEmail["trial@example.com"])
+	}
+	if !byEmail["grace@example.com"].IsPaid || byEmail["grace@example.com"].SubscriptionStatus != domain.SubscriptionStatusCanceled {
+		t.Fatalf("expected unexpired canceled member to remain paid, got %#v", byEmail["grace@example.com"])
+	}
+	if byEmail["free@example.com"].IsPaid || byEmail["free@example.com"].SubscriptionStatus != domain.SubscriptionStatusCanceled {
+		t.Fatalf("expected expired canceled member to be free, got %#v", byEmail["free@example.com"])
 	}
 }
 

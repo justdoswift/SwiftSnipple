@@ -55,6 +55,7 @@ type memberStore interface {
 	CreateUser(ctx context.Context, email, passwordHash string) (domain.MemberUser, error)
 	GetUserByEmail(ctx context.Context, email string) (domain.MemberUser, error)
 	GetUserByID(ctx context.Context, id string) (domain.MemberUser, error)
+	ListAdminMembers(ctx context.Context) ([]domain.AdminMember, error)
 	GetSubscriptionByUserID(ctx context.Context, userID string) (*domain.MemberSubscription, error)
 	GetSubscriptionByStripeCustomerID(ctx context.Context, customerID string) (*domain.MemberSubscription, error)
 	GetSubscriptionByStripeSubscriptionID(ctx context.Context, subscriptionID string) (*domain.MemberSubscription, error)
@@ -72,11 +73,11 @@ type Handler struct {
 }
 
 const (
-	maxCoverImageDimension  = 2200
-	coverImageWebPQuality   = 92
-	maxCoverUploadBytes     = 25 << 20
-	maxContentVideoBytes    = 250 << 20
-	contentImageWebPQuality = 90
+	maxCoverImageDimension     = 2200
+	coverImageWebPQuality      = 92
+	maxCoverUploadBytes        = 25 << 20
+	maxContentVideoBytes       = 250 << 20
+	contentImageWebPQuality    = 90
 	maxRemoteContentImageBytes = 64 << 20
 )
 
@@ -192,6 +193,16 @@ func (h *Handler) GetAdminSnippet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, snippet)
+}
+
+func (h *Handler) ListAdminMembers(w http.ResponseWriter, r *http.Request) {
+	members, err := h.members.ListAdminMembers(r.Context())
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to list members"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, members)
 }
 
 func (h *Handler) CreateSnippet(w http.ResponseWriter, r *http.Request) {

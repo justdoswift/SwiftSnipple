@@ -35,7 +35,7 @@ const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const AccountPage = lazy(() => import("./pages/AccountPage"));
 const AdminLoginPage = lazy(() => import("./pages/admin/AdminLoginPage"));
-const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminMembers = lazy(() => import("./pages/admin/AdminMembers"));
 const AdminSnippets = lazy(() => import("./pages/admin/AdminSnippets"));
 const AdminSnippetEditor = lazy(() => import("./pages/admin/AdminSnippetEditor"));
 
@@ -81,7 +81,7 @@ function LegacySnippetRedirect() {
 function LegacyAdminSnippetRedirect() {
   const { id } = useParams();
   return (
-    <Navigate to={localizeAdminPath("en", id ? `/admin/snippets/${id}` : "/admin/snippets")} replace />
+    <Navigate to={localizeAdminPath("en", id ? `/admin/snippets/${id}` : "/admin")} replace />
   );
 }
 
@@ -358,18 +358,18 @@ export default function App() {
                 index
                 element={
                   <Suspense fallback={<AdminRouteFallback />}>
-                    <AdminDashboard />
+                    <AdminSnippets />
                   </Suspense>
                 }
               />
-              <Route path="articles" element={<Navigate to="../snippets" replace />} />
+              <Route path="articles" element={<Navigate to="../" replace />} />
               <Route path="articles/new" element={<Navigate to="../snippets/new" replace />} />
               <Route path="articles/:id" element={<LegacyAdminSnippetRedirect />} />
               <Route
-                path="snippets"
+                path="members"
                 element={
                   <Suspense fallback={<AdminRouteFallback />}>
-                    <AdminSnippets />
+                    <AdminMembers />
                   </Suspense>
                 }
               />

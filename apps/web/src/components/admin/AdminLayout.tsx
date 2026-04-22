@@ -23,10 +23,9 @@ export default function AdminLayout({ adminAuthSession, onSignOut, onToggleTheme
   const location = useLocation();
   const [headerConfig, setHeaderConfig] = useState<AdminHeaderConfig | null>(null);
   const outletContext = useMemo<AdminHeaderOutletContext>(() => ({ setHeaderConfig }), []);
-  const isOverviewRoute = location.pathname === "/admin";
   const isEditorRoute =
     location.pathname === "/admin/snippets/new" ||
-    (location.pathname.startsWith("/admin/snippets/") && location.pathname !== "/admin/snippets");
+    (location.pathname.startsWith("/admin/snippets/") && location.pathname !== "/admin");
   const activeHeader: AdminHeaderConfig = headerConfig ?? {};
 
   useEffect(() => {
@@ -52,7 +51,7 @@ export default function AdminLayout({ adminAuthSession, onSignOut, onToggleTheme
             ) : (
               <Link to={localizeAdminPath(locale, "/admin")} className="admin-nav-brand min-w-0" aria-label="Just Do Swift admin">
                 <span className="admin-nav-logo" aria-hidden="true">
-                  <img src="/favicon.svg" alt="" className="admin-nav-logo-image" />
+                  <img src="/logo-mark.svg" alt="" className="admin-nav-logo-image" />
                 </span>
                 <span className="admin-brand-title truncate">
                   Just Do Swift
@@ -155,16 +154,10 @@ export default function AdminLayout({ adminAuthSession, onSignOut, onToggleTheme
         </div>
       </header>
 
-      {!isOverviewRoute && !isEditorRoute ? <AdminSidebar /> : null}
+      {!isEditorRoute ? <AdminSidebar /> : null}
 
       <div
-        className={`min-w-0 ${
-          isOverviewRoute
-            ? ""
-            : isEditorRoute
-              ? "md:px-24 xl:px-28"
-              : "md:pl-24 xl:pl-28"
-        }`}
+        className={`min-w-0 ${isEditorRoute ? "md:px-24 xl:px-28" : "md:pl-24 xl:pl-28"}`}
         data-testid="admin-content-shell"
       >
         <div

@@ -17,9 +17,14 @@ if [[ ! -f "$ROOT_DIR/apps/web/.vercel/project.json" ]]; then
 fi
 
 log_step "Deploying frontend to Vercel"
+build_env_api_base_url="$API_BASE_URL"
+if [[ "$API_BASE_URL" == "$APP_BASE_URL" ]]; then
+  build_env_api_base_url=""
+fi
+
 deployment_url="$(
   cd "$ROOT_DIR/apps/web" && \
-    vercel deploy --prod --yes --build-env "VITE_API_BASE_URL=$API_BASE_URL"
+    vercel deploy --prod --yes --build-env "VITE_API_BASE_URL=$build_env_api_base_url"
 )"
 
 resolved_url="$(printf '%s\n' "$deployment_url" | rg -o 'https://[^ ]+' | tail -n 1)"

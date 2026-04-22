@@ -72,6 +72,7 @@ func main() {
 		httpapi.MemberAuthConfig{
 			SessionSecret: cfg.MemberSessionSecret,
 		},
+		cfg.CORSAllowedOrigin,
 		httpapi.NewStripeBillingProvider(httpapi.BillingConfig{
 			SecretKey:       cfg.StripeSecretKey,
 			WebhookSecret:   cfg.StripeWebhookSecret,

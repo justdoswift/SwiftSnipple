@@ -606,6 +606,7 @@ func newTestRouter(t *testing.T, snippets *fakeSnippetStore, members *fakeMember
 		members,
 		testAdminAuthConfig,
 		testMemberAuthConfig,
+		"https://justdoswift.com",
 		billing,
 		assetStore,
 	)
@@ -1449,6 +1450,7 @@ func TestUploadCoverImageAndServeStatic(t *testing.T) {
 		newFakeMemberStore(),
 		testAdminAuthConfig,
 		testMemberAuthConfig,
+		"https://justdoswift.com",
 		&fakeBillingProvider{checkoutURL: "https://stripe.test/checkout", portalURL: "https://stripe.test/portal"},
 		newLocalAssetStore(uploadDir, defaultUploadPublicBasePath),
 	)
@@ -1606,6 +1608,7 @@ func TestUploadContentImageAndVideo(t *testing.T) {
 		newFakeMemberStore(),
 		testAdminAuthConfig,
 		testMemberAuthConfig,
+		"https://justdoswift.com",
 		&fakeBillingProvider{checkoutURL: "https://stripe.test/checkout", portalURL: "https://stripe.test/portal"},
 		newLocalAssetStore(uploadDir, defaultUploadPublicBasePath),
 	)

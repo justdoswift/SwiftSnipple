@@ -21,6 +21,7 @@ type Config struct {
 	StripeSuccessURL      string
 	StripeCancelURL       string
 	StripePortalReturnURL string
+	CORSAllowedOrigin     string
 	StorageProvider       string
 	UploadsDir            string
 	UploadsBasePath       string
@@ -71,6 +72,7 @@ func Load() Config {
 	stripeSuccessURL := strings.TrimSpace(os.Getenv("STRIPE_SUCCESS_URL"))
 	stripeCancelURL := strings.TrimSpace(os.Getenv("STRIPE_CANCEL_URL"))
 	stripePortalReturnURL := strings.TrimSpace(os.Getenv("STRIPE_PORTAL_RETURN_URL"))
+	corsAllowedOrigin := strings.TrimSpace(os.Getenv("CORS_ALLOWED_ORIGIN"))
 	if stripeSecretKey == "" ||
 		stripeWebhookSecret == "" ||
 		stripePriceID == "" ||
@@ -106,6 +108,7 @@ func Load() Config {
 		StripeSuccessURL:      stripeSuccessURL,
 		StripeCancelURL:       stripeCancelURL,
 		StripePortalReturnURL: stripePortalReturnURL,
+		CORSAllowedOrigin:     corsAllowedOrigin,
 		StorageProvider:       storageProvider,
 		UploadsDir:            uploadsDir,
 		UploadsBasePath:       uploadsBasePath,

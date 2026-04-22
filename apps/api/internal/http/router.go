@@ -14,6 +14,7 @@ func NewRouter(
 	members memberStore,
 	authConfig AdminAuthConfig,
 	memberAuthConfig MemberAuthConfig,
+	corsAllowedOrigin string,
 	billing billingProvider,
 	assets assetStore,
 ) http.Handler {
@@ -33,6 +34,7 @@ func NewRouter(
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.Timeout(15 * time.Second))
+	router.Use(corsMiddleware(corsAllowedOrigin))
 
 	router.Get("/healthz", handler.Healthz)
 	router.Get("/uploads/*", handler.ServeUpload)
@@ -92,4 +94,29 @@ func NewRouter(
 	})
 
 	return router
+}
+
+func corsMiddleware(allowedOrigin string) func(http.Handler) http.Handler {
+	normalizedOrigin := allowedOrigin
+
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			origin := r.Header.Get("Origin")
+			if origin != "" && normalizedOrigin != "" && origin == normalizedOrigin {
+				headers := w.Header()
+				headers.Set("Access-Control-Allow-Origin", normalizedOrigin)
+				headers.Set("Access-Control-Allow-Credentials", "true")
+				headers.Set("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type, X-Requested-With")
+				headers.Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+				headers.Add("Vary", "Origin")
+			}
+
+			if r.Method == http.MethodOptions {
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
 }

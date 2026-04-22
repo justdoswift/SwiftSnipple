@@ -86,7 +86,7 @@ export default function PricingPage({ authSession }: PricingPageProps) {
         </motion.p>
       </div>
 
-      <div className="mx-auto grid w-full max-w-[980px] grid-cols-1 gap-5 md:grid-cols-2 lg:gap-6">
+      <div className="mx-auto grid w-full max-w-[860px] grid-cols-1 gap-6 md:grid-cols-2 md:gap-7">
         {copy.plans.map((plan) => {
           const isYearly = plan.id === "yearly";
           const isLoading = isRedirecting === plan.id;
@@ -113,9 +113,9 @@ export default function PricingPage({ authSession }: PricingPageProps) {
                 <div className={`absolute -inset-[1px] rounded-[var(--radius-panel-lg)] ${accentShellClass}`} />
               )}
               
-              <Card className={`public-surface-strong relative flex flex-1 flex-col overflow-hidden transition-transform duration-500 hover:scale-[1.01] ${cardClass}`}>
-                <Card.Content className="flex flex-1 flex-col gap-5 px-6 py-7 lg:px-7 lg:py-8">
-                  <div className="space-y-4">
+              <Card className={`public-surface-strong relative flex min-h-[620px] flex-1 flex-col overflow-hidden transition-transform duration-500 hover:scale-[1.01] ${cardClass}`}>
+                <Card.Content className="flex flex-1 flex-col gap-6 px-7 py-8 lg:px-8 lg:py-9">
+                  <div className="space-y-5">
                     <div className="flex items-center justify-between">
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 shadow-inner">
                         <Zap size={20} className={iconClass} />
@@ -129,11 +129,11 @@ export default function PricingPage({ authSession }: PricingPageProps) {
                     
                     <div>
                       <h3 className="type-section-title text-[1.15rem] font-bold text-white/90">{plan.name}</h3>
-                      <p className="type-body-sm mt-2 text-white/40 leading-relaxed min-h-[2.75rem]">{plan.description}</p>
+                      <p className="type-body-sm mt-3 min-h-[3.25rem] text-white/40 leading-relaxed">{plan.description}</p>
                     </div>
 
-                    <div className={`rounded-[24px] border px-4 py-4 ${priceWrapClass}`}>
-                      <div className="flex items-baseline gap-2">
+                    <div className={`rounded-[24px] border px-5 py-5 ${priceWrapClass}`}>
+                      <div className="flex items-baseline gap-3">
                         <span className="text-[3.2rem] font-bold tracking-tighter leading-none text-white">
                         {plan.price}
                         </span>
@@ -142,23 +142,23 @@ export default function PricingPage({ authSession }: PricingPageProps) {
                     </div>
                   </div>
 
-                  <div className="flex-1 space-y-3 pt-1">
-                    <p className="type-mono-micro mb-3 text-white/20 uppercase tracking-[0.2em]">
+                  <div className="flex-1 space-y-4 pt-3">
+                    <p className="type-mono-micro mb-4 text-white/20 uppercase tracking-[0.2em]">
                       {copy.featuresTitle}
                     </p>
                     {copy.features.slice(0, 3).map((feature) => (
-                      <div key={feature} className="flex items-start gap-3">
+                      <div key={feature} className="flex items-start gap-3.5">
                         <Check size={14} className={checkClass} />
-                        <span className="type-body-xs text-white/60 leading-snug">{feature}</span>
+                        <span className="type-body-xs leading-snug text-white/60">{feature}</span>
                       </div>
                     ))}
                   </div>
 
-                  <div className="flex flex-col gap-3 pt-3">
+                  <div className="flex flex-col gap-3 pt-5">
                     {!authSession ? (
                       <Link
                         to={localizePublicPath("/login")}
-                        className={`public-button-lg type-action flex w-full items-center justify-center gap-2 py-3 ${buttonClass}`}
+                        className={`public-button-lg type-action flex w-full items-center justify-center gap-2 py-3.5 ${buttonClass}`}
                       >
                         <CreditCard size={18} strokeWidth={2.5} />
                         <span>{primaryLabel}</span>
@@ -166,14 +166,14 @@ export default function PricingPage({ authSession }: PricingPageProps) {
                     ) : isReturningMember ? (
                       <Link
                         to={localizePublicPath("/account")}
-                        className="public-secondary-button public-button-lg type-action flex w-full items-center justify-center gap-2 py-4"
+                        className="public-secondary-button public-button-lg type-action flex w-full items-center justify-center gap-2 py-3.5"
                       >
                         <ShieldCheck size={18} strokeWidth={2.5} />
                         <span>{primaryLabel}</span>
                       </Link>
                     ) : (
                       <Button
-                        className={`public-button-lg type-action w-full py-3 text-[0.9rem] ${buttonClass}`}
+                        className={`public-button-lg type-action w-full py-3.5 text-[0.9rem] ${buttonClass}`}
                         isDisabled={!!isRedirecting}
                         onPress={() => handleCheckout(plan.id, plan.priceId)}
                       >

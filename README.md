@@ -137,14 +137,15 @@ make deploy
 Frontend deploy note:
 
 - `make deploy-web` publishes the `justdoswift-web` Vercel project
+- `https://justdoswift.com` is attached directly to the `justdoswift-web` project as its production domain
 - after deploy, verify that `https://justdoswift.com` points to the newest production deployment
-- do not assume `justdoswift-web.vercel.app` updating means the root domain alias moved automatically
+- if the root domain ever stops following the latest production deploy, fix the project/domain binding instead of relying on repeated manual alias changes
 
 Common failure points:
 
 - missing `.env.deploy` values
 - `vercel` project not linked yet for `apps/web`
-- root domain alias still pointing at an older Vercel deployment after `make deploy-web`
+- `justdoswift.com` not attached to `justdoswift-web` as the project production domain
 - missing `run.admin` or Cloud Build permissions in GCP
 - missing access to the configured GCS bucket
 - Stripe webhook secret or return URLs not matching production domains

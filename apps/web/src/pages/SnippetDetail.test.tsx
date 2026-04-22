@@ -499,7 +499,7 @@ describe("SnippetDetail", () => {
     renderSnippetDetail();
 
     const loading = screen.getByTestId("snippet-detail-loading");
-    expect(loading).toHaveTextContent("Loading snippet...");
+    expect(loading).toHaveAttribute("aria-label", "Loading snippet...");
     expect(screen.queryByTestId("snippet-detail-shell")).not.toBeInTheDocument();
   });
 

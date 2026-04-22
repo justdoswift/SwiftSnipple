@@ -117,7 +117,7 @@ describe("App public theme", () => {
     renderAppAt("/");
 
     const fallback = screen.getByTestId("public-route-fallback");
-    expect(fallback).toHaveTextContent("Loading");
+    expect(fallback).toHaveAttribute("aria-label", "Loading");
     expect(fallback.querySelector(".public-surface")).toBeNull();
   });
 

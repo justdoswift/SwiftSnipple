@@ -7,10 +7,14 @@ interface PublicCenteredLoadingProps {
 
 export default function PublicCenteredLoading({ label, testId = "public-centered-loading" }: PublicCenteredLoadingProps) {
   return (
-    <div data-testid={testId} className="public-centered-loading mx-auto flex w-full max-w-[1400px] flex-1 items-center justify-center px-8 md:px-12 lg:px-16">
-      <div className="flex flex-col items-center gap-4 text-center">
+    <div
+      data-testid={testId}
+      className="public-centered-loading fixed left-1/2 top-1/2 z-40 -translate-x-1/2 -translate-y-1/2"
+      aria-label={label}
+      role="status"
+    >
+      <div className="flex items-center justify-center text-center">
         <Spinner size="lg" />
-        <p className="type-mono-micro public-loading-label">{label}</p>
       </div>
     </div>
   );

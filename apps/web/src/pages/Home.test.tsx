@@ -61,8 +61,9 @@ describe("Home", () => {
     });
 
     expect(screen.getByTestId("home-lead-card")).toHaveAttribute("href", "/snippets/newest-entry");
-    expect(screen.getByTestId("home-lead-card-media").querySelector(".public-home-lead-card-media-panel")).not.toBeNull();
     expect(screen.getByTestId("home-lead-card-media").querySelector(".public-home-lead-card-media-image")).not.toBeNull();
+    expect(screen.getByTestId("home-lead-card")).toHaveTextContent("The newest published snippet.");
+    expect(screen.getByTestId("home-lead-card")).toHaveTextContent("April 12, 2026");
     expect(screen.getByTestId("home-lead-card-shell")).not.toHaveAttribute("data-tone");
 
     expect(screen.getByTestId("home-grid")).toHaveTextContent("Glass Navigation");

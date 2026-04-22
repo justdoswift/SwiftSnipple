@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { LockKeyhole } from "lucide-react";
 import HighlightedCodeBlock from "../components/HighlightedCodeBlock";
 import MarkdownRenderer from "../components/MarkdownRenderer";
+import PublicCenteredLoading from "../components/PublicCenteredLoading";
 import { resolveAssetUrl } from "../lib/asset-url";
 import { getMessages } from "../lib/messages";
 import { extractMarkdownOutline, type MarkdownOutlineItem } from "../lib/markdown-outline";
@@ -415,7 +416,7 @@ export default function SnippetDetail() {
   const detailShellClass = "public-page public-snippet-detail mx-auto max-w-[1400px] px-8 pt-32 md:px-12 md:pt-36 lg:px-16 lg:pt-40";
 
   if (isLoading) {
-    return <div data-testid="snippet-detail-shell" className={`${detailShellClass} pb-20 public-status-copy`}>{copy.loadingSnippet}</div>;
+    return <PublicCenteredLoading label={copy.loadingSnippet} testId="snippet-detail-loading" />;
   }
 
   if (!snippet || error) {

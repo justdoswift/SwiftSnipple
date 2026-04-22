@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Navigate, Outlet, Route, Routes, useLocation, 
 import { Suspense, lazy, useEffect, useMemo, useState, type ReactNode } from "react";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import PublicCenteredLoading from "./components/PublicCenteredLoading";
 import AdminLayout from "./components/admin/AdminLayout";
 import { Spinner } from "./lib/heroui";
 import { type AdminAuthSession } from "./lib/admin-auth";
@@ -54,16 +55,7 @@ function PublicRouteFallback() {
   const { locale } = useAppLocale();
   const copy = getMessages(locale).app;
 
-  return (
-    <div className="public-route-fallback mx-auto flex w-full max-w-[1380px] flex-1 items-center justify-center px-6 py-20 md:px-8">
-      <div className="public-surface w-full max-w-xl px-8 py-12 text-center">
-        <div className="flex flex-col items-center gap-4">
-          <Spinner size="lg" />
-          <p className="type-mono-micro public-loading-label">{copy.loading}</p>
-        </div>
-      </div>
-    </div>
-  );
+  return <PublicCenteredLoading label={copy.loading} testId="public-route-fallback" />;
 }
 
 function AdminRouteFallback() {
@@ -178,7 +170,7 @@ function PublicShell({
     <div className="public-theme relative flex min-h-screen flex-col" data-theme={theme} data-testid="public-theme-root">
       <div className="vibe-grain" />
       {showNavbar ? <Navbar theme={theme} onToggleTheme={onToggleTheme} authSession={authSession} /> : null}
-      <main className="z-10 flex-grow">
+      <main className="z-10 flex flex-1 flex-col">
         <Suspense fallback={<PublicRouteFallback />}>{children}</Suspense>
       </main>
       {showFooter ? <Footer /> : null}

@@ -111,6 +111,16 @@ describe("App public theme", () => {
     expect(screen.getByRole("button", { name: "Switch to dark site mode" })).toBeInTheDocument();
   });
 
+  it("shows the centered public fallback without a surface card while a route is loading", () => {
+    mockedGetSnippets.mockImplementation(() => new Promise(() => undefined));
+
+    renderAppAt("/");
+
+    const fallback = screen.getByTestId("public-route-fallback");
+    expect(fallback).toHaveTextContent("Loading");
+    expect(fallback.querySelector(".public-surface")).toBeNull();
+  });
+
   it("redirects unauthenticated admin visits to the creator login page", async () => {
     renderAppAt("/admin");
 

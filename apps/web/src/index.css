@@ -921,6 +921,10 @@
     color: var(--public-body-sm);
   }
 
+  .public-centered-loading {
+    min-height: 100%;
+  }
+
   .public-content-panel {
     border: 1px solid var(--public-border-soft);
     background-color: var(--public-panel-bg);

@@ -492,12 +492,15 @@ describe("SnippetDetail", () => {
     expect(screen.getByRole("button", { name: "Copy code block" })).toBeInTheDocument();
   });
 
-  it("uses the same safer top spacing while loading", () => {
+  it("renders the shared centered loading state while the snippet is resolving", () => {
     mockedGetSnippetBySlug.mockImplementation(() => new Promise(() => undefined));
+    mockedGetMemberSession.mockImplementation(() => new Promise(() => undefined));
 
     renderSnippetDetail();
 
-    expect(screen.getByTestId("snippet-detail-shell")).toHaveClass("pt-32", "md:pt-36", "lg:pt-40");
+    const loading = screen.getByTestId("snippet-detail-loading");
+    expect(loading).toHaveTextContent("Loading snippet...");
+    expect(screen.queryByTestId("snippet-detail-shell")).not.toBeInTheDocument();
   });
 
   it("shows a missing-language state instead of falling back to another locale", async () => {

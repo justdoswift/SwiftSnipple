@@ -43,7 +43,10 @@ export default function LeadSnippetCard({ snippet }: LeadSnippetCardProps) {
       >
         <Card className="public-home-lead-card-shell public-surface overflow-hidden" data-testid="home-lead-card-shell">
           <div className="public-home-lead-card-grid relative min-h-[420px] overflow-hidden md:min-h-[500px]">
-            <div className="public-home-lead-card-media absolute inset-0" data-testid="home-lead-card-media">
+            <div
+              className="public-home-lead-card-media absolute inset-3 overflow-hidden md:inset-4"
+              data-testid="home-lead-card-media"
+            >
               <img
                 src={coverImageUrl}
                 alt={fields.title}
@@ -51,8 +54,8 @@ export default function LeadSnippetCard({ snippet }: LeadSnippetCardProps) {
                 referrerPolicy="no-referrer"
               />
             </div>
-            <div className="public-home-lead-card-image-overlay absolute inset-0" />
-            <div className="public-home-lead-card-image-vignette absolute inset-0" />
+            <div className="public-home-lead-card-image-overlay absolute inset-3 md:inset-4" />
+            <div className="public-home-lead-card-image-vignette absolute inset-3 md:inset-4" />
 
             <Card.Content className="public-home-lead-card-copy relative z-[1] flex min-h-[420px] flex-col justify-end px-7 py-8 md:min-h-[500px] md:px-10 md:py-10 lg:px-12 lg:py-12">
               <div className="public-home-lead-card-copy-inner max-w-[680px] space-y-6">

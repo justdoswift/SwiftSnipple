@@ -1147,6 +1147,7 @@
 
   .public-home-lead-card-media {
     background-color: #080808;
+    border-radius: calc(var(--radius-panel-lg) - 2px);
   }
 
   .public-home-lead-card-media-image {
@@ -1157,6 +1158,7 @@
   }
 
   .public-home-lead-card-image-overlay {
+    border-radius: calc(var(--radius-panel-lg) - 2px);
     background:
       linear-gradient(180deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.14)),
       linear-gradient(135deg, rgba(255, 255, 255, 0.04), transparent 28%);
@@ -1170,6 +1172,7 @@
   }
 
   .public-home-lead-card-image-vignette {
+    border-radius: calc(var(--radius-panel-lg) - 2px);
     background:
       radial-gradient(circle at 18% 78%, rgba(0, 0, 0, 0.22), transparent 38%),
       linear-gradient(90deg, rgba(0, 0, 0, 0.3) 0%, transparent 46%, rgba(0, 0, 0, 0.18) 100%);

@@ -937,6 +937,7 @@ describe("AdminSnippetEditor", () => {
     expect(screen.getByRole("button", { name: "完成" })).toHaveClass("admin-preview-toolbar-button");
     expect(screen.getByRole("tab", { name: "手机" })).toHaveClass("admin-preview-toolbar-button");
     expect(screen.getByRole("tab", { name: "桌面" })).toHaveClass("admin-preview-toolbar-button");
+    expect(screen.getByRole("group", { name: "预览语言" })).toBeInTheDocument();
     expect(screen.getByText("前台路由")).toBeInTheDocument();
     expect(screen.queryByText("预览模式")).not.toBeInTheDocument();
     expect(screen.queryByText("Smooth Feedback Loops for macOS Apps")).not.toBeInTheDocument();
@@ -945,6 +946,102 @@ describe("AdminSnippetEditor", () => {
       "src",
       "/snippets/smooth-feedback-loops?preview=admin&id=snippet-1&locale=zh&rev=0",
     );
+  });
+
+  it("switches preview language, keeps device selection, and syncs editor fields", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+    mockedGetSnippetById.mockResolvedValue(createSnippetFixture({
+      id: "snippet-1",
+      title: "English Title",
+      slug: "english-title",
+      excerpt: "English excerpt.",
+      category: "Workflow",
+      tags: ["SwiftUI"],
+      coverImage: "https://example.com/cover.jpg",
+      content: "# English Title",
+      code: "Text(\"Preview\")",
+      prompts: "Build an English previewable snippet.",
+      seoTitle: "English Title",
+      seoDescription: "SEO copy",
+      status: "Published",
+      updatedAt: "2026-04-09T12:00:00.000Z",
+      publishedAt: "2026-04-09T12:00:00.000Z",
+      locales: {
+        en: {
+          title: "English Title",
+          slug: "english-title",
+          excerpt: "English excerpt.",
+          category: "Workflow",
+          tags: ["SwiftUI"],
+          content: "# English Title",
+          prompts: "Build an English previewable snippet.",
+          seoTitle: "English Title",
+          seoDescription: "SEO copy",
+        },
+        zh: {
+          title: "中文标题",
+          slug: "zhong-wen-biao-ti",
+          excerpt: "中文摘要。",
+          category: "工作流",
+          tags: ["SwiftUI"],
+          content: "# 中文标题",
+          prompts: "构建一个可预览的中文 snippet。",
+          seoTitle: "中文标题",
+          seoDescription: "中文 SEO",
+        },
+      },
+    }));
+
+    render(
+      <LocaleContext.Provider value={{ locale: "en" }}>
+        <MemoryRouter initialEntries={["/admin/snippets/snippet-1"]}>
+          <Routes>
+            <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+              <Route path="snippets/:id" element={<AdminSnippetEditor />} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </LocaleContext.Provider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Snippet Title")).toHaveValue("English Title");
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Preview" }));
+
+    const iframe = await screen.findByTitle("Snippet public preview");
+    const previewLocaleSwitcher = screen.getByTestId("admin-preview-locale-switcher");
+
+    expect(within(previewLocaleSwitcher).getByRole("button", { name: "EN" })).toHaveAttribute("aria-pressed", "true");
+    expect(iframe).toHaveAttribute(
+      "src",
+      "/snippets/english-title?preview=admin&id=snippet-1&locale=en&rev=0",
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: "Mobile" }));
+    expect(screen.getByRole("tab", { name: "Mobile" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: "Desktop" })).toHaveAttribute("aria-selected", "false");
+
+    fireEvent.click(within(previewLocaleSwitcher).getByRole("button", { name: "中文" }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Snippet Title")).toHaveValue("中文标题");
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTitle("Snippet public preview")).toHaveAttribute(
+        "src",
+        "/snippets/zhong-wen-biao-ti?preview=admin&id=snippet-1&locale=zh&rev=0",
+      );
+    });
+
+    expect(within(previewLocaleSwitcher).getByRole("button", { name: "中文" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByText("/snippets/zhong-wen-biao-ti")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Mobile" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: "Desktop" })).toHaveAttribute("aria-selected", "false");
   });
 
   it("refreshes the preview iframe after autosaving a published draft update", async () => {

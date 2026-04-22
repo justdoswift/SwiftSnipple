@@ -928,8 +928,8 @@
   }
 
   .public-snippet-notes-panel {
-    background-color: var(--public-panel-bg);
-    border-radius: var(--radius-panel);
+    background-color: transparent;
+    border-radius: 0;
   }
 
   .public-divider-top {

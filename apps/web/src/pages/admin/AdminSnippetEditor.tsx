@@ -98,6 +98,45 @@ function EditorSectionRail({
   );
 }
 
+function LocaleSwitcher({
+  activeLocale,
+  ariaLabel,
+  onSelect,
+  options,
+  testId,
+}: {
+  activeLocale: AppLocale;
+  ariaLabel?: string;
+  onSelect: (locale: AppLocale) => void;
+  options: EditorContentLocaleOption[];
+  testId?: string;
+}) {
+  return (
+    <div
+      className="admin-editor-locale-switcher inline-flex w-fit max-w-full flex-wrap rounded-full border p-1"
+      data-testid={testId}
+      role={ariaLabel ? "group" : undefined}
+      aria-label={ariaLabel}
+    >
+      {options.map((option) => {
+        const isActive = option.id === activeLocale;
+
+        return (
+          <button
+            key={option.id}
+            type="button"
+            className={`admin-editor-locale-button ${isActive ? "admin-editor-locale-button-active" : "admin-editor-locale-button-inactive"}`}
+            aria-pressed={isActive}
+            onClick={() => onSelect(option.id)}
+          >
+            <span>{option.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function slugify(value: string) {
   return value
     .toLowerCase()
@@ -1703,26 +1742,12 @@ export default function AdminSnippetEditor() {
                 />
               </div>
 
-              <div
-                className="admin-editor-locale-switcher inline-flex w-fit max-w-full flex-wrap rounded-full border p-1"
-                data-testid="admin-editor-locale-switcher"
-              >
-                {editorLocaleOptions.map((option) => {
-                  const isActive = option.id === editorLocale;
-
-                  return (
-                    <button
-                      key={option.id}
-                      type="button"
-                      className={`admin-editor-locale-button ${isActive ? "admin-editor-locale-button-active" : "admin-editor-locale-button-inactive"}`}
-                      aria-pressed={isActive}
-                      onClick={() => setEditorLocale(option.id)}
-                    >
-                      <span>{option.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
+              <LocaleSwitcher
+                activeLocale={editorLocale}
+                onSelect={setEditorLocale}
+                options={editorLocaleOptions}
+                testId="admin-editor-locale-switcher"
+              />
             </div>
 
             <motion.div
@@ -2075,6 +2100,13 @@ export default function AdminSnippetEditor() {
                       <span>{common.desktop}</span>
                     </button>
                   </div>
+                  <LocaleSwitcher
+                    activeLocale={editorLocale}
+                    ariaLabel={copy.previewLanguage}
+                    onSelect={setEditorLocale}
+                    options={editorLocaleOptions}
+                    testId="admin-preview-locale-switcher"
+                  />
                 </div>
                 <div className="hidden min-w-0 flex-1 items-center justify-center gap-3 md:flex">
                   <span className="admin-copy-faint type-mono-micro">{copy.publicRoute}</span>

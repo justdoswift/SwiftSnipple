@@ -1,7 +1,6 @@
 import { motion } from "motion/react";
 import { ArrowRight, LockKeyhole } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Card } from "../lib/heroui";
 import { resolveAssetUrl } from "../lib/asset-url";
 import { getMessages } from "../lib/messages";
 import { getLocalizedSnippetFields, localizePublicPath, useAppLocale } from "../lib/locale";
@@ -44,9 +43,9 @@ export default function LeadSnippetCard({ snippet }: LeadSnippetCardProps) {
         whileHover={{ scale: 1.003, y: -2 }}
         transition={{ type: "spring", stiffness: 220, damping: 26 }}
       >
-        <Card className="public-home-lead-card-shell public-surface overflow-hidden" data-testid="home-lead-card-shell">
+        <div className="public-home-lead-card-shell public-surface overflow-hidden" data-testid="home-lead-card-shell">
           <div className="public-home-lead-card-grid">
-            <Card.Content className="public-home-lead-card-copy flex h-full flex-col gap-5 px-7 py-7 md:px-8 md:py-6 lg:px-9 lg:py-6">
+            <div className="public-home-lead-card-copy flex h-full flex-col gap-5 px-7 py-7 md:px-8 md:py-6 lg:px-9 lg:py-6">
               <div className="public-home-lead-card-copy-inner max-w-[680px] space-y-4 md:space-y-3">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                   <span className="type-mono-micro">{isLocaleAvailable ? fields.category : common.languageUnavailable}</span>
@@ -80,7 +79,7 @@ export default function LeadSnippetCard({ snippet }: LeadSnippetCardProps) {
                   </span>
                 </div>
               </div>
-            </Card.Content>
+            </div>
 
             <div className="public-home-lead-card-media-pane p-4 pt-0 md:p-0">
               <div
@@ -96,7 +95,7 @@ export default function LeadSnippetCard({ snippet }: LeadSnippetCardProps) {
               </div>
             </div>
           </div>
-        </Card>
+        </div>
       </motion.div>
     </Link>
   );

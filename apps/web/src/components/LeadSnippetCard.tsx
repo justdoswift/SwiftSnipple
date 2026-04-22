@@ -45,9 +45,9 @@ export default function LeadSnippetCard({ snippet }: LeadSnippetCardProps) {
         transition={{ type: "spring", stiffness: 220, damping: 26 }}
       >
         <Card className="public-home-lead-card-shell public-surface overflow-hidden" data-testid="home-lead-card-shell">
-          <div className="public-home-lead-card-grid min-h-[400px]">
-            <Card.Content className="public-home-lead-card-copy flex min-h-[240px] flex-col justify-between px-7 py-8 md:px-10 md:py-8 lg:px-12 lg:py-9">
-              <div className="public-home-lead-card-copy-inner max-w-[680px] space-y-6">
+          <div className="public-home-lead-card-grid">
+            <Card.Content className="public-home-lead-card-copy flex min-h-[240px] h-full flex-col gap-8 px-7 py-8 md:px-8 md:py-6 lg:px-9 lg:py-6">
+              <div className="public-home-lead-card-copy-inner max-w-[680px] space-y-5 md:space-y-4">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                   <span className="type-mono-micro">{isLocaleAvailable ? fields.category : common.languageUnavailable}</span>
                   {publishedDate ? <span className="type-mono-micro">{publishedDate}</span> : null}
@@ -59,7 +59,7 @@ export default function LeadSnippetCard({ snippet }: LeadSnippetCardProps) {
                   ) : null}
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-3 md:space-y-4">
                   <h2 className="public-home-lead-card-title max-w-[11ch] text-[2.4rem] font-semibold leading-[0.98] tracking-[-0.05em] md:text-[3.2rem] lg:text-[4rem]">
                     {isLocaleAvailable ? fields.title : common.languageUnavailable}
                   </h2>
@@ -71,7 +71,7 @@ export default function LeadSnippetCard({ snippet }: LeadSnippetCardProps) {
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4 pt-2">
+                <div className="flex flex-wrap items-center gap-4 pt-1">
                   <span className="public-home-lead-card-cta inline-flex items-center gap-3">
                     <span className="public-home-lead-card-cta-icon inline-flex h-11 w-11 items-center justify-center rounded-full">
                       <ArrowRight size={20} strokeWidth={2.1} />
@@ -82,7 +82,7 @@ export default function LeadSnippetCard({ snippet }: LeadSnippetCardProps) {
               </div>
             </Card.Content>
 
-            <div className="public-home-lead-card-media-pane p-4 pt-0 md:p-4">
+            <div className="public-home-lead-card-media-pane p-4 pt-0 md:p-0">
               <div
                 className="public-home-lead-card-media overflow-hidden"
                 data-testid="home-lead-card-media"

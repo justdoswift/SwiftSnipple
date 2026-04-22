@@ -6,6 +6,8 @@ import { Snippet } from "../types";
 import { getMessages } from "../lib/messages";
 import { getLocalizedSnippetFields, localizePublicPath, useAppLocale } from "../lib/locale";
 import { LockKeyhole } from "lucide-react";
+import { resolveSnippetCoverImage } from "../lib/snippet-cover";
+import { usePublicTheme } from "../lib/public-theme";
 
 interface SnippetCardProps {
   snippet: Snippet;
@@ -24,9 +26,11 @@ function formatPublishedDate(value: string | null, locale: "en" | "zh") {
 
 export default function SnippetCard({ snippet }: SnippetCardProps) {
   const { locale } = useAppLocale();
+  const theme = usePublicTheme();
   const common = getMessages(locale).common;
   const fields = getLocalizedSnippetFields(snippet, locale);
   const publishedDate = formatPublishedDate(snippet.publishedAt, locale);
+  const coverImageUrl = resolveAssetUrl(resolveSnippetCoverImage(snippet, theme));
 
   return (
     <Link to={localizePublicPath(`/snippets/${fields.slug}`)} className="public-snippet-card group block">
@@ -37,7 +41,7 @@ export default function SnippetCard({ snippet }: SnippetCardProps) {
         <Card className="public-surface overflow-hidden">
           <div className="snippet-cover-frame relative overflow-hidden">
             <img
-              src={resolveAssetUrl(snippet.coverImage)}
+              src={coverImageUrl}
               alt={fields.title}
               className="snippet-cover-image transition-all duration-700 group-hover:scale-[1.02] group-hover:brightness-110"
               referrerPolicy="no-referrer"

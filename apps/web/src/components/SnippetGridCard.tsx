@@ -4,7 +4,9 @@ import { Link } from "react-router-dom";
 import { Card } from "../lib/heroui";
 import { resolveAssetUrl } from "../lib/asset-url";
 import { getLocalizedSnippetFields, localizePublicPath, useAppLocale } from "../lib/locale";
+import { resolveSnippetCoverImage } from "../lib/snippet-cover";
 import { isSnippetLocaleAvailable } from "../lib/snippet-localization";
+import { usePublicTheme } from "../lib/public-theme";
 import { getMessages } from "../lib/messages";
 import type { Snippet } from "../types";
 
@@ -24,10 +26,12 @@ function formatPublishedDate(value: string | null, locale: "en" | "zh") {
 
 export default function SnippetGridCard({ snippet }: SnippetGridCardProps) {
   const { locale } = useAppLocale();
+  const theme = usePublicTheme();
   const common = getMessages(locale).common;
   const fields = getLocalizedSnippetFields(snippet, locale);
   const isLocaleAvailable = isSnippetLocaleAvailable(snippet, locale);
   const publishedDate = formatPublishedDate(snippet.publishedAt, locale);
+  const coverImageUrl = resolveAssetUrl(resolveSnippetCoverImage(snippet, theme));
 
   return (
     <Link
@@ -41,7 +45,7 @@ export default function SnippetGridCard({ snippet }: SnippetGridCardProps) {
         <Card className="public-home-grid-card-shell public-surface-subtle overflow-hidden">
           <div className="snippet-cover-frame public-home-grid-card-media overflow-hidden">
             <img
-              src={resolveAssetUrl(snippet.coverImage)}
+              src={coverImageUrl}
               alt={fields.title}
               className="snippet-cover-image transition-all duration-500 group-hover:scale-[1.02] group-hover:brightness-105"
               referrerPolicy="no-referrer"

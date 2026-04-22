@@ -65,6 +65,8 @@ describe("Home", () => {
     expect(screen.getByTestId("home-lead-card")).toHaveTextContent("The newest published snippet.");
     expect(screen.getByTestId("home-lead-card")).toHaveTextContent("April 12, 2026");
     expect(screen.getByTestId("home-lead-card-shell")).not.toHaveAttribute("data-tone");
+    expect(document.querySelector(".public-home-lead-card-image-overlay")).toBeNull();
+    expect(document.querySelector(".public-home-lead-card-image-vignette")).toBeNull();
 
     expect(screen.getByTestId("home-grid")).toHaveTextContent("Glass Navigation");
     expect(screen.queryByText("Draft Entry")).not.toBeInTheDocument();

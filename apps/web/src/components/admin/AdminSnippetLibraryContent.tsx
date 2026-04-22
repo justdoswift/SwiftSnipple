@@ -6,6 +6,8 @@ import type { Snippet, SnippetStatus } from "../../types";
 import { resolveAssetUrl } from "../../lib/asset-url";
 import { getMessages } from "../../lib/messages";
 import { getLocalizedSnippetFields, localizeAdminPath, useAppLocale } from "../../lib/locale";
+import { usePublicTheme } from "../../lib/public-theme";
+import { resolveSnippetCoverImage } from "../../lib/snippet-cover";
 import StatusBadge from "./StatusBadge";
 
 const STATUS_OPTIONS: Array<SnippetStatus | "All"> = ["All", "Draft", "Published"];
@@ -35,6 +37,7 @@ export default function AdminSnippetLibraryContent({
   error,
 }: AdminSnippetLibraryContentProps) {
   const { locale } = useAppLocale();
+  const theme = usePublicTheme();
   const copy = getMessages(locale).admin;
   const common = getMessages(locale).common;
   const safeSnippets = snippets ?? [];
@@ -176,7 +179,7 @@ export default function AdminSnippetLibraryContent({
                   <div className="grid gap-6 p-5 md:grid-cols-[220px_minmax(0,1fr)] md:p-6">
                     <div className="snippet-cover-frame admin-image-stage overflow-hidden">
                       <img
-                        src={resolveAssetUrl(snippet.coverImage)}
+                        src={resolveAssetUrl(resolveSnippetCoverImage(snippet, theme))}
                         alt={fields.title}
                         className="snippet-cover-image grayscale transition-all duration-500 hover:scale-[1.02] hover:grayscale-0"
                         referrerPolicy="no-referrer"

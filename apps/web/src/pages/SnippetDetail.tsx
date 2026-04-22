@@ -9,6 +9,8 @@ import { resolveAssetUrl } from "../lib/asset-url";
 import { getMessages } from "../lib/messages";
 import { extractMarkdownOutline, type MarkdownOutlineItem } from "../lib/markdown-outline";
 import { getLocalizedSnippetFields, getLocalizedSnippetPath, localizePublicPath, useAppLocale } from "../lib/locale";
+import { usePublicTheme } from "../lib/public-theme";
+import { resolveSnippetCoverImage } from "../lib/snippet-cover";
 import { isSnippetLocaleAvailable } from "../lib/snippet-localization";
 import { getMemberSession } from "../services/member-auth";
 import { getSnippetBySlug } from "../services/snippets";
@@ -52,6 +54,7 @@ function normalizeSectionHash(hash: string): SnippetSectionId | null {
 }
 
 export default function SnippetDetail() {
+  const theme = usePublicTheme();
   const { locale } = useAppLocale();
   const { slug } = useParams();
   const location = useLocation();
@@ -475,7 +478,7 @@ export default function SnippetDetail() {
               </div>
             ) : (
               <img
-                src={resolveAssetUrl(snippet.coverImage)}
+                src={resolveAssetUrl(resolveSnippetCoverImage(snippet, theme))}
                 alt={localizedFields?.title}
                 className="snippet-cover-image"
                 referrerPolicy="no-referrer"

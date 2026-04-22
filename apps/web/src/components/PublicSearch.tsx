@@ -5,6 +5,8 @@ import { resolveAssetUrl } from "../lib/asset-url";
 import { SearchField, Modal, Spinner } from "../lib/heroui";
 import { getMessages } from "../lib/messages";
 import { getLocalizedSnippetFields, getLocalizedSnippetPath, useAppLocale } from "../lib/locale";
+import { usePublicTheme } from "../lib/public-theme";
+import { resolveSnippetCoverImage } from "../lib/snippet-cover";
 import { isSnippetLocaleAvailable } from "../lib/snippet-localization";
 import { searchPublicSnippets } from "../lib/public-search";
 import { getSnippets } from "../services/snippets";
@@ -26,6 +28,7 @@ function formatUpdatedDate(value: string, locale: "en" | "zh") {
 
 export default function PublicSearch({ isOpen, onOpenChange, loadSnippets = getSnippets }: PublicSearchProps) {
   const { locale } = useAppLocale();
+  const theme = usePublicTheme();
   const copy = getMessages(locale).search;
   const common = getMessages(locale).common;
   const location = useLocation();
@@ -167,7 +170,7 @@ export default function PublicSearch({ isOpen, onOpenChange, loadSnippets = getS
                       >
                         <div className="snippet-cover-frame public-search-result-media">
                           <img
-                            src={resolveAssetUrl(snippet.coverImage)}
+                            src={resolveAssetUrl(resolveSnippetCoverImage(snippet, theme))}
                             alt={fields.title}
                             className="snippet-cover-image"
                           />

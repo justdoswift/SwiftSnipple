@@ -66,6 +66,15 @@ func newFakeSnippetStore(items ...domain.Snippet) *fakeSnippetStore {
 	return store
 }
 
+func firstNonEmptyString(values ...string) string {
+	for _, value := range values {
+		if strings.TrimSpace(value) != "" {
+			return value
+		}
+	}
+	return ""
+}
+
 func (f *fakeSnippetStore) storeSnippet(snippet domain.Snippet) {
 	live := snippet
 	live.HasUnpublishedChanges = false
@@ -153,7 +162,9 @@ func (f *fakeSnippetStore) Create(_ context.Context, payload domain.SnippetPaylo
 
 	snippet := domain.Snippet{
 		ID:                    "new-id",
-		CoverImage:            normalized.CoverImage,
+		CoverImage:            firstNonEmptyString(normalized.CoverImageDark, normalized.CoverImageLight),
+		CoverImageDark:        normalized.CoverImageDark,
+		CoverImageLight:       normalized.CoverImageLight,
 		Code:                  normalized.Code,
 		Status:                normalized.Status,
 		UpdatedAt:             time.Now().UTC(),
@@ -186,7 +197,9 @@ func (f *fakeSnippetStore) Update(_ context.Context, id string, payload domain.S
 	f.removePreviewIndexes(editable)
 	now := time.Now().UTC()
 
-	editable.CoverImage = normalized.CoverImage
+	editable.CoverImage = firstNonEmptyString(normalized.CoverImageDark, normalized.CoverImageLight, editable.CoverImage)
+	editable.CoverImageDark = normalized.CoverImageDark
+	editable.CoverImageLight = normalized.CoverImageLight
 	editable.Code = normalized.Code
 	editable.RequiresSubscription = normalized.RequiresSubscription
 	editable.UpdatedAt = now
@@ -410,6 +423,10 @@ func decodeResponse[T any](t *testing.T, reader io.Reader) T {
 	return value
 }
 
+func ptrTime(value time.Time) *time.Time {
+	return &value
+}
+
 type fakeMemberStore struct {
 	users          map[string]domain.MemberUser
 	userIDsByEmail map[string]string
@@ -553,7 +570,7 @@ type fakeBillingProvider struct {
 	subscriptionErr    error
 }
 
-func (f *fakeBillingProvider) CreateCheckoutSession(_ context.Context, params CheckoutSessionParams) (string, error) {
+func (f *fakeBillingProvider) CreateCheckoutSession(_ context.Context, params CheckoutSessionParams, _ string) (string, error) {
 	f.lastCheckoutParams = params
 	return f.checkoutURL, nil
 }
@@ -615,12 +632,14 @@ func newTestRouter(t *testing.T, snippets *fakeSnippetStore, members *fakeMember
 func TestSnippetRoutesSuccess(t *testing.T) {
 	now := time.Now().UTC()
 	store := newFakeSnippetStore(domain.Snippet{
-		ID:          "snippet-1",
-		CoverImage:  "https://example.com/cover.jpg",
-		Code:        "Text(\"Hello\")",
-		Status:      domain.StatusPublished,
-		UpdatedAt:   now,
-		PublishedAt: &now,
+		ID:              "snippet-1",
+		CoverImage:      "https://example.com/cover.jpg",
+		CoverImageDark:  "https://example.com/cover-dark.jpg",
+		CoverImageLight: "https://example.com/cover-light.jpg",
+		Code:            "Text(\"Hello\")",
+		Status:          domain.StatusPublished,
+		UpdatedAt:       now,
+		PublishedAt:     &now,
 		Locales: domain.SnippetLocales{
 			EN: localizedFields("Glass Drawer Navigation", "glass-drawer-navigation", "Navigation"),
 			ZH: localizedFields("玻璃抽屉导航", "bo-li-chou-ti-dao-hang", "Navigation"),
@@ -641,6 +660,13 @@ func TestSnippetRoutesSuccess(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected get-by-id status 200, got %d", rec.Code)
 	}
+	snippetResponse := decodeResponse[domain.Snippet](t, rec.Body)
+	if snippetResponse.CoverImageDark != "https://example.com/cover-dark.jpg" {
+		t.Fatalf("expected dark cover image, got %q", snippetResponse.CoverImageDark)
+	}
+	if snippetResponse.CoverImageLight != "https://example.com/cover-light.jpg" {
+		t.Fatalf("expected light cover image, got %q", snippetResponse.CoverImageLight)
+	}
 
 	req = httptest.NewRequest(http.MethodGet, "/api/snippets/slug/glass-drawer-navigation", nil)
 	rec = httptest.NewRecorder()
@@ -654,6 +680,71 @@ func TestSnippetRoutesSuccess(t *testing.T) {
 	router.ServeHTTP(rec, req)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected get-by-slug ZH status 200, got %d", rec.Code)
+	}
+}
+
+func TestCreateAndUpdatePersistThemeCoverFields(t *testing.T) {
+	store := newFakeSnippetStore(domain.Snippet{
+		ID:              "snippet-1",
+		CoverImage:      "https://example.com/live-default.jpg",
+		CoverImageDark:  "",
+		CoverImageLight: "",
+		Code:            "Text(\"Hello\")",
+		Status:          domain.StatusPublished,
+		UpdatedAt:       time.Now().UTC(),
+		PublishedAt:     ptrTime(time.Now().UTC()),
+		Locales: domain.SnippetLocales{
+			EN: localizedFields("Glass Drawer Navigation", "glass-drawer-navigation", "Navigation"),
+			ZH: localizedFields("玻璃抽屉导航", "bo-li-chou-ti-dao-hang", "Navigation"),
+		},
+	})
+	router := newTestRouter(t, store, nil, nil)
+	adminCookie := loginCookie(t, router)
+
+	createPayload := domain.SnippetPayload{
+		CoverImageDark:  "https://example.com/dark.jpg",
+		CoverImageLight: "",
+		Status:          domain.StatusDraft,
+		Locales: domain.SnippetLocales{
+			EN: localizedFields("A", "valid-slug", "Workflow"),
+			ZH: localizedFields("A 中文", "valid-zh-slug", "Workflow"),
+		},
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/api/admin/snippets", strings.NewReader(snippetPayloadJSON(t, createPayload)))
+	req.Header.Set("Content-Type", "application/json")
+	req.AddCookie(adminCookie)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("expected create status 201, got %d with body %q", rec.Code, rec.Body.String())
+	}
+	created := decodeResponse[domain.Snippet](t, rec.Body)
+	if created.CoverImageDark != createPayload.CoverImageDark || created.CoverImageLight != createPayload.CoverImageLight {
+		t.Fatalf("expected create response to keep theme cover images, got %#v", created)
+	}
+
+	updatePayload := domain.SnippetPayload{
+		CoverImageDark:  "https://example.com/draft-dark.jpg",
+		CoverImageLight: "https://example.com/draft-light.jpg",
+		Status:          domain.StatusPublished,
+		Locales: domain.SnippetLocales{
+			EN: localizedFields("Glass Drawer Navigation", "glass-drawer-navigation", "Navigation"),
+			ZH: localizedFields("玻璃抽屉导航", "bo-li-chou-ti-dao-hang", "Navigation"),
+		},
+	}
+
+	req = httptest.NewRequest(http.MethodPut, "/api/admin/snippets/snippet-1", strings.NewReader(snippetPayloadJSON(t, updatePayload)))
+	req.Header.Set("Content-Type", "application/json")
+	req.AddCookie(adminCookie)
+	rec = httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected update status 200, got %d with body %q", rec.Code, rec.Body.String())
+	}
+	updated := decodeResponse[domain.Snippet](t, rec.Body)
+	if updated.CoverImageDark != updatePayload.CoverImageDark || updated.CoverImageLight != updatePayload.CoverImageLight {
+		t.Fatalf("expected update response to keep theme cover images, got %#v", updated)
 	}
 }
 

@@ -18,6 +18,7 @@ function createLocalizedFields(overrides?: PartialLocalizedFields): SnippetLocal
 }
 
 export function createSnippet(overrides?: Partial<Snippet>): Snippet {
+  const coverImage = overrides?.coverImage ?? overrides?.coverImageDark ?? overrides?.coverImageLight ?? "https://example.com/cover.jpg";
   const localizedOverrideFields: PartialLocalizedFields = {
     title: overrides?.title,
     slug: overrides?.slug,
@@ -46,7 +47,9 @@ export function createSnippet(overrides?: Partial<Snippet>): Snippet {
 
   return {
     id: "snippet-1",
-    coverImage: "https://example.com/cover.jpg",
+    coverImage,
+    coverImageDark: "",
+    coverImageLight: "",
     code: 'Text("Hello")',
     status: "Published",
     updatedAt: "2026-04-09T12:00:00.000Z",

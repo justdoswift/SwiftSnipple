@@ -6,6 +6,8 @@ import { resolveAssetUrl } from "../lib/asset-url";
 import { getMessages } from "../lib/messages";
 import { getLocalizedSnippetFields, localizePublicPath, useAppLocale } from "../lib/locale";
 import { isSnippetLocaleAvailable } from "../lib/snippet-localization";
+import { resolveSnippetCoverImage } from "../lib/snippet-cover";
+import { usePublicTheme } from "../lib/public-theme";
 import type { Snippet } from "../types";
 
 interface LeadSnippetCardProps {
@@ -24,12 +26,13 @@ function formatPublishedDate(value: string | null, locale: "en" | "zh") {
 
 export default function LeadSnippetCard({ snippet }: LeadSnippetCardProps) {
   const { locale } = useAppLocale();
+  const theme = usePublicTheme();
   const copy = getMessages(locale).home;
   const common = getMessages(locale).common;
   const fields = getLocalizedSnippetFields(snippet, locale);
   const isLocaleAvailable = isSnippetLocaleAvailable(snippet, locale);
   const publishedDate = formatPublishedDate(snippet.publishedAt, locale);
-  const coverImageUrl = resolveAssetUrl(snippet.coverImage);
+  const coverImageUrl = resolveAssetUrl(resolveSnippetCoverImage(snippet, theme));
 
   return (
     <Link
@@ -42,22 +45,8 @@ export default function LeadSnippetCard({ snippet }: LeadSnippetCardProps) {
         transition={{ type: "spring", stiffness: 220, damping: 26 }}
       >
         <Card className="public-home-lead-card-shell public-surface overflow-hidden" data-testid="home-lead-card-shell">
-          <div className="public-home-lead-card-grid relative min-h-[420px] overflow-hidden md:min-h-[500px]">
-            <div
-              className="public-home-lead-card-media absolute inset-3 overflow-hidden md:inset-4"
-              data-testid="home-lead-card-media"
-            >
-              <img
-                src={coverImageUrl}
-                alt={fields.title}
-                className="public-home-lead-card-media-image h-full w-full transition-transform duration-700 group-hover:scale-[1.02]"
-                referrerPolicy="no-referrer"
-              />
-            </div>
-            <div className="public-home-lead-card-image-overlay absolute inset-3 md:inset-4" />
-            <div className="public-home-lead-card-image-vignette absolute inset-3 md:inset-4" />
-
-            <Card.Content className="public-home-lead-card-copy relative z-[1] flex min-h-[420px] flex-col justify-end px-7 py-8 md:min-h-[500px] md:px-10 md:py-10 lg:px-12 lg:py-12">
+          <div className="public-home-lead-card-grid min-h-[400px]">
+            <Card.Content className="public-home-lead-card-copy flex min-h-[240px] flex-col justify-between px-7 py-8 md:px-10 md:py-8 lg:px-12 lg:py-9">
               <div className="public-home-lead-card-copy-inner max-w-[680px] space-y-6">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                   <span className="type-mono-micro">{isLocaleAvailable ? fields.category : common.languageUnavailable}</span>
@@ -75,7 +64,7 @@ export default function LeadSnippetCard({ snippet }: LeadSnippetCardProps) {
                     {isLocaleAvailable ? fields.title : common.languageUnavailable}
                   </h2>
                   <p
-                    className="public-home-lead-card-excerpt type-body max-w-[56ch] text-[0.98rem] leading-[1.7] md:text-[1.08rem]"
+                    className="public-home-lead-card-excerpt public-home-lead-card-excerpt-clamp type-body max-w-[56ch] text-[0.98rem] leading-[1.7] md:text-[1.08rem]"
                     aria-hidden={!isLocaleAvailable && !fields.excerpt}
                   >
                     {isLocaleAvailable ? fields.excerpt || "\u00A0" : common.languageUnavailableLong}
@@ -92,6 +81,20 @@ export default function LeadSnippetCard({ snippet }: LeadSnippetCardProps) {
                 </div>
               </div>
             </Card.Content>
+
+            <div className="public-home-lead-card-media-pane p-4 pt-0 md:p-4">
+              <div
+                className="public-home-lead-card-media overflow-hidden"
+                data-testid="home-lead-card-media"
+              >
+                <img
+                  src={coverImageUrl}
+                  alt={fields.title}
+                  className="public-home-lead-card-media-image h-full w-full transition-transform duration-700 group-hover:scale-[1.02]"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+            </div>
           </div>
         </Card>
       </motion.div>

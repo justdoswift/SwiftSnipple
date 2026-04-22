@@ -41,6 +41,8 @@ export interface SnippetAvailableLocales {
 export interface Snippet {
   id: string;
   coverImage: string;
+  coverImageDark?: string;
+  coverImageLight?: string;
   code: string;
   status: SnippetStatus;
   updatedAt: string;
@@ -66,7 +68,8 @@ export interface Snippet {
 }
 
 export interface SnippetPayload {
-  coverImage: string;
+  coverImageDark: string;
+  coverImageLight: string;
   code: string;
   status: SnippetStatus;
   publishedAt: string | null;
@@ -75,7 +78,8 @@ export interface SnippetPayload {
 }
 
 export interface SnippetFormState {
-  coverImage: string;
+  coverImageDark: string;
+  coverImageLight: string;
   code: string;
   status: SnippetStatus;
   publishedAt: string;

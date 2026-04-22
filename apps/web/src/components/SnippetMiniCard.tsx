@@ -6,6 +6,8 @@ import { Snippet } from "../types";
 import { getMessages } from "../lib/messages";
 import { getLocalizedSnippetFields, localizePublicPath, useAppLocale } from "../lib/locale";
 import { LockKeyhole } from "lucide-react";
+import { resolveSnippetCoverImage } from "../lib/snippet-cover";
+import { usePublicTheme } from "../lib/public-theme";
 
 interface SnippetMiniCardProps {
   snippet: Snippet;
@@ -14,8 +16,10 @@ interface SnippetMiniCardProps {
 
 export default function SnippetMiniCard({ snippet }: SnippetMiniCardProps) {
   const { locale } = useAppLocale();
+  const theme = usePublicTheme();
   const common = getMessages(locale).common;
   const fields = getLocalizedSnippetFields(snippet, locale);
+  const coverImageUrl = resolveAssetUrl(resolveSnippetCoverImage(snippet, theme));
 
   return (
     <Link to={localizePublicPath(`/snippets/${fields.slug}`)} className="public-snippet-mini-card group block cursor-pointer">
@@ -26,7 +30,7 @@ export default function SnippetMiniCard({ snippet }: SnippetMiniCardProps) {
           <Card className="public-snippet-mini-card-shell vibe-glass overflow-hidden transition-colors">
           <div className="snippet-cover-frame public-snippet-mini-card-media overflow-hidden">
             <img
-              src={resolveAssetUrl(snippet.coverImage)}
+              src={coverImageUrl}
               alt={fields.title}
               className="snippet-cover-image opacity-80 transition-all duration-500 group-hover:scale-[1.02] group-hover:opacity-100 group-hover:brightness-110"
               referrerPolicy="no-referrer"

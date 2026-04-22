@@ -68,7 +68,7 @@ describe("AdminSnippetEditor", () => {
     expect(screen.getByRole("tab", { name: "Narrative" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Code" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Prompt" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Surface" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /^(Surface|表面)$/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Preview" })).toHaveClass("admin-nav-action-icon");
     expect(screen.getByRole("button", { name: "Publish" })).toHaveClass("admin-nav-action-icon");
     expect(screen.getByRole("button", { name: "Publish" })).not.toHaveClass("admin-nav-action-icon-primary");
@@ -88,6 +88,9 @@ describe("AdminSnippetEditor", () => {
     expect(screen.queryByText("Prompt notes", { selector: "span, p" })).not.toBeInTheDocument();
     expect(screen.queryByText("Live preview")).not.toBeInTheDocument();
     expect(screen.queryByText("Shared with public view")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: /^(Surface|表面)$/ }));
+    expect(screen.getByTestId("admin-cover-theme-switcher")).toBeInTheDocument();
+    expect(screen.queryByText("Default cover")).not.toBeInTheDocument();
   });
 
   it("renders the new snippet editor route", () => {
@@ -112,7 +115,7 @@ describe("AdminSnippetEditor", () => {
     expect(screen.getByRole("tab", { name: "Narrative" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Code" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Prompt" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Surface" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /^(Surface|表面)$/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Preview" })).toHaveClass("admin-nav-action-icon");
     expect(screen.getByRole("button", { name: "Publish" })).toHaveClass("admin-nav-action-icon");
     expect(screen.getByRole("button", { name: "Publish" })).not.toHaveClass("admin-nav-action-icon-primary");
@@ -121,6 +124,105 @@ describe("AdminSnippetEditor", () => {
     fireEvent.click(screen.getByRole("button", { name: "Preview" }));
     expect(screen.getByText("Save this draft first to open the public preview at /snippets/untitled.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Done" })).not.toBeInTheDocument();
+  });
+
+  it("auto-updates the route slug from the title until the slug is manually changed", () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+
+    render(
+      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+            <Route path="snippets/new" element={<AdminSnippetEditor />} />
+            <Route path="snippets/:id" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getAllByRole("tab")[3]);
+    fireEvent.change(screen.getByLabelText("Snippet Title"), { target: { value: "Fresh Draft" } });
+    expect(screen.getByLabelText("Route Slug")).toHaveValue("fresh-draft");
+
+    fireEvent.change(screen.getByLabelText("Route Slug"), { target: { value: "custom-slug" } });
+    fireEvent.change(screen.getByLabelText("Snippet Title"), { target: { value: "Fresh Draft Updated" } });
+    expect(screen.getByLabelText("Route Slug")).toHaveValue("custom-slug");
+  });
+
+  it("generates the route slug from the current title and overwrites manual slug edits", () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+
+    render(
+      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+            <Route path="snippets/new" element={<AdminSnippetEditor />} />
+            <Route path="snippets/:id" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getAllByRole("tab")[3]);
+    fireEvent.change(screen.getByLabelText("Snippet Title"), { target: { value: "English Title" } });
+    fireEvent.change(screen.getByLabelText("Route Slug"), { target: { value: "manual-slug" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "Generate from title" }));
+
+    expect(screen.getByLabelText("Route Slug")).toHaveValue("english-title");
+  });
+
+  it("generates the route slug for the active locale only, including empty chinese slug output", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+
+    render(
+      <LocaleContext.Provider value={{ locale: "zh" }}>
+        <MemoryRouter initialEntries={["/admin/snippets/new"]}>
+          <Routes>
+            <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+              <Route path="snippets/new" element={<AdminSnippetEditor />} />
+              <Route path="snippets/:id" element={<AdminSnippetEditor />} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </LocaleContext.Provider>,
+    );
+
+    fireEvent.click(screen.getAllByRole("tab")[3]);
+    const localeSwitcher = within(screen.getByTestId("admin-editor-locale-switcher"));
+    const englishButton = localeSwitcher.getByRole("button", { name: /EN/i });
+    const chineseButton = localeSwitcher.getByRole("button", { name: /中文/i });
+
+    fireEvent.click(englishButton);
+    await waitFor(() => {
+      expect(englishButton).toHaveAttribute("aria-pressed", "true");
+    });
+    fireEvent.change(screen.getByLabelText("Snippet 标题"), { target: { value: "English Title" } });
+    expect(screen.getByLabelText("路由 Slug")).toHaveValue("english-title");
+
+    fireEvent.click(chineseButton);
+    await waitFor(() => {
+      expect(chineseButton).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByLabelText("Snippet 标题")).toHaveValue("");
+    });
+
+    fireEvent.change(screen.getByLabelText("Snippet 标题"), { target: { value: "中文标题" } });
+    fireEvent.change(screen.getByLabelText("路由 Slug"), { target: { value: "shou-dong" } });
+    fireEvent.click(screen.getByRole("button", { name: "根据标题生成" }));
+
+    expect(screen.getByLabelText("路由 Slug")).toHaveValue("");
+
+    fireEvent.click(englishButton);
+    await waitFor(() => {
+      expect(englishButton).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByLabelText("路由 Slug")).toHaveValue("english-title");
+    });
   });
 
   it("uploads a local cover image and stores the returned url", async () => {
@@ -143,7 +245,7 @@ describe("AdminSnippetEditor", () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByRole("tab", { name: "Surface" }));
+    fireEvent.click(screen.getByRole("tab", { name: /^(Surface|表面)$/ }));
     const file = new File(["cover"], "cover.png", { type: "image/png" });
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement | null;
     expect(fileInput).not.toBeNull();
@@ -184,7 +286,7 @@ describe("AdminSnippetEditor", () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByRole("tab", { name: "Surface" }));
+    fireEvent.click(screen.getByRole("tab", { name: /^(Surface|表面)$/ }));
     const file = new File(["cover"], "cover.txt", { type: "text/plain" });
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement | null;
     expect(fileInput).not.toBeNull();
@@ -193,6 +295,87 @@ describe("AdminSnippetEditor", () => {
 
     expect(await screen.findByText("Choose a valid image file before uploading.")).toBeInTheDocument();
     expect(mockedUploadCoverImage).not.toHaveBeenCalled();
+  });
+
+  it("stores theme-specific cover uploads in the matching payload fields", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+    mockedUploadCoverImage.mockResolvedValue({ url: "/api/uploads/dark-cover.webp" });
+    mockedCreateSnippet.mockResolvedValue(createSnippetFixture({
+      id: "snippet-theme-cover",
+      title: "Theme Cover",
+      slug: "theme-cover",
+      coverImageDark: "/api/uploads/dark-cover.webp",
+    }));
+
+    render(
+      <MemoryRouter initialEntries={["/admin/snippets/new"]}>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+            <Route path="snippets/new" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: /^(Surface|表面)$/ }));
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement | null;
+    expect(fileInput).not.toBeNull();
+
+    fireEvent.change(fileInput!, { target: { files: [new File(["dark"], "dark-cover.png", { type: "image/png" })] } });
+    fireEvent.change(screen.getByLabelText("Snippet Title"), { target: { value: "Theme Cover" } });
+
+    await waitFor(() => {
+      expect(mockedCreateSnippet).toHaveBeenCalledWith(expect.objectContaining({
+        coverImageDark: "/api/uploads/dark-cover.webp",
+        coverImageLight: "",
+      }));
+    });
+  });
+
+  it("clears a theme-specific cover and falls back to the other theme cover", async () => {
+    mockedGetSnippetById.mockReset();
+    mockedCreateSnippet.mockReset();
+    mockedPublishSnippet.mockReset();
+    mockedUpdateSnippet.mockReset();
+    mockedGetSnippetById.mockResolvedValue(createSnippetFixture({
+      id: "snippet-1",
+      coverImageDark: "https://example.com/dark-cover.jpg",
+      coverImageLight: "https://example.com/light-cover.jpg",
+      status: "Draft",
+    }));
+    mockedUpdateSnippet.mockResolvedValue(createSnippetFixture({
+      id: "snippet-1",
+      coverImageDark: "",
+      coverImageLight: "https://example.com/light-cover.jpg",
+      status: "Draft",
+    }));
+
+    render(
+      <MemoryRouter initialEntries={["/admin/snippets/snippet-1"]}>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout adminAuthSession={adminAuthSession} onSignOut={vi.fn()} />}>
+            <Route path="snippets/:id" element={<AdminSnippetEditor />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(await screen.findByRole("tab", { name: "Surface" }));
+    fireEvent.click(screen.getByRole("button", { name: "Clear" }));
+
+    await waitFor(() => {
+      expect(mockedUpdateSnippet).toHaveBeenCalledWith(
+        "snippet-1",
+        expect.objectContaining({
+          coverImageDark: "",
+        }),
+      );
+    });
+
+    expect(screen.getByText("Using light")).toBeInTheDocument();
+    expect(document.querySelector(".admin-cover-upload-preview img")).toHaveAttribute("src", "https://example.com/light-cover.jpg");
   });
 
   it("formats markdown content and inserts uploaded media", async () => {
@@ -734,7 +917,7 @@ describe("AdminSnippetEditor", () => {
       expect(screen.getByLabelText("Snippet Title")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("tab", { name: "Surface" }));
+    fireEvent.click(screen.getByRole("tab", { name: /^(Surface|表面)$/ }));
 
     const visibilityTrigger = screen.getByRole("button", { name: "Visibility" });
     expect(within(visibilityTrigger).getByText("Free")).toBeInTheDocument();
@@ -852,7 +1035,7 @@ describe("AdminSnippetEditor", () => {
     );
 
     fireEvent.change(screen.getByLabelText("Snippet Title"), { target: { value: "Paid Snippet" } });
-    fireEvent.click(screen.getByRole("tab", { name: "Surface" }));
+    fireEvent.click(screen.getByRole("tab", { name: /^(Surface|表面)$/ }));
     fireEvent.click(screen.getByRole("button", { name: "Visibility" }));
     fireEvent.click(await screen.findByRole("menuitemradio", { name: "Subscribers only" }));
 
@@ -1485,7 +1668,7 @@ describe("AdminSnippetEditor", () => {
       expect(screen.getByLabelText("Snippet Title")).toHaveValue("Live Snippet");
     });
 
-    fireEvent.click(screen.getByRole("tab", { name: "Surface" }));
+    fireEvent.click(screen.getByRole("tab", { name: /^(Surface|表面)$/ }));
     fireEvent.click(screen.getByRole("button", { name: "Delete Snippet" }));
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -1778,7 +1961,7 @@ describe("AdminSnippetEditor", () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByRole("tab", { name: "Surface" }));
+    fireEvent.click(screen.getByRole("tab", { name: /^(Surface|表面)$/ }));
 
     const statusValue = document.querySelector(".admin-form-select-value");
     const statusTriggerElement = statusValue?.closest("button, [data-slot='dropdown-trigger']") as HTMLElement | null;
@@ -1829,7 +2012,7 @@ describe("AdminSnippetEditor", () => {
       expect(screen.getByLabelText("Snippet Title")).toHaveValue("Live Snippet");
     });
 
-    fireEvent.click(screen.getByRole("tab", { name: "Surface" }));
+    fireEvent.click(screen.getByRole("tab", { name: /^(Surface|表面)$/ }));
 
     expect(screen.getByRole("button", { name: "Status" })).toBeDisabled();
   });
@@ -1873,7 +2056,7 @@ describe("AdminSnippetEditor", () => {
       expect(screen.getByLabelText("Snippet 标题")).toHaveValue("玻璃导航");
     });
 
-    fireEvent.click(screen.getByRole("tab", { name: "表面" }));
+    fireEvent.click(screen.getByRole("tab", { name: /^(Surface|表面)$/ }));
 
     const visibilityTrigger = screen.getByRole("button", { name: "可见性" });
     expect(within(visibilityTrigger).getByText("仅订阅用户")).toBeInTheDocument();

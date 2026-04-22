@@ -12,11 +12,12 @@ import { resolveAssetUrl } from "../../lib/asset-url";
 import { applyHeading, insertBlock, insertLink, replaceLinePrefix, wrapSelection } from "../../lib/markdown-editor";
 import { getMessages } from "../../lib/messages";
 import { getLocalizedSnippetFields, localizeAdminPath, localizePublicPath, useAppLocale } from "../../lib/locale";
+import type { PublicTheme } from "../../lib/public-theme";
 import { createEmptyLocalizedFields, getFormLocale, getSnippetLocale } from "../../lib/snippet-localization";
 import { isUnauthorizedError } from "../../services/api";
 import { createSnippet, deleteSnippet, getSnippetById, publishSnippet, unpublishSnippet, updateSnippet, uploadContentImage, uploadContentImageFromURL, uploadContentVideo, uploadCoverImage } from "../../services/snippets";
 import { AppLocale, Snippet, SnippetFormState, SnippetPayload, SnippetStatus } from "../../types";
-import { ChevronDown, ChevronLeft, Code2, Eye, ImageUp, Layout, Monitor, MessageSquareQuote, Send, Smartphone, Settings2, Trash2, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, Code2, Eye, ImageUp, Layout, Monitor, MessageSquareQuote, RefreshCw, Send, Smartphone, Settings2, Trash2, X } from "lucide-react";
 
 const EDITABLE_STATUS_OPTIONS: SnippetStatus[] = ["Draft"];
 type EditorTabKey = "content" | "code" | "prompt" | "meta";
@@ -31,11 +32,12 @@ type EditorVisibilityOption = {
   id: "free" | "subscribers";
   label: string;
 };
-type EditorContentLocaleOption = {
-  id: AppLocale;
+type SegmentedControlOption<T extends string> = {
+  id: T;
   label: string;
 };
 type EditorMediaModalKind = "image" | "video" | null;
+type CoverImageField = "coverImageDark" | "coverImageLight";
 type ContentHistoryEntry = {
   value: string;
   selectionStart: number;
@@ -98,17 +100,17 @@ function EditorSectionRail({
   );
 }
 
-function LocaleSwitcher({
-  activeLocale,
+function SegmentedSwitcher<T extends string>({
+  activeValue,
   ariaLabel,
   onSelect,
   options,
   testId,
 }: {
-  activeLocale: AppLocale;
+  activeValue: T;
   ariaLabel?: string;
-  onSelect: (locale: AppLocale) => void;
-  options: EditorContentLocaleOption[];
+  onSelect: (value: T) => void;
+  options: SegmentedControlOption<T>[];
   testId?: string;
 }) {
   return (
@@ -119,7 +121,7 @@ function LocaleSwitcher({
       aria-label={ariaLabel}
     >
       {options.map((option) => {
-        const isActive = option.id === activeLocale;
+        const isActive = option.id === activeValue;
 
         return (
           <button
@@ -163,8 +165,9 @@ function toDateTimeInputValue(value: string | null) {
 function createEmptySnippet(): Snippet {
   return {
     id: "",
-    coverImage:
-      "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=80",
+    coverImage: "",
+    coverImageDark: "",
+    coverImageLight: "",
     locales: {
       en: {
         ...createEmptyLocalizedFields(),
@@ -200,7 +203,8 @@ function toFormState(snippet: Snippet): SnippetFormState {
   const chinese = getSnippetLocale(snippet, "zh");
 
   return {
-    coverImage: snippet.coverImage,
+    coverImageDark: snippet.coverImageDark ?? "",
+    coverImageLight: snippet.coverImageLight ?? "",
     code: snippet.code,
     status: snippet.status,
     publishedAt: toDateTimeInputValue(snippet.publishedAt),
@@ -248,7 +252,8 @@ function buildLocalizedPayload(fields: SnippetFormState["locales"]["en"]) {
 
 function buildSnippetPayload(baseSnippet: Snippet, form: SnippetFormState): SnippetPayload {
   return {
-    coverImage: form.coverImage.trim(),
+    coverImageDark: form.coverImageDark.trim(),
+    coverImageLight: form.coverImageLight.trim(),
     code: form.code,
     status: form.status,
     publishedAt: baseSnippet.id ? baseSnippet.publishedAt : null,
@@ -265,7 +270,8 @@ function toSnippetPayload(snippet: Snippet): SnippetPayload {
   const chinese = getSnippetLocale(snippet, "zh");
 
   return {
-    coverImage: snippet.coverImage,
+    coverImageDark: snippet.coverImageDark ?? "",
+    coverImageLight: snippet.coverImageLight ?? "",
     code: snippet.code,
     status: snippet.status,
     publishedAt: snippet.publishedAt,
@@ -283,6 +289,7 @@ function fromFormState(baseSnippet: Snippet, form: SnippetFormState): Snippet {
   return {
     ...baseSnippet,
     ...payload,
+    coverImage: payload.coverImageDark || payload.coverImageLight || baseSnippet.coverImage,
     updatedAt: new Date().toISOString(),
   };
 }
@@ -671,9 +678,13 @@ export default function AdminSnippetEditor() {
   const [form, setForm] = useState<SnippetFormState>(() => toFormState(createEmptySnippet()));
   const [isLoading, setIsLoading] = useState(!isNew);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isUploadingCoverImage, setIsUploadingCoverImage] = useState(false);
+  const [uploadingCoverField, setUploadingCoverField] = useState<CoverImageField | null>(null);
+  const [activeCoverTheme, setActiveCoverTheme] = useState<PublicTheme>("dark");
   const [isUploadingContentMedia, setIsUploadingContentMedia] = useState(false);
-  const [localCoverPreviewUrl, setLocalCoverPreviewUrl] = useState("");
+  const [localCoverPreviewUrls, setLocalCoverPreviewUrls] = useState<Record<CoverImageField, string>>({
+    coverImageDark: "",
+    coverImageLight: "",
+  });
   const [error, setError] = useState("");
   const [contentMediaError, setContentMediaError] = useState("");
   const [feedback, setFeedback] = useState("");
@@ -848,8 +859,30 @@ export default function AdminSnippetEditor() {
     [copy.code, copy.narrative, copy.prompt, copy.surface],
   );
   const localizedForm = useMemo(() => getFormLocale(form, editorLocale), [editorLocale, form]);
+  const coverThemeOptions = useMemo<SegmentedControlOption<PublicTheme>[]>(
+    () => [
+      { id: "dark", label: copy.darkTheme },
+      { id: "light", label: copy.lightTheme },
+    ],
+    [copy.darkTheme, copy.lightTheme],
+  );
+  const activeCoverField: CoverImageField = activeCoverTheme === "dark" ? "coverImageDark" : "coverImageLight";
+  const inactiveCoverField: CoverImageField = activeCoverTheme === "dark" ? "coverImageLight" : "coverImageDark";
+  const ownCoverPreviewUrl = localCoverPreviewUrls[activeCoverField] || resolveAssetUrl(form[activeCoverField]);
+  const fallbackCoverPreviewUrl = localCoverPreviewUrls[inactiveCoverField] || resolveAssetUrl(form[inactiveCoverField]);
+  const activeCoverPreviewUrl = ownCoverPreviewUrl || fallbackCoverPreviewUrl || resolveAssetUrl(baseSnippet.coverImage);
+  const activeCoverLabel = activeCoverField === "coverImageDark" ? copy.coverImageDark : copy.coverImageLight;
+  const activeCoverStatus = ownCoverPreviewUrl
+    ? null
+    : fallbackCoverPreviewUrl
+      ? activeCoverTheme === "dark"
+        ? copy.themeCoverImageUsingLight
+        : copy.themeCoverImageUsingDark
+      : baseSnippet.coverImage
+        ? copy.themeCoverImageLegacy
+        : copy.themeCoverImageEmpty;
   const localizedPreview = useMemo(() => getLocalizedSnippetFields(previewSnippet, editorLocale), [editorLocale, previewSnippet]);
-  const editorLocaleOptions = useMemo<EditorContentLocaleOption[]>(
+  const editorLocaleOptions = useMemo<SegmentedControlOption<AppLocale>[]>(
     () => [
       { id: "en", label: copy.localeEditorEnglish },
       { id: "zh", label: copy.localeEditorChinese },
@@ -1047,6 +1080,23 @@ export default function AdminSnippetEditor() {
         locales: {
           ...current.locales,
           [editorLocale]: nextLocaleForm,
+        },
+      };
+    });
+  }, [editorLocale]);
+
+  const handleGenerateSlug = useCallback(() => {
+    setForm((current) => {
+      const currentLocaleForm = current.locales[editorLocale];
+
+      return {
+        ...current,
+        locales: {
+          ...current.locales,
+          [editorLocale]: {
+            ...currentLocaleForm,
+            slug: slugify(currentLocaleForm.title),
+          },
         },
       };
     });
@@ -1314,7 +1364,7 @@ export default function AdminSnippetEditor() {
     }
   };
 
-  const handleCoverImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverImageUpload = useCallback(async (field: CoverImageField, event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
 
@@ -1330,15 +1380,19 @@ export default function AdminSnippetEditor() {
     try {
       setError("");
       setFeedback("");
-      setIsUploadingCoverImage(true);
+      setUploadingCoverField(field);
       const result = await uploadCoverImage(file);
-      setLocalCoverPreviewUrl((currentPreviewUrl) => {
+      setLocalCoverPreviewUrls((currentPreviewUrls) => {
+        const currentPreviewUrl = currentPreviewUrls[field];
         if (currentPreviewUrl && typeof URL !== "undefined" && typeof URL.revokeObjectURL === "function") {
           URL.revokeObjectURL(currentPreviewUrl);
         }
-        return nextPreviewUrl;
+        return {
+          ...currentPreviewUrls,
+          [field]: nextPreviewUrl,
+        };
       });
-      updateField("coverImage", result.url);
+      updateField(field, result.url);
     } catch (err) {
       if (nextPreviewUrl && typeof URL !== "undefined" && typeof URL.revokeObjectURL === "function") {
         URL.revokeObjectURL(nextPreviewUrl);
@@ -1351,9 +1405,25 @@ export default function AdminSnippetEditor() {
       const nextError = err instanceof Error ? err.message : copy.failedCoverImageUpload;
       setError(nextError);
     } finally {
-      setIsUploadingCoverImage(false);
+      setUploadingCoverField(null);
     }
   }, [copy.failedCoverImageUpload, copy.invalidCoverImage, redirectToAdminLogin]);
+
+  const clearThemeCoverImage = useCallback((field: CoverImageField) => {
+    setLocalCoverPreviewUrls((currentPreviewUrls) => {
+      const currentPreviewUrl = currentPreviewUrls[field];
+      if (currentPreviewUrl && typeof URL !== "undefined" && typeof URL.revokeObjectURL === "function") {
+        URL.revokeObjectURL(currentPreviewUrl);
+      }
+
+      return {
+        ...currentPreviewUrls,
+        [field]: "",
+      };
+    });
+
+    updateField(field, "");
+  }, []);
 
   const handleContentTextareaChange = useCallback((event: React.ChangeEvent<HTMLTextAreaElement>) => {
     const previousValue = contentValueRef.current;
@@ -1561,11 +1631,17 @@ export default function AdminSnippetEditor() {
 
   useEffect(() => {
     return () => {
-      if (localCoverPreviewUrl && typeof URL !== "undefined" && typeof URL.revokeObjectURL === "function") {
-        URL.revokeObjectURL(localCoverPreviewUrl);
+      if (typeof URL === "undefined" || typeof URL.revokeObjectURL !== "function") {
+        return;
       }
+
+      Object.values(localCoverPreviewUrls).forEach((previewUrl) => {
+        if (previewUrl) {
+          URL.revokeObjectURL(previewUrl);
+        }
+      });
     };
-  }, [localCoverPreviewUrl]);
+  }, [localCoverPreviewUrls]);
 
   const handlePreview = useCallback(() => {
     if (!hasSavedPreview || !previewPath) {
@@ -1742,9 +1818,9 @@ export default function AdminSnippetEditor() {
                 />
               </div>
 
-              <LocaleSwitcher
-                activeLocale={editorLocale}
-                onSelect={setEditorLocale}
+              <SegmentedSwitcher<AppLocale>
+                activeValue={editorLocale}
+                onSelect={(value) => setEditorLocale(value)}
                 options={editorLocaleOptions}
                 testId="admin-editor-locale-switcher"
               />
@@ -1862,54 +1938,89 @@ export default function AdminSnippetEditor() {
                       </label>
                       <label className="grid gap-2 md:col-span-2">
                          <span className="admin-eyebrow type-mono-micro">{copy.routeSlug}</span>
-                         <Input
-                           aria-label={copy.routeSlug}
-                           value={localizedForm.slug}
-                           onChange={(event) => updateLocalizedField("slug", event.target.value)}
-                           className="admin-input w-full"
-                         />
+                         <div className="flex items-stretch gap-3">
+                           <Input
+                             aria-label={copy.routeSlug}
+                             value={localizedForm.slug}
+                             onChange={(event) => updateLocalizedField("slug", event.target.value)}
+                             className="admin-input w-full"
+                           />
+                           <Button
+                             type="button"
+                             aria-label={copy.generateSlugFromTitle}
+                             className="admin-button-secondary admin-button-icon shrink-0"
+                             onPress={handleGenerateSlug}
+                           >
+                             <RefreshCw size={16} aria-hidden="true" />
+                           </Button>
+                         </div>
                       </label>
-                      <label className="grid gap-2 md:col-span-2">
-                        <span className="admin-eyebrow type-mono-micro">{copy.coverImage}</span>
-                        <div className="admin-cover-upload-shell grid gap-4">
-                          {form.coverImage || localCoverPreviewUrl ? (
+                      <div className="grid gap-4 md:col-span-2">
+                        <div className="flex flex-wrap items-center justify-between gap-4">
+                          <div className="grid gap-1">
+                            <span className="admin-eyebrow type-mono-micro">{copy.coverThemes}</span>
+                            <span className="admin-copy-muted">{activeCoverLabel}</span>
+                          </div>
+                          <SegmentedSwitcher<PublicTheme>
+                            activeValue={activeCoverTheme}
+                            ariaLabel={copy.coverThemes}
+                            onSelect={(value) => setActiveCoverTheme(value)}
+                            options={coverThemeOptions}
+                            testId="admin-cover-theme-switcher"
+                          />
+                        </div>
+                        <div className="admin-cover-panel grid gap-4">
+                          {activeCoverPreviewUrl ? (
                             <div className="snippet-cover-frame admin-cover-upload-preview overflow-hidden">
                               <img
-                                src={localCoverPreviewUrl || resolveAssetUrl(form.coverImage)}
+                                src={activeCoverPreviewUrl}
                                 alt={localizedForm.title || copy.untitledSnippet}
                                 className="snippet-cover-image"
                               />
                             </div>
-                          ) : null}
-                          <div className="flex flex-wrap items-center gap-3">
+                          ) : (
+                            <div className="admin-cover-empty flex items-center justify-center rounded-[22px] border border-dashed px-5 py-8">
+                              <p className="admin-copy-faint type-mono-micro">{copy.themeCoverImageEmpty}</p>
+                            </div>
+                          )}
+                          <div className="admin-cover-toolbar flex flex-wrap items-center gap-3">
                             <input
                               ref={coverImageInputRef}
                               type="file"
                               accept="image/png,image/jpeg,image/webp,image/gif"
                               className="sr-only"
-                              onChange={handleCoverImageUpload}
+                              onChange={(event) => handleCoverImageUpload(activeCoverField, event)}
                             />
                             <Button
                               type="button"
                               className="admin-button-secondary admin-button-md"
-                              isDisabled={isUploadingCoverImage}
+                              isDisabled={Boolean(uploadingCoverField)}
                               onPress={() => coverImageInputRef.current?.click()}
                             >
                               <ImageUp size={16} className="mr-2" />
-                              {isUploadingCoverImage
+                              {uploadingCoverField === activeCoverField
                                 ? copy.uploadingCoverImage
-                                : form.coverImage
+                                : form[activeCoverField]
                                   ? copy.replaceCoverImage
                                   : copy.uploadCoverImage}
                             </Button>
-                            {!form.coverImage ? (
-                              <span className="admin-copy-faint type-mono-micro min-w-0 truncate">
-                                {copy.coverImageUploadHint}
-                              </span>
+                            {form[activeCoverField] ? (
+                              <Button
+                                type="button"
+                                className="admin-button-secondary admin-button-md"
+                                isDisabled={Boolean(uploadingCoverField)}
+                                onPress={() => clearThemeCoverImage(activeCoverField)}
+                              >
+                                <X size={16} className="mr-2" />
+                                {copy.clearThemeCoverImage}
+                              </Button>
+                            ) : null}
+                            {activeCoverStatus ? (
+                              <span className="admin-cover-status-badge type-mono-micro">{activeCoverStatus}</span>
                             ) : null}
                           </div>
                         </div>
-                      </label>
+                      </div>
                     </div>
                   </EditorSection>
 
@@ -2100,10 +2211,10 @@ export default function AdminSnippetEditor() {
                       <span>{common.desktop}</span>
                     </button>
                   </div>
-                  <LocaleSwitcher
-                    activeLocale={editorLocale}
+                  <SegmentedSwitcher<AppLocale>
+                    activeValue={editorLocale}
                     ariaLabel={copy.previewLanguage}
-                    onSelect={setEditorLocale}
+                    onSelect={(value) => setEditorLocale(value)}
                     options={editorLocaleOptions}
                     testId="admin-preview-locale-switcher"
                   />

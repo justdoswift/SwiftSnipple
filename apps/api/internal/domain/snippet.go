@@ -45,6 +45,8 @@ type SnippetAvailableLocales struct {
 type Snippet struct {
 	ID                    string                  `json:"id"`
 	CoverImage            string                  `json:"coverImage"`
+	CoverImageDark        string                  `json:"coverImageDark"`
+	CoverImageLight       string                  `json:"coverImageLight"`
 	Code                  string                  `json:"code"`
 	Status                SnippetStatus           `json:"status"`
 	UpdatedAt             time.Time               `json:"updatedAt"`
@@ -61,7 +63,8 @@ type Snippet struct {
 }
 
 type SnippetPayload struct {
-	CoverImage           string         `json:"coverImage"`
+	CoverImageDark       string         `json:"coverImageDark"`
+	CoverImageLight      string         `json:"coverImageLight"`
 	Code                 string         `json:"code"`
 	Status               SnippetStatus  `json:"status"`
 	PublishedAt          *time.Time     `json:"publishedAt"`
@@ -73,6 +76,9 @@ func (p SnippetPayload) Normalize() SnippetPayload {
 	if p.Status == "" {
 		p.Status = StatusDraft
 	}
+
+	p.CoverImageDark = strings.TrimSpace(p.CoverImageDark)
+	p.CoverImageLight = strings.TrimSpace(p.CoverImageLight)
 
 	p.Locales.EN = normalizeLocalizedFields(p.Locales.EN)
 	p.Locales.ZH = normalizeLocalizedFields(p.Locales.ZH)

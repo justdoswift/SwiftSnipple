@@ -46,8 +46,8 @@ export default function LeadSnippetCard({ snippet }: LeadSnippetCardProps) {
       >
         <Card className="public-home-lead-card-shell public-surface overflow-hidden" data-testid="home-lead-card-shell">
           <div className="public-home-lead-card-grid">
-            <Card.Content className="public-home-lead-card-copy flex min-h-[240px] h-full flex-col gap-8 px-7 py-8 md:px-8 md:py-6 lg:px-9 lg:py-6">
-              <div className="public-home-lead-card-copy-inner max-w-[680px] space-y-5 md:space-y-4">
+            <Card.Content className="public-home-lead-card-copy flex h-full flex-col gap-5 px-7 py-7 md:px-8 md:py-6 lg:px-9 lg:py-6">
+              <div className="public-home-lead-card-copy-inner max-w-[680px] space-y-4 md:space-y-3">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                   <span className="type-mono-micro">{isLocaleAvailable ? fields.category : common.languageUnavailable}</span>
                   {publishedDate ? <span className="type-mono-micro">{publishedDate}</span> : null}
@@ -59,8 +59,8 @@ export default function LeadSnippetCard({ snippet }: LeadSnippetCardProps) {
                   ) : null}
                 </div>
 
-                <div className="space-y-3 md:space-y-4">
-                  <h2 className="public-home-lead-card-title max-w-[11ch] text-[2.4rem] font-semibold leading-[0.98] tracking-[-0.05em] md:text-[3.2rem] lg:text-[4rem]">
+                <div className="space-y-3">
+                  <h2 className="public-home-lead-card-title max-w-[11ch] text-[2.25rem] font-semibold leading-[0.98] tracking-[-0.05em] md:text-[2.65rem] lg:text-[3.15rem]">
                     {isLocaleAvailable ? fields.title : common.languageUnavailable}
                   </h2>
                   <p

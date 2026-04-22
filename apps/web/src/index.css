@@ -1143,11 +1143,18 @@
     max-width: 9.5ch;
   }
 
+  .public-home-lead-card-title {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+  }
+
   .public-home-lead-card-excerpt-clamp {
     display: -webkit-box;
     overflow: hidden;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 2;
   }
 
   .public-home-lead-card-copy .type-mono-micro {
@@ -1185,6 +1192,7 @@
 
   .public-home-lead-card-media {
     height: auto;
+    max-height: 32rem;
     line-height: 0;
     background-color: #080808;
   }
@@ -1196,7 +1204,7 @@
   .public-home-lead-card-media-image {
     display: block;
     width: 100%;
-    height: auto;
+    height: 100%;
     object-fit: cover;
     object-position: center;
     filter: saturate(0.99) contrast(1) brightness(0.99);
@@ -1230,39 +1238,54 @@
 
   @media (min-width: 768px) {
     .public-home-lead-card-grid {
-      grid-template-columns: minmax(0, 0.48fr) minmax(0, 1.52fr);
+      grid-template-columns: minmax(0, 1fr) auto;
       min-height: 0;
+      align-items: center;
     }
 
     .public-home-lead-card-copy {
       justify-content: center;
       border-right: 1px solid color-mix(in srgb, var(--public-border-faint) 72%, transparent);
+      gap: 1rem;
     }
 
     .public-home-lead-card-copy-inner .public-home-lead-card-title {
       max-width: 7.2ch;
     }
 
+    .public-home-lead-card-title {
+      -webkit-line-clamp: 3;
+    }
+
     .public-home-lead-card-excerpt-clamp {
-      -webkit-line-clamp: 2;
+      -webkit-line-clamp: 1;
     }
 
     .public-home-lead-card-media-pane {
       padding: 0;
+      align-items: flex-end;
     }
 
     .public-home-lead-card-media {
+      --lead-card-media-height: clamp(18rem, 26vw, 20rem);
+      width: calc(var(--lead-card-media-height) * 1200 / 630);
+      height: var(--lead-card-media-height);
+      max-height: none;
       min-height: 0;
     }
   }
 
   @media (min-width: 1280px) {
-    .public-home-lead-card-grid {
-      grid-template-columns: minmax(0, 0.43fr) minmax(0, 1.57fr);
-    }
-
     .public-home-lead-card-copy-inner .public-home-lead-card-title {
       max-width: 6.6ch;
+    }
+
+    .public-home-lead-card-title {
+      -webkit-line-clamp: 2;
+    }
+
+    .public-home-lead-card-media {
+      --lead-card-media-height: 20rem;
     }
   }
 
@@ -1313,7 +1336,7 @@
   @media (min-width: 1024px) {
     .public-home-lead-card-copy {
       min-height: 100%;
-      padding-right: 18rem;
+      padding-right: 0;
     }
   }
 

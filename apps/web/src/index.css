@@ -3294,7 +3294,7 @@
   .markdown-renderer {
     @apply space-y-4 text-[1.0625rem] leading-[1.55];
     letter-spacing: 0;
-    color: var(--public-body-lg);
+    color: var(--public-heading);
   }
 
   .markdown-renderer > :first-child {
@@ -3323,7 +3323,7 @@
 
   .markdown-renderer p {
     @apply leading-[1.55];
-    color: var(--public-body-lg);
+    color: var(--public-heading);
   }
 
   .markdown-renderer strong {
@@ -3333,7 +3333,7 @@
 
   .markdown-renderer em {
     @apply italic;
-    color: var(--public-body-lg);
+    color: var(--public-heading);
   }
 
   .markdown-renderer a {
@@ -3351,7 +3351,7 @@
   .markdown-renderer ul,
   .markdown-renderer ol {
     @apply space-y-2 pl-5;
-    color: var(--public-body-lg);
+    color: var(--public-heading);
   }
 
   .markdown-renderer ul {

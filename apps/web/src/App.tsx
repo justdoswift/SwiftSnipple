@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import PublicCenteredLoading from "./components/PublicCenteredLoading";
 import AdminLayout from "./components/admin/AdminLayout";
+import SnippetDetail from "./pages/SnippetDetail";
 import { Spinner } from "./lib/heroui";
 import { type AdminAuthSession } from "./lib/admin-auth";
 import {
@@ -30,7 +31,6 @@ import { getMemberSession, logoutMember } from "./services/member-auth";
 import type { AppLocale, MemberSession } from "./types";
 
 const Home = lazy(() => import("./pages/Home"));
-const SnippetDetail = lazy(() => import("./pages/SnippetDetail"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));

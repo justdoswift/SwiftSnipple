@@ -11,6 +11,10 @@
     {
       "source": "/healthz",
       "destination": "https://justdoswift-api-ygmq3ylvda-uc.a.run.app/healthz"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/"
     }
   ]
 }

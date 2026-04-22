@@ -87,6 +87,61 @@ For documentation changes, verify that:
 - roadmap language is aspirational but truthful
 - no stale starter-template or publication-platform framing remains where it would mislead future work
 
+## Deployment Notes
+
+Production deployment is no longer the old Caddy flow. The current live stack is:
+
+- frontend: Vercel project `justdoswift-web`
+- backend: Google Cloud Run service `justdoswift-api`
+- database: Neon Postgres
+- asset storage: Google Cloud Storage
+- primary site: `https://justdoswift.com`
+
+Important deployment behavior:
+
+- treat `justdoswift.com` as the primary frontend origin
+- treat the current production API path as same-origin via Vercel rewrites, not direct browser traffic to `api.justdoswift.com`
+- frontend production traffic should use `https://justdoswift.com/api/*`
+- `apps/web/vercel.json` contains the active Vercel rewrites and SPA fallback rules; preserve them unless intentionally changing deployment architecture
+
+Deploy commands:
+
+```bash
+make deploy-check
+make deploy-api
+make deploy-web
+make deploy
+```
+
+How to deploy by change type:
+
+- backend-only Go/API changes:
+  run `make deploy-api`
+- frontend-only React/Vite changes:
+  run `make deploy-web`
+  after deploy, ensure `justdoswift.com` points to the latest production deployment if the root alias did not move automatically
+- changes affecting both frontend and backend:
+  run `make deploy`
+
+Current deploy config expectations:
+
+- deployment config lives in `.env.deploy`
+- local dev config lives in `.env` / `.env.example`
+- `.env.deploy` currently uses:
+  - `CLOUD_RUN_SERVICE=justdoswift-api`
+  - `VERCEL_PROJECT_NAME=justdoswift-web`
+  - `APP_BASE_URL=https://justdoswift.com`
+  - `API_BASE_URL=https://justdoswift.com`
+
+Important gotchas learned from production setup:
+
+- if browser requests hit `https://api.justdoswift.com/...`, prefer checking whether frontend should instead use same-origin `/api/...`
+- if frontend shows CORS errors, confirm `API_BASE_URL` is still `https://justdoswift.com` for production and that `apps/web/vercel.json` rewrites are present
+- if `/admin` or any client route returns 404 on Vercel, confirm the SPA fallback rewrite in `apps/web/vercel.json`
+- if API changes are deployed, the frontend may still need redeploying when rewrite or env behavior changed
+- Vercel domain aliases can lag behind the newest production deployment; if needed, update the root alias to the latest deployment explicitly
+- `api.justdoswift.com` custom-domain work is not the primary production path right now; avoid switching browser traffic back to it unless the domain mapping and DNS behavior have been fully re-verified
+
 ## Default Assumption
 
 If a request is ambiguous, favor decisions that make SwiftSnipple feel more like a strong SwiftUI snippet showcase and less like a publishing or archive product.

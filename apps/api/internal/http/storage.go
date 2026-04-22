@@ -1,6 +1,7 @@
 package http
 
 import (
+	"cloud.google.com/go/storage"
 	"context"
 	"errors"
 	"fmt"
@@ -14,20 +15,25 @@ import (
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+	"google.golang.org/api/option"
 )
 
 const defaultUploadPublicBasePath = "/api/uploads"
 
 type AssetStorageConfig struct {
-	Provider       string
-	LocalDir       string
-	PublicBasePath string
-	MinIOEndpoint  string
-	MinIOAccessKey string
-	MinIOSecretKey string
-	MinIOBucket    string
-	MinIORegion    string
-	MinIOUseSSL    bool
+	Provider         string
+	LocalDir         string
+	PublicBasePath   string
+	GCSPublicBaseURL string
+	MinIOEndpoint    string
+	MinIOAccessKey   string
+	MinIOSecretKey   string
+	MinIOBucket      string
+	MinIORegion      string
+	MinIOUseSSL      bool
+	GCSBucket        string
+	GCSProjectID     string
+	GCSCredentials   string
 }
 
 type assetStore interface {
@@ -58,6 +64,12 @@ type minioAssetStore struct {
 	publicBasePath string
 }
 
+type gcsAssetStore struct {
+	client         *storage.Client
+	bucket         string
+	publicBasePath string
+}
+
 func NewAssetStore(ctx context.Context, cfg AssetStorageConfig) (assetStore, error) {
 	provider := strings.ToLower(strings.TrimSpace(cfg.Provider))
 	switch provider {
@@ -65,6 +77,8 @@ func NewAssetStore(ctx context.Context, cfg AssetStorageConfig) (assetStore, err
 		return newLocalAssetStore(cfg.LocalDir, cfg.PublicBasePath), nil
 	case "minio":
 		return newMinIOAssetStore(ctx, cfg)
+	case "gcs":
+		return newGCSAssetStore(ctx, cfg)
 	default:
 		return nil, fmt.Errorf("unsupported storage provider %q", cfg.Provider)
 	}
@@ -114,6 +128,40 @@ func newMinIOAssetStore(ctx context.Context, cfg AssetStorageConfig) (*minioAsse
 		client:         client,
 		bucket:         bucket,
 		publicBasePath: normalizePublicBasePath(cfg.PublicBasePath),
+	}, nil
+}
+
+func newGCSAssetStore(ctx context.Context, cfg AssetStorageConfig) (*gcsAssetStore, error) {
+	bucket := strings.TrimSpace(cfg.GCSBucket)
+	if bucket == "" {
+		return nil, errors.New("gcs storage requires GCS_BUCKET")
+	}
+
+	clientOptions := make([]option.ClientOption, 0, 1)
+	if credentialsJSON := strings.TrimSpace(cfg.GCSCredentials); credentialsJSON != "" {
+		clientOptions = append(clientOptions, option.WithCredentialsJSON([]byte(credentialsJSON)))
+	}
+
+	client, err := storage.NewClient(ctx, clientOptions...)
+	if err != nil {
+		return nil, fmt.Errorf("create gcs client: %w", err)
+	}
+
+	bucketHandle := client.Bucket(bucket)
+	if _, err := bucketHandle.Attrs(ctx); err != nil {
+		_ = client.Close()
+		return nil, fmt.Errorf("check gcs bucket: %w", err)
+	}
+
+	publicBasePath := strings.TrimSpace(cfg.GCSPublicBaseURL)
+	if publicBasePath == "" {
+		publicBasePath = fmt.Sprintf("https://storage.googleapis.com/%s", bucket)
+	}
+
+	return &gcsAssetStore{
+		client:         client,
+		bucket:         bucket,
+		publicBasePath: strings.TrimRight(publicBasePath, "/"),
 	}, nil
 }
 
@@ -222,6 +270,53 @@ func (s *minioAssetStore) Get(ctx context.Context, objectKey string) (storedObje
 	}, nil
 }
 
+func (s *gcsAssetStore) Put(ctx context.Context, objectKey, contentType string, body io.Reader, size int64) (storedAsset, error) {
+	safeKey, err := sanitizeObjectKey(objectKey)
+	if err != nil {
+		return storedAsset{}, err
+	}
+
+	writer := s.client.Bucket(s.bucket).Object(safeKey).NewWriter(ctx)
+	writer.ContentType = strings.TrimSpace(contentType)
+	if _, err := io.Copy(writer, body); err != nil {
+		_ = writer.Close()
+		return storedAsset{}, fmt.Errorf("write gcs object: %w", err)
+	}
+	if err := writer.Close(); err != nil {
+		return storedAsset{}, fmt.Errorf("finalize gcs object: %w", err)
+	}
+
+	return storedAsset{
+		Key:         safeKey,
+		URL:         assetURLForKey(s.publicBasePath, safeKey),
+		ContentType: strings.TrimSpace(contentType),
+	}, nil
+}
+
+func (s *gcsAssetStore) Get(ctx context.Context, objectKey string) (storedObject, error) {
+	safeKey, err := sanitizeObjectKey(objectKey)
+	if err != nil {
+		return storedObject{}, err
+	}
+
+	object := s.client.Bucket(s.bucket).Object(safeKey)
+	attrs, err := object.Attrs(ctx)
+	if err != nil {
+		return storedObject{}, fmt.Errorf("stat gcs object: %w", err)
+	}
+
+	reader, err := object.NewReader(ctx)
+	if err != nil {
+		return storedObject{}, fmt.Errorf("read gcs object: %w", err)
+	}
+
+	return storedObject{
+		Body:        reader,
+		ContentType: strings.TrimSpace(attrs.ContentType),
+		Size:        attrs.Size,
+	}, nil
+}
+
 func sanitizeObjectKey(objectKey string) (string, error) {
 	cleaned := path.Clean("/" + strings.TrimSpace(objectKey))
 	cleaned = strings.TrimPrefix(cleaned, "/")
@@ -249,6 +344,10 @@ func normalizePublicBasePath(publicBasePath string) string {
 }
 
 func assetURLForKey(publicBasePath, objectKey string) string {
+	if strings.HasPrefix(publicBasePath, "http://") || strings.HasPrefix(publicBasePath, "https://") {
+		return strings.TrimRight(publicBasePath, "/") + "/" + strings.TrimPrefix(objectKey, "/")
+	}
+
 	return fmt.Sprintf("%s/%s", normalizePublicBasePath(publicBasePath), strings.TrimPrefix(objectKey, "/"))
 }
 

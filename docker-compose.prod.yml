@@ -43,8 +43,8 @@ services:
   api:
     image: swiftsnipple-api
     build:
-      context: .
-      dockerfile: apps/api/Dockerfile
+      context: ./apps/api
+      dockerfile: Dockerfile
       args:
         GOLANG_IMAGE: ${GOLANG_IMAGE:-golang:1.26.2-alpine3.22}
         ALPINE_IMAGE: ${ALPINE_IMAGE:-alpine:3.21}

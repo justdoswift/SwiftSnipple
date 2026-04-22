@@ -24,12 +24,16 @@ type Config struct {
 	StorageProvider       string
 	UploadsDir            string
 	UploadsBasePath       string
+	GCSPublicBaseURL      string
 	MinIOEndpoint         string
 	MinIOAccessKey        string
 	MinIOSecretKey        string
 	MinIOBucket           string
 	MinIORegion           string
 	MinIOUseSSL           bool
+	GCSBucket             string
+	GCSProjectID          string
+	GCSCredentials        string
 }
 
 func Load() Config {
@@ -78,12 +82,16 @@ func Load() Config {
 	storageProvider := strings.TrimSpace(envOrDefault("STORAGE_PROVIDER", "local"))
 	uploadsDir := envOrDefault("UPLOADS_DIR", "uploads")
 	uploadsBasePath := strings.TrimSpace(envOrDefault("UPLOADS_BASE_PATH", "/api/uploads"))
+	gcsPublicBaseURL := strings.TrimSpace(os.Getenv("GCS_PUBLIC_BASE_URL"))
 	minIOEndpoint := strings.TrimSpace(os.Getenv("MINIO_ENDPOINT"))
 	minIOAccessKey := strings.TrimSpace(os.Getenv("MINIO_ACCESS_KEY"))
 	minIOSecretKey := strings.TrimSpace(os.Getenv("MINIO_SECRET_KEY"))
 	minIOBucket := strings.TrimSpace(envOrDefault("MINIO_BUCKET", "swiftsnipple-assets"))
 	minIORegion := strings.TrimSpace(envOrDefault("MINIO_REGION", "us-east-1"))
 	minIOUseSSL := strings.EqualFold(strings.TrimSpace(envOrDefault("MINIO_USE_SSL", "false")), "true")
+	gcsBucket := strings.TrimSpace(os.Getenv("GCS_BUCKET"))
+	gcsProjectID := strings.TrimSpace(os.Getenv("GCS_PROJECT_ID"))
+	gcsCredentials := strings.TrimSpace(os.Getenv("GCS_CREDENTIALS"))
 
 	return Config{
 		APIPort:               apiPort,
@@ -101,12 +109,16 @@ func Load() Config {
 		StorageProvider:       storageProvider,
 		UploadsDir:            uploadsDir,
 		UploadsBasePath:       uploadsBasePath,
+		GCSPublicBaseURL:      gcsPublicBaseURL,
 		MinIOEndpoint:         minIOEndpoint,
 		MinIOAccessKey:        minIOAccessKey,
 		MinIOSecretKey:        minIOSecretKey,
 		MinIOBucket:           minIOBucket,
 		MinIORegion:           minIORegion,
 		MinIOUseSSL:           minIOUseSSL,
+		GCSBucket:             gcsBucket,
+		GCSProjectID:          gcsProjectID,
+		GCSCredentials:        gcsCredentials,
 	}
 }
 

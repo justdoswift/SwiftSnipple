@@ -102,6 +102,46 @@ make stop
 make logs
 ```
 
+## One-Command Deploy
+
+SwiftSnipple can be deployed from this repo with:
+
+```bash
+cp .env.deploy.example .env.deploy
+make deploy-check
+make deploy
+```
+
+Expected hosting setup:
+
+- `apps/web` deploys to Vercel
+- `apps/api` deploys to Google Cloud Run
+- PostgreSQL comes from Neon via `NEON_DATABASE_URL`
+- uploads go to Google Cloud Storage
+
+Prerequisites:
+
+- `vercel` CLI installed and logged in with `vercel login`
+- `gcloud` CLI installed and logged in with `gcloud auth login`
+- active GCP project selected with `gcloud config set project <project-id>`
+
+Useful deploy commands:
+
+```bash
+make deploy-check
+make deploy-api
+make deploy-web
+make deploy
+```
+
+Common failure points:
+
+- missing `.env.deploy` values
+- `vercel` project not linked yet for `apps/web`
+- missing `run.admin` or Cloud Build permissions in GCP
+- missing access to the configured GCS bucket
+- Stripe webhook secret or return URLs not matching production domains
+
 Default ports:
 
 - Web: `3000`

@@ -10,12 +10,11 @@ ENV GOPROXY=${GOPROXY}
 ENV GOSUMDB=${GOSUMDB}
 WORKDIR /app
 
-COPY apps/api/go.mod ./apps/api/go.mod
-WORKDIR /app/apps/api
+COPY go.mod ./go.mod
 RUN echo "[api build] downloading Go module dependencies" && \
     go mod download
 
-COPY apps/api ./ 
+COPY . ./
 RUN echo "[api build] compiling API server binary" && \
     go build -o /out/server ./cmd/server && \
     echo "[api build] compiling migration binary" && \

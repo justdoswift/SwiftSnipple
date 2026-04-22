@@ -42,15 +42,19 @@ func main() {
 	defer pool.Close()
 
 	assets, err := httpapi.NewAssetStore(ctx, httpapi.AssetStorageConfig{
-		Provider:       cfg.StorageProvider,
-		LocalDir:       cfg.UploadsDir,
-		PublicBasePath: cfg.UploadsBasePath,
-		MinIOEndpoint:  cfg.MinIOEndpoint,
-		MinIOAccessKey: cfg.MinIOAccessKey,
-		MinIOSecretKey: cfg.MinIOSecretKey,
-		MinIOBucket:    cfg.MinIOBucket,
-		MinIORegion:    cfg.MinIORegion,
-		MinIOUseSSL:    cfg.MinIOUseSSL,
+		Provider:         cfg.StorageProvider,
+		LocalDir:         cfg.UploadsDir,
+		PublicBasePath:   cfg.UploadsBasePath,
+		GCSPublicBaseURL: cfg.GCSPublicBaseURL,
+		MinIOEndpoint:    cfg.MinIOEndpoint,
+		MinIOAccessKey:   cfg.MinIOAccessKey,
+		MinIOSecretKey:   cfg.MinIOSecretKey,
+		MinIOBucket:      cfg.MinIOBucket,
+		MinIORegion:      cfg.MinIORegion,
+		MinIOUseSSL:      cfg.MinIOUseSSL,
+		GCSBucket:        cfg.GCSBucket,
+		GCSProjectID:     cfg.GCSProjectID,
+		GCSCredentials:   cfg.GCSCredentials,
 	})
 	if err != nil {
 		log.Fatalf("configure asset storage: %v", err)

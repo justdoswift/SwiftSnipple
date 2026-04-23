@@ -140,7 +140,11 @@ vi.mock("../lib/heroui", async () => {
   return {
     Modal: MockModal,
     SearchField: MockSearchField,
-    Spinner: ({ size }: { size?: string }) => <div data-testid={`spinner-${size ?? "md"}`}>spinner</div>,
+    Spinner: ({ size, className }: { size?: string; className?: string }) => (
+      <div data-testid={`spinner-${size ?? "md"}`} className={className}>
+        spinner
+      </div>
+    ),
   };
 });
 
@@ -207,6 +211,7 @@ describe("PublicSearch", () => {
     );
 
     expect(screen.getByTestId("public-search-loading")).toBeInTheDocument();
+    expect(screen.getByTestId("spinner-sm")).toHaveClass("public-search-spinner");
     expect(screen.getByRole("dialog")).toHaveClass("public-search-dialog");
     expect(screen.getByRole("textbox", { name: "Search the snippet library" }).closest(".public-search-field-group")).not.toBeNull();
   });

@@ -129,7 +129,7 @@ export default function PublicSearch({ isOpen, onOpenChange, loadSnippets = getS
             <div className="public-search-body">
               {isLoading ? (
                 <div className="public-search-state" data-testid="public-search-loading">
-                  <Spinner size="sm" />
+                  <Spinner size="sm" className="public-search-spinner" />
                   <p>{copy.loading}</p>
                 </div>
               ) : null}
@@ -142,7 +142,7 @@ export default function PublicSearch({ isOpen, onOpenChange, loadSnippets = getS
 
               {!isLoading && !error && !query.trim() ? (
                 <div className="public-search-state" data-testid="public-search-idle">
-                  <Search size={18} strokeWidth={2} />
+                  <Search size={18} strokeWidth={2} className="public-search-idle-icon" />
                   <div className="text-center">
                     <p className="type-body-sm">{copy.idleCopy}</p>
                   </div>

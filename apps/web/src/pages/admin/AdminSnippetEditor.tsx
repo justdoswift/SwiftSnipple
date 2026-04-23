@@ -1971,7 +1971,7 @@ export default function AdminSnippetEditor() {
                         </div>
                         <div className="admin-cover-panel grid gap-4">
                           {activeCoverPreviewUrl ? (
-                            <div className="snippet-cover-frame admin-cover-upload-preview overflow-hidden">
+                            <div className="admin-cover-upload-preview overflow-hidden">
                               <img
                                 src={activeCoverPreviewUrl}
                                 alt={localizedForm.title || copy.untitledSnippet}
@@ -1979,7 +1979,7 @@ export default function AdminSnippetEditor() {
                               />
                             </div>
                           ) : (
-                            <div className="admin-cover-empty flex items-center justify-center rounded-[22px] border border-dashed px-5 py-8">
+                            <div className="admin-cover-upload-preview admin-cover-empty flex items-center justify-center rounded-[22px] border border-dashed px-5 py-8">
                               <p className="admin-copy-faint type-mono-micro">{copy.themeCoverImageEmpty}</p>
                             </div>
                           )}
@@ -2019,6 +2019,7 @@ export default function AdminSnippetEditor() {
                               <span className="admin-cover-status-badge type-mono-micro">{activeCoverStatus}</span>
                             ) : null}
                           </div>
+                          <p className="admin-copy-muted text-sm leading-6">{copy.coverImageRatioHint}</p>
                         </div>
                       </div>
                     </div>

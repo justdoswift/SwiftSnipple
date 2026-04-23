@@ -45,8 +45,8 @@ export default function LeadSnippetCard({ snippet }: LeadSnippetCardProps) {
       >
         <div className="public-home-lead-card-shell public-surface overflow-hidden" data-testid="home-lead-card-shell">
           <div className="public-home-lead-card-grid">
-            <div className="public-home-lead-card-copy flex h-full flex-col gap-5 px-7 py-7 md:px-8 md:py-6 lg:px-9 lg:py-6">
-              <div className="public-home-lead-card-copy-inner max-w-[680px] space-y-4 md:space-y-3">
+            <div className="public-home-lead-card-copy flex h-full flex-col justify-between gap-4 px-6 py-6 sm:px-7 sm:py-7 md:px-8 md:py-7 lg:px-9 lg:py-8">
+              <div className="public-home-lead-card-copy-inner max-w-[36rem] space-y-4 md:space-y-3">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                   <span className="type-mono-micro">{isLocaleAvailable ? fields.category : common.languageUnavailable}</span>
                   {publishedDate ? <span className="type-mono-micro">{publishedDate}</span> : null}
@@ -59,11 +59,11 @@ export default function LeadSnippetCard({ snippet }: LeadSnippetCardProps) {
                 </div>
 
                 <div className="space-y-3">
-                  <h2 className="public-home-lead-card-title max-w-[11ch] text-[2.25rem] font-semibold leading-[0.98] tracking-[-0.05em] md:text-[2.65rem] lg:text-[3.15rem]">
+                  <h2 className="public-home-lead-card-title text-[1.9rem] font-semibold leading-[0.96] tracking-[-0.05em] sm:text-[2.15rem] md:text-[2.4rem] lg:text-[2.8rem]">
                     {isLocaleAvailable ? fields.title : common.languageUnavailable}
                   </h2>
                   <p
-                    className="public-home-lead-card-excerpt public-home-lead-card-excerpt-clamp type-body max-w-[56ch] text-[0.98rem] leading-[1.7] md:text-[1.08rem]"
+                    className="public-home-lead-card-excerpt public-home-lead-card-excerpt-clamp type-body max-w-[34ch] text-[0.98rem] leading-[1.68] md:text-[1.02rem] lg:text-[1.08rem]"
                     aria-hidden={!isLocaleAvailable && !fields.excerpt}
                   >
                     {isLocaleAvailable ? fields.excerpt || "\u00A0" : common.languageUnavailableLong}

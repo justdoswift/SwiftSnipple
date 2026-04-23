@@ -261,7 +261,8 @@ describe("AdminSnippetEditor", () => {
       expect(screen.getByAltText("Untitled Snippet")).toHaveAttribute("src", "blob:cover-preview");
     });
 
-    expect(document.querySelector(".admin-cover-upload-preview")).toHaveClass("snippet-cover-frame");
+    expect(document.querySelector(".admin-cover-upload-preview")).not.toHaveClass("snippet-cover-frame");
+    expect(screen.getByText("Homepage lead covers now use a 12:9 frame. Re-upload older 1200x630 artwork for the new crop.")).toBeInTheDocument();
     expect(screen.queryByText("/api/uploads/cover-test.webp")).not.toBeInTheDocument();
     expect(URL.createObjectURL).toHaveBeenCalledWith(file);
     expect(screen.queryByRole("heading", { name: "Crop cover image" })).not.toBeInTheDocument();

@@ -1247,11 +1247,11 @@
 
   @media (min-width: 768px) {
     .public-home-lead-card-shell {
-      aspect-ratio: 16 / 9;
+      aspect-ratio: 3.25;
     }
 
     .public-home-lead-card-grid {
-      grid-template-columns: minmax(0, 4fr) minmax(0, 12fr);
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
       grid-template-rows: minmax(0, 1fr);
       align-items: stretch;
     }
@@ -1264,7 +1264,7 @@
     }
 
     .public-home-lead-card-copy-inner .public-home-lead-card-title {
-      max-width: 8.5ch;
+      max-width: 10.5ch;
     }
 
     .public-home-lead-card-title {
@@ -1301,7 +1301,7 @@
 
   @media (min-width: 1280px) {
     .public-home-lead-card-copy-inner .public-home-lead-card-title {
-      max-width: 9ch;
+      max-width: 11ch;
     }
 
     .public-home-lead-card-title {
